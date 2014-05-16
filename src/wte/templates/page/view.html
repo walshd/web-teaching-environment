@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:py="http://genshi.edgewall.org/" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>${module.title} | ${tutorial.title} | ${page.title}</title>
+    <link rel="stylesheet" href="${r.static_url('wte:static/css/normalize.css')}" />
+    <link rel="stylesheet" href="${r.static_url('wte:static/css/foundation.min.css')}" />
+    <link rel="stylesheet" href="${r.static_url('wte:static/css/codemirror.css')}" />
+    <link rel="stylesheet" href="${r.static_url('wte:static/css/cm-theme/elegant.css')}" />
+    <link rel="stylesheet" href="${r.static_url('wte:static/css/docutils.css')}" />
+    <link rel="stylesheet" href="${r.static_url('wte:static/css/application.css')}" />
+    <script src="${r.static_url('wte:static/js/foundation/vendor/modernizr.js')}"></script>
+  </head>
+  <body>
+    <nav class="top-bar" data-topbar="">
+      <ul class="title-area">
+        <li class="name"><h1><a href="#">WTE</a></h1></li>
+        <li class="toggle-topbar menu-icon"><a href="#"><span></span></a></li>
+      </ul>
+      <section class="top-bar-section">
+        <ul class="left">
+          <li><a href="${r.route_url('module.view', mid=module.id)}">${module.title}</a></li>
+          <li class="active"><a href="${r.route_url('tutorial.view', mid=module.id, tid=tutorial.id)}">${tutorial.title}</a></li>
+        </ul>
+        <ul class="right">
+          <li class="has-dropdown"><a href="#">Mark Hall</a>
+            <ul class="dropdown">
+              <li><a href="#">Profile</a></li>
+              <li><a href="#">Modules</a></li>
+              <li class="divider"></li>
+              <li><a href="#">Log out</a></li>
+            </ul>
+          </li>
+        </ul>
+      </section>
+    </nav>
+    <article class="rows">
+      <section id="textbook" class="small-12 medium-6 large-4 column" style="border-right:1px solid #dfdfdf;">
+        <h1>${page.title}</h1>
+        ${Markup(page.compiled_content)}
+        <div class="pagination-centered">
+          <ul class="pagination">
+            <li py:if="page.order > 1" class="arrow"><a href="${r.route_url('page.view', mid=module.id, tid=tutorial.id, pageno=page.order - 1)}">&laquo; Previous page</a></li>
+            <li py:if="page.order > 2"><a href="${r.route_url('page.view', mid=module.id, tid=tutorial.id, pageno=page.order - 2)}">${page.order - 2}</a></li>
+            <li py:if="page.order > 1"><a href="${r.route_url('page.view', mid=module.id, tid=tutorial.id, pageno=page.order - 1)}">${page.order - 1}</a></li>
+            <li class="current"><a href="${r.route_url('page.view', mid=module.id, tid=tutorial.id, pageno=page.order)}">${page.order}</a></li>
+            <li py:if="len(tutorial.pages) > page.order"><a href="${r.route_url('page.view', mid=module.id, tid=tutorial.id, pageno=page.order + 1)}">${page.order + 1}</a></li>
+            <li py:if="len(tutorial.pages) > page.order + 1" class="unavailable">&hellip;</li>
+            <li py:if="len(tutorial.pages) > page.order" class="arrow"><a href="${r.route_url('page.view', mid=module.id, tid=tutorial.id, pageno=page.order + 1)}">Next page &raquo;</a></li>
+          </ul>
+        </div>
+      </section>
+    </article>
+    <div id="overlay"></div>
+    <div id="busy"><img src="${r.static_url('wte:static/img/spinner.gif')}" alt="The application is currently busy working on something for you."/></div>
+    <script src="${r.static_url('wte:static/js/foundation/vendor/jquery.js')}"></script>
+    <script src="${r.static_url('wte:static/js/jquery-ui-1.10.4.custom.min.js')}"></script>
+    <script src="${r.static_url('wte:static/js/foundation/vendor/fastclick.js')}"></script>
+    <script src="${r.static_url('wte:static/js/foundation/foundation.min.js')}"></script>
+    <script>$(document).foundation();</script>
+    <script>$('#textbook').on('click', '.pagination a', function(ev) {
+    	ev.preventDefault();
+    	$('#overlay').show();
+    	$('#busy').show().position({
+    		my: 'center center',
+    		at: 'center center',
+    		of: $(window)
+    	});
+    	$.ajax($(this).attr('href')).success(function(data) {
+    		data = $(data);
+    		$('#textbook').html(data.find('#textbook').children());
+    	}).always(function() {
+    		$('#overlay').hide();
+    		$('#busy').hide();
+    	});
+    });</script>
+  </body>
+</html>

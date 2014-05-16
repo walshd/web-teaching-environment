@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:py="http://genshi.edgewall.org/" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xi:include href="../layout/layout.html"/>
+  <head>
+    <title>Log in to the Web Teaching Environment</title>
+  </head>
+  <body>
+    <div class="row">
+      <article class="small-12 medium-8 medium-offset-2 large-6 large-offset-3 column end">
+        <h1>Login</h1>
+        <div py:if="e" class="alert-box alert">${e.msg}</div>
+        <form action="${r.route_url('user.login')}" method="post">
+          <py:if test="'return_to' in r.params">${h.form.tags.hidden_field('return_to', r.params['return_to'])}</py:if>
+          <div class="row">
+            ${h.form.field('email', 'E-Mail Address', h.form.tags.email_field, size='small-12', e=e, default='')}
+          </div>
+          <div class="row">
+            ${h.form.field('password', 'Password', h.form.tags.password_field, size='small-12', e=e)}
+          </div>
+          <div class="row text-right">
+            <div class="small-12 column">
+              <a href="${r.route_url('user.register')}" class="button small secondary">Register</a>
+              <a href="${r.route_url('user.forgotten_password')}" class="button small secondary">Forgotten Password</a>
+              ${h.form.tags.submit('Login', class_='button small')}
+            </div>
+          </div>
+        </form>
+      </article>
+    </div>
+  </body>
+</html>

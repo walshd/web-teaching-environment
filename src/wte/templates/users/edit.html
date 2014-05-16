@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:py="http://genshi.edgewall.org/" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xi:include href="../layout/layout.html"/>
+  <head>
+    <title>${user.display_name} - Edit</title>
+  </head>
+  <body>
+    <article class="small-12 column">
+      <h1>${user.display_name} - Edit</h1>
+      <form action="${r.route_url('user.edit', uid=user.id)}" method="post">
+        <div class="clearfix">
+          ${h.form.field('email', 'E-Mail Address (change will require a re-validation)', h.form.tags.email_field, size='small-12 medium-6 large-4', e=e, default=user.email)}
+        </div>
+        <div class="clearfix">
+          ${h.form.field('name', 'Your Name', h.form.tags.text_field, size='small-12 medium-6 large-4', e=e, default=user.display_name)}
+        </div>
+        <div class="clearfix">
+          ${h.form.field('password', 'New Password (leave empty to leave unchanged)', h.form.tags.password_field, size='small-12 medium-6 large-4', e=e)}
+        </div>
+        <div class="small-12 medium-6 large-4 text-right">
+          ${h.form.tags.submit('Update', class_='button small')}
+        </div>
+      </form>
+    </article>
+  </body>
+</html>

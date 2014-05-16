@@ -1,0 +1,84 @@
+/**
+ * Busy marker styles
+ */
+#overlay {
+    position: fixed;
+    left: 0px;
+    top: 0px;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    background-color: #000;
+    opacity: 0.6;
+    display: none;
+}
+#busy {
+    position: absolute;
+    z-index: 10001;
+    display: none;
+}
+
+/**
+ * Pagination styles
+ */
+
+.pagination {
+    margin-top: 1.5em;
+}
+
+/**
+ * Editor styles
+ */
+
+#editor {
+    position: relative;
+}
+
+#editor span.label {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    z-index: 1;
+}
+
+#editor:hover span.label {
+    display: none;
+}
+
+#editor .tabs dd a {
+    padding: 0.5rem 0.8rem;
+}
+
+#editor .tabs-content {
+    padding: 0;
+    margin: 0;
+}
+
+#editor .tabs-content .content {
+    padding: 0;
+}
+
+#editor .CodeMirror {
+    border: 1px solid #fff;
+}
+
+/**
+ * Viewer styles
+ */
+
+#viewer {
+    position: relative;
+    box-sizing: border-box;
+    border-top: 1px solid #dfdfdf;
+}
+
+#viewer span.label {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    z-index: 1;
+}
+
+#viewer:hover span.label {
+    display: none;
+}

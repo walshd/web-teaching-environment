@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:py="http://genshi.edgewall.org/" xmlns:xi="http://www.w3.org/2001/XInclude" py:strip="True">
+  <head py:match="head">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>${select('title/text()')}</title>
+    <link rel="stylesheet" href="${r.static_url('wte:static/css/normalize.css')}" />
+    <link rel="stylesheet" href="${r.static_url('wte:static/css/foundation.min.css')}" />
+    <link rel="stylesheet" href="${r.static_url('wte:static/css/codemirror.css')}" />
+    <link rel="stylesheet" href="${r.static_url('wte:static/css/cm-theme/elegant.css')}" />
+    <link rel="stylesheet" href="${r.static_url('wte:static/css/docutils.css')}" />
+    <link rel="stylesheet" href="${r.static_url('wte:static/css/application.css')}" />
+    <script src="${r.static_url('wte:static/js/foundation/vendor/modernizr.js')}"></script>
+  </head>
+  <body py:match="body">
+    <xi:include href="navigation.html"/>
+    <xi:include href="flash.html" py:if="r.session.peek_flash('info') or r.session.peek_flash('error') or r.session.peek_flash('auth')"/>
+    ${select('*')}
+    <script src="${r.static_url('wte:static/js/foundation/vendor/jquery.js')}"></script>
+    <script src="${r.static_url('wte:static/js/jquery-ui-1.10.4.custom.min.js')}"></script>
+    <script src="${r.static_url('wte:static/js/foundation/vendor/fastclick.js')}"></script>
+    <script src="${r.static_url('wte:static/js/foundation/foundation.min.js')}"></script>
+    <script>$(document).foundation();</script>
+  </body>
+</html>

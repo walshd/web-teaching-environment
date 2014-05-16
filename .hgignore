@@ -1,0 +1,11 @@
+
+syntax: regexp
+^src/WebTeachingEnvironment\.egg-info$
+syntax: regexp
+\.ini$
+syntax: regexp
+^.settings$
+syntax: regexp
+^.project$
+syntax: regexp
+^.pydevproject$

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:py="http://genshi.edgewall.org/" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xi:include href="../layout/layout.html"/>
+  <head>
+    <title>${user.display_name}</title>
+  </head>
+  <body>
+    <article class="small-12 column">
+      <h1>${user.display_name}</h1>
+      <p>${user.email}</p>
+      <p>
+        <a py:if="h.auth.is_authorised(r.current_user, 'delete', user)" href="${r.route_url('user.delete', uid=user.id)}" class="button small alert">
+          <py:if test="r.current_user.id == user.id">Delete your account</py:if>
+          <py:if test="r.current_user.id != user.id">Delete this user</py:if>
+        </a>
+        <a py:if="h.auth.engine.is_authorised(':user.has_permission(\'admin.users.permissions\')', {'user': r.current_user})" href="${r.route_url('user.permissions', uid=user.id)}" class="button small secondary">Edit Permissions</a>
+        <a py:if="h.auth.is_authorised(r.current_user, 'edit', user)" href="${r.route_url('user.edit', uid=user.id)}" class="button small">Edit your Profile</a>
+      </p>
+    </article>
+  </body>
+</html>
