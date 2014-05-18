@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
-'''
-Created on 12 May 2014
+u"""
+###################################################
+:mod:`wte.views.frontend` -- Frontend view handlers
+###################################################
 
-@author: mhall
-'''
+The :mod:`~wte.views.frontend` handles all routes related to the user working
+through a :mod:`~wte.models.Tutorial`.
+
+.. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
+"""
 from pyramid.view import view_config
 from pywebtools.renderer import render
 from sqlalchemy import and_

@@ -1,0 +1,2 @@
+.. automodule:: wte.decorators
+   :members:

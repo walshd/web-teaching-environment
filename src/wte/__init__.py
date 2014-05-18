@@ -1,5 +1,14 @@
 # -*- coding: utf-8 -*-
+u"""
+######################################
+:mod:`wte` -- Web Teaching Environment
+######################################
 
+The :mod:`wte` module provides the :func:`~wte.main` function which constructs
+the ``WSGIApplication``.
+
+.. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
+"""
 from pyramid.config import Configurator
 from pyramid_beaker import session_factory_from_settings
 from pywebtools import renderer
@@ -10,7 +19,8 @@ from wte.models import (DBSession, Base, check_database_version)
 
 
 def main(global_config, **settings):
-    """ This function returns a Pyramid WSGI application.
+    """Constructs, initialises, and returns the Web Teaching Environment's
+    ``WSGIApplication``.
     """
     engine = engine_from_config(settings, 'sqlalchemy.')
     DBSession.configure(bind=engine)

@@ -26,9 +26,9 @@
           <p>Unfortunately we have no data that matches your confirmation.</p>
           <p>Please try <a href="${r.route_url('user.register')}">registering again</a>
             or if that confirms that a user with your e-mail address already
-            exists, then try to <a href="${r.route_url('user.login')}">log in</a>
-            using the e-mail address you provided and an empty password, which
-            will send another confirmation e-mail.</p>
+            exists, then try to <a href="${r.route_url('user.forgotten_password')}">request a new password</a>
+            using the e-mail address you provided, which will send another
+            confirmation e-mail.</p>
         </py:if>
       </article>
     </div>

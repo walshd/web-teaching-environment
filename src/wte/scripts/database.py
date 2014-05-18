@@ -1,4 +1,14 @@
 # -*- coding: utf-8 -*-
+u"""
+################################################
+:mod:`wte.scripts.database` -- Database  scripts
+################################################
+
+The :mod:`~wte.scripts.database` module provides the functionality for
+creating the initial database.
+
+.. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
+"""
 import transaction
 
 from pkg_resources import resource_stream
@@ -9,12 +19,19 @@ from wte.models import (Base, DBSession, Module, Tutorial, Page,
                         User, Permission, PermissionGroup)
 
 def init(subparsers):
+    u"""Initialises the :class:`~argparse.ArgumentParser`, adding the
+    "initialise-database" command.
+    """
     parser = subparsers.add_parser('initialise-database', help='Initialise the database')
     parser.add_argument('configuration', help='WTE configuration file')
     parser.add_argument('--drop-existing', action='store_true', default=False, help='Drop any existing tables')
     parser.set_defaults(func=initialise_database)
 
 def initialise_database(args):
+    u"""Initialises the database schema and adds the default
+    :class:`~wte.models.Permission`, :class:`~wte.models.PermissionGroup`, and
+    :class:`~wte.models.User` to the database.
+    """
     settings = get_appsettings(args.configuration)
     setup_logging(args.configuration)
     engine = engine_from_config(settings, 'sqlalchemy.')

@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
 u"""
+#######################################
+:mod:`wte.decorators` -- Decoratorators
+#######################################
+
+The :mod:`~wte.decorators` module contains function decorators for use with
+various functions.
 
 .. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
@@ -12,6 +18,8 @@ def current_user():
     """Inserts the currently logged in :class:`~wte.models.User` into the
     `request` parameter under the attribute ``current_user``. If there is no
     logged in user, then an anonymous :class:`~wte.models.User` is created.
+    
+    Used in view functions.
     """
     def wrapper(f, *args, **kwargs):
         request = request_from_args(*args)
