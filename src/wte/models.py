@@ -182,7 +182,7 @@ class User(Base):
         """
         dbsession = DBSession()
         direct_perm = dbsession.query(Permission.name).join(User, Permission.users).filter(User.id==self.id)
-        group_perm = dbsession.query(Permission.name).join(PermissionGroup, Permission.groups).join(User, PermissionGroup.users).filter(User.id==self.id)
+        group_perm = dbsession.query(Permission.name).join(PermissionGroup, Permission.permission_groups).join(User, PermissionGroup.users).filter(User.id==self.id)
         return permission in map(lambda p: p[0], direct_perm.union(group_perm))
     
     def allow(self, action, user):
