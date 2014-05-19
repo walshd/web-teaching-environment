@@ -93,7 +93,7 @@ class PasswordValidator(formencode.FancyValidator):
             raise formencode.api.Invalid(self.message('nologin', state), value, state)
     
 class LoginSchema(formencode.Schema):
-    u"""The :class:`~wte.views.usre.LoginSchema` handles the validation of a
+    u"""The :class:`~wte.views.user.LoginSchema` handles the validation of a
     login request.
     """
     return_to = formencode.validators.UnicodeString(if_missing=None)
