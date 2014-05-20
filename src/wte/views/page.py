@@ -68,13 +68,13 @@ def new(request):
                             'tutorial': tutorial,
                             'crumbs': [{'title': 'Modules', 'url': request.route_url('modules')},
                                        {'title': module.title, 'url': request.route_url('module.view', mid=module.id)},
-                                       {'title': tutorial.title, 'url': request.route_url('tutorial.new', mid=module.id, tid=tutorial.id)},
+                                       {'title': tutorial.title, 'url': request.route_url('tutorial.view', mid=module.id, tid=tutorial.id)},
                                        {'title': 'Add page', 'url': request.route_url('page.new', mid=module.id, tid=tutorial.id), 'current': True}]}
             return {'module': module,
                     'tutorial': tutorial,
                     'crumbs': [{'title': 'Modules', 'url': request.route_url('modules')},
                                {'title': module.title, 'url': request.route_url('module.view', mid=module.id)},
-                               {'title': tutorial.title, 'url': request.route_url('tutorial.new', mid=module.id, tid=tutorial.id)},
+                               {'title': tutorial.title, 'url': request.route_url('tutorial.view', mid=module.id, tid=tutorial.id)},
                                {'title': 'Add page', 'url': request.route_url('page.new', mid=module.id, tid=tutorial.id), 'current': True}]}
         else:
             unauthorised_redirect(request)

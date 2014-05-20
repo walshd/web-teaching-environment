@@ -5,19 +5,21 @@
     <title>New Module</title>
   </head>
   <body>
-    <article class="small-12 medium-6 large-6 end column">
-      <h1>New Module</h1>
-      <form action="${r.route_url('module.new')}" method="post">
-        <div class="clearfix">
-          ${h.form.field('title', 'Title', h.form.tags.text_field, size='small-12', e=e, default=u'')}
-        </div>
-        <div class="clearfix">
-          ${h.form.field('status', 'Status', h.form.tags.select, size='small-12', e=e, value=u'unavailable', options=[('unavailable', 'Unavailable'), ('available', 'Available')])}
-        </div>
-        <div class="text-right">
-          ${h.form.tags.submit('Create', class_='button small')}
-        </div>
-      </form>
-    </article>
+    <div class="row left">
+      <article class="small-12 medium-10 large-8 column">
+        <h1>New Module</h1>
+        <form action="${r.route_url('module.new')}" method="post">
+          <div class="clearfix">
+            ${h.form.field('title', 'Title', h.form.tags.text_field, size='small-12', e=e, default=u'')}
+          </div>
+          <div class="clearfix">
+            ${h.form.field('status', 'Status', h.form.tags.select, size='small-12', e=e, value=u'unavailable', options=[('unavailable', 'Unavailable'), ('available', 'Available')])}
+          </div>
+          <div class="text-right">
+            ${h.form.tags.submit('Create', class_='button small')}
+          </div>
+        </form>
+      </article>
+    </div>
   </body>
 </html>

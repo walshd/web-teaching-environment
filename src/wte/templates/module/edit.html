@@ -5,28 +5,30 @@
     <title>${module.title} - Edit</title>
   </head>
   <body>
-    <article class="small-12 medium-6 large-6 end column">
-      <h1>${module.title} - Edit</h1>
-      <form action="${r.route_url('module.edit', mid=module.id)}" method="post">
-        <div class="clearfix">
-          ${h.form.field('title', 'Title', h.form.tags.text_field, size='small-12', e=e, default=module.title)}
-        </div>
-        <div class="clearfix">
-          ${h.form.field('status', 'Status', h.form.tags.select, size='small-12', e=e, value=module.status, options=[('unavailable', 'Unavailable'), ('available', 'Available')])}
-        </div>
-        <div class="clearfix" py:if="module.tutorials">
-          <div class="small-12 column">
-            <label>Tutorial order</label>
-            <ul id="tutorials" class="no-symbol">
-              <li py:for="tutorial in module.tutorials" class="panel">${h.form.tags.hidden_field('tutorial_id', tutorial.id)}${tutorial.title}</li>
-            </ul>
+    <div class="row left">
+      <article class="small-12 medium-10 large-8 column">
+        <h1>${module.title} - Edit</h1>
+        <form action="${r.route_url('module.edit', mid=module.id)}" method="post">
+          <div class="clearfix">
+            ${h.form.field('title', 'Title', h.form.tags.text_field, size='small-12', e=e, default=module.title)}
           </div>
-        </div>
-        <div class="text-right">
-          ${h.form.tags.submit('Update', class_='button small')}
-        </div>
-      </form>
-    </article>
+          <div class="clearfix">
+            ${h.form.field('status', 'Status', h.form.tags.select, size='small-12', e=e, value=module.status, options=[('unavailable', 'Unavailable'), ('available', 'Available')])}
+          </div>
+          <div class="clearfix" py:if="module.tutorials">
+            <div class="small-12 column">
+              <label>Tutorial order</label>
+              <ul id="tutorials" class="no-symbol">
+                <li py:for="tutorial in module.tutorials" class="panel">${h.form.tags.hidden_field('tutorial_id', tutorial.id)}${tutorial.title}</li>
+              </ul>
+            </div>
+          </div>
+          <div class="text-right">
+            ${h.form.tags.submit('Update', class_='button small')}
+          </div>
+        </form>
+      </article>
+    </div>
     <script>$('#tutorials').sortable();</script>
   </body>
 </html>
