@@ -2,15 +2,15 @@
 <html xmlns:py="http://genshi.edgewall.org/" xmlns:xi="http://www.w3.org/2001/XInclude">
   <xi:include href="../layout/layout.html"/>
   <head>
-    <title>Available modules</title>
+    <title>Modules</title>
   </head>
   <body>
     <div class="row left">
       <article class="small-12 column">
-        <h1>Available modules</h1>
+        <h1>Modules</h1>
         <ul class="no-symbol">
-          <li py:if="not modules" class="panel callout">There are currently no modules available.</li>
-          <li py:for="module in modules" class="panel">
+          <li py:if="not taught_modules" class="panel callout">There are currently no modules available.</li>
+          <li py:for="module in taught_modules" class="panel">
             <span py:if="h.auth.is_authorised(r.current_user, 'edit', module) or h.auth.is_authorised(r.current_user, 'delete', module)" class="right">
               <a py:if="h.auth.is_authorised(r.current_user, 'edit', module)" href="${r.route_url('module.edit', mid=module.id)}" class="button small">Edit</a>
               <a py:if="h.auth.is_authorised(r.current_user, 'delete', module)" href="${r.route_url('module.delete', mid=module.id)}" class="button small alert">Delete</a>

@@ -16,7 +16,7 @@ from sqlalchemy import and_
 
 from pyramid.httpexceptions import (HTTPSeeOther, HTTPNotFound)
 from wte.decorators import current_user
-from wte.models import (DBSession, Module, Tutorial, Page)
+from wte.models import (DBSession, Module, Tutorial, Page, User)
 from wte.util import (unauthorised_redirect, State, send_email, get_config_setting)
 
 def init(config):
@@ -24,16 +24,35 @@ def init(config):
     config.add_route('module.view', '/modules/{mid}')
     config.add_route('tutorial.view', '/modules/{mid}/tutorials/{tid}')
     config.add_route('page.view', '/modules/{mid}/tutorials/{tid}/pages/{pid}')
+    config.add_route('user.modules', '/users/{uid}/modules')
 
 @view_config(route_name='modules')
 @render({'text/html': 'module/list.html'})
 @current_user()
 def modules(request):
     dbsession = DBSession()
-    modules = dbsession.query(Module).filter(Module.status==u'available').filter()
+    modules = dbsession.query(Module).filter(Module.status==u'available').all()
     return {'modules': modules,
             'crumbs': [{'title': 'Modules', 'url': request.route_url('modules'), 'current': True}]}
 
+@view_config(route_name='user.modules')
+@render({'text/html': 'module/user.html'})
+@current_user()
+def user_modules(request):
+    dbsession = DBSession()
+    user = dbsession.query(User).filter(User.id==request.matchdict['uid']).first()
+    if user:
+        if user.allow('view', request.current_user):
+            taught_modules = dbsession.query(Module).filter(Module.owner_id==request.matchdict['uid']).order_by(Module.title).all()
+            return {'user': user,
+                    'taught_modules': taught_modules,
+                    'crumbs': [{'title': user.display_name, 'url': request.route_url('user.modules', uid=user.id)},
+                               {'title': 'Modules', 'url': request.route_url('modules'), 'current': True}]}
+        else:
+            unauthorised_redirect(request)
+    else:
+        raise HTTPNotFound()
+    
 @view_config(route_name='module.view')
 @render({'text/html': 'module/view.html'})
 @current_user()
