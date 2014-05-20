@@ -65,7 +65,7 @@ def users(request):
         pass
     else:
         unauthorised_redirect(request)
-    return {}
+    return {'crumbs': [{'title': 'Users', 'url': request.route_url('users'), 'current': True}]}
 
 class PasswordValidator(formencode.FancyValidator):
     u"""The :class:`~wte.views.user.PasswordValidator` handles the checking of
@@ -135,7 +135,7 @@ def login(request):
         except formencode.api.Invalid as e:
             e.params = request.params
             return {'e': e}
-    return {}
+    return {'crumbs': [{'title': 'Login', 'url': request.route_url('user.login'), 'current': True}]}
 
 @view_config(route_name='user.logout')
 @render({'text/html': 'users/logout.html'})
@@ -148,7 +148,7 @@ def logout(request):
         request.current_user.logged_in = False
         request.session.delete()
         raise HTTPSeeOther(request.route_url('root'))
-    return {}
+    return {'crumbs': [{'title': 'Logout', 'url': request.route_url('user.logout'), 'current': True}]}
 
 class UniqueEmailValidator(formencode.FancyValidator):
     u"""The :class:`~wte.views.user.UniqueEmailValidator` checks that the given
@@ -213,12 +213,15 @@ Thank you for registering with the Web Teaching Environment. To complete your re
 
 Best Regards,
 Web Teaching Environment''' % (user.display_name, request.route_url('user.confirm', uid=user.id, token=user.validation_token)))
-            request.session.flash('Your registration has been successful. A confirmation e-mail has been sent to the e-mail address you specified.')
+            request.session.flash('Your registration has been successful. A confirmation e-mail has been sent to the e-mail address you specified.', queue='info')
             raise HTTPSeeOther(request.route_url('root'))
         except formencode.Invalid as e:
             e.params = request.params
-            return {'e': e}
-    return {}
+            return {'e': e,
+                    'crumbs': [{'title': 'Login', 'url': request.route_url('user.login')},
+                               {'title': 'Register', 'url': request.route_url('user.register'), 'current': True}]}
+    return {'crumbs': [{'title': 'Login', 'url': request.route_url('user.login')},
+                       {'title': 'Register', 'url': request.route_url('user.register'), 'current': True}]}
 
 @view_config(route_name='user.confirm')
 @render({'text/html': 'users/confirm.html'})
@@ -260,7 +263,10 @@ Web Teaching Environment''' % (user.display_name, user.email, new_password))
             status = u'confirmed'
         else:
             status = u'fail'
-    return {'status': status}
+    return {'status': status,
+            'crumbs': [{'title': 'Login', 'url': request.route_url('user.login')},
+                       {'title': 'Register', 'url': request.route_url('user.register')},
+                       {'title': 'Confirmation', 'url': request.route_url('user.confirm', uid=request.matchdict['uid'], token=request.matchdict['token']), 'current': True}]}
 
 class ForgottenPasswordSchema(formencode.Schema):
     u"""The :class:`~wte.views.user.ForgottenPasswordSchema` handles the
@@ -332,7 +338,8 @@ Web Teaching Environment''' % (user.display_name, user.email, new_password))
         except formencode.api.Invalid as e:
             e.params = request.params
             return {'e': e}
-    return {}
+    return {'crumbs': [{'title': 'Login', 'url': request.route_url('user.login')},
+                       {'title': 'Forgotten Password', 'url': request.route_url('user.forgotten_password'), 'current': True}]}
 
 @view_config(route_name='user.view')
 @render({'text/html': 'users/view.html'})
@@ -345,7 +352,8 @@ def view(request):
     if user:
         if is_authorised(u':user.allow("view" :current)', {'user': user,
                                                             'current': request.current_user}):
-            return {'user': user}
+            return {'user': user,
+                    'crumbs': [{'title': user.display_name, 'url': request.route_url('user.view', uid=user.id), 'current': True}]}
         else:
             unauthorised_redirect(request)
     else:
@@ -389,8 +397,12 @@ def edit(request):
                 except formencode.api.Invalid as e:
                     e.params = request.params
                     return {'e': e,
-                            'user': user}
-            return {'user': user}
+                            'user': user,
+                            'crumbs': [{'title': user.display_name, 'url': request.route_url('user.view', uid=user.id)},
+                                       {'title': 'Edit', 'url': request.route_url('user.edit', uid=user.id), 'current': True}]}
+            return {'user': user,
+                    'crumbs': [{'title': user.display_name, 'url': request.route_url('user.view', uid=user.id)},
+                               {'title': 'Edit', 'url': request.route_url('user.edit', uid=user.id), 'current': True}]}
         else:
             unauthorised_redirect(request)
     else:
@@ -428,7 +440,9 @@ def permissions(request):
                 request.session.flash('Permissions updated', queue='info')
             return {'user': user,
                     'permission_groups': permission_groups,
-                    'permissions': permissions}
+                    'permissions': permissions,
+                    'crumbs': [{'title': user.display_name, 'url': request.route_url('user.view', uid=user.id)},
+                               {'title': 'Permissions', 'url': request.route_url('user.permissions', uid=user.id), 'current': True}]}
         else:
             raise HTTPNotFound()
     else:
@@ -452,7 +466,9 @@ def delete(request):
                     dbsession.delete(user)
                 request.session.flash('The account has been deleted', queue='info')
                 raise HTTPSeeOther(request.route_url('root'))
-            return {'user': user}
+            return {'user': user,
+                    'crumbs': [{'title': user.display_name, 'url': request.route_url('user.view', uid=user.id)},
+                               {'title': 'Delete', 'url': request.route_url('user.delete', uid=user.id), 'current': True}]}
         else:
             unauthorised_redirect(request)
     else:
