@@ -84,7 +84,7 @@ class PasswordValidator(formencode.FancyValidator):
                 'noconfirmed': 'You must confirm your registration before being able to log in'}
     
     def _validate_python(self, value, state):
-        user = state.dbsession.query(User).filter(User.email==value['email']).first()
+        user = state.dbsession.query(User).filter(User.email==value['email'].lower()).first()
         if user:
             if user.validation_token:
                 raise formencode.api.Invalid(self.message('noconfirmed', state), value, state)
@@ -124,7 +124,7 @@ def login(request):
         try:
             dbsession = DBSession()
             params = LoginSchema().to_python(request.params, State(dbsession=dbsession))
-            user = dbsession.query(User).filter(User.email==params['email']).first()
+            user = dbsession.query(User).filter(User.email==params['email'].lower()).first()
             request.current_user = user
             request.current_user.logged_in = True
             request.session['uid'] = user.id
@@ -197,7 +197,7 @@ def register(request):
             dbsession = DBSession()
             params = RegisterSchema().to_python(request.params, State(dbsession=dbsession))
             with transaction.manager:
-                user = User(params['email'], params['name'])
+                user = User(params['email'].lower(), params['name'])
                 user.validation_token = uuid.uuid4().get_hex()
                 dbsession.add(user)
             dbsession.add(user)
@@ -290,7 +290,7 @@ def forgotten_password(request):
         dbsession = DBSession()
         try:
             params = ForgottenPasswordSchema().to_python(request.params)
-            user = dbsession.query(User).filter(User.email==params['email']).first()
+            user = dbsession.query(User).filter(User.email==params['email'].lower()).first()
             if user:
                 if user.validation_token:
                     with transaction.manager:
