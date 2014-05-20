@@ -7,6 +7,8 @@ u"""
 The :mod:`~wte.views.frontend` handles all routes related to the user working
 through a :mod:`~wte.models.Tutorial`.
 
+Routes are defined in :func:`~wte.views.frontend.init`.
+
 .. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
 from pyramid.view import view_config
@@ -20,6 +22,19 @@ from wte.models import (DBSession, Module, Tutorial, Page, User)
 from wte.util import (unauthorised_redirect, State, send_email, get_config_setting)
 
 def init(config):
+    u"""Adds the frontend-specific backend routes (route name, URL pattern
+    handler):
+    
+    * ``modules`` -- ``/modules`` -- :func:`~wte.views.frontend.modules`
+    * ``module.view`` -- ``/modules/{mid}`` --
+      :func:`~wte.views.frontend.view_module`
+    * ``tutorial.view`` -- ``/modules/{mid}/tutorials/{tid}`` --
+      :func:`~wte.views.frontend.view_tutorial`
+    * ``page.view`` -- ``/modules/{mid}/tutorials/{tid}/pages/{pid}`` --
+      :func:`~wte.views.frontend.view_page`
+    * ``user.modules`` -- ``/users/{uid}/modules`` --
+      :func:`~wte.views.frontend.user_modules`
+    """
     config.add_route('modules', '/modules')
     config.add_route('module.view', '/modules/{mid}')
     config.add_route('tutorial.view', '/modules/{mid}/tutorials/{tid}')
@@ -30,6 +45,9 @@ def init(config):
 @render({'text/html': 'module/list.html'})
 @current_user()
 def modules(request):
+    u"""Handles the ``/modules`` URL, displaying all available
+    :class:`~wte.models.Module`.
+    """
     dbsession = DBSession()
     modules = dbsession.query(Module).filter(Module.status==u'available').all()
     return {'modules': modules,
@@ -39,6 +57,12 @@ def modules(request):
 @render({'text/html': 'module/user.html'})
 @current_user()
 def user_modules(request):
+    u"""Handles the ``/users/{uid}/modules`` URL, displaying all the
+    :class:`~wte.models.Module` of the :class:`~wte.models.User`.
+    
+    Requires that the current user has "view" rights for the
+    :class:`~wte.models.User`.
+    """
     dbsession = DBSession()
     user = dbsession.query(User).filter(User.id==request.matchdict['uid']).first()
     if user:
@@ -57,6 +81,12 @@ def user_modules(request):
 @render({'text/html': 'module/view.html'})
 @current_user()
 def view_module(request):
+    u"""Handles the ``/modules/{mid}`` URL, displaying the
+    :class:`~wte.models.Module` and its child :class:`~wte.models.Tutorial`.
+    
+    Requires that the user has "view" rights on the
+    :class:`~wte.models.Module`.
+    """
     dbsession = DBSession()
     module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
     if module:
@@ -74,6 +104,12 @@ def view_module(request):
 @render({'text/html': 'tutorial/view.html'})
 @current_user()
 def view_tutorial(request):
+    u"""Handles the ``/modules/{mid}/tutorials/{tid}`` URL, displaying the
+    :class:`~wte.models.Tutorial` and its child :class:`~wte.models.Page`.
+    
+    Requires that the user has "view" rights on the
+    :class:`~wte.models.Module`.
+    """
     dbsession = DBSession()
     module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
     tutorial = dbsession.query(Tutorial).filter(and_(Tutorial.id==request.matchdict['tid'],
@@ -95,6 +131,12 @@ def view_tutorial(request):
 @render({'text/html': 'page/view.html'})
 @current_user()
 def view_page(request):
+    u"""Handles the ``/modules/{mid}/tutorials/{tid}/pages/{pid}`` URL,
+    displaying the :class:`~wte.models.Page`.
+    
+    Requires that the user has "view" rights on the
+    :class:`~wte.models.Module`.
+    """
     dbsession = DBSession()
     module = dbsession.query(Module).filter(Module.id==request.matchdict[u'mid']).first()
     tutorial = dbsession.query(Tutorial).filter(and_(Tutorial.id==request.matchdict[u'tid'],

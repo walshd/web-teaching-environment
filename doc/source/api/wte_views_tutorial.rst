@@ -1,3 +1,3 @@
-.. automodule:: wte.views.frontend
+.. automodule:: wte.views.tutorial
    :members:
    :exclude-members: and_

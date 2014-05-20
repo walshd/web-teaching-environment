@@ -1,5 +1,14 @@
 # -*- coding: utf-8 -*-
 u"""
+#####################################
+:mod:`wte.views.page` -- Page Backend
+#####################################
+
+The :mod:`~wte.views.page` module provides the backend functionality for
+creating, editing, and deleting :class:`~wte.models.Page`. It also provides
+functionality to preview ReST text.
+
+Routes are defined in :func:`~wte.views.page.init`.
 
 .. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
@@ -18,6 +27,18 @@ from wte.models import (DBSession, Module, Tutorial, Page)
 from wte.text_formatter import compile_rst
 
 def init(config):
+    u"""Adds the page-specific backend routes (route name, URL pattern
+    handler):
+    
+    * ``page.new`` -- ``/modules/{mid}/tutorials/{tid}/pages/new`` --
+      :func:`~wte.views.tutorial.new`
+    * ``page.edit`` -- ``/modules/{mid}/tutorials/{tid}/pages/{pid}/edit`` --
+      :func:`~wte.views.tutorial.edit`
+    * ``page.delete`` -- ``/modules/{mid}/tutorials/{tid}/pages/{pid}/delete``
+      -- :func:`~wte.views.tutorial.delete`
+    * ``page.edit`` -- ``/modules/{mid}/tutorials/{tid}/pages/{pid}/preview``
+      -- :func:`~wte.views.tutorial.preview`
+    """
     config.add_route('page.new', '/modules/{mid}/tutorials/{tid}/pages/new')
     config.add_route('page.edit', '/modules/{mid}/tutorials/{tid}/pages/{pid}/edit')
     config.add_route('page.delete', '/modules/{mid}/tutorials/{tid}/pages/{pid}/delete')
@@ -36,6 +57,13 @@ class PageSchema(formencode.Schema):
 @render({'text/html': 'page/new.html'})
 @current_user()
 def new(request):
+    u"""Handles the ``/modules/{mid}/tutorials/{tid}/pages/new`` URL,
+    providing the UI and backend for creating a new
+    :class:`~wte.models.Tutorial`.
+    
+    Requires that the user has "edit" rights on the current
+    :class:`~wte.models.Module`.
+    """
     dbsession = DBSession()
     module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
     tutorial = dbsession.query(Tutorial).filter(and_(Tutorial.id==request.matchdict['tid'],
@@ -85,6 +113,12 @@ def new(request):
 @render({'text/html': 'page/edit.html'})
 @current_user()
 def edit(request):
+    u"""Handles the ``/modules/{mid}/tutorials/{tid}/pages/{pid}/edit`` URL,
+    providing the UI and backend for editing a :class:`~wte.models.Tutorial`.
+    
+    Requires that the user has "edit" rights on the current
+    :class:`~wte.models.Module`.
+    """
     dbsession = DBSession()
     module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
     tutorial = dbsession.query(Tutorial).filter(and_(Tutorial.id==request.matchdict['tid'],
@@ -131,6 +165,12 @@ def edit(request):
 @render({'text/html': 'page/delete.html'})
 @current_user()
 def delete(request):
+    u"""Handles the ``/modules/{mid}/tutorials/{tid}/pages/{pid}/delete`` URL,
+    providing the UI and backend for deleting a :class:`~wte.models.Tutorial`.
+    
+    Requires that the user has "edit" rights on the current
+    :class:`~wte.models.Module`.
+    """
     dbsession = DBSession()
     module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
     tutorial = dbsession.query(Tutorial).filter(and_(Tutorial.id==request.matchdict['tid'],
@@ -162,6 +202,13 @@ def delete(request):
 @render({'application/json': True})
 @current_user()
 def preview(request):
+    u"""Handles the ``/modules/{mid}/tutorials/{tid}/pages/{pid}/preview`` URL,
+    generating an HTML preview of the submitted ReST. The ReST text to render
+    has to be set as the ``content`` parameter.
+    
+    Requires that the user has "edit" rights on the current
+    :class:`~wte.models.Module`.
+    """
     dbsession = DBSession()
     module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
     tutorial = dbsession.query(Tutorial).filter(and_(Tutorial.id==request.matchdict['tid'],

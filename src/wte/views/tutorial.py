@@ -1,5 +1,13 @@
 # -*- coding: utf-8 -*-
 u"""
+#############################################
+:mod:`wte.views.tutorial` -- Tutorial Backend
+#############################################
+
+The :mod:`~wte.views.tutorial` module provides the backend functionality for
+creating, editing, and deleting :class:`~wte.modules.Tutorial`.
+
+Routes are defined in :func:`~wte.views.tutorial.init`.
 
 .. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
@@ -13,10 +21,20 @@ from pywebtools.auth import is_authorised
 from sqlalchemy import and_
 
 from wte.decorators import current_user
-from wte.util import (unauthorised_redirect, State, send_email, get_config_setting)
+from wte.util import (unauthorised_redirect)
 from wte.models import (DBSession, Module, Tutorial)
 
 def init(config):
+    u"""Adds the tutorial-specific backend routes (route name, URL pattern
+    handler):
+    
+    * ``tutorial.new`` -- ``/modules/{mid}/tutorials/new`` --
+      :func:`~wte.views.tutorial.new`
+    * ``tutorial.edit`` -- ``/modules/{mid}/tutorials/{tid}/edit`` --
+      :func:`~wte.views.tutorial.edit`
+    * ``tutorial.delete`` -- ``/modules/{mid}/tutorials/{tid}/delete`` --
+      :func:`~wte.views.tutorial.delete`
+    """
     config.add_route('tutorial.new', '/modules/{mid}/tutorials/new')
     config.add_route('tutorial.edit', '/modules/{mid}/tutorials/{tid}/edit')
     config.add_route('tutorial.delete', '/modules/{mid}/tutorials/{tid}/delete')
@@ -38,6 +56,12 @@ class TutorialSchema(formencode.Schema):
 @render({'text/html': 'tutorial/new.html'})
 @current_user()
 def new(request):
+    u"""Handles the ``/modules/{mid}/tutorials/new`` URL, providing the UI and
+    backend for creating a new :class:`~wte.models.Tutorial`.
+    
+    Requires that the user has "edit" rights on the current
+    :class:`~wte.models.Module`.
+    """
     dbsession = DBSession()
     module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
     if module:
@@ -81,6 +105,12 @@ def new(request):
 @render({'text/html': 'tutorial/edit.html'})
 @current_user()
 def edit(request):
+    u"""Handles the ``/modules/{mid}/tutorials/{tid}/edit`` URL, providing
+    the UI and backend for editing a :class:`~wte.models.Tutorial`.
+    
+    Requires that the user has "edit" rights on the current
+    :class:`~wte.models.Module`.
+    """
     dbsession = DBSession()
     module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
     tutorial = dbsession.query(Tutorial).filter(and_(Tutorial.id==request.matchdict['tid'],
@@ -127,6 +157,12 @@ def edit(request):
 @render({'text/html': 'tutorial/delete.html'})
 @current_user()
 def delete(request):
+    u"""Handles the ``/modules/{mid}/tutorials/{tid}/delete`` URL, providing
+    the UI and backend for deleting a :class:`~wte.models.Tutorial`.
+    
+    Requires that the user has "edit" rights on the current
+    :class:`~wte.models.Module`.
+    """
     dbsession = DBSession()
     module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
     tutorial = dbsession.query(Tutorial).filter(and_(Tutorial.id==request.matchdict['tid'],

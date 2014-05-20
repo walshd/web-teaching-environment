@@ -1,5 +1,13 @@
 # -*- coding: utf-8 -*-
 u"""
+#########################################
+:mod:`wte.views.module` -- Module Backend
+#########################################
+
+The :mod:`~wte.views.modle` module provides the backend functionality for
+creating, editing, and deleting :class:`~wte.models.Module`.
+
+Routes are defined in :func:`~wte.views.module.init`.
 
 .. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
@@ -17,6 +25,15 @@ from wte.util import (unauthorised_redirect, State, send_email, get_config_setti
 from wte.models import (DBSession, Module)
 
 def init(config):
+    u"""Adds the module-specific backend routes (route name, URL pattern
+    handler):
+    
+    * ``module.new`` -- ``/modules/new`` -- :func:`~wte.views.module.new`
+    * ``module.edit`` -- ``/modules/{mid}/edit`` --
+      :func:`~wte.views.module.edit`
+    * ``module.delete`` -- ``/modules/{mid}/delete``
+      -- :func:`~wte.views.module.delete`
+    """
     config.add_route('module.new', '/modules/new')
     config.add_route('module.edit', '/modules/{mid}/edit')
     config.add_route('module.delete', '/modules/{mid}/delete')
@@ -38,6 +55,12 @@ class ModuleSchema(formencode.Schema):
 @render({'text/html': 'module/new.html'})
 @current_user()
 def new(request):
+    u"""Handles the ``/modules/new`` URL, providing the UI and backend for
+    creating a new :class:`~wte.models.Module`.
+    
+    Requires that the user has "modules.create"
+    :class:`~wte.models.Permission`.
+    """
     if is_authorised(u':user.has_permission("modules.create")', {'user': request.current_user}):
         if request.method == u'POST':
             try:
@@ -65,6 +88,12 @@ def new(request):
 @render({'text/html': 'module/edit.html'})
 @current_user()
 def edit(request):
+    u"""Handles the ``/modules/{mid}/edit`` URL, providing the UI and backend
+    for editing a :class:`~wte.models.Module`.
+    
+    Requires that the user has "edit" rights on the current
+    :class:`~wte.models.Module`.
+    """
     dbsession = DBSession()
     module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
     if module:
@@ -105,6 +134,12 @@ def edit(request):
 @render({'text/html': 'module/delete.html'})
 @current_user()
 def delete(request):
+    u"""Handles the ``/modules/{mid}/delete`` URL, providing the UI and backend
+    for deleting a :class:`~wte.models.Module`.
+    
+    Requires that the user has "delete" rights on the current
+    :class:`~wte.models.Module`.
+    """
     dbsession = DBSession()
     module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
     if module:

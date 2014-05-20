@@ -4,8 +4,9 @@ u"""
 :mod:`wte.views.user` -- User functionality view handlers
 #########################################################
 
-The :mod:`~wte.views.user` module handles all user functionality. Routes are
-defined in :func:`~wte.views.init`.
+The :mod:`~wte.views.user` module handles all user functionality.
+
+Routes are defined in :func:`~wte.views.user.init`.
 
 .. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
