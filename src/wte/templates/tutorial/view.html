@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:py="http://genshi.edgewall.org/" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xi:include href="../layout/layout.html"/>
+  <head>
+    <title>${tutorial.title}</title>
+  </head>
+  <body>
+    <div class="row left">
+      <article class="small-12 column">
+        <h1>${tutorial.title}</h1>
+        <ul class="no-symbol">
+          <li py:for="page in tutorial.pages" class="panel">
+            <span py:if="h.auth.is_authorised(r.current_user, 'edit', module)" class="right">
+              <a href="${r.route_url('page.edit', mid=module.id, tid=tutorial.id, pid=page.id)}" class="button small">Edit</a>
+              <a href="${r.route_url('page.delete', mid=module.id, tid=tutorial.id, pid=page.id)}" class="button small alert">Delete</a>
+            </span>
+            <h2><a href="${r.route_url('page.view', mid=module.id, tid=tutorial.id, pid=page.id)}">${page.title}</a></h2>
+          </li>
+        </ul>
+        <div py:if="h.auth.is_authorised(r.current_user, 'edit', module)">
+          <a href="${r.route_url('tutorial.edit', mid=module.id, tid=tutorial.id)}" class="button small">Edit</a>
+          <a href="${r.route_url('page.new', mid=module.id, tid=tutorial.id)}" class="button small">Add page</a>
+          <a href="${r.route_url('tutorial.delete', mid=module.id, tid=tutorial.id)}" class="button small alert">Delete</a>
+        </div>
+      </article>
+    </div>
+  </body>
+</html>

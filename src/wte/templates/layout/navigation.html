@@ -5,6 +5,7 @@
   </ul>
   <section class="top-bar-section">
     <ul class="left">
+      <li py:for="crumb in crumbs" class="${'active' if 'current' in crumb else ''}"><a href="${crumb['url']}">${crumb['title']}</a></li>
     </ul>
     <ul class="right">
       <li class="has-dropdown" py:if="r.current_user.logged_in"><a href="${r.route_url('user.view', uid=r.current_user.id)}">${r.current_user.display_name}</a>

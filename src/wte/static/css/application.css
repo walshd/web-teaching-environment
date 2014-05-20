@@ -1,4 +1,26 @@
 /**
+ * Foundation overrides
+ */
+.row.left {margin:0}
+
+/**
+ * Generic styles
+ */
+ul.no-symbol, ol.no-symbol {
+    margin-left: 0;
+}
+ul.no-symbol > li, ol.no-symbol > li {
+    list-style-type: none;
+}
+
+/**
+ * jQuery UI styles
+ */
+.ui-sortable > * {
+    cursor: move;
+}
+
+/**
  * Busy marker styles
  */
 #overlay {
@@ -19,11 +41,23 @@
 }
 
 /**
+ * Textbook styles
+ */
+#textbook {
+    overflow: auto;
+    box-sizing: border-box;
+    border-right: 1px solid #333;
+}
+/**
  * Pagination styles
  */
 
 .pagination {
     margin-top: 1.5em;
+}
+.pagination li.disabled {
+    padding: 0.0625rem 0.625rem;
+    visibility: hidden;
 }
 
 /**

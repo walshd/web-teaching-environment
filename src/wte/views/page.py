@@ -1,0 +1,180 @@
+# -*- coding: utf-8 -*-
+u"""
+
+.. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
+"""
+import transaction
+import formencode
+
+from pyramid.httpexceptions import (HTTPSeeOther, HTTPNotFound, HTTPForbidden)
+from pyramid.view import view_config
+from pywebtools.renderer import render
+from pywebtools.auth import is_authorised
+from sqlalchemy import and_
+
+from wte.decorators import current_user
+from wte.util import (unauthorised_redirect, State, send_email, get_config_setting)
+from wte.models import (DBSession, Module, Tutorial, Page)
+from wte.text_formatter import compile_rst
+
+def init(config):
+    config.add_route('page.new', '/modules/{mid}/tutorials/{tid}/pages/new')
+    config.add_route('page.edit', '/modules/{mid}/tutorials/{tid}/pages/{pid}/edit')
+    config.add_route('page.delete', '/modules/{mid}/tutorials/{tid}/pages/{pid}/delete')
+    config.add_route('page.preview', '/modules/{mid}/tutorials/{tid}/pages/{pid}/preview')
+
+class PageSchema(formencode.Schema):
+    u"""The :class:`~wte.views.backend.PageSchema` handles the validation
+    of a new or updated :class:`~wte.models.Page`.
+    """
+    title = formencode.validators.UnicodeString(not_empty=True)
+    u"""The page's title"""
+    content = formencode.validators.UnicodeString(if_missing=u'')
+    u"""The page's ReST content"""
+    
+@view_config(route_name='page.new')
+@render({'text/html': 'page/new.html'})
+@current_user()
+def new(request):
+    dbsession = DBSession()
+    module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
+    tutorial = dbsession.query(Tutorial).filter(and_(Tutorial.id==request.matchdict['tid'],
+                                                     Tutorial.module_id==request.matchdict['mid'])).first()
+    if module and tutorial:
+        if is_authorised(u':module.allow("edit" :current)', {'module': module,
+                                                             'current': request.current_user}):
+            if request.method == u'POST':
+                try:
+                    params = PageSchema().to_python(request.params)
+                    dbsession = DBSession()
+                    with transaction.manager:
+                        dbsession.add(tutorial)
+                        max_order = [t.order + 1 for t in tutorial.pages]
+                        max_order.append(0)
+                        max_order = max(max_order)
+                        
+                        new_page = Page(title=params['title'],
+                                        tutorial=tutorial,
+                                        content=u'',
+                                        order=max_order)
+                        dbsession.add(new_page)
+                    dbsession.add(new_page)
+                    request.session.flash('Your new page has been created', queue='info')
+                    raise HTTPSeeOther(request.route_url('page.edit', mid=request.matchdict['mid'], tid=request.matchdict['tid'], pid=new_page.id))
+                except formencode.Invalid as e:
+                    e.params = request.params
+                    return {'e': e,
+                            'module': module,
+                            'tutorial': tutorial,
+                            'crumbs': [{'title': 'Modules', 'url': request.route_url('modules')},
+                                       {'title': module.title, 'url': request.route_url('module.view', mid=module.id)},
+                                       {'title': tutorial.title, 'url': request.route_url('tutorial.new', mid=module.id, tid=tutorial.id)},
+                                       {'title': 'Add page', 'url': request.route_url('page.new', mid=module.id, tid=tutorial.id), 'current': True}]}
+            return {'module': module,
+                    'tutorial': tutorial,
+                    'crumbs': [{'title': 'Modules', 'url': request.route_url('modules')},
+                               {'title': module.title, 'url': request.route_url('module.view', mid=module.id)},
+                               {'title': tutorial.title, 'url': request.route_url('tutorial.new', mid=module.id, tid=tutorial.id)},
+                               {'title': 'Add page', 'url': request.route_url('page.new', mid=module.id, tid=tutorial.id), 'current': True}]}
+        else:
+            unauthorised_redirect(request)
+    else:
+        raise HTTPNotFound()
+
+@view_config(route_name='page.edit')
+@render({'text/html': 'page/edit.html'})
+@current_user()
+def edit(request):
+    dbsession = DBSession()
+    module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
+    tutorial = dbsession.query(Tutorial).filter(and_(Tutorial.id==request.matchdict['tid'],
+                                                     Tutorial.module_id==request.matchdict['mid'])).first()
+    page = dbsession.query(Page).filter(and_(Page.id==request.matchdict['pid'],
+                                             Page.tutorial_id==request.matchdict['tid'])).first()
+    if module and tutorial and page:
+        if is_authorised(u':module.allow("edit" :current)', {'module': module,
+                                                             'current': request.current_user}):
+            if request.method == u'POST':
+                try:
+                    params = PageSchema().to_python(request.params)
+                    with transaction.manager:
+                        dbsession.add(page)
+                        page.title = params['title']
+                        page.content = params['content']
+                    request.session.flash('The page has been updated', queue='info')
+                    raise HTTPSeeOther(request.route_url('page.view', mid=request.matchdict['mid'], tid=request.matchdict['tid'], pid=request.matchdict['pid']))
+                except formencode.Invalid as e:
+                    e.params = params
+                    return {'e': e,
+                            'module': module,
+                            'tutorial': tutorial,
+                            'page': page,
+                            'crumbs': [{'title': 'Modules', 'url': request.route_url('modules')},
+                                       {'title': module.title, 'url': request.route_url('module.view', mid=module.id)},
+                                       {'title': tutorial.title, 'url': request.route_url('tutorial.view', mid=module.id, tid=tutorial.id)},
+                                       {'title': page.title, 'url': request.route_url('page.view', mid=module.id, tid=tutorial.id, pid=page.id)},
+                                       {'title': 'Edit', 'url': request.route_url('page.edit', mid=module.id, tid=tutorial.id, pid=page.id), 'current': True}]}
+            return {'module': module,
+                    'tutorial': tutorial,
+                    'page': page,
+                    'crumbs': [{'title': 'Modules', 'url': request.route_url('modules')},
+                               {'title': module.title, 'url': request.route_url('module.view', mid=module.id)},
+                               {'title': tutorial.title, 'url': request.route_url('tutorial.view', mid=module.id, tid=tutorial.id)},
+                               {'title': page.title, 'url': request.route_url('page.view', mid=module.id, tid=tutorial.id, pid=page.id)},
+                               {'title': 'Edit', 'url': request.route_url('page.edit', mid=module.id, tid=tutorial.id, pid=page.id), 'current': True}]}
+        else:
+            unauthorised_redirect(request)
+    else:
+        raise HTTPNotFound()
+
+@view_config(route_name='page.delete')
+@render({'text/html': 'page/delete.html'})
+@current_user()
+def delete(request):
+    dbsession = DBSession()
+    module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
+    tutorial = dbsession.query(Tutorial).filter(and_(Tutorial.id==request.matchdict['tid'],
+                                                     Tutorial.module_id==request.matchdict['mid'])).first()
+    page = dbsession.query(Page).filter(and_(Page.id==request.matchdict['pid'],
+                                             Page.tutorial_id==request.matchdict['tid'])).first()
+    if module and tutorial and page:
+        if is_authorised(u':module.allow("edit" :current)', {'module': module,
+                                                             'current': request.current_user}):
+            if request.method == u'POST':
+                with transaction.manager:
+                    dbsession.delete(page)
+                request.session.flash('The page has been deleted', queue='info')
+                raise HTTPSeeOther(request.route_url('tutorial.view', mid=request.matchdict['mid'], tid=request.matchdict['tid']))
+            return {'module': module,
+                    'tutorial': tutorial,
+                    'page': page,
+                    'crumbs': [{'title': 'Modules', 'url': request.route_url('modules')},
+                               {'title': module.title, 'url': request.route_url('module.view', mid=module.id)},
+                               {'title': tutorial.title, 'url': request.route_url('tutorial.view', mid=module.id, tid=tutorial.id)},
+                               {'title': page.title, 'url': request.route_url('page.view', mid=module.id, tid=tutorial.id, pid=page.id)},
+                               {'title': 'Delete', 'url': request.route_url('page.delete', mid=module.id, tid=tutorial.id, pid=page.id), 'current': True}]}
+        else:
+            unauthorised_redirect(request)
+    else:
+        raise HTTPNotFound()
+            
+@view_config(route_name='page.preview')
+@render({'application/json': True})
+@current_user()
+def preview(request):
+    dbsession = DBSession()
+    module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
+    tutorial = dbsession.query(Tutorial).filter(and_(Tutorial.id==request.matchdict['tid'],
+                                                     Tutorial.module_id==request.matchdict['mid'])).first()
+    page = dbsession.query(Page).filter(and_(Page.id==request.matchdict['pid'],
+                                             Page.tutorial_id==request.matchdict['tid'])).first()
+    if module and tutorial and page:
+        if is_authorised(u':module.allow("edit" :current)', {'module': module,
+                                                             'current': request.current_user}):
+            if 'content' in request.params:
+                return {'content': compile_rst(request.params['content'])}
+        else:
+            raise HTTPForbidden()
+    else:
+        raise HTTPNotFound()
+    

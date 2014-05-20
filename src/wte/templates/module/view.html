@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:py="http://genshi.edgewall.org/" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xi:include href="../layout/layout.html"/>
+  <head>
+    <title>${module.title}</title>
+  </head>
+  <body>
+    <div class="row left">
+      <article class="small-12 column">
+        <h1>${module.title}</h1>
+        <ul class="no-symbol">
+          <li py:for="tutorial in module.tutorials" class="panel">
+            <span py:if="h.auth.is_authorised(r.current_user, 'edit', module)" class="right">
+              <a href="${r.route_url('tutorial.edit', mid=module.id, tid=tutorial.id)}" class="button small">Edit</a>
+              <a href="${r.route_url('tutorial.delete', mid=module.id, tid=tutorial.id)}" class="button small alert">Delete</a>
+            </span>
+            <h2><a href="${r.route_url('tutorial.view', mid=module.id, tid=tutorial.id)}">${tutorial.title}</a></h2>
+          </li>
+        </ul>
+        <div>
+          <py:if test="h.auth.is_authorised(r.current_user, 'edit', module)">
+            <a href="${r.route_url('module.edit', mid=module.id)}" class="button small">Edit</a>
+            <a href="${r.route_url('tutorial.new', mid=module.id)}" class="button small">Add tutorial</a>
+          </py:if>
+          <py:if test="h.auth.is_authorised(r.current_user, 'delete', module)">
+            <a href="${r.route_url('module.delete', mid=module.id)}" class="button small alert">Delete</a>
+          </py:if>
+        </div>
+      </article>
+    </div>
+  </body>
+</html>

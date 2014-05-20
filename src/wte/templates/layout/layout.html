@@ -9,15 +9,18 @@
     <link rel="stylesheet" href="${r.static_url('wte:static/css/codemirror.css')}" />
     <link rel="stylesheet" href="${r.static_url('wte:static/css/cm-theme/elegant.css')}" />
     <link rel="stylesheet" href="${r.static_url('wte:static/css/docutils.css')}" />
+    <link rel="stylesheet" href="${r.static_url('wte:static/css/docutils.css')}" />
     <link rel="stylesheet" href="${r.static_url('wte:static/css/application.css')}" />
     <script src="${r.static_url('wte:static/js/foundation/vendor/modernizr.js')}"></script>
+    <script src="${r.static_url('wte:static/js/foundation/vendor/jquery.js')}"></script>
+    <script src="${r.static_url('wte:static/js/jquery-ui-1.10.4.custom.min.js')}"></script>
   </head>
   <body py:match="body">
     <xi:include href="navigation.html"/>
     <xi:include href="flash.html" py:if="r.session.peek_flash('info') or r.session.peek_flash('error') or r.session.peek_flash('auth')"/>
     ${select('*')}
-    <script src="${r.static_url('wte:static/js/foundation/vendor/jquery.js')}"></script>
-    <script src="${r.static_url('wte:static/js/jquery-ui-1.10.4.custom.min.js')}"></script>
+    <div id="overlay"></div>
+    <div id="busy"><img src="${r.static_url('wte:static/img/spinner.gif')}" alt="The application is currently busy working on something for you."/></div>
     <script src="${r.static_url('wte:static/js/foundation/vendor/fastclick.js')}"></script>
     <script src="${r.static_url('wte:static/js/foundation/foundation.min.js')}"></script>
     <script>$(document).foundation();</script>

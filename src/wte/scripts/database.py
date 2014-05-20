@@ -42,13 +42,26 @@ def initialise_database(args):
     DBSession.configure(bind=engine)
     dbsession = DBSession()
     with transaction.manager:
+        admin_user = User(email=u'admin@example.com', display_name=u'Admin', password=u'password')
+        dbsession.add(admin_user)
+        
         group = PermissionGroup(title=u'User Admin')
         dbsession.add(group)
         group.permissions.append(Permission(name=u'admin.users.view', title=u'View all users'))
         group.permissions.append(Permission(name=u'admin.users.edit', title=u'Edit all users'))
         group.permissions.append(Permission(name=u'admin.users.delete', title=u'Delete all users'))
         group.permissions.append(Permission(name=u'admin.users.permissions', title=u'Edit user permissions'))
-        
-        admin_user = User(email=u'admin@example.com', display_name=u'Admin', password=u'password')
         admin_user.permission_groups.append(group)
         
+        group = PermissionGroup(title=u'Content Admin')
+        dbsession.add(group)
+        create_module_perm = Permission(name=u'modules.create', title=u'Create a new module')
+        group.permissions.append(create_module_perm)
+        group.permissions.append(Permission(name=u'admin.modules.view', title=u'View all modules'))
+        group.permissions.append(Permission(name=u'admin.modules.edit', title=u'Edit all modules'))
+        group.permissions.append(Permission(name=u'admin.modules.delete', title=u'Delete all modules'))
+        admin_user.permission_groups.append(group)
+
+        group = PermissionGroup(title=u'Teacher')
+        dbsession.add(group)
+        group.permissions.append(create_module_perm)

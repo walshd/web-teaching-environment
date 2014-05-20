@@ -27,14 +27,12 @@ def main(global_config, **settings):
     Base.metadata.bind = engine
     check_database_version()
     settings['genshi.template_path'] = 'wte:templates'
-    renderer.init(settings, template_defaults={'text/html': {'h': helpers}})
+    renderer.init(settings, template_defaults={'text/html': {'h': helpers,
+                                                             'crumbs': []}})
     session_factory = session_factory_from_settings(settings)
     config = Configurator(settings=settings, session_factory=session_factory)
     
     config.add_static_view('static', 'static', cache_max_age=3600)
-    config.add_route('module.view', '/modules/{mid}')
-    config.add_route('tutorial.view', '/modules/{mid}/tutorials/{tid}')
-    config.add_route('page.view', '/modules/{mid}/tutorials/{tid}/pages/{pageno}')
     views.init(config, settings)
     
     config.scan()

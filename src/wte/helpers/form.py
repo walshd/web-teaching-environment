@@ -34,7 +34,10 @@ def field(name, label, form_tag, size=None, e=None, **kwargs):
     :param kwargs: Any keyword arguments to pass to `form_tag`
     """ 
     if size:
-        field_class = '%s column %s' % (size, kwargs['class_']) if 'class_' in kwargs else '%s column' % (size)
+        if form_tag == tags.select:
+            field_class = kwargs['class_'] if 'class_' in kwargs else ''
+        else:
+            field_class = '%s column %s' % (size, kwargs['class_']) if 'class_' in kwargs else '%s column' % (size)
         column_class = '%s column' % (size)
     else:
         field_class = kwargs['class_'] if 'class_' in kwargs else ''

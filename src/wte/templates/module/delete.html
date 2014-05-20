@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:py="http://genshi.edgewall.org/" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xi:include href="../layout/layout.html"/>
+  <head>
+    <title>${module.title} - Delete</title>
+  </head>
+  <body>
+    <div class="row.left clearfix">
+      <article class="small-12 medium-6 large-6 end column">
+        <h1>${module.title} - Delete</h1>
+        <form action="${r.route_url('module.delete', mid=module.id)}" method="post">
+          <p>Please confirm that you wish to delete the module &quot;${module.title}&quot;
+            and all its tutorials.</p>
+          <div class="text-right">
+            ${h.form.tags.submit('Delete', class_='button small alert')}
+          </div>
+        </form>
+      </article>
+    </div>
+  </body>
+</html>

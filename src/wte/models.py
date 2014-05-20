@@ -16,7 +16,7 @@ import random
 import hashlib
 
 from sqlalchemy import (Column, Index, ForeignKey, Integer, Unicode,
-                        UnicodeText, Table)
+                        UnicodeText, Table, Boolean)
 from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.event import listens_for
 from sqlalchemy.exc import OperationalError
@@ -282,6 +282,11 @@ class Module(Base):
     Instances of :class:`~wte.models.Module` have the following attributes:
     
     * ``id`` -- The unique database identifier
+    * ``owner_id`` -- The unique database identifier of the
+      :class:`~wte.models.User` who created this :class:`~wte.models.Module`
+    * ``owner`` -- The :class:`~wte.models.User` who created this
+      :class:`~wte.models.Module`
+    * ``status`` -- The status determines the access level
     * ``title`` -- The title displayed for this :class:`~wte.models.Module`
     * ``tutorials`` -- List of :class:`~wte.models.Tutorial` contained in this
       :class:`~wte.models.Module`
@@ -289,9 +294,31 @@ class Module(Base):
     __tablename__ = u'modules'
     
     id = Column(Integer, primary_key=True)
+    owner_id = Column(Integer, ForeignKey(User.id, name=u'modules_owner_id_fk'))
     title = Column(Unicode(255))
+    status = Column(Unicode(255))
     
-    tutorials = relationship(u'Tutorial', backref=u'module', order_by='Tutorial.order')
+    tutorials = relationship(u'Tutorial', backref=u'module', cascade=u'all,delete', order_by=u'Tutorial.order')
+    owner = relationship(u'User')
+    
+    def allow(self, action, user):
+        """Checks whether the given ``user`` is allowed to perform the given
+        ``action``. Supports the following actions: view, edit, delete.
+        
+        :param action: The action to check for
+        :type action: `unicode`
+        :param user: The user to check
+        :type user: :class:`~wte.models.User`
+        :return: ``True`` if the ``user`` may perform the action, ``False``
+                 otherwise
+        :rtype: `bool`
+        """
+        if action == u'view':
+            return self.status == u'available' or user.id == self.owner_id or user.has_permission('admin.modules.view')
+        elif action == u'edit':
+            return user.id == self.owner_id or user.has_permission('admin.modules.edit')
+        elif action == u'delete':
+            return user.id == self.owner_id or user.has_permission('admin.modules.delete')
 
 class Tutorial(Base):
     u"""The :class:`~wte.models.Tutorial` class represents a tutorial covering
@@ -307,6 +334,7 @@ class Tutorial(Base):
     * ``order`` -- The ordering position of this :class:`~wte.models.Tutorial`
     * ``pages`` -- List of :class:`~wte.models.Page` contained in this
       :class:`~wte.models.Tutorial`
+    * ``status`` -- The :class:`~wte.models.Tutorial`'s availability status
     * ``title`` -- The title displayed for this :class:`~wte.models.Tutorial`
     """
     __tablename__ = u'tutorials'
@@ -315,8 +343,9 @@ class Tutorial(Base):
     module_id = Column(Integer, ForeignKey(u'modules.id', name=u'sessions_module_id_fk'))
     order = Column(Integer)
     title = Column(Unicode(255))
+    status = Column(Unicode(255))
     
-    pages = relationship(u'Page', backref=u'tutorial', order_by='Page.order')
+    pages = relationship(u'Page', backref=u'tutorial', cascade=u'all,delete', order_by='Page.order')
     
 Index('sessions_modules_id_ix', Tutorial.module_id)
 
