@@ -21,7 +21,7 @@ from pywebtools.auth import is_authorised
 
 from wte.decorators import current_user
 from wte.util import (unauthorised_redirect)
-from wte.models import (DBSession, Module)
+from wte.models import (DBSession, Module, UserModuleRole)
 
 def init(config):
     u"""Adds the module-specific backend routes (route name, URL pattern
@@ -36,6 +36,8 @@ def init(config):
     config.add_route('module.new', '/modules/new')
     config.add_route('module.edit', '/modules/{mid}/edit')
     config.add_route('module.delete', '/modules/{mid}/delete')
+    config.add_route('module.register', '/modules/{mid}/register')
+    config.add_route('module.deregister', '/modules/{mid}/deregister')
 
 class ModuleSchema(formencode.Schema):
     u"""The :class:`~wte.views.backend.ModuleSchema` handles the validation
@@ -67,9 +69,11 @@ def new(request):
                 dbsession = DBSession()
                 with transaction.manager:
                     new_module = Module(title=params['title'],
-                                        status=params['status'],
-                                        owner=request.current_user)
+                                        status=params['status'])
                     dbsession.add(new_module)
+                    dbsession.add(UserModuleRole(user=request.current_user,
+                                                 module=new_module,
+                                                 role=u'owner'))
                 dbsession.add(new_module)
                 request.session.flash('Your new module has been created', queue='info')
                 raise HTTPSeeOther(request.route_url('module.view', mid=new_module.id))
@@ -114,7 +118,7 @@ def edit(request):
                     request.session.flash('The module has been updated', queue='info')
                     raise HTTPSeeOther(request.route_url('module.view', mid=request.matchdict['mid']))
                 except formencode.Invalid as e:
-                    e.params = params
+                    e.params = request.params
                     return {'e': e,
                             'module': module,
                             'crumbs': [{'title': 'Modules', 'url': request.route_url('modules')},
@@ -155,5 +159,70 @@ def delete(request):
                                {'title': 'Delete', 'url': request.route_url('module.delete', mid=module.id), 'current': True}]}
         else:
             unauthorised_redirect(request)
+    else:
+        raise HTTPNotFound()
+    
+@view_config(route_name='module.register')
+@render({'text/html': 'module/register.html'})
+@current_user()
+def register(request):
+    u"""Handles the ``/modules/{mid}/register`` URL, providing the UI and
+    backend for registering for a :class:`~wte.models.Module`.
+    
+    Requires that the user does not have the "view" rights on the current
+    :class:`~wte.models.Module`.
+    """
+    dbsession = DBSession()
+    module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
+    if module:
+        if not module.allow('view', request.current_user):
+            if request.method == u'POST':
+                with transaction.manager:
+                    dbsession.add(UserModuleRole(user=request.current_user,
+                                                 module=module,
+                                                 role=u'student'))
+                request.session.flash('You have registered for the module', queue='info')
+                raise HTTPSeeOther(request.route_url('module.view', mid=request.matchdict['mid']))
+            return {'module': module,
+                    'crumbs': [{'title': 'Modules', 'url': request.route_url('modules')},
+                               {'title': module.title, 'url': request.route_url('module.view', mid=module.id)},
+                               {'title': 'Register', 'url': request.route_url('module.register', mid=module.id), 'current': True}]}
+        else:
+            request.session.flash('You are already registered for this module', queue='info')
+            raise HTTPSeeOther(request.route_url('module.view', mid=request.matchdict['mid']))
+    else:
+        raise HTTPNotFound()
+    
+@view_config(route_name='module.deregister')
+@render({'text/html': 'module/deregister.html'})
+@current_user()
+def deregister(request):
+    u"""Handles the ``/modules/{mid}/deregister`` URL, providing the UI and
+    backend for de-registering from a :class:`~wte.models.Module`.
+    
+    Requires that the user does not have the "view" rights on the current
+    :class:`~wte.models.Module`.
+    """
+    dbsession = DBSession()
+    module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
+    if module:
+        if module.allow('view', request.current_user):
+            if request.method == u'POST':
+                with transaction.manager:
+                    dbsession.add(module)
+                    for user_asc in module.users:
+                        if user_asc.user == request.current_user and user_asc.role != u'owner':
+                            dbsession.delete(user_asc)
+                        elif user_asc.user == request.current_user and user_asc.role == u'owner':
+                            request.session.flash('As you are the module\'s owner, you cannot de-register from the module', queue='error')
+                request.session.flash('You have de-registered from the module', queue='info')
+                raise HTTPSeeOther(request.route_url('modules'))
+            return {'module': module,
+                    'crumbs': [{'title': 'Modules', 'url': request.route_url('modules')},
+                               {'title': module.title, 'url': request.route_url('module.view', mid=module.id)},
+                               {'title': 'De-register', 'url': request.route_url('module.register', mid=module.id), 'current': True}]}
+        else:
+            request.session.flash('You are not registered for this module', queue='info')
+            raise HTTPSeeOther(request.route_url('modules'))
     else:
         raise HTTPNotFound()

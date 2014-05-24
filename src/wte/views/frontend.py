@@ -71,9 +71,7 @@ def user_modules(request):
     user = dbsession.query(User).filter(User.id==request.matchdict['uid']).first()
     if user:
         if user.allow('view', request.current_user):
-            taught_modules = dbsession.query(Module).filter(Module.owner_id==request.matchdict['uid']).order_by(Module.title).all()
             return {'user': user,
-                    'taught_modules': taught_modules,
                     'crumbs': [{'title': user.display_name, 'url': request.route_url('user.view', uid=user.id)},
                                {'title': 'Modules', 'url': request.route_url('modules'), 'current': True}]}
         else:

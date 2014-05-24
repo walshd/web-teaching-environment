@@ -103,6 +103,7 @@ class User(Base):
     
     permissions = relationship('Permission', backref='users', secondary='users_permissions')
     permission_groups = relationship('PermissionGroup', backref='users', secondary='users_permission_groups')
+    modules = relationship('UserModuleRole', backref=u'user', cascade=u'all,delete')
     
     def __init__(self, email, display_name, password=None):
         u"""Constructs a new :class:`~wte.models.User` with the given email
@@ -275,6 +276,15 @@ u""":class:`sqlalchemy.Table` to link :class:`~wte.models.User` and
 :class:`~wte.models.PermissionGroup`.
 """
 
+class UserModuleRole(Base):
+    
+    __tablename__ = u'users_modules'
+    
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey(User.id, name=u'users_modules_user_id_fk'))
+    module_id = Column(Integer, ForeignKey('modules.id', name=u'users_modules_module_id_fk'))
+    role = Column(Unicode(255))
+    
 class Module(Base):
     u"""The :class:`~wte.models.Module` class represents a teaching module that
     contains one or more :class:`~wte.models.Part`.
@@ -294,12 +304,11 @@ class Module(Base):
     __tablename__ = u'modules'
     
     id = Column(Integer, primary_key=True)
-    owner_id = Column(Integer, ForeignKey(User.id, name=u'modules_owner_id_fk'))
     title = Column(Unicode(255))
     status = Column(Unicode(255))
     
+    users = relationship(u'UserModuleRole', backref=u'module', cascade=u'all,delete')
     parts = relationship(u'Part', backref=u'module', cascade=u'all,delete', order_by=u'Part.order')
-    owner = relationship(u'User')
     
     def allow(self, action, user):
         """Checks whether the given ``user`` is allowed to perform the given
@@ -313,12 +322,15 @@ class Module(Base):
                  otherwise
         :rtype: `bool`
         """
-        if action == u'view':
-            return self.status == u'available' or user.id == self.owner_id or user.has_permission('admin.modules.view')
-        elif action == u'edit':
-            return user.id == self.owner_id or user.has_permission('admin.modules.edit')
-        elif action == u'delete':
-            return user.id == self.owner_id or user.has_permission('admin.modules.delete')
+        for user_asc in self.users:
+            if user_asc.user == user:
+                if action == u'view':
+                    return True
+                elif action == u'edit' and user_asc.role == u'owner':
+                    return True
+                elif action == u'delete' and user_asc.role == u'owner':
+                    return True
+        return False
 
 class Part(Base):
     u"""The :class:`~wte.models.Part` class represents either a tutorial or

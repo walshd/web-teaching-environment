@@ -15,7 +15,8 @@
               <a py:if="h.auth.is_authorised(r.current_user, 'edit', module)" href="${r.route_url('module.edit', mid=module.id)}" class="button small">Edit</a>
               <a py:if="h.auth.is_authorised(r.current_user, 'delete', module)" href="${r.route_url('module.delete', mid=module.id)}" class="button small alert">Delete</a>
             </span>
-            <h2><a href="${r.route_url('module.view', mid=module.id)}">${module.title}</a></h2>
+            <h2 py:if="module.allow('view', r.current_user)"><a href="${r.route_url('module.view', mid=module.id)}">${module.title}</a></h2>
+            <h2 py:if="not module.allow('view', r.current_user)"><a href="${r.route_url('module.register', mid=module.id)}">${module.title}</a></h2>
           </li>
         </ul>
         <div>
