@@ -331,6 +331,23 @@ class Module(Base):
                 elif action == u'delete' and user_asc.role == u'owner':
                     return True
         return False
+    
+    def has_role(self, role, user):
+        """Checks whether the given ``user`` has the given ``role`` with this
+        :class:`~wte.models.Module`.
+        
+        :param role: The role to check for
+        :type role: `unicode`
+        :param user: The user to check the ``role`` for
+        :type user: :class:`~wte.models.User`
+        :return: ``True`` if the ``user`` has the given ``role``, ``False``
+                 otherwise
+        :rtype: `bool`
+        """
+        for user_asc in self.users:
+            if user_asc.user == user and user_asc.role == role:
+                return True
+        return False
 
 class Part(Base):
     u"""The :class:`~wte.models.Part` class represents either a tutorial or

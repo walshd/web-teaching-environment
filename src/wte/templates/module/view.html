@@ -33,7 +33,7 @@
           <py:if test="h.auth.is_authorised(r.current_user, 'delete', module)">
             <a href="${r.route_url('module.delete', mid=module.id)}" class="button small alert">Delete</a>
           </py:if>
-          <a href="${r.route_url('module.deregister', mid=module.id)}" class="button small">De-register</a>
+          <a py:if="not module.has_role('owner', r.current_user)" href="${r.route_url('module.deregister', mid=module.id)}" class="button small">De-register</a>
         </div>
       </article>
     </div>
