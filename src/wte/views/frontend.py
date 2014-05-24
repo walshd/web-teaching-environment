@@ -12,14 +12,16 @@ Routes are defined in :func:`~wte.views.frontend.init`.
 
 .. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
+import transaction
+
+from pyramid.httpexceptions import (HTTPNotFound)
 from pyramid.view import view_config
 from pywebtools.auth import is_authorised
 from pywebtools.renderer import render
 from sqlalchemy import and_
 
-from pyramid.httpexceptions import (HTTPNotFound)
 from wte.decorators import current_user
-from wte.models import (DBSession, Module, Part, Page, User)
+from wte.models import (DBSession, Module, Part, Page, User, UserPartProgress)
 from wte.util import (unauthorised_redirect)
 
 def init(config):
@@ -102,6 +104,40 @@ def view_module(request):
     else:
         raise HTTPNotFound()
 
+def get_user_part_progress(dbsession, user, part, page=None):
+    u"""Returns the :class:`~wte.models.UserPartProgress` for the given
+    ``user`` and ``part. If none exists, then a new one is instantiated. If
+    the :class:`~wte.models.UserPartProgress` points to a current page that
+    is different to ``page``, then the :class:`~wte.models.UserPartProgress`
+    is updated.
+    
+    :param user: The user to get the progress for
+    :type user: :class:`~wte.models.User`
+    :param part: The part to get the progress for
+    :type part: :class:`~wte.models.Part`
+    :return: The :class:`~wte.models.UserPartProgress`
+    :rtype: :class:`~wte.models.UserPartProgress`
+    """
+    user_part = None
+    for part_asc in user.parts:
+        if part_asc.part == part:
+            user_part = part_asc
+            break
+    if not user_part:
+        with transaction.manager:
+            user_part = UserPartProgress(user=user,
+                                         part=part,
+                                         current_page=page)
+            dbsession.add(user_part)
+    elif page:
+        if user_part.page_id != page.id:
+            with transaction.manager:
+                dbsession.add(page)
+                dbsession.add(user_part)
+                user_part.current_page = page
+    return user_part
+
+
 @view_config(route_name='tutorial.view')
 @render({'text/html': 'tutorial/view.html'})
 @current_user()
@@ -118,10 +154,15 @@ def view_tutorial(request):
                                                  Part.module_id==request.matchdict['mid'],
                                                  Part.type==u'tutorial')).first()
     if module and tutorial:
-        if is_authorised(u':module.allow("view" :current)', {'module': module,
-                                                             'current': request.current_user}):
+        if tutorial.allow('view', request.current_user):
+            progress = get_user_part_progress(dbsession, request.current_user, tutorial)
+            dbsession.add(progress)
+            dbsession.add(module)
+            dbsession.add(tutorial)
+            dbsession.add(request.current_user)
             return {'module': module,
                     'tutorial': tutorial,
+                    'progress': progress,
                     'crumbs': [{'title': 'Modules', 'url': request.route_url('modules')},
                                {'title': module.title, 'url': request.route_url('module.view', mid=module.id)},
                                {'title': tutorial.title, 'url': request.route_url('tutorial.view', mid=module.id, tid=tutorial.id), 'current': True}]}
@@ -146,8 +187,7 @@ def view_exercise(request):
                                                  Part.module_id==request.matchdict['mid'],
                                                  Part.type==u'exercise')).first()
     if module and exercise:
-        if is_authorised(u':module.allow("view" :current)', {'module': module,
-                                                             'current': request.current_user}):
+        if exercise.allow('view', request.current_user):
             return {'module': module,
                     'exercise': exercise,
                     'crumbs': [{'title': 'Modules', 'url': request.route_url('modules')},
@@ -176,8 +216,14 @@ def view_page(request):
     page = dbsession.query(Page).filter(and_(Page.id==request.matchdict[u'pid'],
                                              Page.part_id==request.matchdict[u'tid'])).first()
     if module and tutorial and page:
-        if is_authorised(u':module.allow("view" :current)', {'module': module,
-                                                             'current': request.current_user}):
+        if tutorial.allow('view', request.current_user):
+            progress = get_user_part_progress(dbsession, request.current_user, tutorial, page)
+            dbsession.add(progress)
+            dbsession.add(module)
+            dbsession.add(tutorial)
+            dbsession.add(page)
+            dbsession.add(request.current_user)
+
             prev_page = None
             next_page = None
             page_no = 1

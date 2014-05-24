@@ -9,7 +9,7 @@
       <article class="small-12 column">
         <h1>${module.title}</h1>
         <ul class="no-symbol">
-          <li py:for="part in module.parts" class="panel">
+          <li py:for="part in module.parts" class="panel" py:if="part.allow('view', r.current_user)">
             <span py:if="h.auth.is_authorised(r.current_user, 'edit', module)" class="right">
               <py:if test="part.type == 'tutorial'">
                 <a href="${r.route_url('tutorial.edit', mid=module.id, tid=part.id)}" class="button small">Edit</a>

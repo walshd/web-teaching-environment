@@ -104,6 +104,7 @@ class User(Base):
     permissions = relationship('Permission', backref='users', secondary='users_permissions')
     permission_groups = relationship('PermissionGroup', backref='users', secondary='users_permission_groups')
     modules = relationship('UserModuleRole', backref=u'user', cascade=u'all,delete')
+    parts = relationship('UserPartProgress', backref=u'user', cascade=u'all,delete')
     
     def __init__(self, email, display_name, password=None):
         u"""Constructs a new :class:`~wte.models.User` with the given email
@@ -379,8 +380,61 @@ class Part(Base):
     type = Column(Unicode(255))
     
     pages = relationship(u'Page', backref=u'part', cascade=u'all,delete', order_by='Page.order')
+    users = relationship(u'UserPartProgress', backref=u'part', cascade=u'all,delete')
 
+    def allow(self, action, user):
+        """Checks whether the given ``user`` is allowed to perform the given
+        ``action``. Supports the following action: view.
+        
+        :param action: The action to check for
+        :type action: `unicode`
+        :param user: The user to check
+        :type user: :class:`~wte.models.User`
+        :return: ``True`` if the ``user`` may perform the action, ``False``
+                 otherwise
+        :rtype: `bool`
+        """
+        if self.module.allow('view', user) and (self.status == u'available'
+                                                or self.module.allow('edit', user)
+                                                or self.module.allow('delete', user)):
+            return True
+        return False
+    
 Index('parts_module_id_ix', Part.module_id)
+
+class UserPartProgress(Base):
+    u"""The :class:`~wte.models.UserPartProgress` represents the progress a
+    :class:`~wte.models.User` has made through the :class:`~wte.models.Page`
+    of a :class:`~wte.models.Part` as a tutorial or on the content of a
+    :class:`~wte.models.Part` as an exercise.
+    
+    Instances of :class:`~wte.models.UserPartProgress` have the following
+    attributes:
+    
+    * ``id`` -- The unique database identifier
+    * ``current_page`` -- The current :class:`~wte.models.Page`
+    * ``page_id`` -- The unique identifier of the current
+      :class:`~wte.models.Page`
+    * ``part_id`` -- The unique identifier of the :class:`~wte.models.Part`
+    * ``part`` -- The :class:`~wte.models.Part` that this represents the
+      progress in
+    * ``user_id`` -- The unique identifier of the :class:`~wte.models.User`
+    * ``user`` -- The :class:`~wte.models.User` for which this represents the
+      progress
+    """
+    
+    __tablename__ = u'user_part_progress'
+    
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey(User.id, name=u'user_part_progress_user_id_fk'))
+    part_id = Column(Integer, ForeignKey(Part.id, name=u'user_part_progress_part_id_fk'))
+    page_id = Column(Integer, ForeignKey('pages.id', name=u'user_part_progress_page_id_fk'))
+    
+    current_page = relationship(u'Page')
+
+Index('user_part_progress_user_id_ix', UserPartProgress.user_id)
+Index('user_part_progress_part_id_ix', UserPartProgress.part_id)
+Index('user_part_progress_user_id_part_id_ix', UserPartProgress.user_id, UserPartProgress.part_id)
 
 class Page(Base):
     u"""The :class:`~wte.models.Page` class represents a single page in a

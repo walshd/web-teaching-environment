@@ -8,7 +8,7 @@
     <div class="row left">
       <article class="small-12 column">
         <h1>${tutorial.title}</h1>
-        <ul class="no-symbol">
+        <ul class="no-symbol" py:if="module.has_role('owner', r.current_user)">
           <li py:for="page in tutorial.pages" class="panel">
             <span py:if="h.auth.is_authorised(r.current_user, 'edit', module)" class="right">
               <a href="${r.route_url('page.edit', mid=module.id, tid=tutorial.id, pid=page.id)}" class="button small">Edit</a>
@@ -21,6 +21,10 @@
           <a href="${r.route_url('tutorial.edit', mid=module.id, tid=tutorial.id)}" class="button small">Edit</a>
           <a href="${r.route_url('page.new', mid=module.id, tid=tutorial.id)}" class="button small">Add page</a>
           <a href="${r.route_url('tutorial.delete', mid=module.id, tid=tutorial.id)}" class="button small alert">Delete</a>
+        </div>
+        <div py:if="module.has_role('student', r.current_user)">
+          <a py:if="not progress.current_page" href="${r.route_url('page.view', mid=module.id, tid=tutorial.id, pid=tutorial.pages[0].id)}" class="button small">Start Tutorial</a>
+          <a py:if="progress.current_page" href="${r.route_url('page.view', mid=module.id, tid=tutorial.id, pid=progress.current_page.id)}" class="button small">Continue Tutorial</a>
         </div>
       </article>
     </div>
