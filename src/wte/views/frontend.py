@@ -117,7 +117,8 @@ def view_tutorial(request):
     dbsession = DBSession()
     module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
     tutorial = dbsession.query(Part).filter(and_(Part.id==request.matchdict['tid'],
-                                                 Part.module_id==request.matchdict['mid'])).first()
+                                                 Part.module_id==request.matchdict['mid'],
+                                                 Part.type==u'tutorial')).first()
     if module and tutorial:
         if is_authorised(u':module.allow("view" :current)', {'module': module,
                                                              'current': request.current_user}):
