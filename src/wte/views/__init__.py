@@ -18,7 +18,7 @@ from pywebtools.auth import is_authorised
 from sqlalchemy import and_
 
 from wte.decorators import current_user
-from . import user, frontend, module, tutorial, page
+from . import (user, frontend, module, tutorial, page, exercise)
 
 def init(config, settings):
     u"""Adds the following routes (route name, URL pattern, handler):
@@ -32,6 +32,7 @@ def init(config, settings):
     user.init(config)
     module.init(config)
     tutorial.init(config)
+    exercise.init(config)
     page.init(config)
     frontend.init(config)
 

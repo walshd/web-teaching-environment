@@ -23,7 +23,7 @@ from sqlalchemy import and_
 
 from wte.decorators import current_user
 from wte.util import (unauthorised_redirect, State, send_email, get_config_setting)
-from wte.models import (DBSession, Module, Tutorial, Page)
+from wte.models import (DBSession, Module, Part, Page)
 from wte.text_formatter import compile_rst
 
 def init(config):
@@ -59,15 +59,16 @@ class PageSchema(formencode.Schema):
 def new(request):
     u"""Handles the ``/modules/{mid}/tutorials/{tid}/pages/new`` URL,
     providing the UI and backend for creating a new
-    :class:`~wte.models.Tutorial`.
+    :class:`~wte.models.Page`.
     
     Requires that the user has "edit" rights on the current
     :class:`~wte.models.Module`.
     """
     dbsession = DBSession()
     module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
-    tutorial = dbsession.query(Tutorial).filter(and_(Tutorial.id==request.matchdict['tid'],
-                                                     Tutorial.module_id==request.matchdict['mid'])).first()
+    tutorial = dbsession.query(Part).filter(and_(Part.id==request.matchdict['tid'],
+                                                 Part.module_id==request.matchdict['mid'],
+                                                 Part.type==u'tutorial')).first()
     if module and tutorial:
         if is_authorised(u':module.allow("edit" :current)', {'module': module,
                                                              'current': request.current_user}):
@@ -82,7 +83,7 @@ def new(request):
                         max_order = max(max_order)
                         
                         new_page = Page(title=params['title'],
-                                        tutorial=tutorial,
+                                        part=tutorial,
                                         content=u'',
                                         order=max_order)
                         dbsession.add(new_page)
@@ -114,17 +115,18 @@ def new(request):
 @current_user()
 def edit(request):
     u"""Handles the ``/modules/{mid}/tutorials/{tid}/pages/{pid}/edit`` URL,
-    providing the UI and backend for editing a :class:`~wte.models.Tutorial`.
+    providing the UI and backend for editing a :class:`~wte.models.Page`.
     
     Requires that the user has "edit" rights on the current
     :class:`~wte.models.Module`.
     """
     dbsession = DBSession()
     module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
-    tutorial = dbsession.query(Tutorial).filter(and_(Tutorial.id==request.matchdict['tid'],
-                                                     Tutorial.module_id==request.matchdict['mid'])).first()
+    tutorial = dbsession.query(Part).filter(and_(Part.id==request.matchdict['tid'],
+                                                 Part.module_id==request.matchdict['mid'],
+                                                 Part.type==u'tutorial')).first()
     page = dbsession.query(Page).filter(and_(Page.id==request.matchdict['pid'],
-                                             Page.tutorial_id==request.matchdict['tid'])).first()
+                                             Page.part_id==request.matchdict['tid'])).first()
     if module and tutorial and page:
         if is_authorised(u':module.allow("edit" :current)', {'module': module,
                                                              'current': request.current_user}):
@@ -166,17 +168,18 @@ def edit(request):
 @current_user()
 def delete(request):
     u"""Handles the ``/modules/{mid}/tutorials/{tid}/pages/{pid}/delete`` URL,
-    providing the UI and backend for deleting a :class:`~wte.models.Tutorial`.
+    providing the UI and backend for deleting a :class:`~wte.models.Page`.
     
     Requires that the user has "edit" rights on the current
     :class:`~wte.models.Module`.
     """
     dbsession = DBSession()
     module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
-    tutorial = dbsession.query(Tutorial).filter(and_(Tutorial.id==request.matchdict['tid'],
-                                                     Tutorial.module_id==request.matchdict['mid'])).first()
+    tutorial = dbsession.query(Part).filter(and_(Part.id==request.matchdict['tid'],
+                                                 Part.module_id==request.matchdict['mid'],
+                                                 Part.type==u'tutorial')).first()
     page = dbsession.query(Page).filter(and_(Page.id==request.matchdict['pid'],
-                                             Page.tutorial_id==request.matchdict['tid'])).first()
+                                             Page.part_id==request.matchdict['tid'])).first()
     if module and tutorial and page:
         if is_authorised(u':module.allow("edit" :current)', {'module': module,
                                                              'current': request.current_user}):
@@ -211,10 +214,11 @@ def preview(request):
     """
     dbsession = DBSession()
     module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
-    tutorial = dbsession.query(Tutorial).filter(and_(Tutorial.id==request.matchdict['tid'],
-                                                     Tutorial.module_id==request.matchdict['mid'])).first()
+    tutorial = dbsession.query(Part).filter(and_(Part.id==request.matchdict['tid'],
+                                                 Part.module_id==request.matchdict['mid'],
+                                                 Part.type==u'tutorial')).first()
     page = dbsession.query(Page).filter(and_(Page.id==request.matchdict['pid'],
-                                             Page.tutorial_id==request.matchdict['tid'])).first()
+                                             Page.part_id==request.matchdict['tid'])).first()
     if module and tutorial and page:
         if is_authorised(u':module.allow("edit" :current)', {'module': module,
                                                              'current': request.current_user}):

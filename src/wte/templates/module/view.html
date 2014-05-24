@@ -9,18 +9,26 @@
       <article class="small-12 column">
         <h1>${module.title}</h1>
         <ul class="no-symbol">
-          <li py:for="tutorial in module.tutorials" class="panel">
+          <li py:for="part in module.parts" class="panel">
             <span py:if="h.auth.is_authorised(r.current_user, 'edit', module)" class="right">
-              <a href="${r.route_url('tutorial.edit', mid=module.id, tid=tutorial.id)}" class="button small">Edit</a>
-              <a href="${r.route_url('tutorial.delete', mid=module.id, tid=tutorial.id)}" class="button small alert">Delete</a>
+              <py:if test="part.type == 'tutorial'">
+                <a href="${r.route_url('tutorial.edit', mid=module.id, tid=part.id)}" class="button small">Edit</a>
+                <a href="${r.route_url('tutorial.delete', mid=module.id, tid=part.id)}" class="button small alert">Delete</a>
+              </py:if>
+              <py:if test="part.type == 'exercise'">
+                <a href="${r.route_url('exercise.edit', mid=module.id, eid=part.id)}" class="button small">Edit</a>
+                <a href="${r.route_url('exercise.delete', mid=module.id, eid=part.id)}" class="button small alert">Delete</a>
+              </py:if>
             </span>
-            <h2><a href="${r.route_url('tutorial.view', mid=module.id, tid=tutorial.id)}">${tutorial.title}</a></h2>
+            <h2 py:if="part.type == 'tutorial'"><a href="${r.route_url('tutorial.view', mid=module.id, tid=part.id)}">${part.title}</a></h2>
+            <h2 py:if="part.type == 'exercise'"><a href="${r.route_url('exercise.view', mid=module.id, eid=part.id)}">${part.title}</a></h2>
           </li>
         </ul>
         <div>
           <py:if test="h.auth.is_authorised(r.current_user, 'edit', module)">
             <a href="${r.route_url('module.edit', mid=module.id)}" class="button small">Edit</a>
             <a href="${r.route_url('tutorial.new', mid=module.id)}" class="button small">Add tutorial</a>
+            <a href="${r.route_url('exercise.new', mid=module.id)}" class="button small">Add exercise</a>
           </py:if>
           <py:if test="h.auth.is_authorised(r.current_user, 'delete', module)">
             <a href="${r.route_url('module.delete', mid=module.id)}" class="button small alert">Delete</a>

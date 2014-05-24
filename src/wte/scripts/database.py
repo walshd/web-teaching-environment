@@ -15,8 +15,7 @@ from pkg_resources import resource_stream
 from pyramid.paster import (get_appsettings, setup_logging)
 from sqlalchemy import engine_from_config
 
-from wte.models import (Base, DBSession, Module, Tutorial, Page,
-                        User, Permission, PermissionGroup)
+from wte.models import (Base, DBSession, User, Permission, PermissionGroup)
 
 def init(subparsers):
     u"""Initialises the :class:`~argparse.ArgumentParser`, adding the

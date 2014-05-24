@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:py="http://genshi.edgewall.org/" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xi:include href="../layout/layout.html"/>
+  <head>
+    <title>${exercise.title}</title>
+  </head>
+  <body>
+    <div class="row left">
+      <article class="small-12 column">
+        <h1>${exercise.title}</h1>
+        <div py:if="h.auth.is_authorised(r.current_user, 'edit', module)">
+          <a href="${r.route_url('exercise.edit', mid=module.id, eid=exercise.id)}" class="button small">Edit</a>
+          <a href="${r.route_url('exercise.delete', mid=module.id, eid=exercise.id)}" class="button small alert">Delete</a>
+        </div>
+      </article>
+    </div>
+  </body>
+</html>

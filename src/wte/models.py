@@ -16,7 +16,7 @@ import random
 import hashlib
 
 from sqlalchemy import (Column, Index, ForeignKey, Integer, Unicode,
-                        UnicodeText, Table, Boolean)
+                        UnicodeText, Table)
 from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.event import listens_for
 from sqlalchemy.exc import OperationalError
@@ -277,7 +277,7 @@ u""":class:`sqlalchemy.Table` to link :class:`~wte.models.User` and
 
 class Module(Base):
     u"""The :class:`~wte.models.Module` class represents a teaching module that
-    contains one or more :class:`~wte.models.Tutorial`.
+    contains one or more :class:`~wte.models.Part`.
     
     Instances of :class:`~wte.models.Module` have the following attributes:
     
@@ -288,7 +288,7 @@ class Module(Base):
       :class:`~wte.models.Module`
     * ``status`` -- The status determines the access level
     * ``title`` -- The title displayed for this :class:`~wte.models.Module`
-    * ``tutorials`` -- List of :class:`~wte.models.Tutorial` contained in this
+    * ``tutorials`` -- List of :class:`~wte.models.Part` contained in this
       :class:`~wte.models.Module`
     """
     __tablename__ = u'modules'
@@ -298,7 +298,7 @@ class Module(Base):
     title = Column(Unicode(255))
     status = Column(Unicode(255))
     
-    tutorials = relationship(u'Tutorial', backref=u'module', cascade=u'all,delete', order_by=u'Tutorial.order')
+    parts = relationship(u'Part', backref=u'module', cascade=u'all,delete', order_by=u'Part.order')
     owner = relationship(u'User')
     
     def allow(self, action, user):
@@ -320,38 +320,42 @@ class Module(Base):
         elif action == u'delete':
             return user.id == self.owner_id or user.has_permission('admin.modules.delete')
 
-class Tutorial(Base):
-    u"""The :class:`~wte.models.Tutorial` class represents a tutorial covering
-    one topic over one or more :class:`~wte.models.Page`.
+class Part(Base):
+    u"""The :class:`~wte.models.Part` class represents either a tutorial or
+    exercise. If a tutorial, then it consists of one or more
+    :class:`~wte.models.Page`.
     
-    Instances of :class:`~wte.models.Tutorial` have the following attributes:
+    Instances of :class:`~wte.models.Part` have the following attributes:
     
     * ``id`` -- The unique database identifier
     * ``module_id`` -- The unique identifier of the :class:`~wte.models.Module`
-      that contains this :class:`~wte.models.Tutorial`
+      that contains this :class:`~wte.models.Part`
     * ``module`` -- The :class:`~wte.models.Module` that contains this
-      :class:`~wte.models.Tutorial`
-    * ``order`` -- The ordering position of this :class:`~wte.models.Tutorial`
+      :class:`~wte.models.Part`
+    * ``order`` -- The ordering position of this :class:`~wte.models.Part`
     * ``pages`` -- List of :class:`~wte.models.Page` contained in this
-      :class:`~wte.models.Tutorial`
-    * ``status`` -- The :class:`~wte.models.Tutorial`'s availability status
-    * ``title`` -- The title displayed for this :class:`~wte.models.Tutorial`
+      :class:`~wte.models.Part`
+    * ``status`` -- The :class:`~wte.models.Part`'s availability status
+    * ``title`` -- The title displayed for this :class:`~wte.models.Part`
+    * ``type`` -- Whether the :class:`~wte.models.Part` is a tutorial or
+      exercise.
     """
-    __tablename__ = u'tutorials'
+    __tablename__ = u'parts'
     
     id = Column(Integer, primary_key=True)
     module_id = Column(Integer, ForeignKey(u'modules.id', name=u'sessions_module_id_fk'))
     order = Column(Integer)
     title = Column(Unicode(255))
     status = Column(Unicode(255))
+    type = Column(Unicode(255))
     
-    pages = relationship(u'Page', backref=u'tutorial', cascade=u'all,delete', order_by='Page.order')
-    
-Index('sessions_modules_id_ix', Tutorial.module_id)
+    pages = relationship(u'Page', backref=u'part', cascade=u'all,delete', order_by='Page.order')
+
+Index('parts_module_id_ix', Part.module_id)
 
 class Page(Base):
     u"""The :class:`~wte.models.Page` class represents a single page in a
-    :class:`~wte.models.Tutorial`.
+    :class:`~wte.models.Part`.
     
     Instances of :class:`~wte.models.Page` have the following attributes:
     
@@ -359,24 +363,24 @@ class Page(Base):
     * ``compiled_content`` -- The compiled HTML content to display
     * ``content`` -- The raw ReST text content of this
       :class:`~wte.models.Page`
-    * ``order`` -- The ordering position of this :class:`~wte.models.Tutorial`
-    * ``title`` -- The title displayed for this :class:`~wte.models.Tutorial`
+    * ``order`` -- The ordering position of this :class:`~wte.models.Part`
+    * ``title`` -- The title displayed for this :class:`~wte.models.Part`
     * ``tutorial_id`` -- The unique database identifier of the 
-      :class:`~wte.models.Tutorial` that contains this
+      :class:`~wte.models.Part` that contains this
       :class:`~wte.models.Page`
-    * ``tutorial`` -- The :class:`~wte.models.Tutorial` that contains this
+    * ``tutorial`` -- The :class:`~wte.models.Part` that contains this
       :class:`~wte.models.Page`
     """
     __tablename__ = u'pages'
     
     id = Column(Integer, primary_key=True)
-    tutorial_id = Column(Integer, ForeignKey(u'tutorials.id', name=u'pages_tutorial_id_fk'))
+    part_id = Column(Integer, ForeignKey(u'parts.id', name=u'pages_part_id_fk'))
     order = Column(Integer)
     title = Column(Unicode(255))
     content = Column(UnicodeText)
     compiled_content = Column(UnicodeText)
 
-Index('pages_tutorial_id_ix', Page.tutorial_id)
+Index('pages_part_id_ix', Page.part_id)
 
 @listens_for(Page.content, 'set')
 def compile_page_content(target, value, old_value, initiator):

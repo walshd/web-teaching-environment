@@ -4,8 +4,9 @@ u"""
 :mod:`wte.views.frontend` -- Frontend view handlers
 ###################################################
 
-The :mod:`~wte.views.frontend` handles all routes related to the user working
-through a :mod:`~wte.models.Tutorial`.
+The :mod:`~wte.views.frontend` handles the frontend functionality for
+interacting with :class:`~wte.models.Module`, :class:`~wte.models.Part`, and
+:class:`~wte.models.Page`.
 
 Routes are defined in :func:`~wte.views.frontend.init`.
 
@@ -16,10 +17,10 @@ from pywebtools.auth import is_authorised
 from pywebtools.renderer import render
 from sqlalchemy import and_
 
-from pyramid.httpexceptions import (HTTPSeeOther, HTTPNotFound)
+from pyramid.httpexceptions import (HTTPNotFound)
 from wte.decorators import current_user
-from wte.models import (DBSession, Module, Tutorial, Page, User)
-from wte.util import (unauthorised_redirect, State, send_email, get_config_setting)
+from wte.models import (DBSession, Module, Part, Page, User)
+from wte.util import (unauthorised_redirect)
 
 def init(config):
     u"""Adds the frontend-specific backend routes (route name, URL pattern
@@ -30,6 +31,8 @@ def init(config):
       :func:`~wte.views.frontend.view_module`
     * ``tutorial.view`` -- ``/modules/{mid}/tutorials/{tid}`` --
       :func:`~wte.views.frontend.view_tutorial`
+    * ``exercise.view`` -- ``/modules/{mid}/exercises/{eid}`` --
+      :func:`~wte.views.frontend.view_exercise`
     * ``page.view`` -- ``/modules/{mid}/tutorials/{tid}/pages/{pid}`` --
       :func:`~wte.views.frontend.view_page`
     * ``user.modules`` -- ``/users/{uid}/modules`` --
@@ -38,6 +41,7 @@ def init(config):
     config.add_route('modules', '/modules')
     config.add_route('module.view', '/modules/{mid}')
     config.add_route('tutorial.view', '/modules/{mid}/tutorials/{tid}')
+    config.add_route('exercise.view', '/modules/{mid}/exercises/{eid}')
     config.add_route('page.view', '/modules/{mid}/tutorials/{tid}/pages/{pid}')
     config.add_route('user.modules', '/users/{uid}/modules')
 
@@ -82,7 +86,7 @@ def user_modules(request):
 @current_user()
 def view_module(request):
     u"""Handles the ``/modules/{mid}`` URL, displaying the
-    :class:`~wte.models.Module` and its child :class:`~wte.models.Tutorial`.
+    :class:`~wte.models.Module` and its child :class:`~wte.models.Part`.
     
     Requires that the user has "view" rights on the
     :class:`~wte.models.Module`.
@@ -105,15 +109,15 @@ def view_module(request):
 @current_user()
 def view_tutorial(request):
     u"""Handles the ``/modules/{mid}/tutorials/{tid}`` URL, displaying the
-    :class:`~wte.models.Tutorial` and its child :class:`~wte.models.Page`.
+    :class:`~wte.models.Part` and its child :class:`~wte.models.Page`.
     
     Requires that the user has "view" rights on the
     :class:`~wte.models.Module`.
     """
     dbsession = DBSession()
     module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
-    tutorial = dbsession.query(Tutorial).filter(and_(Tutorial.id==request.matchdict['tid'],
-                                                     Tutorial.module_id==request.matchdict['mid'])).first()
+    tutorial = dbsession.query(Part).filter(and_(Part.id==request.matchdict['tid'],
+                                                 Part.module_id==request.matchdict['mid'])).first()
     if module and tutorial:
         if is_authorised(u':module.allow("view" :current)', {'module': module,
                                                              'current': request.current_user}):
@@ -122,6 +126,34 @@ def view_tutorial(request):
                     'crumbs': [{'title': 'Modules', 'url': request.route_url('modules')},
                                {'title': module.title, 'url': request.route_url('module.view', mid=module.id)},
                                {'title': tutorial.title, 'url': request.route_url('tutorial.view', mid=module.id, tid=tutorial.id), 'current': True}]}
+        else:
+            unauthorised_redirect(request)
+    else:
+        raise HTTPNotFound()
+
+@view_config(route_name='exercise.view')
+@render({'text/html': 'exercise/view.html'})
+@current_user()
+def view_exercise(request):
+    u"""Handles the ``/modules/{mid}/exercises/{eid}`` URL, displaying the
+    :class:`~wte.models.Part`.
+    
+    Requires that the user has "view" rights on the
+    :class:`~wte.models.Module`.
+    """
+    dbsession = DBSession()
+    module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
+    exercise = dbsession.query(Part).filter(and_(Part.id==request.matchdict['eid'],
+                                                 Part.module_id==request.matchdict['mid'],
+                                                 Part.type==u'exercise')).first()
+    if module and exercise:
+        if is_authorised(u':module.allow("view" :current)', {'module': module,
+                                                             'current': request.current_user}):
+            return {'module': module,
+                    'exercise': exercise,
+                    'crumbs': [{'title': 'Modules', 'url': request.route_url('modules')},
+                               {'title': module.title, 'url': request.route_url('module.view', mid=module.id)},
+                               {'title': exercise.title, 'url': request.route_url('exercise.view', mid=module.id, eid=exercise.id), 'current': True}]}
         else:
             unauthorised_redirect(request)
     else:
@@ -139,10 +171,11 @@ def view_page(request):
     """
     dbsession = DBSession()
     module = dbsession.query(Module).filter(Module.id==request.matchdict[u'mid']).first()
-    tutorial = dbsession.query(Tutorial).filter(and_(Tutorial.id==request.matchdict[u'tid'],
-                                                     Tutorial.module_id==request.matchdict[u'mid'])).first()
+    tutorial = dbsession.query(Part).filter(and_(Part.id==request.matchdict[u'tid'],
+                                                 Part.module_id==request.matchdict[u'mid'],
+                                                 Part.type==u'tutorial')).first()
     page = dbsession.query(Page).filter(and_(Page.id==request.matchdict[u'pid'],
-                                             Page.tutorial_id==request.matchdict[u'tid'])).first()
+                                             Page.part_id==request.matchdict[u'tid'])).first()
     if module and tutorial and page:
         if is_authorised(u':module.allow("view" :current)', {'module': module,
                                                              'current': request.current_user}):

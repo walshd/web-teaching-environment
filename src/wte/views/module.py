@@ -18,10 +18,9 @@ from pyramid.httpexceptions import (HTTPSeeOther, HTTPNotFound)
 from pyramid.view import view_config
 from pywebtools.renderer import render
 from pywebtools.auth import is_authorised
-from sqlalchemy import and_
 
 from wte.decorators import current_user
-from wte.util import (unauthorised_redirect, State, send_email, get_config_setting)
+from wte.util import (unauthorised_redirect)
 from wte.models import (DBSession, Module)
 
 def init(config):
@@ -48,8 +47,8 @@ class ModuleSchema(formencode.Schema):
                             formencode.validators.OneOf([u'unavailable',
                                                          u'available']))
     u"""The module's status"""
-    tutorial_id = formencode.foreach.ForEach(formencode.validators.Int())
-    u"""The ids of the child tutorials"""
+    part_id = formencode.foreach.ForEach(formencode.validators.Int())
+    u"""The ids of the child parts"""
     
 @view_config(route_name='module.new')
 @render({'text/html': 'module/new.html'})
@@ -106,12 +105,12 @@ def edit(request):
                         dbsession.add(module)
                         module.title = params['title']
                         module.status = params['status']
-                        if params['tutorial_id']:
-                            for order, tid in enumerate(params['tutorial_id']):
-                                for tutorial in module.tutorials:
-                                    if tutorial.id == int(tid):
-                                        dbsession.add(tutorial)
-                                        tutorial.order = order
+                        if params['part_id']:
+                            for order, tid in enumerate(params['part_id']):
+                                for part in module.parts:
+                                    if part.id == int(tid):
+                                        dbsession.add(part)
+                                        part.order = order
                     request.session.flash('The module has been updated', queue='info')
                     raise HTTPSeeOther(request.route_url('module.view', mid=request.matchdict['mid']))
                 except formencode.Invalid as e:

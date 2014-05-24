@@ -15,11 +15,11 @@
           <div class="clearfix">
             ${h.form.field('status', 'Status', h.form.tags.select, size='small-12', e=e, value=module.status, options=[('unavailable', 'Unavailable'), ('available', 'Available')])}
           </div>
-          <div class="clearfix" py:if="module.tutorials">
+          <div class="clearfix" py:if="module.parts">
             <div class="small-12 column">
               <label>Tutorial order</label>
               <ul id="tutorials" class="no-symbol">
-                <li py:for="tutorial in module.tutorials" class="panel">${h.form.tags.hidden_field('tutorial_id', tutorial.id)}${tutorial.title}</li>
+                <li py:for="part in module.parts" class="panel">${h.form.tags.hidden_field('part_id', part.id)}${part.title}</li>
               </ul>
             </div>
           </div>

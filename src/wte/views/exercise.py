@@ -1,14 +1,5 @@
 # -*- coding: utf-8 -*-
 u"""
-#############################################
-:mod:`wte.views.tutorial` -- Tutorial Backend
-#############################################
-
-The :mod:`~wte.views.tutorial` module provides the backend functionality for
-creating, editing, and deleting :class:`~wte.models.Part` when they are
-set as type "tutorial".
-
-Routes are defined in :func:`~wte.views.tutorial.init`.
 
 .. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
@@ -26,23 +17,23 @@ from wte.util import (unauthorised_redirect)
 from wte.models import (DBSession, Module, Part)
 
 def init(config):
-    u"""Adds the tutorial-specific backend routes (route name, URL pattern
+    u"""Adds the exercise-specific backend routes (route name, URL pattern
     handler):
     
-    * ``tutorial.new`` -- ``/modules/{mid}/tutorials/new`` --
+    * ``exercise.new`` -- ``/modules/{mid}/exercise/new`` --
       :func:`~wte.views.tutorial.new`
-    * ``tutorial.edit`` -- ``/modules/{mid}/tutorials/{tid}/edit`` --
+    * ``exercise.edit`` -- ``/modules/{mid}/exercise/{eid}/edit`` --
       :func:`~wte.views.tutorial.edit`
-    * ``tutorial.delete`` -- ``/modules/{mid}/tutorials/{tid}/delete`` --
+    * ``exercise.delete`` -- ``/modules/{mid}/exercise/{eid}/delete`` --
       :func:`~wte.views.tutorial.delete`
     """
-    config.add_route('tutorial.new', '/modules/{mid}/tutorials/new')
-    config.add_route('tutorial.edit', '/modules/{mid}/tutorials/{tid}/edit')
-    config.add_route('tutorial.delete', '/modules/{mid}/tutorials/{tid}/delete')
+    config.add_route('exercise.new', '/modules/{mid}/exercise/new')
+    config.add_route('exercise.edit', '/modules/{mid}/exercise/{eid}/edit')
+    config.add_route('exercise.delete', '/modules/{mid}/exercise/{eid}/delete')
 
-class TutorialSchema(formencode.Schema):
-    u"""The :class:`~wte.views.backend.TutorialSchema` handles the validation
-    of a new :class:`~wte.models.Part`.
+class ExerciseSchema(formencode.Schema):
+    u"""The :class:`~wte.views.backend.NewModuleSchema` handles the validation
+    of a new :class:`~wte.models.Part` as an exercise.
     """
     title = formencode.validators.UnicodeString(not_empty=True)
     u"""The exercise's title"""
@@ -50,15 +41,13 @@ class TutorialSchema(formencode.Schema):
                             formencode.validators.OneOf([u'unavailable',
                                                          u'available']))
     u"""The exercise's status"""
-    page_id = formencode.foreach.ForEach(formencode.validators.Int())
-    u"""The ids of the child pages"""
     
-@view_config(route_name='tutorial.new')
-@render({'text/html': 'tutorial/new.html'})
+@view_config(route_name='exercise.new')
+@render({'text/html': 'exercise/new.html'})
 @current_user()
 def new(request):
-    u"""Handles the ``/modules/{mid}/tutorials/new`` URL, providing the UI and
-    backend for creating a new :class:`~wte.models.Part` as a "tutorial".
+    u"""Handles the ``/modules/{mid}/exercises/new`` URL, providing the UI and
+    backend for creating a new :class:`~wte.models.Part` as an exercise.
     
     Requires that the user has "edit" rights on the current
     :class:`~wte.models.Module`.
@@ -70,7 +59,7 @@ def new(request):
                                                              'current': request.current_user}):
             if request.method == u'POST':
                 try:
-                    params = TutorialSchema().to_python(request.params)
+                    params = ExerciseSchema().to_python(request.params)
                     dbsession = DBSession()
                     with transaction.manager:
                         dbsession.add(module)
@@ -78,113 +67,108 @@ def new(request):
                         max_order.append(0)
                         max_order = max(max_order)
                         
-                        new_tutorial = Part(title=params['title'],
+                        new_exercise = Part(title=params['title'],
                                             status=params['status'],
                                             module=module,
                                             order=max_order,
-                                            type=u'tutorial')
-                        dbsession.add(new_tutorial)
-                    dbsession.add(new_tutorial)
-                    request.session.flash('Your new tutorial has been created', queue='info')
-                    raise HTTPSeeOther(request.route_url('tutorial.view', mid=request.matchdict['mid'], tid=new_tutorial.id))
+                                            type=u'exercise')
+                        dbsession.add(new_exercise)
+                    dbsession.add(new_exercise)
+                    request.session.flash('Your new exercise has been created', queue='info')
+                    raise HTTPSeeOther(request.route_url('exercise.view', mid=request.matchdict['mid'], eid=new_exercise.id))
                 except formencode.Invalid as e:
                     e.params = request.params
                     return {'e': e,
                             'module': module,
                             'crumbs': [{'title': 'Modules', 'url': request.route_url('modules')},
                                        {'title': module.title, 'url': request.route_url('module.view', mid=module.id)},
-                                       {'title': 'Add Tutorial', 'url': request.route_url('tutorial.new', mid=module.id), 'current': True}]}
+                                       {'title': 'Add Exercise', 'url': request.route_url('exercise.new', mid=module.id), 'current': True}]}
             return {'module': module,
                     'crumbs': [{'title': 'Modules', 'url': request.route_url('modules')},
                                {'title': module.title, 'url': request.route_url('module.view', mid=module.id)},
-                               {'title': 'Add Tutorial', 'url': request.route_url('tutorial.new', mid=module.id), 'current': True}]}
+                               {'title': 'Add exercise', 'url': request.route_url('exercise.new', mid=module.id), 'current': True}]}
         else:
             unauthorised_redirect(request)
     else:
         raise HTTPNotFound()
 
-@view_config(route_name='tutorial.edit')
-@render({'text/html': 'tutorial/edit.html'})
+@view_config(route_name='exercise.edit')
+@render({'text/html': 'exercise/edit.html'})
 @current_user()
 def edit(request):
-    u"""Handles the ``/modules/{mid}/tutorials/{tid}/edit`` URL, providing
-    the UI and backend for editing a :class:`~wte.models.Part` as a "tutorial".
+    u"""Handles the ``/modules/{mid}/exercise/{eid}/edit`` URL, providing
+    the UI and backend for editing a :class:`~wte.models.Part` as an
+    exercise.
     
     Requires that the user has "edit" rights on the current
     :class:`~wte.models.Module`.
     """
     dbsession = DBSession()
     module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
-    tutorial = dbsession.query(Part).filter(and_(Part.id==request.matchdict['tid'],
+    exercise = dbsession.query(Part).filter(and_(Part.id==request.matchdict['eid'],
                                                  Part.module_id==request.matchdict['mid'],
-                                                 Part.type==u'tutorial')).first()
-    if module and tutorial:
+                                                 Part.type==u'exercise')).first()
+    if module and exercise:
         if is_authorised(u':module.allow("edit" :current)', {'module': module,
                                                              'current': request.current_user}):
             if request.method == u'POST':
                 try:
-                    params = TutorialSchema().to_python(request.params)
+                    params = ExerciseSchema().to_python(request.params)
                     with transaction.manager:
-                        dbsession.add(tutorial)
-                        tutorial.title = params['title']
-                        tutorial.status = params['status']
-                        if params['page_id']:
-                            for order, pid in enumerate(params['page_id']):
-                                for page in tutorial.pages:
-                                    if page.id == int(pid):
-                                        dbsession.add(page)
-                                        page.order = order
-                    request.session.flash('The tutorial has been updated', queue='info')
-                    raise HTTPSeeOther(request.route_url('tutorial.view', mid=request.matchdict['mid'], tid=request.matchdict['tid']))
+                        dbsession.add(exercise)
+                        exercise.title = params['title']
+                        exercise.status = params['status']
+                    request.session.flash('The exercise has been updated', queue='info')
+                    raise HTTPSeeOther(request.route_url('exercise.view', mid=request.matchdict['mid'], eid=request.matchdict['eid']))
                 except formencode.Invalid as e:
                     e.params = params
                     return {'e': e,
                             'module': module,
-                            'tutorial': tutorial,
+                            'exercise': exercise,
                             'crumbs': [{'title': 'Modules', 'url': request.route_url('modules')},
                                        {'title': module.title, 'url': request.route_url('module.view', mid=module.id)},
-                                       {'title': tutorial.title, 'url': request.route_url('tutorial.view', mid=module.id, tid=tutorial.id)},
-                                       {'title': 'Edit', 'url': request.route_url('tutorial.edit', mid=module.id, tid=tutorial.id), 'current': True}]}
+                                       {'title': exercise.title, 'url': request.route_url('exercise.view', mid=module.id, eid=exercise.id)},
+                                       {'title': 'Edit', 'url': request.route_url('exercise.edit', mid=module.id, eid=exercise.id), 'current': True}]}
             return {'module': module,
-                    'tutorial': tutorial,
+                    'exercise': exercise,
                     'crumbs': [{'title': 'Modules', 'url': request.route_url('modules')},
                                {'title': module.title, 'url': request.route_url('module.view', mid=module.id)},
-                               {'title': tutorial.title, 'url': request.route_url('tutorial.view', mid=module.id, tid=tutorial.id)},
-                               {'title': 'Edit', 'url': request.route_url('tutorial.edit', mid=module.id, tid=tutorial.id), 'current': True}]}
+                               {'title': exercise.title, 'url': request.route_url('exercise.view', mid=module.id, eid=exercise.id)},
+                               {'title': 'Edit', 'url': request.route_url('exercise.edit', mid=module.id, eid=exercise.id), 'current': True}]}
         else:
             unauthorised_redirect(request)
     else:
         raise HTTPNotFound()
 
-@view_config(route_name='tutorial.delete')
-@render({'text/html': 'tutorial/delete.html'})
+@view_config(route_name='exercise.delete')
+@render({'text/html': 'exercise/delete.html'})
 @current_user()
 def delete(request):
-    u"""Handles the ``/modules/{mid}/tutorials/{tid}/delete`` URL, providing
-    the UI and backend for deleting a :class:`~wte.models.Part` as a "tutorial".
+    u"""Handles the ``/modules/{mid}/exercises/{eid}/delete`` URL, providing
+    the UI and backend for deleting a :class:`~wte.models.Part`.
     
     Requires that the user has "edit" rights on the current
     :class:`~wte.models.Module`.
     """
     dbsession = DBSession()
     module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
-    tutorial = dbsession.query(Part).filter(and_(Part.id==request.matchdict['tid'],
+    exercise = dbsession.query(Part).filter(and_(Part.id==request.matchdict['eid'],
                                                  Part.module_id==request.matchdict['mid'],
-                                                 Part.type==u'tutorial')).first()
-    if module and tutorial:
+                                                 Part.type==u'exercise')).first()
+    if module and exercise:
         if is_authorised(u':module.allow("edit" :current)', {'module': module,
                                                              'current': request.current_user}):
             if request.method == u'POST':
                 with transaction.manager:
-                    dbsession.delete(tutorial)
-                request.session.flash('The tutorial has been deleted', queue='info')
+                    dbsession.delete(exercise)
+                request.session.flash('The exercise has been deleted', queue='info')
                 raise HTTPSeeOther(request.route_url('module.view', mid=request.matchdict['mid']))
             return {'module': module,
-                    'tutorial': tutorial,
+                    'exercise': exercise,
                     'crumbs': [{'title': 'Modules', 'url': request.route_url('modules')},
                                {'title': module.title, 'url': request.route_url('module.view', mid=module.id)},
-                               {'title': tutorial.title, 'url': request.route_url('tutorial.view', mid=module.id, tid=tutorial.id)},
-                               {'title': 'Delete', 'url': request.route_url('tutorial.delete', mid=module.id, tid=tutorial.id), 'current': True}]}
+                               {'title': exercise.title, 'url': request.route_url('exercise.view', mid=module.id, eid=exercise.id)},
+                               {'title': 'Delete', 'url': request.route_url('exercise.delete', mid=module.id, eid=exercise.id), 'current': True}]}
         else:
             unauthorised_redirect(request)
     else:
