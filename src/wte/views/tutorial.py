@@ -51,7 +51,7 @@ class TutorialSchema(formencode.Schema):
                                                          u'available']))
     u"""The exercise's status"""
     page_id = formencode.foreach.ForEach(formencode.validators.Int())
-    u"""The ids of the child :class:`~wte.models.Part"""
+    u"""The ids of the child :class:`~wte.models.Part`"""
     template_id = formencode.foreach.ForEach(formencode.validators.Int())
     u"""The ids of the child :class:`~wte.models.Template`"""
     
