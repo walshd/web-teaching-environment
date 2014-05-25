@@ -22,16 +22,16 @@
       <section id="editor" class="small-12 medium-6 large-8">
         <section id="files">
           <dl class="tabs" data-tab="">
-            <dd py:for="idx, file in enumerate(progress.files)" class="${'active' if idx == 0 else ''}"><a href="#${h.frontend.html_id(file.filename)}">${file.filename}</a></dd>
+            <dd py:for="idx, file in enumerate(progress.files)" id="${h.frontend.html_id(file.filename)}-tab" class="${'active' if idx == 0 else ''}"><a href="#${h.frontend.html_id(file.filename)}">${file.filename} <img src="${r.static_url('wte:static/img/spinner-small.gif')}" class="hidden"/></a></dd>
           </dl>
           <form class="tabs-content">
             <div py:for="idx, file in enumerate(progress.files)" class="content ${'active' if idx == 0 else ''}" id="${h.frontend.html_id(file.filename)}">
-              ${h.form.tags.textarea('', file.content, None, data_wte_mimetype=file.mimetype)}
+              ${h.form.tags.textarea('', file.content, None, data_wte_mimetype=file.mimetype, data_wte_fileid=file.id)}
             </div>
           </form>
         </section>
         <section id="viewer">
-          <iframe src="/"></iframe>
+          <iframe src="${r.route_url('file.view', mid=module.id, tid=tutorial.id, pid=page.id, uid=r.current_user.id, filename='index.html')}"></iframe>
         </section>
       </section>
     </article>
@@ -51,14 +51,35 @@
         });
         $('#viewer').css('height', (win_height / 2) + 'px');
     }
+    function save_doc(cm, textarea) {
+    	var spinner = $('#' + textarea.parent().attr('id') + '-tab img');
+    	spinner.show();
+    	var url = '${r.route_url('file.save', mid=module.id, tid=tutorial.id, pid=page.id, uid=r.current_user.id, fid='FID')}';
+    	url = url.replace('FID', textarea.data('wte-fileid'));
+    	$.ajax(url, {
+    		type: 'POST',
+    		data: {'content': cm.getValue()},
+    		dataType: 'json'
+    	}).complete(function() {
+    		var iframe = $('#viewer iframe');
+    		iframe.attr('src', iframe.attr('src'));
+    	}).always(function() {
+    		spinner.hide();
+    	});
+    }
     $(document).ready(function() {
         resize_page();
         $(window).on('resize', resize_page);
         $('#files .content textarea').each(function() {
         	var textarea = $(this);
-            textarea.data('wte-cm', CodeMirror.fromTextArea(this, {
-            	mode: textarea.data('wte-mimetype')
-            }));
+        	cm = CodeMirror.fromTextArea(this, {
+                mode: textarea.data('wte-mimetype')
+            });
+        	cm.on('change', function(cm, changes) {
+        		clearTimeout(textarea.data('wte-timeout'));
+        		textarea.data('wte-timeout', setTimeout(function() {save_doc(cm, textarea);}, 1000));
+        	});
+            textarea.data('wte-cm', cm);
         });
         $('#files .tabs').on('toggled', function (event, tab) {
         	tab.children('textarea').data('wte-cm').refresh();

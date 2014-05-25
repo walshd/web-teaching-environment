@@ -15,6 +15,7 @@ Routes are defined in :func:`~wte.views.frontend.init`.
 import transaction
 
 from pyramid.httpexceptions import (HTTPNotFound)
+from pyramid.response import Response
 from pyramid.view import view_config
 from pywebtools.auth import is_authorised
 from pywebtools.renderer import render
@@ -40,6 +41,10 @@ def init(config):
       :func:`~wte.views.frontend.view_page`
     * ``user.modules`` -- ``/users/{uid}/modules`` --
       :func:`~wte.views.frontend.user_modules`
+    * ``file.view`` -- ``/modules/{mid}/tutorials/{tid}/pages/{pid}/users/{uid}/files/name/{filename}``
+      -- :func:`~wte.views.frontend.view_file`
+    * ``file.save`` -- ``/modules/{mid}/tutorials/{tid}/pages/{pid}/users/{uid}/files/id/{fid}/save``
+      -- :func:`~wte.views.frontend.save_file`
     """
     config.add_route('modules', '/modules')
     config.add_route('module.view', '/modules/{mid}')
@@ -47,6 +52,8 @@ def init(config):
     config.add_route('exercise.view', '/modules/{mid}/exercises/{eid}')
     config.add_route('page.view', '/modules/{mid}/tutorials/{tid}/pages/{pid}')
     config.add_route('user.modules', '/users/{uid}/modules')
+    config.add_route('file.view', '/modules/{mid}/tutorials/{tid}/pages/{pid}/users/{uid}/files/name/{filename}')
+    config.add_route('file.save', '/modules/{mid}/tutorials/{tid}/pages/{pid}/users/{uid}/files/id/{fid}/save')
 
 @view_config(route_name='modules')
 @render({'text/html': 'module/list.html'})
@@ -256,6 +263,76 @@ def view_page(request):
                                {'title': module.title, 'url': request.route_url('module.view', mid=module.id)},
                                {'title': tutorial.title, 'url': request.route_url('tutorial.view', mid=module.id, tid=tutorial.id), 'current': True}]
                     }
+        else:
+            unauthorised_redirect(request)
+    else:
+        raise HTTPNotFound()
+
+@view_config(route_name='file.view')
+@current_user()
+def view_file(request):
+    u"""Handles the ``/modules/{mid}/tutorials/{tid}/pages/{pid}/users/{uid}/files/name/{filename}``
+    URL, sending back the correct :class:`~wte.models.File`.
+    
+    Requires that the user has "view" rights on the
+    :class:`~wte.models.Module`. It will also only send a
+    :class:`~wte.models.File` belonging to the current
+    :class:`~wte.models.User`.
+    """
+    dbsession = DBSession()
+    module = dbsession.query(Module).filter(Module.id==request.matchdict[u'mid']).first()
+    tutorial = dbsession.query(Part).filter(and_(Part.id==request.matchdict[u'tid'],
+                                                 Part.module_id==request.matchdict[u'mid'],
+                                                 Part.type==u'tutorial')).first()
+    page = dbsession.query(Page).filter(and_(Page.id==request.matchdict[u'pid'],
+                                             Page.part_id==request.matchdict[u'tid'])).first()
+    if module and tutorial and page:
+        if tutorial.allow('view', request.current_user):
+            progress = get_user_part_progress(dbsession, request.current_user, tutorial, page)
+            dbsession.add(progress)
+            for user_file in progress.files:
+                if user_file.filename == request.matchdict['filename']:
+                    return Response(body=user_file.content,
+                                    headerlist=[('Content-Type', str(user_file.mimetype))])
+            raise HTTPNotFound()
+        else:
+            unauthorised_redirect(request)
+    else:
+        raise HTTPNotFound()
+
+@view_config(route_name='file.save')
+@render({'application/json': True})
+@current_user()
+def save_file(request):
+    u"""Handles the ``/modules/{mid}/tutorials/{tid}/pages/{pid}/users/{uid}/files/id/{fid}/save``
+    URL, updating the :class:`~wte.models.File` content.
+    
+    Requires that the user has "view" rights on the
+    :class:`~wte.models.Module`. It will also only send a
+    :class:`~wte.models.File` belonging to the current
+    :class:`~wte.models.User`.
+    """
+    dbsession = DBSession()
+    module = dbsession.query(Module).filter(Module.id==request.matchdict[u'mid']).first()
+    tutorial = dbsession.query(Part).filter(and_(Part.id==request.matchdict[u'tid'],
+                                                 Part.module_id==request.matchdict[u'mid'],
+                                                 Part.type==u'tutorial')).first()
+    page = dbsession.query(Page).filter(and_(Page.id==request.matchdict[u'pid'],
+                                             Page.part_id==request.matchdict[u'tid'])).first()
+    if module and tutorial and page:
+        if tutorial.allow('view', request.current_user):
+            progress = get_user_part_progress(dbsession, request.current_user, tutorial, page)
+            dbsession.add(progress)
+            for user_file in progress.files:
+                if user_file.id == int(request.matchdict['fid']):
+                    if 'content' in request.params:
+                        with transaction.manager:
+                            dbsession.add(user_file)
+                            user_file.content = request.params['content']
+                        return {'status': 'saved'}
+                    else:
+                        return {'status': 'no-changes'}
+            raise HTTPNotFound()
         else:
             unauthorised_redirect(request)
     else:

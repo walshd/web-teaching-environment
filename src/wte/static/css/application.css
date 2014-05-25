@@ -13,6 +13,9 @@ ul.no-symbol, ol.no-symbol {
 ul.no-symbol > li, ol.no-symbol > li {
     list-style-type: none;
 }
+.hidden {
+    display: none;
+}
 
 /**
  * jQuery UI styles
