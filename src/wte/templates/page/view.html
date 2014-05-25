@@ -19,7 +19,24 @@
           </ul>
         </div>
       </section>
+      <section id="editor" class="small-12 medium-6 large-8">
+        <section id="files">
+          <dl class="tabs" data-tab="">
+            <dd py:for="idx, file in enumerate(progress.files)" class="${'active' if idx == 0 else ''}"><a href="#${h.frontend.html_id(file.filename)}">${file.filename}</a></dd>
+          </dl>
+          <form class="tabs-content">
+            <div py:for="idx, file in enumerate(progress.files)" class="content ${'active' if idx == 0 else ''}" id="${h.frontend.html_id(file.filename)}">
+              ${h.form.tags.textarea('', file.content, None, data_wte_mimetype=file.mimetype)}
+            </div>
+          </form>
+        </section>
+        <section id="viewer">
+          <iframe src="/"></iframe>
+        </section>
+      </section>
     </article>
+    <script src="${r.static_url('wte:static/js/codemirror/codemirror.js')}"></script>
+    ${h.frontend.codemirror_scripts(r, ['text/html'])}
     <script>
     function resize_page() {
         var win_height = $(window).innerHeight();
@@ -27,10 +44,25 @@
             win_height = win_height - $(this).outerHeight(true);
         });
         $('#textbook').css('height', win_height + 'px');
+        $('#editor').css('height', win_height + 'px');
+        $('#files').css('height', (win_height / 2) + 'px');
+        $('#files .content').each(function() {
+        	$(this).css('height', (win_height / 2) - $('#files .tabs').outerHeight(true) + 'px');
+        });
+        $('#viewer').css('height', (win_height / 2) + 'px');
     }
     $(document).ready(function() {
         resize_page();
         $(window).on('resize', resize_page);
+        $('#files .content textarea').each(function() {
+        	var textarea = $(this);
+            textarea.data('wte-cm', CodeMirror.fromTextArea(this, {
+            	mode: textarea.data('wte-mimetype')
+            }));
+        });
+        $('#files .tabs').on('toggled', function (event, tab) {
+        	tab.children('textarea').data('wte-cm').refresh();
+        });
     });
     </script>
   </body>

@@ -432,6 +432,7 @@ class UserPartProgress(Base):
     page_id = Column(Integer, ForeignKey('pages.id', name=u'user_part_progress_page_id_fk'))
     
     current_page = relationship(u'Page')
+    files = relationship(u'File', cascade="all,delete", order_by=u'File.order')
 
 Index('user_part_progress_user_id_ix', UserPartProgress.user_id)
 Index('user_part_progress_part_id_ix', UserPartProgress.part_id)
@@ -491,6 +492,37 @@ class Template(Base):
     filename = Column(Unicode(255))
     mimetype = Column(Unicode(255))
     content = Column(UnicodeText)
+
+Index('templates_part_id_ix', Page.part_id)
+    
+class File(Base):
+    u"""The :class:`~wte.models.File` represents a file used in a
+    :class:`~wte.models.Part` by a :class:`~wte.models.User` via the
+    :class:`~wte.models.UserPartProgress`.
+    
+    Instances of :class:`~wte.models.File` have the following attributes:
+    
+    * ``id`` -- The unique database identifier
+    * ``content`` -- The file content
+    * ``filename`` -- The file's name
+    * ``mimetype`` -- The file's mimetype
+    * ``order`` -- The order of the template
+    * ``progress_id`` -- The unique database identifier of the 
+      :class:`~wte.models.UserPartProgress` that contains this
+      :class:`~wte.models.File`
+    * ``progress`` -- The :class:`~wte.models.UserPartProgress`` this
+      :class:`~wte.models.File`` belongs to
+    """
+    __tablename__ = u'files'
+    
+    id = Column(Integer, primary_key=True)
+    progress_id = Column(Integer, ForeignKey(u'user_part_progress.id', name=u'files_progress_id_fk'))
+    order = Column(Integer)
+    filename = Column(Unicode(255))
+    mimetype = Column(Unicode(255))
+    content = Column(UnicodeText)
+
+Index('files_progress_id_ix', Page.part_id)
     
 @listens_for(Page.content, 'set')
 def compile_page_content(target, value, old_value, initiator):

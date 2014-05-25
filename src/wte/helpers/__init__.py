@@ -15,4 +15,4 @@ consulte the following documentation: :mod:`pywebtools.text`,
 from genshi.builder import Markup
 from pywebtools import text
 
-from . import form, auth
+from . import form, auth, frontend

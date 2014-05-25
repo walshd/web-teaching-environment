@@ -49,6 +49,7 @@ ul.no-symbol > li, ol.no-symbol > li {
     box-sizing: border-box;
     border-right: 1px solid #333;
 }
+
 /**
  * Pagination styles
  */
@@ -66,35 +67,49 @@ ul.no-symbol > li, ol.no-symbol > li {
  */
 
 #editor {
-    position: relative;
+    overflow: hidden;
 }
-
-#editor span.label {
-    position: absolute;
-    top: 0px;
-    right: 0px;
-    z-index: 1;
+#files {
+    border-bottom: 1px solid #333;
+    overflow: hidden;
 }
-
-#editor:hover span.label {
-    display: none;
+#files .tabs {
+    border-bottom: 1px solid #dfdfdf;
+    padding: 0.5em 2em 0 2em;
 }
-
-#editor .tabs dd a {
-    padding: 0.5rem 0.8rem;
+#files .tabs dd {
+    margin-right: 0.5em;
+    margin-bottom: -1px !important;
 }
-
-#editor .tabs-content {
-    padding: 0;
-    margin: 0;
+#files .tabs dd > a {
+    border-radius: 3px 3px 0 0;
+    border: 1px solid transparent;
+    border-bottom-color: #dfdfdf;
+    background-color: #fff;
+    padding: 0.5em 0.8em;
 }
-
-#editor .tabs-content .content {
-    padding: 0;
+#files .tabs dd > a:hover {
+    background-color: #eee;
 }
-
-#editor .CodeMirror {
-    border: 1px solid #fff;
+#files .tabs dd.active {
+}
+#files .tabs dd.active > a {
+    border-top-color: #dfdfdf;
+    border-right-color: #dfdfdf;
+    border-bottom-color: transparent;
+    border-left-color: #dfdfdf;
+}
+#files .tabs dd.active > a:hover {
+    background-color: #fff;
+}
+#files .tabs-content .content {
+    padding: 0.2em 0.5em;
+}
+#files .tabs-content .content textarea {
+    height: 100%;
+}
+#files .tabs-content .content .CodeMirror {
+    height: 100%;
 }
 
 /**
@@ -102,18 +117,12 @@ ul.no-symbol > li, ol.no-symbol > li {
  */
 
 #viewer {
-    position: relative;
     box-sizing: border-box;
-    border-top: 1px solid #dfdfdf;
+    padding: 3px;
+    box-shadow: 1px 1px 2px 1px #888 inset, -1px -1px 1px 0px #888 inset;
 }
-
-#viewer span.label {
-    position: absolute;
-    top: 0px;
-    right: 0px;
-    z-index: 1;
-}
-
-#viewer:hover span.label {
-    display: none;
+#viewer iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
 }

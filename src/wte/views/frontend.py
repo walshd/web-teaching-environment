@@ -21,7 +21,8 @@ from pywebtools.renderer import render
 from sqlalchemy import and_
 
 from wte.decorators import current_user
-from wte.models import (DBSession, Module, Part, Page, User, UserPartProgress)
+from wte.models import (DBSession, Module, Part, Page, User, UserPartProgress,
+                        File)
 from wte.util import (unauthorised_redirect)
 
 def init(config):
@@ -125,9 +126,15 @@ def get_user_part_progress(dbsession, user, part, page=None):
             break
     if not user_part:
         with transaction.manager:
+            dbsession.add(part)
             user_part = UserPartProgress(user=user,
                                          part=part,
                                          current_page=page)
+            for template in part.templates:
+                user_part.files.append(File(order=template.order,
+                                            filename=template.filename,
+                                            mimetype=template.mimetype,
+                                            content=template.content))
             dbsession.add(user_part)
     elif page:
         if user_part.page_id != page.id:
@@ -244,6 +251,7 @@ def view_page(request):
                     'prev_page': prev_page,
                     'next_page': next_page,
                     'page_no': page_no,
+                    'progress': progress,
                     'crumbs': [{'title': 'Modules', 'url': request.route_url('modules')},
                                {'title': module.title, 'url': request.route_url('module.view', mid=module.id)},
                                {'title': tutorial.title, 'url': request.route_url('tutorial.view', mid=module.id, tid=tutorial.id), 'current': True}]
