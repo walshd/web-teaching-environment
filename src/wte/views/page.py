@@ -22,7 +22,7 @@ from pywebtools.auth import is_authorised
 from sqlalchemy import and_
 
 from wte.decorators import current_user
-from wte.util import (unauthorised_redirect, State, send_email, get_config_setting)
+from wte.util import (unauthorised_redirect)
 from wte.models import (DBSession, Module, Part, Page)
 from wte.text_formatter import compile_rst
 
