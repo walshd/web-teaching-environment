@@ -36,7 +36,7 @@ def init(config):
       :func:`~wte.views.tutorial.edit`
     * ``page.delete`` -- ``/modules/{mid}/tutorials/{tid}/pages/{pid}/delete``
       -- :func:`~wte.views.tutorial.delete`
-    * ``page.edit`` -- ``/modules/{mid}/tutorials/{tid}/pages/{pid}/preview``
+    * ``page.preview`` -- ``/modules/{mid}/tutorials/{tid}/pages/{pid}/preview``
       -- :func:`~wte.views.tutorial.preview`
     """
     config.add_route('page.new', '/modules/{mid}/tutorials/{tid}/pages/new')
