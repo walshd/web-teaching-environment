@@ -8,18 +8,36 @@
     <div class="row left">
       <article class="small-12 column">
         <h1>${tutorial.title}</h1>
-        <ul class="no-symbol" py:if="module.has_role('owner', r.current_user)">
-          <li py:for="page in tutorial.pages" class="panel">
-            <span py:if="h.auth.is_authorised(r.current_user, 'edit', module)" class="right">
-              <a href="${r.route_url('page.edit', mid=module.id, tid=tutorial.id, pid=page.id)}" class="button small">Edit</a>
-              <a href="${r.route_url('page.delete', mid=module.id, tid=tutorial.id, pid=page.id)}" class="button small alert">Delete</a>
-            </span>
-            <h2><a href="${r.route_url('page.view', mid=module.id, tid=tutorial.id, pid=page.id)}">${page.title}</a></h2>
-          </li>
-        </ul>
+        <py:if test="module.has_role('owner', r.current_user)">
+          <section py:if="tutorial.pages">
+            <h2>Pages</h2>
+            <ul class="no-symbol">
+              <li py:for="page in tutorial.pages" class="panel">
+                <span py:if="h.auth.is_authorised(r.current_user, 'edit', module)" class="right">
+                  <a href="${r.route_url('page.edit', mid=module.id, tid=tutorial.id, pid=page.id)}" class="button small">Edit</a>
+                  <a href="${r.route_url('page.delete', mid=module.id, tid=tutorial.id, pid=page.id)}" class="button small alert">Delete</a>
+                </span>
+                <h2><a href="${r.route_url('page.view', mid=module.id, tid=tutorial.id, pid=page.id)}">${page.title}</a></h2>
+              </li>
+            </ul>
+          </section>
+          <section py:if="tutorial.templates">
+            <h2>Templates</h2>
+            <ul class="no-symbol">
+              <li py:for="template in tutorial.templates" class="panel">
+                <span py:if="h.auth.is_authorised(r.current_user, 'edit', module)" class="right">
+                  <a href="${r.route_url('template.edit', mid=module.id, tid=tutorial.id, tpid=template.id)}" class="button small">Edit</a>
+                  <a href="${r.route_url('template.delete', mid=module.id, tid=tutorial.id, tpid=template.id)}" class="button small alert">Delete</a>
+                </span>
+                <h2>${template.filename}</h2>
+              </li>
+            </ul>
+          </section>
+        </py:if>
         <div py:if="h.auth.is_authorised(r.current_user, 'edit', module)">
           <a href="${r.route_url('tutorial.edit', mid=module.id, tid=tutorial.id)}" class="button small">Edit</a>
           <a href="${r.route_url('page.new', mid=module.id, tid=tutorial.id)}" class="button small">Add page</a>
+          <a href="${r.route_url('template.new', mid=module.id, tid=tutorial.id)}" class="button small">Add template</a>
           <a href="${r.route_url('tutorial.delete', mid=module.id, tid=tutorial.id)}" class="button small alert">Delete</a>
         </div>
         <div py:if="module.has_role('student', r.current_user)">

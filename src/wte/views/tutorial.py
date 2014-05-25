@@ -51,7 +51,9 @@ class TutorialSchema(formencode.Schema):
                                                          u'available']))
     u"""The exercise's status"""
     page_id = formencode.foreach.ForEach(formencode.validators.Int())
-    u"""The ids of the child pages"""
+    u"""The ids of the child :class:`~wte.models.Part"""
+    template_id = formencode.foreach.ForEach(formencode.validators.Int())
+    u"""The ids of the child :class:`~wte.models.Template`"""
     
 @view_config(route_name='tutorial.new')
 @render({'text/html': 'tutorial/new.html'})
@@ -134,6 +136,12 @@ def edit(request):
                                     if page.id == int(pid):
                                         dbsession.add(page)
                                         page.order = order
+                        if params['template_id']:
+                            for order, tpid in enumerate(params['template_id']):
+                                for template in tutorial.templates:
+                                    if template.id == int(tpid):
+                                        dbsession.add(template)
+                                        template.order = order
                     request.session.flash('The tutorial has been updated', queue='info')
                     raise HTTPSeeOther(request.route_url('tutorial.view', mid=request.matchdict['mid'], tid=request.matchdict['tid']))
                 except formencode.Invalid as e:

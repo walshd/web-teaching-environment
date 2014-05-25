@@ -381,6 +381,7 @@ class Part(Base):
     
     pages = relationship(u'Page', backref=u'part', cascade=u'all,delete', order_by='Page.order')
     users = relationship(u'UserPartProgress', backref=u'part', cascade=u'all,delete')
+    templates = relationship(u'Template', backref=u'part', cascade=u'all,delete', order_by=u'Template.order')
 
     def allow(self, action, user):
         """Checks whether the given ``user`` is allowed to perform the given
@@ -465,8 +466,35 @@ class Page(Base):
 
 Index('pages_part_id_ix', Page.part_id)
 
+class Template(Base):
+    u"""The :class:`~wte.models.Template` represents a file template used in a
+    :class:`~wte.models.Part`.
+    
+    Instances of :class:`~wte.models.Template` have the following attributes:
+    
+    * ``id`` -- The unique database identifier
+    * ``content`` -- The template file content
+    * ``filename`` -- The template's filename
+    * ``mimetype`` -- The template's mimetype
+    * ``order`` -- The order of the template
+    * ``part_id`` -- The unique database identifier of the 
+      :class:`~wte.models.Part` that contains this
+      :class:`~wte.models.Template`
+    * ``part`` -- The :class:`~wte.models.Part`` this
+      :class:`~wte.models.Template`` belongs to
+    """
+    __tablename__ = u'templates'
+    
+    id = Column(Integer, primary_key=True)
+    part_id = Column(Integer, ForeignKey(u'parts.id', name=u'templates_part_id_fk'))
+    order = Column(Integer)
+    filename = Column(Unicode(255))
+    mimetype = Column(Unicode(255))
+    content = Column(UnicodeText)
+    
 @listens_for(Page.content, 'set')
 def compile_page_content(target, value, old_value, initiator):
     u"""SQLAlchemy event listener that automatically compiles the ReST content
     of a :class:`~wte.models.Page` to HTML when it is set / updated."""
     target.compiled_content = compile_rst(value)
+

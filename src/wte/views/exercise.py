@@ -1,5 +1,14 @@
 # -*- coding: utf-8 -*-
 u"""
+#############################################
+:mod:`wte.views.exercise` -- Exercise Backend
+#############################################
+
+The :mod:`~wte.views.exercise` module provides the backend functionality for
+creating, editing, and deleting :class:`~wte.models.Part` when they are used
+as "exercises".
+
+Routes are defined in :func:`~wte.views.exercise.init`.
 
 .. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
