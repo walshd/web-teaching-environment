@@ -9,12 +9,12 @@
       <article class="small-12 column">
         <h1>Modules</h1>
         <ul class="no-symbol">
-          <li py:for="module_asc in user.modules" class="panel">
+          <li py:for="module_asc in user.modules" class="panel clearfix">
             <span py:if="h.auth.is_authorised(r.current_user, 'edit', module_asc.module) or h.auth.is_authorised(r.current_user, 'delete', module_asc.module)" class="right">
-              <a py:if="h.auth.is_authorised(r.current_user, 'edit', module_asc.module)" href="${r.route_url('module.edit', mid=module_asc.module.id)}" class="button small">Edit</a>
-              <a py:if="h.auth.is_authorised(r.current_user, 'delete', module_asc.module)" href="${r.route_url('module.delete', mid=module_asc.module.id)}" class="button small alert">Delete</a>
+              <a py:if="h.auth.is_authorised(r.current_user, 'edit', module_asc.module)" href="${r.route_url('module.edit', mid=module_asc.module.id)}" class="button tiny">Edit</a>
+              <a py:if="h.auth.is_authorised(r.current_user, 'delete', module_asc.module)" href="${r.route_url('module.delete', mid=module_asc.module.id)}" class="button tiny alert">Delete</a>
             </span>
-            <h2><a href="${r.route_url('module.view', mid=module_asc.module.id)}">${module_asc.module.title}</a></h2>
+            <h3><a href="${r.route_url('module.view', mid=module_asc.module.id)}">${module_asc.module.title}</a></h3>
           </li>
         </ul>
         <div>

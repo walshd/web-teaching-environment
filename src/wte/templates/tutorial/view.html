@@ -12,12 +12,12 @@
           <section py:if="tutorial.pages">
             <h2>Pages</h2>
             <ul class="no-symbol">
-              <li py:for="page in tutorial.pages" class="panel">
+              <li py:for="page in tutorial.pages" class="panel clearfix">
                 <span py:if="h.auth.is_authorised(r.current_user, 'edit', module)" class="right">
-                  <a href="${r.route_url('page.edit', mid=module.id, tid=tutorial.id, pid=page.id)}" class="button small">Edit</a>
-                  <a href="${r.route_url('page.delete', mid=module.id, tid=tutorial.id, pid=page.id)}" class="button small alert">Delete</a>
+                  <a href="${r.route_url('page.edit', mid=module.id, tid=tutorial.id, pid=page.id)}" class="button tiny">Edit</a>
+                  <a href="${r.route_url('page.delete', mid=module.id, tid=tutorial.id, pid=page.id)}" class="button tiny alert">Delete</a>
                 </span>
-                <h2><a href="${r.route_url('page.view', mid=module.id, tid=tutorial.id, pid=page.id)}">${page.title}</a></h2>
+                <h3><a href="${r.route_url('page.view', mid=module.id, tid=tutorial.id, pid=page.id)}">${page.title}</a></h3>
               </li>
             </ul>
           </section>
@@ -26,10 +26,10 @@
             <ul class="no-symbol">
               <li py:for="template in tutorial.templates" class="panel">
                 <span py:if="h.auth.is_authorised(r.current_user, 'edit', module)" class="right">
-                  <a href="${r.route_url('template.edit', mid=module.id, tid=tutorial.id, tpid=template.id)}" class="button small">Edit</a>
-                  <a href="${r.route_url('template.delete', mid=module.id, tid=tutorial.id, tpid=template.id)}" class="button small alert">Delete</a>
+                  <a href="${r.route_url('template.edit', mid=module.id, tid=tutorial.id, tpid=template.id)}" class="button tiny">Edit</a>
+                  <a href="${r.route_url('template.delete', mid=module.id, tid=tutorial.id, tpid=template.id)}" class="button tiny alert">Delete</a>
                 </span>
-                <h2>${template.filename}</h2>
+                <h3>${template.filename}</h3>
               </li>
             </ul>
           </section>

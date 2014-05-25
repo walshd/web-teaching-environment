@@ -2,6 +2,7 @@
  * Foundation overrides
  */
 .row.left {margin:0}
+.panel .button {margin-bottom:0}
 
 /**
  * Generic styles

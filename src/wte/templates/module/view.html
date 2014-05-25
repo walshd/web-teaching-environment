@@ -9,19 +9,19 @@
       <article class="small-12 column">
         <h1>${module.title}</h1>
         <ul class="no-symbol">
-          <li py:for="part in module.parts" class="panel" py:if="part.allow('view', r.current_user)">
+          <li py:if="part.allow('view', r.current_user)" py:for="part in module.parts" class="panel clearfix">
             <span py:if="h.auth.is_authorised(r.current_user, 'edit', module)" class="right">
               <py:if test="part.type == 'tutorial'">
-                <a href="${r.route_url('tutorial.edit', mid=module.id, tid=part.id)}" class="button small">Edit</a>
-                <a href="${r.route_url('tutorial.delete', mid=module.id, tid=part.id)}" class="button small alert">Delete</a>
+                <a href="${r.route_url('tutorial.edit', mid=module.id, tid=part.id)}" class="button tiny">Edit</a>
+                <a href="${r.route_url('tutorial.delete', mid=module.id, tid=part.id)}" class="button tiny alert">Delete</a>
               </py:if>
               <py:if test="part.type == 'exercise'">
-                <a href="${r.route_url('exercise.edit', mid=module.id, eid=part.id)}" class="button small">Edit</a>
-                <a href="${r.route_url('exercise.delete', mid=module.id, eid=part.id)}" class="button small alert">Delete</a>
+                <a href="${r.route_url('exercise.edit', mid=module.id, eid=part.id)}" class="button tiny">Edit</a>
+                <a href="${r.route_url('exercise.delete', mid=module.id, eid=part.id)}" class="button tiny alert">Delete</a>
               </py:if>
             </span>
-            <h2 py:if="part.type == 'tutorial'"><a href="${r.route_url('tutorial.view', mid=module.id, tid=part.id)}">${part.title}</a></h2>
-            <h2 py:if="part.type == 'exercise'"><a href="${r.route_url('exercise.view', mid=module.id, eid=part.id)}">${part.title}</a></h2>
+            <h3 py:if="part.type == 'tutorial'"><a href="${r.route_url('tutorial.view', mid=module.id, tid=part.id)}">${part.title}</a></h3>
+            <h3 py:if="part.type == 'exercise'"><a href="${r.route_url('exercise.view', mid=module.id, eid=part.id)}">${part.title}</a></h3>
           </li>
         </ul>
         <div>
