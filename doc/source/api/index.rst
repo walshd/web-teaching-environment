@@ -16,9 +16,11 @@ API Documentation
    wte_scripts_database
    wte_scripts_main
    wte_views
+   wte_views_exercise
    wte_views_frontend
    wte_views_module
    wte_views_page
+   wte_views_template
    wte_views_tutorial
    wte_views_user
    wte_util
