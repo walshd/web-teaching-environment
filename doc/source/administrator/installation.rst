@@ -46,7 +46,7 @@ For MySQL run::
 After the installation has completed, move on to the :doc:`setup`.
 
 .. _`virtual environment`: https://pypi.python.org/pypi/virtualenv
-.. _`pycryptopp`: 
+.. _`pycryptopp`: https://pypi.python.org/pypi/pycryptopp
 .. _`PyCrypto`: https://www.dlitz.net/software/pycrypto/
 .. _`PostgreSQL`: http://www.postgresql.org/
 .. _`MySQL`: http://www.mysql.com/
