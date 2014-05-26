@@ -21,7 +21,8 @@ from pywebtools.auth import is_authorised
 
 from wte.decorators import current_user
 from wte.util import (unauthorised_redirect)
-from wte.models import (DBSession, Module, UserModuleRole)
+from wte.models import (DBSession, Module, UserModuleRole, UserPartProgress,
+    User)
 
 def init(config):
     u"""Adds the module-specific backend routes (route name, URL pattern
@@ -213,6 +214,8 @@ def deregister(request):
                     for user_asc in module.users:
                         if user_asc.user == request.current_user and user_asc.role != u'owner':
                             dbsession.delete(user_asc)
+                            for progress in dbsession.query(UserPartProgress).join(UserPartProgress.user).filter(User.id==request.current_user.id):
+                                dbsession.delete(progress)
                         elif user_asc.user == request.current_user and user_asc.role == u'owner':
                             request.session.flash('As you are the module\'s owner, you cannot de-register from the module', queue='error')
                 request.session.flash('You have de-registered from the module', queue='info')
