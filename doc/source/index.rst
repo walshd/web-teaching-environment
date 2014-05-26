@@ -11,6 +11,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   administrator/index
    api/index
 
 Indices and tables
