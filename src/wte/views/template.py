@@ -28,16 +28,16 @@ def init(config):
     u"""Adds the template-specific backend routes (route name, URL pattern
     handler):
     
-    * ``template.new`` -- ``/modules/{mid}/tutorials/{tid}/templates/new`` --
+    * ``template.new`` -- ``/modules/{mid}/parts/{pid}/templates/new`` --
       :func:`~wte.views.template.new`
-    * ``template.edit`` -- ``/modules/{mid}/tutorials/{tid}/templates/{tpid}/edit``
+    * ``template.edit`` -- ``/modules/{mid}/parts/{pid}/templates/{tid}/edit``
       -- :func:`~wte.views.template.edit`
-    * ``template.delete`` -- ``/modules/{mid}/tutorials/{tid}/templates/{tpid}/delete``
+    * ``template.delete`` -- ``/modules/{mid}/parts/{pid}/templates/{tid}/delete``
       -- :func:`~wte.views.template.delete`
     """
-    config.add_route('template.new', '/modules/{mid}/tutorials/{tid}/templates/new')
-    config.add_route('template.edit', '/modules/{mid}/tutorials/{tid}/templates/{tpid}/edit')
-    config.add_route('template.delete', '/modules/{mid}/tutorials/{tid}/templates/{tpid}/delete')
+    config.add_route('template.new', '/modules/{mid}/parts/{pid}/templates/new')
+    config.add_route('template.edit', '/modules/{mid}/parts/{pid}/templates/{tid}/edit')
+    config.add_route('template.delete', '/modules/{mid}/parts/{pid}/templates/{tid}/delete')
 
 class TemplateSchema(formencode.Schema):
     u"""The :class:`~wte.views.backend.TemplateSchema` handles the validation
@@ -63,10 +63,9 @@ def new(request):
     """
     dbsession = DBSession()
     module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
-    tutorial = dbsession.query(Part).filter(and_(Part.id==request.matchdict['tid'],
-                                                 Part.module_id==request.matchdict['mid'],
-                                                 Part.type==u'tutorial')).first()
-    if module and tutorial:
+    part = dbsession.query(Part).filter(and_(Part.id==request.matchdict['pid'],
+                                             Part.module_id==request.matchdict['mid'])).first()
+    if module and part:
         if is_authorised(u':module.allow("edit" :current)', {'module': module,
                                                              'current': request.current_user}):
             if request.method == u'POST':
@@ -74,12 +73,12 @@ def new(request):
                     params = TemplateSchema().to_python(request.params)
                     dbsession = DBSession()
                     with transaction.manager:
-                        dbsession.add(tutorial)
-                        max_order = [t.order + 1 for t in tutorial.templates]
+                        dbsession.add(part)
+                        max_order = [t.order + 1 for t in part.templates]
                         max_order.append(0)
                         max_order = max(max_order)
                         
-                        new_template = Template(part_id=tutorial.id,
+                        new_template = Template(part_id=part.id,
                                                 filename=params['filename'],
                                                 mimetype=params['mimetype'],
                                                 content=u'',
@@ -87,22 +86,22 @@ def new(request):
                         dbsession.add(new_template)
                     dbsession.add(new_template)
                     request.session.flash('Your new template has been created', queue='info')
-                    raise HTTPSeeOther(request.route_url('template.edit', mid=request.matchdict['mid'], tid=request.matchdict['tid'], tpid=new_template.id))
+                    raise HTTPSeeOther(request.route_url('template.edit', mid=request.matchdict['mid'], pid=request.matchdict['pid'], tid=new_template.id))
                 except formencode.Invalid as e:
                     e.params = request.params
                     return {'e': e,
                             'module': module,
-                            'tutorial': tutorial,
+                            'part': part,
                             'crumbs': [{'title': 'Modules', 'url': request.route_url('modules')},
                                        {'title': module.title, 'url': request.route_url('module.view', mid=module.id)},
-                                       {'title': tutorial.title, 'url': request.route_url('tutorial.view', mid=module.id, tid=tutorial.id)},
-                                       {'title': 'Add template', 'url': request.route_url('template.new', mid=module.id, tid=tutorial.id), 'current': True}]}
+                                       {'title': part.title, 'url': request.route_url('tutorial.view', mid=module.id, tid=part.id)} if part.type == 'tutorial' else {'title': part.title, 'url': request.route_url('exercise.view', mid=module.id, eid=part.id)},
+                                       {'title': 'Add template', 'url': request.route_url('template.new', mid=module.id, pid=part.id), 'current': True}]}
             return {'module': module,
-                    'tutorial': tutorial,
+                    'part': part,
                     'crumbs': [{'title': 'Modules', 'url': request.route_url('modules')},
                                {'title': module.title, 'url': request.route_url('module.view', mid=module.id)},
-                               {'title': tutorial.title, 'url': request.route_url('tutorial.view', mid=module.id, tid=tutorial.id)},
-                               {'title': 'Add template', 'url': request.route_url('template.new', mid=module.id, tid=tutorial.id), 'current': True}]}
+                               {'title': part.title, 'url': request.route_url('tutorial.view', mid=module.id, tid=part.id)} if part.type == 'tutorial' else {'title': part.title, 'url': request.route_url('exercise.view', mid=module.id, eid=part.id)},
+                               {'title': 'Add template', 'url': request.route_url('template.new', mid=module.id, pid=part.id), 'current': True}]}
         else:
             unauthorised_redirect(request)
     else:
@@ -121,12 +120,11 @@ def edit(request):
     """
     dbsession = DBSession()
     module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
-    tutorial = dbsession.query(Part).filter(and_(Part.id==request.matchdict['tid'],
-                                                 Part.module_id==request.matchdict['mid'],
-                                                 Part.type==u'tutorial')).first()
-    template = dbsession.query(Template).filter(and_(Template.id==request.matchdict['tpid'],
-                                                     Template.part_id==request.matchdict['tid'])).first()
-    if module and tutorial and template:
+    part = dbsession.query(Part).filter(and_(Part.id==request.matchdict['pid'],
+                                             Part.module_id==request.matchdict['mid'])).first()
+    template = dbsession.query(Template).filter(and_(Template.id==request.matchdict['tid'],
+                                                     Template.part_id==request.matchdict['pid'])).first()
+    if module and part and template:
         if is_authorised(u':module.allow("edit" :current)', {'module': module,
                                                              'current': request.current_user}):
             if request.method == u'POST':
@@ -137,25 +135,29 @@ def edit(request):
                         template.filename = params['filename']
                         template.mimetype = params['mimetype']
                         template.content = params['content']
+                    dbsession.add(part)
                     request.session.flash('The template has been updated', queue='info')
-                    raise HTTPSeeOther(request.route_url('tutorial.view', mid=request.matchdict['mid'], tid=request.matchdict['tid']))
+                    if part.type == 'tutorial':
+                        raise HTTPSeeOther(request.route_url('tutorial.view', mid=request.matchdict['mid'], tid=request.matchdict['pid']))
+                    else:
+                        raise HTTPSeeOther(request.route_url('exercise.view', mid=request.matchdict['mid'], eid=request.matchdict['pid']))
                 except formencode.Invalid as e:
                     e.params = params
                     return {'e': e,
                             'module': module,
-                            'tutorial': tutorial,
+                            'part': part,
                             'template': template,
                             'crumbs': [{'title': 'Modules', 'url': request.route_url('modules')},
                                        {'title': module.title, 'url': request.route_url('module.view', mid=module.id)},
-                                       {'title': tutorial.title, 'url': request.route_url('tutorial.view', mid=module.id, tid=tutorial.id)},
-                                       {'title': 'Edit Template', 'url': request.route_url('template.edit', mid=module.id, tid=tutorial.id, tpid=template.id), 'current': True}]}
+                                       {'title': part.title, 'url': request.route_url('tutorial.view', mid=module.id, tid=part.id)} if part.type == 'tutorial' else {'title': part.title, 'url': request.route_url('exercise.view', mid=module.id, eid=part.id)},
+                                       {'title': 'Edit Template', 'url': request.route_url('template.edit', mid=module.id, pid=part.id, tid=template.id), 'current': True}]}
             return {'module': module,
-                    'tutorial': tutorial,
+                    'part': part,
                     'template': template,
                     'crumbs': [{'title': 'Modules', 'url': request.route_url('modules')},
                                {'title': module.title, 'url': request.route_url('module.view', mid=module.id)},
-                               {'title': tutorial.title, 'url': request.route_url('tutorial.view', mid=module.id, tid=tutorial.id)},
-                               {'title': 'Edit Template', 'url': request.route_url('template.edit', mid=module.id, tid=tutorial.id, tpid=template.id), 'current': True}]}
+                               {'title': part.title, 'url': request.route_url('tutorial.view', mid=module.id, tid=part.id)} if part.type == 'tutorial' else {'title': part.title, 'url': request.route_url('exercise.view', mid=module.id, eid=part.id)},
+                               {'title': 'Edit Template', 'url': request.route_url('template.edit', mid=module.id, pid=part.id, tid=template.id), 'current': True}]}
         else:
             unauthorised_redirect(request)
     else:
@@ -174,26 +176,29 @@ def delete(request):
     """
     dbsession = DBSession()
     module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
-    tutorial = dbsession.query(Part).filter(and_(Part.id==request.matchdict['tid'],
-                                                 Part.module_id==request.matchdict['mid'],
-                                                 Part.type==u'tutorial')).first()
-    template = dbsession.query(Template).filter(and_(Template.id==request.matchdict['tpid'],
-                                                     Template.part_id==request.matchdict['tid'])).first()
-    if module and tutorial and template:
+    part = dbsession.query(Part).filter(and_(Part.id==request.matchdict['pid'],
+                                             Part.module_id==request.matchdict['mid'])).first()
+    template = dbsession.query(Template).filter(and_(Template.id==request.matchdict['tid'],
+                                                     Template.part_id==request.matchdict['pid'])).first()
+    if module and part and template:
         if is_authorised(u':module.allow("edit" :current)', {'module': module,
                                                              'current': request.current_user}):
             if request.method == u'POST':
                 with transaction.manager:
                     dbsession.delete(template)
+                dbsession.add(part)
                 request.session.flash('The template has been deleted', queue='info')
-                raise HTTPSeeOther(request.route_url('tutorial.view', mid=request.matchdict['mid'], tid=request.matchdict['tid']))
+                if part.type == 'tutorial':
+                    raise HTTPSeeOther(request.route_url('tutorial.view', mid=request.matchdict['mid'], tid=request.matchdict['pid']))
+                else:
+                    raise HTTPSeeOther(request.route_url('exercise.view', mid=request.matchdict['mid'], eid=request.matchdict['pid']))
             return {'module': module,
-                    'tutorial': tutorial,
+                    'part': part,
                     'template': template,
                     'crumbs': [{'title': 'Modules', 'url': request.route_url('modules')},
                                {'title': module.title, 'url': request.route_url('module.view', mid=module.id)},
-                               {'title': tutorial.title, 'url': request.route_url('tutorial.view', mid=module.id, tid=tutorial.id)},
-                               {'title': 'Delete Template', 'url': request.route_url('template.delete', mid=module.id, tid=tutorial.id, tpid=template.id), 'current': True}]}
+                               {'title': part.title, 'url': request.route_url('tutorial.view', mid=module.id, tid=part.id)} if part.type == 'tutorial' else {'title': part.title, 'url': request.route_url('exercise.view', mid=module.id, eid=part.id)},
+                               {'title': 'Delete Template', 'url': request.route_url('template.delete', mid=module.id, pid=part.id, tid=template.id), 'current': True}]}
         else:
             unauthorised_redirect(request)
     else:

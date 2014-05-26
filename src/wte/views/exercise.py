@@ -50,6 +50,8 @@ class ExerciseSchema(formencode.Schema):
                             formencode.validators.OneOf([u'unavailable',
                                                          u'available']))
     u"""The exercise's status"""
+    template_id = formencode.foreach.ForEach(formencode.validators.Int())
+    u"""The ids of the child :class:`~wte.models.Template`"""
     
 @view_config(route_name='exercise.new')
 @render({'text/html': 'exercise/new.html'})
@@ -127,10 +129,16 @@ def edit(request):
                         dbsession.add(exercise)
                         exercise.title = params['title']
                         exercise.status = params['status']
+                        if params['template_id']:
+                            for order, tpid in enumerate(params['template_id']):
+                                for template in exercise.templates:
+                                    if template.id == int(tpid):
+                                        dbsession.add(template)
+                                        template.order = order
                     request.session.flash('The exercise has been updated', queue='info')
                     raise HTTPSeeOther(request.route_url('exercise.view', mid=request.matchdict['mid'], eid=request.matchdict['eid']))
                 except formencode.Invalid as e:
-                    e.params = params
+                    e.params = request.params
                     return {'e': e,
                             'module': module,
                             'exercise': exercise,

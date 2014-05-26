@@ -9,7 +9,7 @@
       <h1 class="small-12 medium-6 large-6 column">${template.filename} - Edit</h1>
     </div>
     <article class="small-12 medium-6 large-6 column">
-      <form action="${r.route_url('template.edit', mid=module.id, tid=tutorial.id, tpid=template.id)}" method="post">
+      <form action="${r.route_url('template.edit', mid=module.id, pid=part.id, tid=template.id)}" method="post">
           <div class="clearfix">
             ${h.form.field('filename', 'Filename', h.form.tags.text_field, size='small-12', e=e, default=template.filename)}
           </div>

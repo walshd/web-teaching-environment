@@ -31,7 +31,7 @@
           </form>
         </section>
         <section id="viewer">
-          <iframe src="${r.route_url('file.view', mid=module.id, tid=tutorial.id, pid=page.id, uid=r.current_user.id, filename='index.html')}"></iframe>
+          <iframe src="${r.route_url('file.view', mid=module.id, ptid=tutorial.id, pid=page.id, uid=r.current_user.id, filename='index.html')}"></iframe>
         </section>
       </section>
     </article>
@@ -54,7 +54,7 @@
     function save_doc(cm, textarea) {
     	var spinner = $('#' + textarea.parent().attr('id') + '-tab img');
     	spinner.show();
-    	var url = '${r.route_url('file.save', mid=module.id, tid=tutorial.id, pid=page.id, uid=r.current_user.id, fid='FID')}';
+    	var url = '${r.route_url('file.save', mid=module.id, ptid=tutorial.id, pid=page.id, uid=r.current_user.id, fid='FID')}';
     	url = url.replace('FID', textarea.data('wte-fileid'));
     	$.ajax(url, {
     		type: 'POST',
