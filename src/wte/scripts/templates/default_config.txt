@@ -9,6 +9,12 @@
 # *************************************
 sqlalchemy.url = ${sqlalchemy_url}
 
+# ********************
+# E-Mail configuration
+# ********************
+
+email.smtp_host = 
+
 # ******************************
 # Session handling configuration
 # ******************************
