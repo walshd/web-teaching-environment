@@ -12,6 +12,7 @@ render the frontend page displays.
 
 from genshi.builder import tag
 
+
 def html_id(text):
     u"""Turns a given text into a valid HTML id attribute value. Removes
     spaces and full-stops.
@@ -23,9 +24,11 @@ def html_id(text):
     """
     return text.replace(' ', '_').replace('.', '_')
 
+
 CODEMIRROR_MODES = {'text/html': ['javascript', 'css', 'xml', 'htmlmixed'],
                     'text/css': ['css'],
                     'text/javascript': ['javascript']}
+
 
 def codemirror_scripts(request, mimetypes):
     u"""Generates the ``<script>`` tags necessary to load the CodeMirror mode
@@ -41,4 +44,5 @@ def codemirror_scripts(request, mimetypes):
     for mimetype in mimetypes:
         if mimetype in CODEMIRROR_MODES:
             modes.extend(CODEMIRROR_MODES[mimetype])
-    return tag([tag.script(src=request.static_url('wte:static/js/codemirror/mode/%s/%s.js' % (mode, mode))) for mode in modes])
+    return tag([tag.script(src=request.static_url('wte:static/js/codemirror/mode/%s/%s.js' % (mode, mode)))
+                for mode in modes])

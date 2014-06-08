@@ -31,9 +31,9 @@ def main(global_config, **settings):
                                                              'crumbs': []}})
     session_factory = session_factory_from_settings(settings)
     config = Configurator(settings=settings, session_factory=session_factory)
-    
+
     config.add_static_view('static', 'static', cache_max_age=3600)
     views.init(config, settings)
-    
+
     config.scan()
     return config.make_wsgi_app()

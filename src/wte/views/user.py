@@ -24,6 +24,7 @@ from wte.decorators import current_user
 from wte.util import (unauthorised_redirect, State, send_email, get_config_setting)
 from wte.models import (DBSession, User, Permission, PermissionGroup)
 
+
 def init(config):
     """Adds the user-specific routes (route name, URL pattern, handler):
     
@@ -54,6 +55,7 @@ def init(config):
     config.add_route('user.permissions', '/users/{uid}/permissions')
     config.add_route('user.delete', '/users/{uid}/delete')
 
+
 @view_config(route_name='users')
 @render({'text/html': 'users/list.html'})
 @current_user()
@@ -67,6 +69,7 @@ def users(request):
     else:
         unauthorised_redirect(request)
     return {'crumbs': [{'title': 'Users', 'url': request.route_url('users'), 'current': True}]}
+
 
 class PasswordValidator(formencode.FancyValidator):
     u"""The :class:`~wte.views.user.PasswordValidator` handles the checking of
@@ -92,7 +95,8 @@ class PasswordValidator(formencode.FancyValidator):
                 raise formencode.api.Invalid(self.message('nologin', state), value, state)
         else:
             raise formencode.api.Invalid(self.message('nologin', state), value, state)
-    
+
+
 class LoginSchema(formencode.Schema):
     u"""The :class:`~wte.views.user.LoginSchema` handles the validation of a
     login request.
@@ -105,7 +109,8 @@ class LoginSchema(formencode.Schema):
     u"""Password to log in with"""
     
     chained_validators = [PasswordValidator()]
-    
+
+
 @view_config(route_name='user.login')
 @render({'text/html': 'users/login.html'})
 @current_user()
@@ -138,6 +143,7 @@ def login(request):
             return {'e': e}
     return {'crumbs': [{'title': 'Login', 'url': request.route_url('user.login'), 'current': True}]}
 
+
 @view_config(route_name='user.logout')
 @render({'text/html': 'users/logout.html'})
 @current_user()
@@ -150,6 +156,7 @@ def logout(request):
         request.session.delete()
         raise HTTPSeeOther(request.route_url('root'))
     return {'crumbs': [{'title': 'Logout', 'url': request.route_url('user.logout'), 'current': True}]}
+
 
 class UniqueEmailValidator(formencode.FancyValidator):
     u"""The :class:`~wte.views.user.UniqueEmailValidator` checks that the given
@@ -165,7 +172,7 @@ class UniqueEmailValidator(formencode.FancyValidator):
         user = state.dbsession.query(User).filter(User.email==value).first()
         if user and (not hasattr(state, 'userid') or user.id != state.userid):
             raise formencode.Invalid(self.message('existing', state), value, state)
-    
+
 
 class RegisterSchema(formencode.Schema):
     u"""The :class:`~wte.user.views.RegisterSchema` handles the validation of
@@ -183,6 +190,7 @@ class RegisterSchema(formencode.Schema):
     
     chained_validators = [formencode.validators.FieldsMatch('email',
                                                  'email_confirm')]
+
 
 @view_config(route_name='user.register')
 @render({'text/html': 'users/register.html'})
@@ -224,6 +232,7 @@ Web Teaching Environment''' % (user.display_name, request.route_url('user.confir
     return {'crumbs': [{'title': 'Login', 'url': request.route_url('user.login')},
                        {'title': 'Register', 'url': request.route_url('user.register'), 'current': True}]}
 
+
 @view_config(route_name='user.confirm')
 @render({'text/html': 'users/confirm.html'})
 @current_user()
@@ -235,8 +244,8 @@ def confirm(request):
     If confirmed, will send an e-mail with a new, random password.
     """
     dbsession = DBSession()
-    user = dbsession.query(User).filter(and_(User.id==request.matchdict['uid'],
-                                             User.validation_token==request.matchdict['token'])).first()
+    user = dbsession.query(User).filter(and_(User.id == request.matchdict['uid'],
+                                             User.validation_token == request.matchdict['token'])).first()
     if user:
         status = u'success'
         with transaction.manager:
@@ -258,8 +267,8 @@ Password: %s
 Best Regards,
 Web Teaching Environment''' % (user.display_name, user.email, new_password))
     else:
-        user = dbsession.query(User).filter(and_(User.id==request.matchdict['uid'],
-                                                 User.validation_token==None)).first()
+        user = dbsession.query(User).filter(and_(User.id == request.matchdict['uid'],
+                                                 User.validation_token == None)).first()
         if user:
             status = u'confirmed'
         else:
@@ -267,7 +276,12 @@ Web Teaching Environment''' % (user.display_name, user.email, new_password))
     return {'status': status,
             'crumbs': [{'title': 'Login', 'url': request.route_url('user.login')},
                        {'title': 'Register', 'url': request.route_url('user.register')},
-                       {'title': 'Confirmation', 'url': request.route_url('user.confirm', uid=request.matchdict['uid'], token=request.matchdict['token']), 'current': True}]}
+                       {'title': 'Confirmation',
+                        'url': request.route_url('user.confirm',
+                                                 uid=request.matchdict['uid'],
+                                                 token=request.matchdict['token']),
+                        'current': True}]}
+
 
 class ForgottenPasswordSchema(formencode.Schema):
     u"""The :class:`~wte.views.user.ForgottenPasswordSchema` handles the
@@ -275,7 +289,8 @@ class ForgottenPasswordSchema(formencode.Schema):
     """
     email = formencode.validators.Email(not_empty=True)
     u"""E-mail to request a new password or validation token for"""
-    
+
+
 @view_config(route_name='user.forgotten_password')
 @render({'text/html': 'users/forgotten_password.html'})
 @current_user()
@@ -290,7 +305,7 @@ def forgotten_password(request):
         dbsession = DBSession()
         try:
             params = ForgottenPasswordSchema().to_python(request.params)
-            user = dbsession.query(User).filter(User.email==params['email'].lower()).first()
+            user = dbsession.query(User).filter(User.email == params['email'].lower()).first()
             if user:
                 if user.validation_token:
                     with transaction.manager:
@@ -309,8 +324,11 @@ Thank you for registering with the Web Teaching Environment. To complete your re
 %s
 
 Best Regards,
-Web Teaching Environment''' % (user.display_name, request.route_url('user.confirm', uid=user.id, token=user.validation_token)))
-                    request.session.flash('A new confirmation e-mail has been sent to the specified e-mail address.', queue='info')
+Web Teaching Environment''' % (user.display_name, request.route_url('user.confirm',
+                                                                    uid=user.id,
+                                                                    token=user.validation_token)))
+                    request.session.flash('A new confirmation e-mail has been sent to the' +
+                                          ' specified e-mail address.', queue='info')
                     raise HTTPSeeOther(request.route_url('root'))
                 else:
                     with transaction.manager:
@@ -331,16 +349,21 @@ Password: %s
 
 Best Regards,
 Web Teaching Environment''' % (user.display_name, user.email, new_password))
-                    request.session.flash('A new password has been sent to the specified e-mail address.', queue='info')
+                    request.session.flash('A new password has been sent to the specified e-mail address.',
+                                          queue='info')
                     raise HTTPSeeOther(request.route_url('root'))
             else:
-                request.session.flash('A new password has been sent to the specified e-mail address.', queue='info')
+                request.session.flash('A new password has been sent to the specified e-mail address.',
+                                      queue='info')
                 raise HTTPSeeOther(request.route_url('root'))
         except formencode.api.Invalid as e:
             e.params = request.params
             return {'e': e}
-    return {'crumbs': [{'title': 'Login', 'url': request.route_url('user.login')},
-                       {'title': 'Forgotten Password', 'url': request.route_url('user.forgotten_password'), 'current': True}]}
+    return {'crumbs': [{'title': 'Login',
+                        'url': request.route_url('user.login')},
+                       {'title': 'Forgotten Password',
+                        'url': request.route_url('user.forgotten_password'), 'current': True}]}
+
 
 @view_config(route_name='user.view')
 @render({'text/html': 'users/view.html'})
@@ -349,16 +372,18 @@ def view(request):
     u"""Handles the "/users/{uid}" URL, showing the user's profile.
     """
     dbsession = DBSession()
-    user = dbsession.query(User).filter(User.id==request.matchdict['uid']).first()
+    user = dbsession.query(User).filter(User.id == request.matchdict['uid']).first()
     if user:
         if is_authorised(u':user.allow("view" :current)', {'user': user,
-                                                            'current': request.current_user}):
+                                                           'current': request.current_user}):
             return {'user': user,
-                    'crumbs': [{'title': user.display_name, 'url': request.route_url('user.view', uid=user.id), 'current': True}]}
+                    'crumbs': [{'title': user.display_name,
+                                'url': request.route_url('user.view', uid=user.id), 'current': True}]}
         else:
             unauthorised_redirect(request)
     else:
         raise HTTPNotFound()
+
 
 class EditSchema(formencode.Schema):
     u"""The class:`~wte.views.user.EditSchema` handles the validation of
@@ -371,7 +396,8 @@ class EditSchema(formencode.Schema):
     u"""Updated name"""
     password = formencode.validators.UnicodeString()
     u"""Updated password"""
-    
+
+
 @view_config(route_name='user.edit')
 @render({'text/html': 'users/edit.html'})
 @current_user()
@@ -380,13 +406,14 @@ def edit(request):
     functionality to update the user's profile.
     """
     dbsession = DBSession()
-    user = dbsession.query(User).filter(User.id==request.matchdict['uid']).first()
+    user = dbsession.query(User).filter(User.id == request.matchdict['uid']).first()
     if user:
         if is_authorised(u':user.allow("edit" :current)', {'user': user,
-                                                            'current': request.current_user}):
+                                                           'current': request.current_user}):
             if request.method == 'POST':
                 try:
-                    params = EditSchema().to_python(request.params, State(dbsession=dbsession, userid=user.id))
+                    params = EditSchema().to_python(request.params,
+                                                    State(dbsession=dbsession, userid=user.id))
                     with transaction.manager:
                         dbsession.add(user)
                         user.email = params['email']
@@ -399,15 +426,21 @@ def edit(request):
                     e.params = request.params
                     return {'e': e,
                             'user': user,
-                            'crumbs': [{'title': user.display_name, 'url': request.route_url('user.view', uid=user.id)},
-                                       {'title': 'Edit', 'url': request.route_url('user.edit', uid=user.id), 'current': True}]}
+                            'crumbs': [{'title': user.display_name,
+                                        'url': request.route_url('user.view', uid=user.id)},
+                                       {'title': 'Edit',
+                                        'url': request.route_url('user.edit', uid=user.id),
+                                        'current': True}]}
             return {'user': user,
-                    'crumbs': [{'title': user.display_name, 'url': request.route_url('user.view', uid=user.id)},
-                               {'title': 'Edit', 'url': request.route_url('user.edit', uid=user.id), 'current': True}]}
+                    'crumbs': [{'title': user.display_name,
+                                'url': request.route_url('user.view', uid=user.id)},
+                               {'title': 'Edit',
+                                'url': request.route_url('user.edit', uid=user.id), 'current': True}]}
         else:
             unauthorised_redirect(request)
     else:
         raise HTTPNotFound()
+
 
 @view_config(route_name='user.permissions')
 @render({'text/html': 'users/permissions.html'})
@@ -418,9 +451,10 @@ def permissions(request):
     :class:`~wte.models.PermissionGroup` that the :class:`~wte.models.User`
     belongs to.
     """
-    if is_authorised(u':user.has_permission("admin.users.permissions")', {'user': request.current_user}):
+    if is_authorised(u':user.has_permission("admin.users.permissions")',
+                     {'user': request.current_user}):
         dbsession = DBSession()
-        user = dbsession.query(User).filter(User.id==request.matchdict['uid']).first()
+        user = dbsession.query(User).filter(User.id == request.matchdict['uid']).first()
         if user:
             permission_groups = dbsession.query(PermissionGroup).order_by(PermissionGroup.title)
             permissions = dbsession.query(Permission).order_by(Permission.title)
@@ -429,7 +463,8 @@ def permissions(request):
                     dbsession.add(user)
                     ids = request.params.getall('permission_group')
                     if ids:
-                        user.permission_groups = dbsession.query(PermissionGroup).filter(PermissionGroup.id.in_(ids)).all()
+                        user.permission_groups = dbsession.query(PermissionGroup).\
+                            filter(PermissionGroup.id.in_(ids)).all()
                     else:
                         user.permission_groups = []
                     ids = request.params.getall('permission')
@@ -442,12 +477,15 @@ def permissions(request):
             return {'user': user,
                     'permission_groups': permission_groups,
                     'permissions': permissions,
-                    'crumbs': [{'title': user.display_name, 'url': request.route_url('user.view', uid=user.id)},
-                               {'title': 'Permissions', 'url': request.route_url('user.permissions', uid=user.id), 'current': True}]}
+                    'crumbs': [{'title': user.display_name,
+                                'url': request.route_url('user.view', uid=user.id)},
+                               {'title': 'Permissions',
+                                'url': request.route_url('user.permissions', uid=user.id), 'current': True}]}
         else:
             raise HTTPNotFound()
     else:
         unauthorised_redirect(request)
+
 
 @view_config(route_name='user.delete')
 @render({'text/html': 'users/delete.html'})
@@ -458,7 +496,7 @@ def delete(request):
     the data that is linked to that :class:`~wte.models.User`.
     """
     dbsession = DBSession()
-    user = dbsession.query(User).filter(User.id==request.matchdict['uid']).first()
+    user = dbsession.query(User).filter(User.id == request.matchdict['uid']).first()
     if user:
         if is_authorised(u':user.allow("delete" :current)', {'user': user,
                                                              'current': request.current_user}):
@@ -468,8 +506,10 @@ def delete(request):
                 request.session.flash('The account has been deleted', queue='info')
                 raise HTTPSeeOther(request.route_url('root'))
             return {'user': user,
-                    'crumbs': [{'title': user.display_name, 'url': request.route_url('user.view', uid=user.id)},
-                               {'title': 'Delete', 'url': request.route_url('user.delete', uid=user.id), 'current': True}]}
+                    'crumbs': [{'title': user.display_name,
+                                'url': request.route_url('user.view', uid=user.id)},
+                               {'title': 'Delete',
+                                'url': request.route_url('user.delete', uid=user.id), 'current': True}]}
         else:
             unauthorised_redirect(request)
     else:

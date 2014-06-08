@@ -12,6 +12,7 @@ forms in the Foundation framework.
 from genshi.builder import tag
 from pywebtools import form as tags
 
+
 def field(name, label, form_tag, size=None, e=None, **kwargs):
     """Generates the HTML form field code around a given form tag. To generate
     the actual form tag, it calls the function passed into the ``form_tag``
@@ -32,12 +33,13 @@ def field(name, label, form_tag, size=None, e=None, **kwargs):
     :param e: The error object
     :type e: :class:`~formencode.api.Invalid`
     :param kwargs: Any keyword arguments to pass to `form_tag`
-    """ 
+    """
     if size:
         if form_tag == tags.select:
             field_class = kwargs['class_'] if 'class_' in kwargs else ''
         else:
-            field_class = '%s column %s' % (size, kwargs['class_']) if 'class_' in kwargs else '%s column' % (size)
+            field_class = '%s column %s' % (size, kwargs['class_']) if 'class_' in kwargs\
+                else '%s column' % (size)
         column_class = '%s column' % (size)
     else:
         field_class = kwargs['class_'] if 'class_' in kwargs else ''

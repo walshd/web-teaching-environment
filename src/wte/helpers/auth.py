@@ -13,6 +13,7 @@ authentication. It also imports the :mod:`pywebtools.auth` module as
 
 from pywebtools import auth as engine
 
+
 def is_authorised(user, action, obj):
     u"""The :func:`~wte.helpers.auth.is_authorised` function checks if the
     given ``user`` is authorised to perform the ``action`` on the given
