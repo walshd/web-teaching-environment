@@ -22,7 +22,7 @@ from sqlalchemy.event import listens_for
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import (scoped_session, sessionmaker, relationship,
-                            reconstructor)
+                            reconstructor, backref)
 from zope.sqlalchemy import ZopeTransactionExtension
 
 from wte.text_formatter import compile_rst
@@ -309,7 +309,11 @@ class Module(Base):
     status = Column(Unicode(255))
     
     users = relationship(u'UserModuleRole', backref=u'module', cascade=u'all,delete')
-    parts = relationship(u'Part', backref=u'module', cascade=u'all,delete', order_by=u'Part.order')
+    parts = relationship(u'Part',
+                         backref=u'module',
+                         cascade=u'all,delete',
+                         primaryjoin=u'and_(Module.id == Part.module_id, Part.parent_id == None)',
+                         order_by=u'Part.order')
     
     def allow(self, action, user):
         """Checks whether the given ``user`` is allowed to perform the given
@@ -374,12 +378,15 @@ class Part(Base):
     
     id = Column(Integer, primary_key=True)
     module_id = Column(Integer, ForeignKey(u'modules.id', name=u'sessions_module_id_fk'))
+    parent_id = Column(Integer, ForeignKey(u'parts.id', name=u'parts_parent_id_fk'))
     order = Column(Integer)
     title = Column(Unicode(255))
     status = Column(Unicode(255))
     type = Column(Unicode(255))
+    content = Column(UnicodeText)
+    compiled_content = Column(UnicodeText)
     
-    pages = relationship(u'Page', backref=u'part', cascade=u'all,delete', order_by='Page.order')
+    children = relationship(u'Part', backref=backref(u'parent', remote_side=[id]), cascade=u'all,delete', order_by=u'Part.order')
     users = relationship(u'UserPartProgress', backref=u'part', cascade=u'all,delete')
     templates = relationship(u'Template', backref=u'part', cascade=u'all,delete', order_by=u'Template.order')
 
@@ -429,43 +436,12 @@ class UserPartProgress(Base):
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey(User.id, name=u'user_part_progress_user_id_fk'))
     part_id = Column(Integer, ForeignKey(Part.id, name=u'user_part_progress_part_id_fk'))
-    page_id = Column(Integer, ForeignKey('pages.id', name=u'user_part_progress_page_id_fk'))
     
-    current_page = relationship(u'Page')
     files = relationship(u'File', cascade="all,delete", order_by=u'File.order')
 
 Index('user_part_progress_user_id_ix', UserPartProgress.user_id)
 Index('user_part_progress_part_id_ix', UserPartProgress.part_id)
 Index('user_part_progress_user_id_part_id_ix', UserPartProgress.user_id, UserPartProgress.part_id)
-
-class Page(Base):
-    u"""The :class:`~wte.models.Page` class represents a single page in a
-    :class:`~wte.models.Part`.
-    
-    Instances of :class:`~wte.models.Page` have the following attributes:
-    
-    * ``id`` -- The unique database identifier
-    * ``compiled_content`` -- The compiled HTML content to display
-    * ``content`` -- The raw ReST text content of this
-      :class:`~wte.models.Page`
-    * ``order`` -- The ordering position of this :class:`~wte.models.Part`
-    * ``title`` -- The title displayed for this :class:`~wte.models.Part`
-    * ``tutorial_id`` -- The unique database identifier of the 
-      :class:`~wte.models.Part` that contains this
-      :class:`~wte.models.Page`
-    * ``tutorial`` -- The :class:`~wte.models.Part` that contains this
-      :class:`~wte.models.Page`
-    """
-    __tablename__ = u'pages'
-    
-    id = Column(Integer, primary_key=True)
-    part_id = Column(Integer, ForeignKey(u'parts.id', name=u'pages_part_id_fk'))
-    order = Column(Integer)
-    title = Column(Unicode(255))
-    content = Column(UnicodeText)
-    compiled_content = Column(UnicodeText)
-
-Index('pages_part_id_ix', Page.part_id)
 
 class Template(Base):
     u"""The :class:`~wte.models.Template` represents a file template used in a
@@ -493,7 +469,7 @@ class Template(Base):
     mimetype = Column(Unicode(255))
     content = Column(UnicodeText)
 
-Index('templates_part_id_ix', Page.part_id)
+Index('templates_part_id_ix', Template.part_id)
     
 class File(Base):
     u"""The :class:`~wte.models.File` represents a file used in a
@@ -522,9 +498,8 @@ class File(Base):
     mimetype = Column(Unicode(255))
     content = Column(UnicodeText)
 
-Index('files_progress_id_ix', Page.part_id)
     
-@listens_for(Page.content, 'set')
+@listens_for(Part.content, 'set')
 def compile_page_content(target, value, old_value, initiator):
     u"""SQLAlchemy event listener that automatically compiles the ReST content
     of a :class:`~wte.models.Page` to HTML when it is set / updated."""

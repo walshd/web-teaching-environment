@@ -4,7 +4,7 @@ u"""
 :mod:`wte.views.module` -- Module Backend
 #########################################
 
-The :mod:`~wte.views.modle` module provides the backend functionality for
+The :mod:`~wte.views.module` module provides the backend functionality for
 creating, editing, and deleting :class:`~wte.models.Module`.
 
 Routes are defined in :func:`~wte.views.module.init`.
@@ -14,7 +14,7 @@ Routes are defined in :func:`~wte.views.module.init`.
 import transaction
 import formencode
 
-from pyramid.httpexceptions import (HTTPSeeOther, HTTPNotFound)
+from pyramid.httpexceptions import (HTTPSeeOther, HTTPNotFound, HTTPForbidden)
 from pyramid.view import view_config
 from pywebtools.renderer import render
 from pywebtools.auth import is_authorised
@@ -23,6 +23,7 @@ from wte.decorators import current_user
 from wte.util import (unauthorised_redirect)
 from wte.models import (DBSession, Module, UserModuleRole, UserPartProgress,
     User)
+from wte.text_formatter import compile_rst
 
 def init(config):
     u"""Adds the module-specific backend routes (route name, URL pattern
@@ -31,14 +32,21 @@ def init(config):
     * ``module.new`` -- ``/modules/new`` -- :func:`~wte.views.module.new`
     * ``module.edit`` -- ``/modules/{mid}/edit`` --
       :func:`~wte.views.module.edit`
-    * ``module.delete`` -- ``/modules/{mid}/delete``
-      -- :func:`~wte.views.module.delete`
+    * ``module.delete`` -- ``/modules/{mid}/delete`` --
+      :func:`~wte.views.module.delete`
+    * ``module.register`` -- ``/modules/{mid}/register`` --
+      :func:`~wte.views.module.register`
+    * ``module.deregister`` -- ``/modules/{mid}/deregister`` --
+      :func:`~wte.views.module.deregister`
+    * ``module.preview`` -- ``/modules/{mid}/rst_preview`` --
+      :func:`~wte.views.module.preview`
     """
     config.add_route('module.new', '/modules/new')
     config.add_route('module.edit', '/modules/{mid}/edit')
     config.add_route('module.delete', '/modules/{mid}/delete')
     config.add_route('module.register', '/modules/{mid}/register')
     config.add_route('module.deregister', '/modules/{mid}/deregister')
+    config.add_route('module.preview', '/modules/{mid}/rst_preview')
 
 class ModuleSchema(formencode.Schema):
     u"""The :class:`~wte.views.backend.ModuleSchema` handles the validation
@@ -227,5 +235,31 @@ def deregister(request):
         else:
             request.session.flash('You are not registered for this module', queue='info')
             raise HTTPSeeOther(request.route_url('modules'))
+    else:
+        raise HTTPNotFound()
+
+
+@view_config(route_name='module.preview')
+@render({'application/json': True})
+@current_user()
+def preview(request):
+    u"""Handles the ``/modules/{mid}/tutorials/{tid}/pages/{pid}/preview`` URL,
+    generating an HTML preview of the submitted ReST. The ReST text to render
+    has to be set as the ``content`` parameter.
+    
+    Requires that the user has "edit" rights on the current
+    :class:`~wte.models.Module`.
+    """
+    dbsession = DBSession()
+    module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
+    if module:
+        if is_authorised(u':module.allow("edit" :current)', {'module': module,
+                                                             'current': request.current_user}):
+            if 'content' in request.params:
+                return {'content': compile_rst(request.params['content'])}
+            else:
+                raise HTTPNotFound()
+        else:
+            raise HTTPForbidden()
     else:
         raise HTTPNotFound()

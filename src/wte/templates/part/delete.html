@@ -2,15 +2,15 @@
 <html xmlns:py="http://genshi.edgewall.org/" xmlns:xi="http://www.w3.org/2001/XInclude">
   <xi:include href="../layout/layout.html"/>
   <head>
-    <title>${exercise.title} - Delete</title>
+    <title>${part.title} - Delete</title>
   </head>
   <body>
     <div class="row left">
       <article class="small-12 medium-10 large-8 column">
-        <h1>${exercise.title} - Delete</h1>
-        <form action="${r.route_url('exercise.delete', mid=module.id, eid=exercise.id)}" method="post">
-          <p>Please confirm that you wish to delete the exercise &quot;${exercise.title}&quot;
-            and all its pages.</p>
+        <h1>${part.title} - Delete</h1>
+        <form action="${r.route_url('part.delete', mid=module.id, pid=part.id)}" method="post">
+          <p>Please confirm that you wish to delete the ${part.type} &quot;${part.title}&quot; and
+            all child parts.</p>
           <div class="text-right">
             ${h.form.tags.submit('Delete', class_='button small alert')}
           </div>

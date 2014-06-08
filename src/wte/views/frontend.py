@@ -22,7 +22,7 @@ from pywebtools.renderer import render
 from sqlalchemy import and_
 
 from wte.decorators import current_user
-from wte.models import (DBSession, Module, Part, Page, User, UserPartProgress,
+from wte.models import (DBSession, Module, Part, User, UserPartProgress,
                         File)
 from wte.util import (unauthorised_redirect)
 
@@ -48,6 +48,7 @@ def init(config):
     """
     config.add_route('modules', '/modules')
     config.add_route('module.view', '/modules/{mid}')
+    config.add_route('part.view', '/modules/{mid}/parts/{pid}')
     config.add_route('tutorial.view', '/modules/{mid}/tutorials/{tid}')
     config.add_route('exercise.view', '/modules/{mid}/exercises/{eid}')
     config.add_route('page.view', '/modules/{mid}/tutorials/{tid}/pages/{pid}')
@@ -152,10 +153,10 @@ def get_user_part_progress(dbsession, user, part, page=None):
     return user_part
 
 
-@view_config(route_name='tutorial.view')
-@render({'text/html': 'tutorial/view.html'})
+@view_config(route_name='part.view')
+@render({'text/html': 'part/view.html'})
 @current_user()
-def view_tutorial(request):
+def view_part(request):
     u"""Handles the ``/modules/{mid}/tutorials/{tid}`` URL, displaying the
     :class:`~wte.models.Part` and its child :class:`~wte.models.Page`.
     
@@ -164,22 +165,25 @@ def view_tutorial(request):
     """
     dbsession = DBSession()
     module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
-    tutorial = dbsession.query(Part).filter(and_(Part.id==request.matchdict['tid'],
-                                                 Part.module_id==request.matchdict['mid'],
-                                                 Part.type==u'tutorial')).first()
-    if module and tutorial:
-        if tutorial.allow('view', request.current_user):
-            progress = get_user_part_progress(dbsession, request.current_user, tutorial)
-            dbsession.add(progress)
-            dbsession.add(module)
-            dbsession.add(tutorial)
-            dbsession.add(request.current_user)
+    part = dbsession.query(Part).filter(and_(Part.id==request.matchdict['pid'],
+                                             Part.module_id==request.matchdict['mid'])).first()
+    if module and part:
+        if part.allow('view', request.current_user):
+            #progress = get_user_part_progress(dbsession, request.current_user, tutorial)
+            #dbsession.add(progress)
+            #dbsession.add(module)
+            #dbsession.add(tutorial)
+            #dbsession.add(request.current_user)
+            crumbs = [{'title': 'Modules', 'url': request.route_url('modules')},
+                      {'title': module.title, 'url': request.route_url('module.view', mid=module.id)}]
+            tmp = part
+            while tmp:
+                crumbs.insert(2, {'title': tmp.title, 'url': request.route_url('part.view', mid=module.id, pid=tmp.id)})
+                tmp = tmp.parent
+            crumbs[-1]['current'] = True
             return {'module': module,
-                    'tutorial': tutorial,
-                    'progress': progress,
-                    'crumbs': [{'title': 'Modules', 'url': request.route_url('modules')},
-                               {'title': module.title, 'url': request.route_url('module.view', mid=module.id)},
-                               {'title': tutorial.title, 'url': request.route_url('tutorial.view', mid=module.id, tid=tutorial.id), 'current': True}]}
+                    'part': part,
+                    'crumbs': crumbs}
         else:
             unauthorised_redirect(request)
     else:

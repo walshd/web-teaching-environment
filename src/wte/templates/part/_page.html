@@ -1,0 +1,76 @@
+<article class="rows" xmlns:py="http://genshi.edgewall.org/">
+  <section id="textbook" class="small-12 medium-6 large-4 column">
+    <h1>${part.title}</h1>
+    ${Markup(part.compiled_content)}
+    <div class="pagination-centered">
+      <ul class="pagination">
+      </ul>
+    </div>
+    <div>
+      <py:if test="h.auth.is_authorised(r.current_user, 'edit', module)">
+        <a href="${r.route_url('part.edit', mid=module.id, pid=part.id)}" class="button small">Edit</a>
+      </py:if>
+      <py:if test="h.auth.is_authorised(r.current_user, 'delete', module)">
+        <a href="${r.route_url('part.delete', mid=module.id, pid=part.id)}" class="button small alert">Delete</a>
+      </py:if>
+    </div>
+  </section>
+  <section id="editor" class="small-12 medium-6 large-8">
+    <section id="files">
+    </section>
+    <section id="viewer">
+      <iframe src=""></iframe>
+    </section>
+  </section>
+    <script src="${r.static_url('wte:static/js/codemirror/codemirror.js')}"></script>
+    ${h.frontend.codemirror_scripts(r, ['text/html'])}
+    <script>
+    function resize_page() {
+        var win_height = $(window).innerHeight();
+        $('nav.top-bar').each(function() {
+            win_height = win_height - $(this).outerHeight(true);
+        });
+        $('#textbook').css('height', win_height + 'px');
+        $('#editor').css('height', win_height + 'px');
+        $('#files').css('height', (win_height / 2) + 'px');
+        $('#files .content').each(function() {
+            $(this).css('height', (win_height / 2) - $('#files .tabs').outerHeight(true) + 'px');
+        });
+        $('#viewer').css('height', (win_height / 2) + 'px');
+    }
+    function save_doc(cm, textarea) {
+        var spinner = $('#' + textarea.parent().attr('id') + '-tab img');
+        spinner.show();
+        var url = '${r.route_url('file.save', mid=module.id, ptid='', pid=part.id, uid=r.current_user.id, fid='FID')}';
+        url = url.replace('FID', textarea.data('wte-fileid'));
+        $.ajax(url, {
+            type: 'POST',
+            data: {'content': cm.getValue()},
+            dataType: 'json'
+        }).complete(function() {
+            var iframe = $('#viewer iframe');
+            iframe.attr('src', iframe.attr('src'));
+        }).always(function() {
+            spinner.hide();
+        });
+    }
+    $(document).ready(function() {
+        resize_page();
+        $(window).on('resize', resize_page);
+        $('#files .content textarea').each(function() {
+            var textarea = $(this);
+            cm = CodeMirror.fromTextArea(this, {
+                mode: textarea.data('wte-mimetype')
+            });
+            cm.on('change', function(cm, changes) {
+                clearTimeout(textarea.data('wte-timeout'));
+                textarea.data('wte-timeout', setTimeout(function() {save_doc(cm, textarea);}, 1000));
+            });
+            textarea.data('wte-cm', cm);
+        });
+        $('#files .tabs').on('toggled', function (event, tab) {
+            tab.children('textarea').data('wte-cm').refresh();
+        });
+    });
+    </script>
+</article>
