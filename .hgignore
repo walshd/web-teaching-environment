@@ -9,3 +9,8 @@ syntax: regexp
 ^.project$
 syntax: regexp
 ^.pydevproject$
+
+syntax: regexp
+^dist$
+syntax: regexp
+^doc/build$
