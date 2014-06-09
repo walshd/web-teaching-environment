@@ -16,6 +16,22 @@ ul.no-symbol > li, ol.no-symbol > li {
 .hidden {
     display: none;
 }
+.icon-menu {
+  position: relative;
+  padding-left: 1.25em;
+}
+.icon-menu:before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.25em;
+  width: 1em;
+  height: 0.15em;
+  background: black;
+  box-shadow: 
+    0 0.25em 0 0 black,
+    0 0.5em 0 0 black;
+}
 
 /**
  * jQuery UI styles
@@ -24,6 +40,18 @@ ul.no-symbol > li, ol.no-symbol > li {
     cursor: move;
 }
 
+/**
+ * Drop-down menu styles
+ */
+.menu {
+    z-index: 1;
+}
+.menu.section {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+}
+ 
 /**
  * Busy marker styles
  */
@@ -75,6 +103,7 @@ ul.no-symbol > li, ol.no-symbol > li {
 #files {
     border-bottom: 1px solid #333;
     overflow: hidden;
+    position: relative;
 }
 #files .tabs {
     border-bottom: 1px solid #dfdfdf;

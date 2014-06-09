@@ -16,6 +16,7 @@
   </section>
   <section id="editor" class="small-12 medium-6 large-8">
     <section id="files">
+      <div class="menu section"><a href="${r.route_url('part.reset-files', mid=module.id, pid=part.id)}" class="button tiny radius">Discard all Changes</a></div>
       <dl class="tabs" data-tab="">
         <dd py:for="idx, file in enumerate(progress.files)" id="${h.frontend.html_id(file.filename)}-tab" class="${'active' if idx == 0 else ''}"><a href="#${h.frontend.html_id(file.filename)}">${file.filename} <img src="${r.static_url('wte:static/img/spinner-small.gif')}" class="hidden"/></a></dd>
       </dl>

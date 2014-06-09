@@ -1,14 +1,23 @@
-<article class="rows" xmlns:py="http://genshi.edgewall.org/">
+<article xmlns:py="http://genshi.edgewall.org/">
   <section id="textbook" class="small-12 medium-4 large-3 column">
     <h1>${part.title}</h1>
     ${Markup(part.compiled_content)}
-    <div class="pagination-centered">
-      <ul class="pagination">
+    <section py:if="not module.has_role('student', r.current_user) and part.templates">
+      <h2>Templates</h2>
+      <ul class="no-symbol">
+        <li py:for="template in part.templates" class="panel clearfix">
+          <span py:if="h.auth.is_authorised(r.current_user, 'edit', module)" class="right">
+            <a href="${r.route_url('template.edit', mid=module.id, pid=part.id, tid=template.id)}" class="button tiny">Edit</a>
+            <a href="${r.route_url('template.delete', mid=module.id, pid=part.id, tid=template.id)}" class="button tiny alert">Delete</a>
+          </span>
+          <h3>${template.filename} (${template.mimetype})</h3>
+        </li>
       </ul>
-    </div>
+    </section>
     <div>
       <py:if test="h.auth.is_authorised(r.current_user, 'edit', module)">
         <a href="${r.route_url('part.edit', mid=module.id, pid=part.id)}" class="button small">Edit</a>
+        <a href="${r.route_url('template.new', mid=module.id, pid=part.id)}" class="button small">Add Template</a>
       </py:if>
       <py:if test="h.auth.is_authorised(r.current_user, 'delete', module)">
         <a href="${r.route_url('part.delete', mid=module.id, pid=part.id)}" class="button small alert">Delete</a>
@@ -17,9 +26,18 @@
   </section>
   <section id="editor" class="small-12 medium-8 large-9">
     <section id="files">
+      <div class="menu section"><a href="${r.route_url('part.reset-files', mid=module.id, pid=part.id)}" class="button tiny radius">Discard all Changes</a></div>
+      <dl class="tabs" data-tab="">
+        <dd py:for="idx, file in enumerate(progress.files)" id="${h.frontend.html_id(file.filename)}-tab" class="${'active' if idx == 0 else ''}"><a href="#${h.frontend.html_id(file.filename)}">${file.filename} <img src="${r.static_url('wte:static/img/spinner-small.gif')}" class="hidden"/></a></dd>
+      </dl>
+      <form class="tabs-content">
+        <div py:for="idx, file in enumerate(progress.files)" class="content ${'active' if idx == 0 else ''}" id="${h.frontend.html_id(file.filename)}">
+          ${h.form.tags.textarea('', file.content, None, data_wte_mimetype=file.mimetype, data_wte_fileid=file.id)}
+        </div>
+      </form>
     </section>
     <section id="viewer">
-      <iframe src=""></iframe>
+      <iframe src="${r.route_url('file.view', mid=module.id, pid=part.id, filename=h.frontend.primary_filename(progress))}"></iframe>
     </section>
   </section>
     <script src="${r.static_url('wte:static/js/codemirror/codemirror.js')}"></script>
@@ -41,7 +59,7 @@
     function save_doc(cm, textarea) {
         var spinner = $('#' + textarea.parent().attr('id') + '-tab img');
         spinner.show();
-        var url = '${r.route_url('file.save', mid=module.id, ptid='', pid=part.id, uid=r.current_user.id, fid='FID')}';
+        var url = '${r.route_url('file.save', mid=module.id, pid=part.id, uid=r.current_user.id, fid='FID')}';
         url = url.replace('FID', textarea.data('wte-fileid'));
         $.ajax(url, {
             type: 'POST',

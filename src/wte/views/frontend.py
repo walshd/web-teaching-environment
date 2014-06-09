@@ -14,7 +14,7 @@ Routes are defined in :func:`~wte.views.frontend.init`.
 """
 import transaction
 
-from pyramid.httpexceptions import (HTTPNotFound)
+from pyramid.httpexceptions import (HTTPNotFound, HTTPSeeOther)
 from pyramid.response import Response
 from pyramid.view import view_config
 from pywebtools.auth import is_authorised
@@ -25,6 +25,7 @@ from wte.decorators import current_user
 from wte.models import (DBSession, Module, Part, User, UserPartProgress,
                         File)
 from wte.util import (unauthorised_redirect)
+from wte.views.part import create_part_crumbs
 
 
 def init(config):
@@ -34,28 +35,24 @@ def init(config):
     * ``modules`` -- ``/modules`` -- :func:`~wte.views.frontend.modules`
     * ``module.view`` -- ``/modules/{mid}`` --
       :func:`~wte.views.frontend.view_module`
-    * ``tutorial.view`` -- ``/modules/{mid}/tutorials/{tid}`` --
-      :func:`~wte.views.frontend.view_tutorial`
-    * ``exercise.view`` -- ``/modules/{mid}/exercises/{eid}`` --
-      :func:`~wte.views.frontend.view_exercise`
-    * ``page.view`` -- ``/modules/{mid}/tutorials/{tid}/pages/{pid}`` --
-      :func:`~wte.views.frontend.view_page`
+    * ``part.view`` -- ``/modules/{mid}/parts/{pid}`` --
+      :func:`~wte.views.frontend.view_part`
     * ``user.modules`` -- ``/users/{uid}/modules`` --
       :func:`~wte.views.frontend.user_modules`
     * ``file.view`` -- ``/modules/{mid}/parts/{pid}/files/name/{filename}``
       -- :func:`~wte.views.frontend.view_file`
     * ``file.save`` -- ``/modules/{mid}/parts/{pid}/files/id/{fid}/save``
       -- :func:`~wte.views.frontend.save_file`
+    * ``part.reset-files`` -- ``/modules/{mid}/parts/{pid}/reset_files`` --
+      :func:`~wte.views.part.reset_files`
     """
     config.add_route('modules', '/modules')
     config.add_route('module.view', '/modules/{mid}')
     config.add_route('part.view', '/modules/{mid}/parts/{pid}')
-    config.add_route('tutorial.view', '/modules/{mid}/tutorials/{tid}')
-    config.add_route('exercise.view', '/modules/{mid}/exercises/{eid}')
-    config.add_route('page.view', '/modules/{mid}/tutorials/{tid}/pages/{pid}')
     config.add_route('user.modules', '/users/{uid}/modules')
     config.add_route('file.view', '/modules/{mid}/parts/{pid}/files/name/{filename}')
     config.add_route('file.save', '/modules/{mid}/parts/{pid}/files/id/{fid}/save')
+    config.add_route('part.reset-files', '/modules/{mid}/parts/{pid}/reset_files')
 
 
 @view_config(route_name='modules')
@@ -118,7 +115,7 @@ def view_module(request):
         raise HTTPNotFound()
 
 
-def get_user_part_progress(dbsession, user, part, page=None):
+def get_user_part_progress(dbsession, user, part):
     u"""Returns the :class:`~wte.models.UserPartProgress` for the given
     ``user`` and ``part. If none exists, then a new one is instantiated. If
     the :class:`~wte.models.UserPartProgress` points to a current page that
@@ -273,6 +270,45 @@ def save_file(request):
                     else:
                         return {'status': 'no-changes'}
             raise HTTPNotFound()
+        else:
+            unauthorised_redirect(request)
+    else:
+        raise HTTPNotFound()
+
+
+@view_config(route_name='part.reset-files')
+@render({'text/html': 'part/reset_files.html'})
+@current_user()
+def reset_files(request):
+    u"""Handles the ``/modules/{mid}/parts/{pid}/reset_files`` URL, providing
+    the UI and backend for resetting all :class:`~wte.models.File` of a
+    :class:`~wte.models.Part`
+    
+    Requires that the user has "edit" rights on the current
+    :class:`~wte.models.Module`.
+    """
+    dbsession = DBSession()
+    module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
+    part = dbsession.query(Part).filter(and_(Part.id==request.matchdict['pid'],
+                                             Part.module_id==request.matchdict['mid'])).first()
+    if module and part:
+        if part.allow('view', request.current_user):
+            crumbs = create_part_crumbs(request,
+                                        module,
+                                        part,
+                                        {'title': 'Discard all Changes',
+                                         'url': request.current_route_url()})
+            if request.method == u'POST':
+                with transaction.manager:
+                    progress = get_user_part_progress(dbsession, request.current_user, part)
+                    for user_file in progress.files:
+                        dbsession.delete(user_file)
+                raise HTTPSeeOther(request.route_url('part.view',
+                                                     mid=request.matchdict['mid'],
+                                                     pid=request.matchdict['pid']))
+            return {'module': module,
+                    'part': part,
+                    'crumbs': crumbs}
         else:
             unauthorised_redirect(request)
     else:
