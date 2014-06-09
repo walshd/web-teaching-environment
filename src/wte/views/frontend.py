@@ -26,6 +26,7 @@ from wte.models import (DBSession, Module, Part, User, UserPartProgress,
                         File)
 from wte.util import (unauthorised_redirect)
 
+
 def init(config):
     u"""Adds the frontend-specific backend routes (route name, URL pattern
     handler):
@@ -56,6 +57,7 @@ def init(config):
     config.add_route('file.view', '/modules/{mid}/parts/{ptid}/pages/{pid}/users/{uid}/files/name/{filename}')
     config.add_route('file.save', '/modules/{mid}/parts/{ptid}/pages/{pid}/users/{uid}/files/id/{fid}/save')
 
+
 @view_config(route_name='modules')
 @render({'text/html': 'module/list.html'})
 @current_user()
@@ -67,6 +69,7 @@ def modules(request):
     modules = dbsession.query(Module).filter(Module.status==u'available').all()
     return {'modules': modules,
             'crumbs': [{'title': 'Modules', 'url': request.route_url('modules'), 'current': True}]}
+
 
 @view_config(route_name='user.modules')
 @render({'text/html': 'module/user.html'})
@@ -89,7 +92,8 @@ def user_modules(request):
             unauthorised_redirect(request)
     else:
         raise HTTPNotFound()
-    
+
+
 @view_config(route_name='module.view')
 @render({'text/html': 'module/view.html'})
 @current_user()
@@ -112,6 +116,7 @@ def view_module(request):
             unauthorised_redirect(request)
     else:
         raise HTTPNotFound()
+
 
 def get_user_part_progress(dbsession, user, part, page=None):
     u"""Returns the :class:`~wte.models.UserPartProgress` for the given
@@ -157,23 +162,33 @@ def get_user_part_progress(dbsession, user, part, page=None):
 @render({'text/html': 'part/view.html'})
 @current_user()
 def view_part(request):
-    u"""Handles the ``/modules/{mid}/tutorials/{tid}`` URL, displaying the
-    :class:`~wte.models.Part` and its child :class:`~wte.models.Page`.
+    u"""Handles the ``/modules/{mid}/parts/{pid}`` URL, displaying the
+    :class:`~wte.models.Part`.
     
     Requires that the user has "view" rights on the
-    :class:`~wte.models.Module`.
+    :class:`~wte.models.Part`.
     """
     dbsession = DBSession()
-    module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
-    part = dbsession.query(Part).filter(and_(Part.id==request.matchdict['pid'],
+    module = dbsession.query(Module).filter(Module.id == request.matchdict['mid']).first()
+    part = dbsession.query(Part).filter(and_(Part.id == request.matchdict['pid'],
                                              Part.module_id==request.matchdict['mid'])).first()
     if module and part:
         if part.allow('view', request.current_user):
-            #progress = get_user_part_progress(dbsession, request.current_user, tutorial)
-            #dbsession.add(progress)
-            #dbsession.add(module)
-            #dbsession.add(tutorial)
-            #dbsession.add(request.current_user)
+            progress = dbsession.query(UserPartProgress).\
+                filter(and_(UserPartProgress.user_id == request.current_user.id,
+                            UserPartProgress.part_id == request.matchdict['pid'])).first()
+            if not progress:
+                if part.type == u'tutorial':
+                    pass
+                elif part.type == u'page':
+                    pass
+                elif part.type == u'exercise':
+                    pass
+                elif part.type == u'task':
+                    pass
+            if progress:
+                with transaction.manager:
+                    dbsession.add(progress)
             crumbs = [{'title': 'Modules', 'url': request.route_url('modules')},
                       {'title': module.title, 'url': request.route_url('module.view', mid=module.id)}]
             tmp = part
@@ -183,100 +198,13 @@ def view_part(request):
             crumbs[-1]['current'] = True
             return {'module': module,
                     'part': part,
-                    'crumbs': crumbs}
+                    'crumbs': crumbs,
+                    'progress': progress}
         else:
             unauthorised_redirect(request)
     else:
         raise HTTPNotFound()
 
-@view_config(route_name='exercise.view')
-@render({'text/html': 'exercise/view.html'})
-@current_user()
-def view_exercise(request):
-    u"""Handles the ``/modules/{mid}/exercises/{eid}`` URL, displaying the
-    :class:`~wte.models.Part`.
-    
-    Requires that the user has "view" rights on the
-    :class:`~wte.models.Module`.
-    """
-    dbsession = DBSession()
-    module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
-    exercise = dbsession.query(Part).filter(and_(Part.id==request.matchdict['eid'],
-                                                 Part.module_id==request.matchdict['mid'],
-                                                 Part.type==u'exercise')).first()
-    if module and exercise:
-        if exercise.allow('view', request.current_user):
-            progress = get_user_part_progress(dbsession, request.current_user, exercise)
-            dbsession.add(progress)
-            dbsession.add(module)
-            dbsession.add(exercise)
-            dbsession.add(request.current_user)
-            return {'module': module,
-                    'exercise': exercise,
-                    'progress': progress,
-                    'crumbs': [{'title': 'Modules', 'url': request.route_url('modules')},
-                               {'title': module.title, 'url': request.route_url('module.view', mid=module.id)},
-                               {'title': exercise.title, 'url': request.route_url('exercise.view', mid=module.id, eid=exercise.id), 'current': True}]}
-        else:
-            unauthorised_redirect(request)
-    else:
-        raise HTTPNotFound()
-
-@view_config(route_name='page.view')
-@render({'text/html': 'page/view.html'})
-@current_user()
-def view_page(request):
-    u"""Handles the ``/modules/{mid}/tutorials/{tid}/pages/{pid}`` URL,
-    displaying the :class:`~wte.models.Page`.
-    
-    Requires that the user has "view" rights on the
-    :class:`~wte.models.Module`.
-    """
-    dbsession = DBSession()
-    module = dbsession.query(Module).filter(Module.id==request.matchdict[u'mid']).first()
-    tutorial = dbsession.query(Part).filter(and_(Part.id==request.matchdict[u'tid'],
-                                                 Part.module_id==request.matchdict[u'mid'],
-                                                 Part.type==u'tutorial')).first()
-    page = dbsession.query(Page).filter(and_(Page.id==request.matchdict[u'pid'],
-                                             Page.part_id==request.matchdict[u'tid'])).first()
-    if module and tutorial and page:
-        if tutorial.allow('view', request.current_user):
-            progress = get_user_part_progress(dbsession, request.current_user, tutorial, page)
-            dbsession.add(progress)
-            dbsession.add(module)
-            dbsession.add(tutorial)
-            dbsession.add(page)
-            dbsession.add(request.current_user)
-
-            prev_page = None
-            next_page = None
-            page_no = 1
-            state = 0
-            for p in tutorial.pages:
-                if p == page:
-                    state = 1
-                else:
-                    if state == 0:
-                        page_no = page_no + 1
-                        prev_page = p
-                    elif state == 1:
-                        state = 2
-                        next_page = p
-            return {'module': module,
-                    'tutorial': tutorial,
-                    'page': page,
-                    'prev_page': prev_page,
-                    'next_page': next_page,
-                    'page_no': page_no,
-                    'progress': progress,
-                    'crumbs': [{'title': 'Modules', 'url': request.route_url('modules')},
-                               {'title': module.title, 'url': request.route_url('module.view', mid=module.id)},
-                               {'title': tutorial.title, 'url': request.route_url('tutorial.view', mid=module.id, tid=tutorial.id), 'current': True}]
-                    }
-        else:
-            unauthorised_redirect(request)
-    else:
-        raise HTTPNotFound()
 
 @view_config(route_name='file.view')
 @current_user()

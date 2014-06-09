@@ -310,7 +310,6 @@ class Module(Base):
     
     users = relationship(u'UserModuleRole', backref=u'module', cascade=u'all,delete')
     parts = relationship(u'Part',
-                         backref=u'module',
                          cascade=u'all,delete',
                          primaryjoin=u'and_(Module.id == Part.module_id, Part.parent_id == None)',
                          order_by=u'Part.order')
@@ -386,8 +385,9 @@ class Part(Base):
     content = Column(UnicodeText)
     compiled_content = Column(UnicodeText)
     
+    module = relationship(u'Module')
     children = relationship(u'Part', backref=backref(u'parent', remote_side=[id]), cascade=u'all,delete', order_by=u'Part.order')
-    users = relationship(u'UserPartProgress', backref=u'part', cascade=u'all,delete')
+    #users = relationship(u'UserPartProgress', backref=u'part', cascade=u'all,delete')
     templates = relationship(u'Template', backref=u'part', cascade=u'all,delete', order_by=u'Template.order')
 
     def allow(self, action, user):
@@ -436,6 +436,7 @@ class UserPartProgress(Base):
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey(User.id, name=u'user_part_progress_user_id_fk'))
     part_id = Column(Integer, ForeignKey(Part.id, name=u'user_part_progress_part_id_fk'))
+    current_id = Column(Integer, ForeignKey(Part.id, name=u'user_part_progress_current_id_fk'))
     
     files = relationship(u'File', cascade="all,delete", order_by=u'File.order')
 

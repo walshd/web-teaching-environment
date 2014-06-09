@@ -19,6 +19,14 @@
         <div class="clearfix">
           ${h.form.field('content', 'Content', h.form.tags.textarea, size='small-12', e=e, default=part.content, id='page-content', style='height:20em;')}
         </div>
+          <div class="clearfix" py:if="part.children">
+            <div class="small-12 column">
+              <label>Child-part order</label>
+              <ul id="children" class="no-symbol">
+                <li py:for="child in part.children" class="panel">${h.form.tags.hidden_field('child_part_id', child.id)}${child.title}</li>
+              </ul>
+            </div>
+          </div>
         <div class="text-right">
           ${h.form.tags.submit('Update', class_='button small')}
         </div>
@@ -43,6 +51,7 @@
         code_change_timer = setTimeout(render_page, 1000);
     });
     render_page();
+    $('#children').sortable();
     </script>
   </body>
 </html>

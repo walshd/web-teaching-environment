@@ -79,6 +79,10 @@ def new(request):
             if parent:
                 if parent.type == u'tutorial':
                     available_types = [('page', 'Page')]
+                elif parent.type == u'exercise':
+                    available_types = [('task', 'Task')]
+                else:
+                    available_types = []
             else:
                 available_types = [('tutorial', 'Tutorial'), ('exercise', 'Exercise')]
             crumbs = [{'title': 'Modules', 'url': request.route_url('modules')},
@@ -139,6 +143,7 @@ class EditPartSchema(formencode.Schema):
     u"""The part's status"""
     content = formencode.validators.UnicodeString(not_empty=True)
     u"""The ReST content"""
+    child_part_id = formencode.ForEach(formencode.validators.Int, if_missing=None)
 
 
 @view_config(route_name='part.edit')
@@ -173,6 +178,12 @@ def edit(request):
                         part.title = params['title']
                         part.status = params['status']
                         part.content = params['content']
+                        if params['child_part_id']:
+                            for idx, cpid in enumerate(params['child_part_id']):
+                                child_part = dbsession.query(Part).filter(and_(Part.id == cpid,
+                                                                               Part.module_id == request.matchdict['mid'])).first()
+                                if child_part:
+                                    child_part.order = idx
                     dbsession.add(part)
                     request.session.flash('The %s has been updated' % (part.type), queue='info')
                     raise HTTPSeeOther(request.route_url('part.view', mid=request.matchdict['mid'], pid=request.matchdict['pid']))
