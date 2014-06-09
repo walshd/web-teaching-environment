@@ -84,3 +84,19 @@ def page_pagination(request, part):
                             class_='disabled'))
     return tag.ul(items,
                   class_='pagination')
+
+def primary_filename(progress):
+    u"""Returns the filename of the first :class:`~wte.models.File` from the
+    :class:`~wte.models.UserPartProgress` that has the mimetype "text/html".
+    
+    :param progress: The :class:`~wte.models.UserPartProgress` to get the files
+                     from
+    :type progress: :class:`~wte.models.UserPartProgress`
+    :return: The filename as a string or the empty string
+    :rtype: `unicode`
+    """
+    files = [f for f in progress.files if f.mimetype == 'text/html']
+    if files:
+        return files[0].filename
+    else:
+        return ''

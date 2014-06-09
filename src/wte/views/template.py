@@ -21,8 +21,10 @@ from pywebtools.auth import is_authorised
 from sqlalchemy import and_
 
 from wte.decorators import current_user
-from wte.util import (unauthorised_redirect)
 from wte.models import (DBSession, Module, Part, Template)
+from wte.util import (unauthorised_redirect)
+from wte.views.part import create_part_crumbs
+
 
 def init(config):
     u"""Adds the template-specific backend routes (route name, URL pattern
@@ -68,6 +70,9 @@ def new(request):
     if module and part:
         if is_authorised(u':module.allow("edit" :current)', {'module': module,
                                                              'current': request.current_user}):
+            crumbs = create_part_crumbs(request, module, part,
+                                        {'title': 'Add template',
+                                         'url': request.route_url('template.new', mid=module.id, pid=part.id)})
             if request.method == u'POST':
                 try:
                     params = TemplateSchema().to_python(request.params)
@@ -92,16 +97,10 @@ def new(request):
                     return {'e': e,
                             'module': module,
                             'part': part,
-                            'crumbs': [{'title': 'Modules', 'url': request.route_url('modules')},
-                                       {'title': module.title, 'url': request.route_url('module.view', mid=module.id)},
-                                       {'title': part.title, 'url': request.route_url('tutorial.view', mid=module.id, tid=part.id)} if part.type == 'tutorial' else {'title': part.title, 'url': request.route_url('exercise.view', mid=module.id, eid=part.id)},
-                                       {'title': 'Add template', 'url': request.route_url('template.new', mid=module.id, pid=part.id), 'current': True}]}
+                            'crumbs': crumbs}
             return {'module': module,
                     'part': part,
-                    'crumbs': [{'title': 'Modules', 'url': request.route_url('modules')},
-                               {'title': module.title, 'url': request.route_url('module.view', mid=module.id)},
-                               {'title': part.title, 'url': request.route_url('tutorial.view', mid=module.id, tid=part.id)} if part.type == 'tutorial' else {'title': part.title, 'url': request.route_url('exercise.view', mid=module.id, eid=part.id)},
-                               {'title': 'Add template', 'url': request.route_url('template.new', mid=module.id, pid=part.id), 'current': True}]}
+                    'crumbs': crumbs}
         else:
             unauthorised_redirect(request)
     else:
@@ -127,6 +126,8 @@ def edit(request):
     if module and part and template:
         if is_authorised(u':module.allow("edit" :current)', {'module': module,
                                                              'current': request.current_user}):
+            crumbs = create_part_crumbs(request, module, part,
+                                        {'title': 'Edit Template', 'url': request.route_url('template.edit', mid=module.id, pid=part.id, tid=template.id)})
             if request.method == u'POST':
                 try:
                     params = TemplateSchema().to_python(request.params)
@@ -137,27 +138,20 @@ def edit(request):
                         template.content = params['content']
                     dbsession.add(part)
                     request.session.flash('The template has been updated', queue='info')
-                    if part.type == 'tutorial':
-                        raise HTTPSeeOther(request.route_url('tutorial.view', mid=request.matchdict['mid'], tid=request.matchdict['pid']))
-                    else:
-                        raise HTTPSeeOther(request.route_url('exercise.view', mid=request.matchdict['mid'], eid=request.matchdict['pid']))
+                    raise HTTPSeeOther(request.route_url('part.view',
+                                                         mid=request.matchdict['mid'],
+                                                         pid=request.matchdict['pid']))
                 except formencode.Invalid as e:
                     e.params = params
                     return {'e': e,
                             'module': module,
                             'part': part,
                             'template': template,
-                            'crumbs': [{'title': 'Modules', 'url': request.route_url('modules')},
-                                       {'title': module.title, 'url': request.route_url('module.view', mid=module.id)},
-                                       {'title': part.title, 'url': request.route_url('tutorial.view', mid=module.id, tid=part.id)} if part.type == 'tutorial' else {'title': part.title, 'url': request.route_url('exercise.view', mid=module.id, eid=part.id)},
-                                       {'title': 'Edit Template', 'url': request.route_url('template.edit', mid=module.id, pid=part.id, tid=template.id), 'current': True}]}
+                            'crumbs': crumbs}
             return {'module': module,
                     'part': part,
                     'template': template,
-                    'crumbs': [{'title': 'Modules', 'url': request.route_url('modules')},
-                               {'title': module.title, 'url': request.route_url('module.view', mid=module.id)},
-                               {'title': part.title, 'url': request.route_url('tutorial.view', mid=module.id, tid=part.id)} if part.type == 'tutorial' else {'title': part.title, 'url': request.route_url('exercise.view', mid=module.id, eid=part.id)},
-                               {'title': 'Edit Template', 'url': request.route_url('template.edit', mid=module.id, pid=part.id, tid=template.id), 'current': True}]}
+                    'crumbs': crumbs}
         else:
             unauthorised_redirect(request)
     else:
@@ -188,17 +182,18 @@ def delete(request):
                     dbsession.delete(template)
                 dbsession.add(part)
                 request.session.flash('The template has been deleted', queue='info')
-                if part.type == 'tutorial':
-                    raise HTTPSeeOther(request.route_url('tutorial.view', mid=request.matchdict['mid'], tid=request.matchdict['pid']))
-                else:
-                    raise HTTPSeeOther(request.route_url('exercise.view', mid=request.matchdict['mid'], eid=request.matchdict['pid']))
+                raise HTTPSeeOther(request.route_url('part.view',
+                                                     mid=request.matchdict['mid'],
+                                                     pid=request.matchdict['pid']))
             return {'module': module,
                     'part': part,
                     'template': template,
-                    'crumbs': [{'title': 'Modules', 'url': request.route_url('modules')},
-                               {'title': module.title, 'url': request.route_url('module.view', mid=module.id)},
-                               {'title': part.title, 'url': request.route_url('tutorial.view', mid=module.id, tid=part.id)} if part.type == 'tutorial' else {'title': part.title, 'url': request.route_url('exercise.view', mid=module.id, eid=part.id)},
-                               {'title': 'Delete Template', 'url': request.route_url('template.delete', mid=module.id, pid=part.id, tid=template.id), 'current': True}]}
+                    'crumbs': create_part_crumbs(request, module, part,
+                                                 {'title': 'Delete Template',
+                                                  'url': request.route_url('template.delete',
+                                                                           mid=module.id,
+                                                                           pid=part.id,
+                                                                           tid=template.id)})}
         else:
             unauthorised_redirect(request)
     else:

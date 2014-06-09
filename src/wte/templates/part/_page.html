@@ -16,13 +16,21 @@
   </section>
   <section id="editor" class="small-12 medium-6 large-8">
     <section id="files">
+      <dl class="tabs" data-tab="">
+        <dd py:for="idx, file in enumerate(progress.files)" id="${h.frontend.html_id(file.filename)}-tab" class="${'active' if idx == 0 else ''}"><a href="#${h.frontend.html_id(file.filename)}">${file.filename} <img src="${r.static_url('wte:static/img/spinner-small.gif')}" class="hidden"/></a></dd>
+      </dl>
+      <form class="tabs-content">
+        <div py:for="idx, file in enumerate(progress.files)" class="content ${'active' if idx == 0 else ''}" id="${h.frontend.html_id(file.filename)}">
+          ${h.form.tags.textarea('', file.content, None, data_wte_mimetype=file.mimetype, data_wte_fileid=file.id)}
+        </div>
+      </form>
     </section>
     <section id="viewer">
-      <iframe src=""></iframe>
+      <iframe src="${r.route_url('file.view', mid=module.id, pid=part.id, filename=h.frontend.primary_filename(progress))}"></iframe>
     </section>
   </section>
     <script src="${r.static_url('wte:static/js/codemirror/codemirror.js')}"></script>
-    ${h.frontend.codemirror_scripts(r, ['text/html'])}
+    ${h.frontend.codemirror_scripts(r, [f.mimetype for f in progress.files])}
     <script>
     function resize_page() {
         var win_height = $(window).innerHeight();
@@ -40,7 +48,7 @@
     function save_doc(cm, textarea) {
         var spinner = $('#' + textarea.parent().attr('id') + '-tab img');
         spinner.show();
-        var url = '${r.route_url('file.save', mid=module.id, ptid='', pid=part.id, uid=r.current_user.id, fid='FID')}';
+        var url = '${r.route_url('file.save', mid=module.id, pid=part.id, fid='FID')}';
         url = url.replace('FID', textarea.data('wte-fileid'));
         $.ajax(url, {
             type: 'POST',

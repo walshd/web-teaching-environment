@@ -42,9 +42,9 @@ def init(config):
       :func:`~wte.views.frontend.view_page`
     * ``user.modules`` -- ``/users/{uid}/modules`` --
       :func:`~wte.views.frontend.user_modules`
-    * ``file.view`` -- ``/modules/{mid}/parts/{ptid}/pages/{pid}/users/{uid}/files/name/{filename}``
+    * ``file.view`` -- ``/modules/{mid}/parts/{pid}/files/name/{filename}``
       -- :func:`~wte.views.frontend.view_file`
-    * ``file.save`` -- ``/modules/{mid}/parts/{ptid}/pages/{pid}/users/{uid}/files/id/{fid}/save``
+    * ``file.save`` -- ``/modules/{mid}/parts/{pid}/files/id/{fid}/save``
       -- :func:`~wte.views.frontend.save_file`
     """
     config.add_route('modules', '/modules')
@@ -54,8 +54,8 @@ def init(config):
     config.add_route('exercise.view', '/modules/{mid}/exercises/{eid}')
     config.add_route('page.view', '/modules/{mid}/tutorials/{tid}/pages/{pid}')
     config.add_route('user.modules', '/users/{uid}/modules')
-    config.add_route('file.view', '/modules/{mid}/parts/{ptid}/pages/{pid}/users/{uid}/files/name/{filename}')
-    config.add_route('file.save', '/modules/{mid}/parts/{ptid}/pages/{pid}/users/{uid}/files/id/{fid}/save')
+    config.add_route('file.view', '/modules/{mid}/parts/{pid}/files/name/{filename}')
+    config.add_route('file.save', '/modules/{mid}/parts/{pid}/files/id/{fid}/save')
 
 
 @view_config(route_name='modules')
@@ -132,30 +132,53 @@ def get_user_part_progress(dbsession, user, part, page=None):
     :return: The :class:`~wte.models.UserPartProgress`
     :rtype: :class:`~wte.models.UserPartProgress`
     """
-    user_part = None
-    for part_asc in user.parts:
-        if part_asc.part == part:
-            user_part = part_asc
-            break
-    if not user_part:
+    if part.type in [u'tutorial', u'task']:
+        progress = dbsession.query(UserPartProgress).\
+            filter(and_(UserPartProgress.user_id == user.id,
+                        UserPartProgress.part_id == part.id)).first()
+        if not progress:
+            progress = UserPartProgress(user_id=user.id,
+                                        part_id=part.id)
+    elif part.type == u'page':
+        progress = dbsession.query(UserPartProgress).\
+            filter(and_(UserPartProgress.user_id == user.id,
+                        UserPartProgress.part_id == part.parent.id)).first()
+        if not progress:
+            progress = UserPartProgress(user_id=user.id,
+                                        part_id=part.parent.id,
+                                        current_id=part.id)
+    else:
+        progress = None
+    if progress:
         with transaction.manager:
+            dbsession.add(progress)
             dbsession.add(part)
-            user_part = UserPartProgress(user=user,
-                                         part=part,
-                                         current_page=page)
-            for template in part.templates:
-                user_part.files.append(File(order=template.order,
-                                            filename=template.filename,
-                                            mimetype=template.mimetype,
-                                            content=template.content))
-            dbsession.add(user_part)
-    elif page:
-        if user_part.page_id != page.id:
-            with transaction.manager:
-                dbsession.add(page)
-                dbsession.add(user_part)
-                user_part.current_page = page
-    return user_part
+            if part.type == u'page':
+                templates = part.parent.templates
+            else:
+                templates = part.templates
+            for template in templates:
+                found = False
+                for user_file in progress.files:
+                    if user_file.filename == template.filename and user_file.mimetype == template.mimetype:
+                        found = True
+                        break
+                if not found:
+                    user_file = File(order=template.order,
+                                     filename=template.filename,
+                                     mimetype=template.mimetype,
+                                     content=template.content)
+                    dbsession.add(user_file)
+                    progress.files.append(user_file)
+            for template in templates:
+                for user_file in progress.files:
+                    if user_file.filename == template.filename and user_file.mimetype == template.mimetype:
+                        user_file.order = template.order
+                        break
+        dbsession.add(part)
+        dbsession.add(progress)
+        dbsession.add(user)
+    return progress
 
 
 @view_config(route_name='part.view')
@@ -174,21 +197,8 @@ def view_part(request):
                                              Part.module_id==request.matchdict['mid'])).first()
     if module and part:
         if part.allow('view', request.current_user):
-            progress = dbsession.query(UserPartProgress).\
-                filter(and_(UserPartProgress.user_id == request.current_user.id,
-                            UserPartProgress.part_id == request.matchdict['pid'])).first()
-            if not progress:
-                if part.type == u'tutorial':
-                    pass
-                elif part.type == u'page':
-                    pass
-                elif part.type == u'exercise':
-                    pass
-                elif part.type == u'task':
-                    pass
-            if progress:
-                with transaction.manager:
-                    dbsession.add(progress)
+            progress = get_user_part_progress(dbsession, request.current_user, part)
+            dbsession.add(module)
             crumbs = [{'title': 'Modules', 'url': request.route_url('modules')},
                       {'title': module.title, 'url': request.route_url('module.view', mid=module.id)}]
             tmp = part
@@ -219,17 +229,11 @@ def view_file(request):
     """
     dbsession = DBSession()
     module = dbsession.query(Module).filter(Module.id==request.matchdict[u'mid']).first()
-    part = dbsession.query(Part).filter(and_(Part.id==request.matchdict[u'ptid'],
+    part = dbsession.query(Part).filter(and_(Part.id==request.matchdict[u'pid'],
                                              Part.module_id==request.matchdict[u'mid'])).first()
-    if request.matchdict[u'pid'] == 'exercise':
-        page = None
-    else:
-        page = dbsession.query(Page).filter(and_(Page.id==request.matchdict[u'pid'],
-                                                 Page.part_id==request.matchdict[u'ptid'])).first()
     if module and part:
         if part.allow('view', request.current_user):
-            progress = get_user_part_progress(dbsession, request.current_user, part, page)
-            dbsession.add(progress)
+            progress = get_user_part_progress(dbsession, request.current_user, part)
             for user_file in progress.files:
                 if user_file.filename == request.matchdict['filename']:
                     return Response(body=user_file.content,
@@ -244,27 +248,21 @@ def view_file(request):
 @render({'application/json': True})
 @current_user()
 def save_file(request):
-    u"""Handles the ``/modules/{mid}/parts/{ptid}/pages/{pid}/users/{uid}/files/id/{fid}/save``
+    u"""Handles the ``/modules/{mid}/parts/{pid}/files/id/{fid}/save``
     URL, updating the :class:`~wte.models.File` content.
     
     Requires that the user has "view" rights on the
-    :class:`~wte.models.Module`. It will also only send a
+    :class:`~wte.models.Module`. It will also only update a
     :class:`~wte.models.File` belonging to the current
     :class:`~wte.models.User`.
     """
     dbsession = DBSession()
     module = dbsession.query(Module).filter(Module.id==request.matchdict[u'mid']).first()
-    part = dbsession.query(Part).filter(and_(Part.id==request.matchdict[u'ptid'],
+    part = dbsession.query(Part).filter(and_(Part.id==request.matchdict[u'pid'],
                                              Part.module_id==request.matchdict[u'mid'])).first()
-    if request.matchdict[u'pid'] == 'exercise':
-        page = None
-    else:
-        page = dbsession.query(Page).filter(and_(Page.id==request.matchdict[u'pid'],
-                                                 Page.part_id==request.matchdict[u'ptid'])).first()
     if module and part:
         if part.allow('view', request.current_user):
-            progress = get_user_part_progress(dbsession, request.current_user, part, page)
-            dbsession.add(progress)
+            progress = get_user_part_progress(dbsession, request.current_user, part)
             for user_file in progress.files:
                 if user_file.id == int(request.matchdict['fid']):
                     if 'content' in request.params:

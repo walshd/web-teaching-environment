@@ -22,7 +22,7 @@ from sqlalchemy import and_
 
 from wte.decorators import current_user
 from wte.util import (unauthorised_redirect)
-from wte.models import (DBSession, Module, Part)
+from wte.models import (DBSession, Module, Part, Template)
 
 def init(config):
     u"""Adds the part-specific backend routes (route name, URL pattern
@@ -60,6 +60,18 @@ class NewPartSchema(formencode.Schema):
     u"""The part's status"""
     
 
+def create_part_crumbs(request, module, part, current):
+    crumbs = [{'title': 'Modules', 'url': request.route_url('modules')},
+              {'title': module.title, 'url': request.route_url('module.view', mid=module.id)}]
+    while part:
+        crumbs.insert(2, {'title': part.title,
+                          'url': request.route_url('part.view', mid=module.id, pid=part.id)})
+        part = part.parent
+    current['current'] = True
+    if current:
+        crumbs.append(current)
+    return crumbs
+
 @view_config(route_name='part.new')
 @render({'text/html': 'part/new.html'})
 @current_user()
@@ -85,13 +97,11 @@ def new(request):
                     available_types = []
             else:
                 available_types = [('tutorial', 'Tutorial'), ('exercise', 'Exercise')]
-            crumbs = [{'title': 'Modules', 'url': request.route_url('modules')},
-                      {'title': module.title, 'url': request.route_url('module.view', mid=module.id)}]
-            tmp = parent
-            while tmp:
-                crumbs.insert(2, {'title': tmp.title, 'url': request.route_url('part.view', mid=module.id, pid=tmp.id)})
-                tmp = tmp.parent
-            crumbs.append({'title': 'Add Part', 'url': request.route_url('part.new', mid=module.id), 'current': True})
+            crumbs = create_part_crumbs(request,
+                                        module,
+                                        parent,
+                                        {'title': 'Add Part',
+                                         'url': request.route_url('part.new', mid=module.id)})
             if request.method == u'POST':
                 try:
                     params = NewPartSchema().to_python(request.params)
@@ -144,6 +154,9 @@ class EditPartSchema(formencode.Schema):
     content = formencode.validators.UnicodeString(not_empty=True)
     u"""The ReST content"""
     child_part_id = formencode.ForEach(formencode.validators.Int, if_missing=None)
+    u"""The child :class:`~wte.models.Part` ids for re-ordering"""
+    template_id = formencode.ForEach(formencode.validators.Int, if_missing=None)
+    u"""The :class:`~wte.models.Template` ids for re-ordering"""
 
 
 @view_config(route_name='part.edit')
@@ -163,13 +176,11 @@ def edit(request):
     if module and part:
         if is_authorised(u':module.allow("edit" :current)', {'module': module,
                                                              'current': request.current_user}):
-            crumbs = [{'title': 'Modules', 'url': request.route_url('modules')},
-                      {'title': module.title, 'url': request.route_url('module.view', mid=module.id)}]
-            tmp = part
-            while tmp:
-                crumbs.insert(2, {'title': tmp.title, 'url': request.route_url('part.view', mid=module.id, pid=tmp.id)})
-                tmp = tmp.parent
-            crumbs.append({'title': 'Edit', 'url': request.current_route_url(), 'current': True})
+            crumbs = create_part_crumbs(request,
+                                        module,
+                                        part,
+                                        {'title': 'Edit',
+                                         'url': request.current_route_url()})
             if request.method == u'POST':
                 try:
                     params = EditPartSchema().to_python(request.params)
@@ -184,6 +195,12 @@ def edit(request):
                                                                                Part.module_id == request.matchdict['mid'])).first()
                                 if child_part:
                                     child_part.order = idx
+                        if params['template_id']:
+                            for idx, tid in enumerate(params['template_id']):
+                                template = dbsession.query(Template).filter(and_(Template.id == tid,
+                                                                                 Template.part_id == request.matchdict['pid'])).first()
+                                if template:
+                                    template.order = idx
                     dbsession.add(part)
                     request.session.flash('The %s has been updated' % (part.type), queue='info')
                     raise HTTPSeeOther(request.route_url('part.view', mid=request.matchdict['mid'], pid=request.matchdict['pid']))
@@ -219,13 +236,13 @@ def delete(request):
     if module and part:
         if is_authorised(u':module.allow("edit" :current)', {'module': module,
                                                              'current': request.current_user}):
-            crumbs = [{'title': 'Modules', 'url': request.route_url('modules')},
-                      {'title': module.title, 'url': request.route_url('module.view', mid=module.id)}]
-            tmp = part
-            while tmp:
-                crumbs.insert(2, {'title': tmp.title, 'url': request.route_url('part.view', mid=module.id, pid=tmp.id)})
-                tmp = tmp.parent
-            crumbs.append({'title': 'Delete', 'url': request.route_url('part.delete', mid=module.id, pid=part.id), 'current': True})
+            crumbs = create_part_crumbs(request,
+                                        module,
+                                        part,
+                                        {'title': 'Delete',
+                                         'url': request.route_url('part.delete',
+                                                                  mid=module.id,
+                                                                  pid=part.id)})
             if request.method == u'POST':
                 part_type = part.type
                 parent = part.parent

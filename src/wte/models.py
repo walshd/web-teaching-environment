@@ -438,6 +438,8 @@ class UserPartProgress(Base):
     part_id = Column(Integer, ForeignKey(Part.id, name=u'user_part_progress_part_id_fk'))
     current_id = Column(Integer, ForeignKey(Part.id, name=u'user_part_progress_current_id_fk'))
     
+    part = relationship(u'Part', foreign_keys=[part_id])
+    current = relationship(u'Part', foreign_keys=[current_id])
     files = relationship(u'File', cascade="all,delete", order_by=u'File.order')
 
 Index('user_part_progress_user_id_ix', UserPartProgress.user_id)
