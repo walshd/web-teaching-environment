@@ -119,10 +119,10 @@ class User(Base):
         """
         self.email = email
         self.display_name = display_name
-        self.salt = u''.join(unichr(random.randint(0, 127)) for _ in range(32))
         if password:
             self.new_password(password)
         else:
+            self.salt = u''.join(unichr(random.randint(0, 127)) for _ in range(32))
             self.password = u''
         self.login_limit = 0
         self.preferences_ = {}
