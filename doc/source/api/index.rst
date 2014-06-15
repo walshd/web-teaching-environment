@@ -17,6 +17,7 @@ API Documentation
    wte_scripts_database
    wte_scripts_main
    wte_views
+   wte_views_asset
    wte_views_frontend
    wte_views_module
    wte_views_part

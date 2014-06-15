@@ -14,10 +14,23 @@
         </li>
       </ul>
     </section>
+    <section py:if="part.assets">
+      <h2>Assets</h2>
+      <ul class="no-symbol">
+        <li py:for="asset in part.assets" class="panel clearfix">
+          <span py:if="h.auth.is_authorised(r.current_user, 'edit', module)" class="right">
+            <a href="${r.route_url('asset.edit', mid=module.id, pid=part.id, aid=asset.id)}" class="button tiny">Edit</a>
+            <a href="${r.route_url('asset.delete', mid=module.id, pid=part.id, aid=asset.id)}" class="button tiny alert">Delete</a>
+          </span>
+          <h3><a href="${r.route_url('asset.view', mid=module.id, pid=part.id, filename=asset.filename)}">${asset.filename} (${asset.mimetype})</a></h3>
+        </li>
+      </ul>
+    </section>
     <div>
       <py:if test="h.auth.is_authorised(r.current_user, 'edit', module)">
         <a href="${r.route_url('part.edit', mid=module.id, pid=part.id)}" class="button small">Edit</a>
         <a href="${r.route_url('template.new', mid=module.id, pid=part.id)}" class="button small">Add Template</a>
+        <a href="${r.route_url('asset.new', mid=module.id, pid=part.id)}" class="button small">Add Asset</a>
       </py:if>
       <py:if test="h.auth.is_authorised(r.current_user, 'delete', module)">
         <a href="${r.route_url('part.delete', mid=module.id, pid=part.id)}" class="button small alert">Delete</a>

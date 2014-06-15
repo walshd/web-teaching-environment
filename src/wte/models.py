@@ -16,7 +16,7 @@ import random
 import hashlib
 
 from sqlalchemy import (Column, Index, ForeignKey, Integer, Unicode,
-                        UnicodeText, Table)
+                        UnicodeText, Table, LargeBinary)
 from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.event import listens_for
 from sqlalchemy.exc import OperationalError
@@ -387,8 +387,9 @@ class Part(Base):
     
     module = relationship(u'Module')
     children = relationship(u'Part', backref=backref(u'parent', remote_side=[id]), cascade=u'all,delete', order_by=u'Part.order')
-    #users = relationship(u'UserPartProgress', backref=u'part', cascade=u'all,delete')
     templates = relationship(u'Template', backref=u'part', cascade=u'all,delete', order_by=u'Template.order')
+    assets = relationship(u'Asset', backref=u'part', cascade=u'all,delete', order_by=u'Asset.id')
+    users = relationship(u'UserPartProgress', cascade=u'all,delete', primaryjoin=u'Part.id==UserPartProgress.part_id')
 
     def allow(self, action, user):
         """Checks whether the given ``user`` is allowed to perform the given
@@ -409,6 +410,14 @@ class Part(Base):
         return False
     
 Index('parts_module_id_ix', Part.module_id)
+
+
+@listens_for(Part.content, 'set')
+def compile_page_content(target, value, old_value, initiator):
+    u"""SQLAlchemy event listener that automatically compiles the ReST content
+    of a :class:`~wte.models.Page` to HTML when it is set / updated."""
+    target.compiled_content = compile_rst(value)
+
 
 class UserPartProgress(Base):
     u"""The :class:`~wte.models.UserPartProgress` represents the progress a
@@ -501,10 +510,16 @@ class File(Base):
     mimetype = Column(Unicode(255))
     content = Column(UnicodeText)
 
-    
-@listens_for(Part.content, 'set')
-def compile_page_content(target, value, old_value, initiator):
-    u"""SQLAlchemy event listener that automatically compiles the ReST content
-    of a :class:`~wte.models.Page` to HTML when it is set / updated."""
-    target.compiled_content = compile_rst(value)
 
+class Asset(Base):
+    
+    __tablename__ = u'assets'
+    
+    id = Column(Integer, primary_key=True)
+    part_id = Column(Integer, ForeignKey(u'parts.id', name=u'assets_part_id_fk'))
+    filename = Column(Unicode(255))
+    mimetype = Column(Unicode(255))
+    data = Column(LargeBinary)
+
+Index(u'assets_part_id_ix', Asset.part_id)
+Index(u'assets_filename_ix', Asset.filename)

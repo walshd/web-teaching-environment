@@ -23,7 +23,7 @@ from sqlalchemy import and_
 
 from wte.decorators import current_user
 from wte.models import (DBSession, Module, Part, User, UserPartProgress,
-                        File)
+                        File, Asset)
 from wte.util import (unauthorised_redirect)
 from wte.views.part import create_part_crumbs
 
@@ -39,6 +39,8 @@ def init(config):
       :func:`~wte.views.frontend.view_part`
     * ``user.modules`` -- ``/users/{uid}/modules`` --
       :func:`~wte.views.frontend.user_modules`
+    * ``asset.view`` -- ``/modules/{mid}/parts/{pid}/files/name/assets/{filename}``
+      -- :func:`~wte.views.frontend.view_asset`
     * ``file.view`` -- ``/modules/{mid}/parts/{pid}/files/name/{filename}``
       -- :func:`~wte.views.frontend.view_file`
     * ``file.save`` -- ``/modules/{mid}/parts/{pid}/files/id/{fid}/save``
@@ -50,6 +52,7 @@ def init(config):
     config.add_route('module.view', '/modules/{mid}')
     config.add_route('part.view', '/modules/{mid}/parts/{pid}')
     config.add_route('user.modules', '/users/{uid}/modules')
+    config.add_route('asset.view', '/modules/{mid}/parts/{pid}/files/name/assets/{filename}')
     config.add_route('file.view', '/modules/{mid}/parts/{pid}/files/name/{filename}')
     config.add_route('file.save', '/modules/{mid}/parts/{pid}/files/id/{fid}/save')
     config.add_route('part.reset-files', '/modules/{mid}/parts/{pid}/reset_files')
@@ -241,6 +244,7 @@ def view_file(request):
     else:
         raise HTTPNotFound()
 
+
 @view_config(route_name='file.save')
 @render({'application/json': True})
 @current_user()
@@ -309,6 +313,40 @@ def reset_files(request):
             return {'module': module,
                     'part': part,
                     'crumbs': crumbs}
+        else:
+            unauthorised_redirect(request)
+    else:
+        raise HTTPNotFound()
+
+
+@view_config(route_name='asset.view')
+@current_user()
+def view_asset(request):
+    u"""Handles the ``/modules/{mid}/parts/{pid}/files/assets/{filename}``
+    URL, sending back the correct :class:`~wte.models.Asset`.
+    
+    Requires that the user has "view" rights on the
+    :class:`~wte.models.Module`.
+    """
+    dbsession = DBSession()
+    module = dbsession.query(Module).filter(Module.id==request.matchdict[u'mid']).first()
+    part = dbsession.query(Part).filter(and_(Part.id==request.matchdict[u'pid'],
+                                             Part.module_id==request.matchdict[u'mid'])).first()
+    if part.type == u'tutorial':
+        pid = part.id
+    elif part.type == u'page':
+        pid = part.parent.id
+    elif part.type == u'exercise':
+        pid = None
+    elif part.type == u'task':
+        pid = part.id
+    asset = dbsession.query(Asset).filter(and_(Asset.filename==request.matchdict[u'filename'],
+                                               Asset.part_id==pid)).first()
+    if module and part and asset:
+        if part.allow('view', request.current_user):
+            return Response(body=asset.data,
+                            headerlist=[('Content-Type', str(asset.mimetype))])
+            raise HTTPNotFound()
         else:
             unauthorised_redirect(request)
     else:
