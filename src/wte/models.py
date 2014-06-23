@@ -451,6 +451,11 @@ class UserPartProgress(Base):
     current = relationship(u'Part', foreign_keys=[current_id])
     files = relationship(u'File', cascade="all,delete", order_by=u'File.order')
 
+    def allow(self, action, user):
+        if user.id == self.user_id:
+            return True
+        return False
+    
 Index('user_part_progress_user_id_ix', UserPartProgress.user_id)
 Index('user_part_progress_part_id_ix', UserPartProgress.part_id)
 Index('user_part_progress_user_id_part_id_ix', UserPartProgress.user_id, UserPartProgress.part_id)

@@ -20,6 +20,8 @@ from pyramid.view import view_config
 from pywebtools.auth import is_authorised
 from pywebtools.renderer import render
 from sqlalchemy import and_
+from StringIO import StringIO
+from zipfile import ZipFile
 
 from wte.decorators import current_user
 from wte.models import (DBSession, Module, Part, User, UserPartProgress,
@@ -47,6 +49,8 @@ def init(config):
       -- :func:`~wte.views.frontend.save_file`
     * ``part.reset-files`` -- ``/modules/{mid}/parts/{pid}/reset_files`` --
       :func:`~wte.views.part.reset_files`
+    * ``userpartprogress.download`` -- ``/users/{uid}/progress/{pid}/download``
+      -- :func:`~wte.views.frontend.download_part_progress`
     """
     config.add_route('modules', '/modules')
     config.add_route('module.view', '/modules/{mid}')
@@ -56,6 +60,7 @@ def init(config):
     config.add_route('file.view', '/modules/{mid}/parts/{pid}/files/name/{filename}')
     config.add_route('file.save', '/modules/{mid}/parts/{pid}/files/id/{fid}/save')
     config.add_route('part.reset-files', '/modules/{mid}/parts/{pid}/reset_files')
+    config.add_route('userpartprogress.download', '/users/{uid}/progress/{pid}/download')
 
 
 @view_config(route_name='modules')
@@ -236,8 +241,12 @@ def view_file(request):
             progress = get_user_part_progress(dbsession, request.current_user, part)
             for user_file in progress.files:
                 if user_file.filename == request.matchdict['filename']:
+                    headers = [('Content-Type', str(user_file.mimetype))]
+                    if 'download' in request.params:
+                        headers.append(('Content-Disposition',
+                                        str('attachment; filename="%s"' % (user_file.filename))))
                     return Response(body=user_file.content,
-                                    headerlist=[('Content-Type', str(user_file.mimetype))])
+                                    headerlist=headers)
             raise HTTPNotFound()
         else:
             unauthorised_redirect(request)
@@ -306,7 +315,9 @@ def reset_files(request):
                 with transaction.manager:
                     progress = get_user_part_progress(dbsession, request.current_user, part)
                     for user_file in progress.files:
-                        dbsession.delete(user_file)
+                        if 'filename' not in request.params\
+                                or request.params['filename'] == user_file.filename:
+                            dbsession.delete(user_file)
                 raise HTTPSeeOther(request.route_url('part.view',
                                                      mid=request.matchdict['mid'],
                                                      pid=request.matchdict['pid']))
@@ -346,7 +357,45 @@ def view_asset(request):
         if part.allow('view', request.current_user):
             return Response(body=asset.data,
                             headerlist=[('Content-Type', str(asset.mimetype))])
-            raise HTTPNotFound()
+        else:
+            unauthorised_redirect(request)
+    else:
+        raise HTTPNotFound()
+
+@view_config(route_name='userpartprogress.download')
+@current_user()
+def download_part_progress(request):
+    u"""Handles the ``/users/{uid}/progress/{pid}/download``
+    URL, sending back the complete project associated with the
+    :class:`~wte.models.UserPartProgress`.
+    
+    Requires that the user has "view" rights on the
+    :class:`~wte.models.UserPartProgress`.
+    """
+    dbsession = DBSession()
+    progress = dbsession.query(UserPartProgress).\
+        filter(UserPartProgress.id == request.matchdict['pid']).first()
+    if progress:
+        if progress.allow('view', request.current_user):
+            if progress.part.type == u'tutorial':
+                basepath = '%s/%s/' % (progress.part.module.title,
+                                       progress.part.title)
+                filename = '%s - %s.zip' % (progress.part.module.title, progress.part.title)
+            elif progress.part.type == u'task':
+                basepath = '%s/%s/%s/' % (progress.part.module.title,
+                                          progress.part.parent.title,
+                                          progress.part.title)
+                filename = '%s - %s.zip' % (progress.part.parent.title, progress.part.title)
+            body = StringIO()
+            zipfile = ZipFile(body, mode='w')
+            for user_file in progress.files:
+                zipfile.writestr('%s%s' % (basepath, user_file.filename), user_file.content.encode('utf8'))
+            for asset in progress.part.assets:
+                zipfile.writestr('%s/assets/%s' % (basepath, asset.filename), asset.data)
+            zipfile.close()
+            return Response(body=body.getvalue(),
+                            headerlist=[('Content-Type', 'application/zip'),
+                                        ('Content-Disposition', str('attachment; filename="%s"' % (filename)))])
         else:
             unauthorised_redirect(request)
     else:

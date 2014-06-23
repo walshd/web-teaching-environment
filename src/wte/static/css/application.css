@@ -4,6 +4,7 @@
 .row.left {margin:0}
 .panel .button {margin-bottom:0}
 
+
 /**
  * Generic styles
  */
@@ -16,22 +17,6 @@ ul.no-symbol > li, ol.no-symbol > li {
 .hidden {
     display: none;
 }
-.icon-menu {
-  position: relative;
-  padding-left: 1.25em;
-}
-.icon-menu:before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0.25em;
-  width: 1em;
-  height: 0.15em;
-  background: black;
-  box-shadow: 
-    0 0.25em 0 0 black,
-    0 0.5em 0 0 black;
-}
 
 /**
  * jQuery UI styles
@@ -41,17 +26,61 @@ ul.no-symbol > li, ol.no-symbol > li {
 }
 
 /**
+ * Image sizes
+ */
+img.small {
+    width: 22px;
+    height: 22px;
+}
+img.medium {
+    width: 32px;
+    height: 32px;
+}
+
+/**
  * Drop-down menu styles
  */
 .menu {
-    z-index: 1;
+    z-index: 99;
 }
 .menu.section {
     position: absolute;
     right: 5px;
     top: 5px;
 }
- 
+.menu.inline {
+    position: relative;
+    display: inline-block;
+    float: right;
+}
+.menu > ul {
+    margin: 0;
+    padding: 0;
+    background: white;
+    border: solid 1px #cccccc;
+    min-width: 200px;
+}
+.menu li {
+    padding: 0;
+    margin: 0;
+    list-style-type: none;
+    font-size: 0.875rem;
+    cursor: pointer;
+    line-height: 1.125rem;
+}
+.menu li a {
+    padding: 0.5rem;
+    display: block;
+    color: #555555;
+}
+.menu li a:hover {
+    background: #eeeeee;
+    color: #222;
+}
+.menu li.divider {
+    border-bottom: 1px solid #ccc;
+}
+
 /**
  * Busy marker styles
  */
@@ -118,7 +147,7 @@ ul.no-symbol > li, ol.no-symbol > li {
     border: 1px solid transparent;
     border-bottom-color: #dfdfdf;
     background-color: #fff;
-    padding: 0.5em 0.8em;
+    padding: 0.5rem 32px 0.5rem 0.8rem;
 }
 #files .tabs dd > a:hover {
     background-color: #eee;

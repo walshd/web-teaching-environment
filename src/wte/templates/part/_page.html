@@ -16,9 +16,23 @@
   </section>
   <section id="editor" class="small-12 medium-6 large-8">
     <section id="files">
-      <div class="menu section"><a href="${r.route_url('part.reset-files', mid=module.id, pid=part.id)}" class="button tiny radius">Discard all Changes</a></div>
+      <div class="menu section"><a href="#" class=""><img src="${r.static_url('wte:static/img/menu-icon.svg')}" alt="Menu"/></a>
+        <ul>
+          <li><a href="${r.route_url('userpartprogress.download', uid=r.current_user.id, pid=progress.id)}">Download the Workspace</a></li>
+          <li class="divider"></li>
+          <li><a href="${r.route_url('part.reset-files', mid=module.id, pid=part.id)}">Discard all Changes</a></li>
+        </ul>
+      </div>
       <dl class="tabs" data-tab="">
-        <dd py:for="idx, file in enumerate(progress.files)" id="${h.frontend.html_id(file.filename)}-tab" class="${'active' if idx == 0 else ''}"><a href="#${h.frontend.html_id(file.filename)}">${file.filename} <img src="${r.static_url('wte:static/img/spinner-small.gif')}" class="hidden"/></a></dd>
+        <dd py:for="idx, file in enumerate(progress.files)" id="${h.frontend.html_id(file.filename)}-tab" class="${'active' if idx == 0 else ''}"><a href="#${h.frontend.html_id(file.filename)}"><img src="${r.static_url('wte:static/img/spinner-small.gif')}" class="hidden"/> ${file.filename}</a>
+          <div class="menu section"><a href="#" class=""><img src="${r.static_url('wte:static/img/menu-icon.svg')}" alt="Menu" class="small"/></a>
+            <ul>
+              <li><a href="${r.route_url('file.view', mid=module.id, pid=part.id, filename=file.filename, _query=[('download', 'true')])}">Download</a></li>
+              <li class="divider"></li>
+              <li><a href="${r.route_url('part.reset-files', mid=module.id, pid=part.id, _query=[('filename', file.filename)])}">Discard all Changes</a></li>
+            </ul>
+          </div>
+        </dd>
       </dl>
       <form class="tabs-content">
         <div py:for="idx, file in enumerate(progress.files)" class="content ${'active' if idx == 0 else ''}" id="${h.frontend.html_id(file.filename)}">
@@ -46,39 +60,14 @@
         });
         $('#viewer').css('height', (win_height / 2) + 'px');
     }
-    function save_doc(cm, textarea) {
-        var spinner = $('#' + textarea.parent().attr('id') + '-tab img');
-        spinner.show();
-        var url = '${r.route_url('file.save', mid=module.id, pid=part.id, fid='FID')}';
-        url = url.replace('FID', textarea.data('wte-fileid'));
-        $.ajax(url, {
-            type: 'POST',
-            data: {'content': cm.getValue()},
-            dataType: 'json'
-        }).complete(function() {
-            var iframe = $('#viewer iframe');
-            iframe.attr('src', iframe.attr('src'));
-        }).always(function() {
-            spinner.hide();
-        });
-    }
     $(document).ready(function() {
         resize_page();
         $(window).on('resize', resize_page);
-        $('#files .content textarea').each(function() {
-            var textarea = $(this);
-            cm = CodeMirror.fromTextArea(this, {
-                mode: textarea.data('wte-mimetype')
-            });
-            cm.on('change', function(cm, changes) {
-                clearTimeout(textarea.data('wte-timeout'));
-                textarea.data('wte-timeout', setTimeout(function() {save_doc(cm, textarea);}, 1000));
-            });
-            textarea.data('wte-cm', cm);
+        $('#files').tabbedEditor({
+        	viewer: $('#viewer iframe'),
+        	save_url: '${r.route_url('file.save', mid=module.id, pid=part.id, fid='FID')}'
         });
-        $('#files .tabs').on('toggled', function (event, tab) {
-            tab.children('textarea').data('wte-cm').refresh();
-        });
+        $('.menu').dropdownMenu();
     });
     </script>
 </article>
