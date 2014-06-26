@@ -8,15 +8,19 @@
     <div class="row left">
       <article class="small-12 medium-10 large-8 column">
         <h1>${asset.filename} - Edit</h1>
-        <form action="${r.route_url('asset.edit', mid=module.id, pid=part.id, aid=asset.id)}" method="post" enctype="multipart/form-data">
+        <form action="${r.route_url('asset.edit', pid=part.id, aid=asset.id)}" method="post" enctype="multipart/form-data">
           <div class="clearfix">
             ${h.form.field('filename', 'Filename', h.form.tags.text_field, size='small-12', e=e, default=asset.filename)}
           </div>
           <div class="clearfix">
-            ${h.form.field('mimetype', 'Mimetype', h.form.tags.text_field, size='small-12', e=e, default=asset.mimetype)}
+            ${h.form.field('mimetype', 'Type', h.form.tags.select, size='small-12', e=e, value=asset.mimetype, options=[('other', '--- Other ---'), ('text/html', 'HTML'), ('text/javascript', 'JavaScript'), ('text/css', 'CSS')])}
+            ${h.form.field('mimetype_other', '', h.form.tags.text_field, size='small-12', e=e, default=asset.mimetype)}
           </div>
-          <div class="clearfix">
-            ${h.form.field('content', 'File (leave empty to keep the file unchanged)', h.form.tags.file_input_field, size='small-12', e=e)}
+          <div class="clearfix" py:if="asset.mimetype.startswith('text/')">
+            ${h.form.field('content', 'Content', h.form.tags.textarea, size='small-12', style='height:20em;', e=e, default=asset.data if asset.data else '')}
+          </div>
+          <div class="clearfix" py:if="not asset.mimetype.startswith('text/')">
+            ${h.form.field('data', 'File (leave empty to keep the file unchanged)', h.form.tags.file_input_field, size='small-12', e=e)}
           </div>
           <div class="text-right">
             ${h.form.tags.submit('Update', class_='button small')}
@@ -24,5 +28,18 @@
         </form>
       </article>
     </div>
+    <script>
+    var mimetype = ($('select[name=mimetype]'));
+    if(mimetype.val() != 'other') {
+    	$('input[name=mimetype_other]').hide();
+    }
+    mimetype.on('change', function() {
+        if(mimetype.val() == 'other') {
+            $('input[name=mimetype_other]').show();
+        } else {
+            $('input[name=mimetype_other]').hide();
+        }
+    });
+    </script>
   </body>
 </html>

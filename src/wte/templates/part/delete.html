@@ -8,7 +8,7 @@
     <div class="row left">
       <article class="small-12 medium-10 large-8 column">
         <h1>${part.title} - Delete</h1>
-        <form action="${r.route_url('part.delete', mid=module.id, pid=part.id)}" method="post">
+        <form action="${r.route_url('part.delete', pid=part.id)}" method="post">
           <p>Please confirm that you wish to delete the ${part.type} &quot;${part.title}&quot; and
             all child parts.</p>
           <div class="text-right">

@@ -2,17 +2,15 @@
 <html xmlns:py="http://genshi.edgewall.org/" xmlns:xi="http://www.w3.org/2001/XInclude">
   <xi:include href="../layout/layout.html"/>
   <head>
-    <title>${module.title} - Delete</title>
+    <title>${part.title} - Registration</title>
   </head>
   <body>
     <div class="row left">
       <article class="small-12 medium-10 large-8 column">
-        <h1>${module.title} - Delete</h1>
-        <form action="${r.route_url('module.delete', mid=module.id)}" method="post">
-          <p>Please confirm that you wish to delete the module &quot;${module.title}&quot;
-            and all its tutorials.</p>
+        <h1>${part.title} - Registration</h1>
+        <form action="${r.route_url('part.register', pid=part.id)}" method="post">
           <div class="text-right">
-            ${h.form.tags.submit('Delete', class_='button small alert')}
+            ${h.form.tags.submit('Register', class_='button small')}
           </div>
         </form>
       </article>

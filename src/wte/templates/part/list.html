@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:py="http://genshi.edgewall.org/" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xi:include href="../layout/layout.html"/>
+  <head>
+    <title>Available modules</title>
+  </head>
+  <body>
+    <div class="row left">
+      <article class="small-12 column">
+        <h1>Available modules</h1>
+        <ul class="no-symbol">
+          <li py:if="not modules" class="panel callout">There are currently no modules available.</li>
+          <li py:for="part in modules" class="panel clearfix">
+            <span class="right">
+              <a py:if="part.allow('edit', r.current_user)" href="${r.route_url('part.edit', pid=part.id)}" class="button tiny">Edit</a>
+              <a py:if="part.allow('delete', r.current_user)" href="${r.route_url('part.delete', pid=part.id)}" class="button tiny alert">Delete</a>
+            </span>
+            <h3 py:if="part.allow('view', r.current_user)"><a href="${r.route_url('part.view', pid=part.id)}">${part.title}</a></h3>
+            <h3 py:if="not part.allow('view', r.current_user)"><a href="${r.route_url('module.register', mid=module.id)}">${part.title}</a></h3>
+          </li>
+        </ul>
+        <div>
+          <a py:if="r.current_user.has_permission('modules.create')" href="${r.route_url('part.new', new_type='module')}" class="button small">New Module</a>
+        </div>
+      </article>
+    </div>
+  </body>
+</html>

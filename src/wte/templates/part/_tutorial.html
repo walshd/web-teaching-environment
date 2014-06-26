@@ -2,16 +2,16 @@
   <section class="small-12 column">
     <h1>${part.title}</h1>
     ${h.Markup(part.compiled_content)}
-    <div py:if="not module.has_role('student', r.current_user)">
-      <section>
+    <div py:if="not part.has_role('student', r.current_user)">
+      <section py:if="part.children">
         <h2>Pages</h2>
         <ul class="no-symbol">
-          <li py:if="part.allow('view', r.current_user)" py:for="part in part.children" class="panel clearfix">
-            <span py:if="h.auth.is_authorised(r.current_user, 'edit', module)" class="right">
-              <a href="${r.route_url('part.edit', mid=module.id, pid=part.id)}" class="button tiny">Edit</a>
-              <a href="${r.route_url('part.delete', mid=module.id, pid=part.id)}" class="button tiny alert">Delete</a>
+          <li py:if="part.allow('view', r.current_user)" py:for="child in part.children" class="panel clearfix">
+            <span class="right">
+              <a py:if="child.allow('edit', r.current_user)" href="${r.route_url('part.edit', pid=child.id)}" class="button tiny">Edit</a>
+              <a py:if="child.allow('delete', r.current_user)" href="${r.route_url('part.delete', pid=child.id)}" class="button tiny alert">Delete</a>
             </span>
-            <h3><a href="${r.route_url('part.view', mid=module.id, pid=part.id)}">${part.title}</a></h3>
+            <h3><a href="${r.route_url('part.view', pid=child.id)}">${child.title}</a></h3>
           </li>
         </ul>
       </section>
@@ -19,9 +19,9 @@
         <h2>Templates</h2>
         <ul class="no-symbol">
           <li py:for="template in part.templates" class="panel clearfix">
-            <span py:if="h.auth.is_authorised(r.current_user, 'edit', module)" class="right">
-              <a href="${r.route_url('template.edit', mid=module.id, pid=part.id, tid=template.id)}" class="button tiny">Edit</a>
-              <a href="${r.route_url('template.delete', mid=module.id, pid=part.id, tid=template.id)}" class="button tiny alert">Delete</a>
+            <span py:if="part.allow('edit', r.current_user)" class="right">
+              <a href="${r.route_url('asset.edit', pid=part.id, aid=template.id)}" class="button tiny">Edit</a>
+              <a href="${r.route_url('asset.delete', pid=part.id, aid=template.id)}" class="button tiny alert">Delete</a>
             </span>
             <h3>${template.filename} (${template.mimetype})</h3>
           </li>
@@ -31,29 +31,29 @@
         <h2>Assets</h2>
         <ul class="no-symbol">
           <li py:for="asset in part.assets" class="panel clearfix">
-            <span py:if="h.auth.is_authorised(r.current_user, 'edit', module)" class="right">
-              <a href="${r.route_url('asset.edit', mid=module.id, pid=part.id, aid=asset.id)}" class="button tiny">Edit</a>
-              <a href="${r.route_url('asset.delete', mid=module.id, pid=part.id, aid=asset.id)}" class="button tiny alert">Delete</a>
+            <span py:if="part.allow('edit', r.current_user)" class="right">
+              <a href="${r.route_url('asset.edit', mid=-1, pid=part.id, aid=asset.id)}" class="button tiny">Edit</a>
+              <a href="${r.route_url('asset.delete', mid=-1, pid=part.id, aid=asset.id)}" class="button tiny alert">Delete</a>
             </span>
-            <h3><a href="${r.route_url('asset.view', mid=module.id, pid=part.id, filename=asset.filename)}">${asset.filename} (${asset.mimetype})</a></h3>
+            <h3><a href="${r.route_url('asset.view', mid=-1, pid=part.id, filename=asset.filename)}">${asset.filename} (${asset.mimetype})</a></h3>
           </li>
         </ul>
       </section>
       <div>
-        <py:if test="h.auth.is_authorised(r.current_user, 'edit', module)">
-          <a href="${r.route_url('part.edit', mid=module.id, pid=part.id)}" class="button small">Edit</a>
-          <a href="${r.route_url('part.new', mid=module.id, _query=[('parent_id', part.id)])}" class="button small">Add Page</a>
-          <a href="${r.route_url('template.new', mid=module.id, pid=part.id)}" class="button small">Add Template</a>
-          <a href="${r.route_url('asset.new', mid=module.id, pid=part.id)}" class="button small">Add Asset</a>
+        <py:if test="part.allow('edit', r.current_user)">
+          <a href="${r.route_url('part.edit', pid=part.id)}" class="button small">Edit</a>
+          <a href="${r.route_url('part.new', new_type='page', _query=[('parent_id', part.id)])}" class="button small">Add Page</a>
+          <a href="${r.route_url('asset.new', pid=part.id, new_type='template')}" class="button small">Add Template</a>
+          <a href="${r.route_url('asset.new', pid=part.id, new_type='asset')}" class="button small">Add Asset</a>
         </py:if>
-        <py:if test="h.auth.is_authorised(r.current_user, 'delete', module)">
-          <a href="${r.route_url('part.delete', mid=module.id, pid=part.id)}" class="button small alert">Delete</a>
+        <py:if test="part.allow('delete', r.current_user)">
+          <a href="${r.route_url('part.delete', pid=part.id)}" class="button small alert">Delete</a>
         </py:if>
       </div>
     </div>
-    <div py:if="module.has_role('student', r.current_user)">
-       <a py:if="not progress.current and progress.part.children" href="${r.route_url('part.view', mid=module.id, pid=progress.part.children[0].id)}" class="button small">Follow the Tutorial</a>
-       <a py:if="progress.current" href="${r.route_url('part.view', mid=module.id, pid=progress.current.id)}" class="button small">Continue the Tutorial</a>
+    <div py:if="part.has_role('student', r.current_user)">
+       <a py:if="not progress.current and progress.part.children" href="${r.route_url('part.view', pid=progress.part.children[0].id)}" class="button small">Follow the Tutorial</a>
+       <a py:if="progress.current" href="${r.route_url('part.view', pid=progress.current.id)}" class="button small">Continue the Tutorial</a>
     </div>
   </section>
 </article>

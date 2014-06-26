@@ -24,8 +24,8 @@ from StringIO import StringIO
 from zipfile import ZipFile
 
 from wte.decorators import current_user
-from wte.models import (DBSession, Module, Part, User, UserPartProgress,
-                        File, Asset)
+from wte.models import (DBSession, Part, User, UserPartProgress,
+                        Asset, UserPartRole)
 from wte.util import (unauthorised_redirect)
 from wte.views.part import create_part_crumbs
 
@@ -54,30 +54,31 @@ def init(config):
     """
     config.add_route('modules', '/modules')
     config.add_route('module.view', '/modules/{mid}')
-    config.add_route('part.view', '/modules/{mid}/parts/{pid}')
+    config.add_route('part.view', '/parts/{pid}')
     config.add_route('user.modules', '/users/{uid}/modules')
-    config.add_route('asset.view', '/modules/{mid}/parts/{pid}/files/name/assets/{filename}')
-    config.add_route('file.view', '/modules/{mid}/parts/{pid}/files/name/{filename}')
-    config.add_route('file.save', '/modules/{mid}/parts/{pid}/files/id/{fid}/save')
-    config.add_route('part.reset-files', '/modules/{mid}/parts/{pid}/reset_files')
+    config.add_route('asset.view', '/parts/{pid}/files/name/assets/{filename}')
+    config.add_route('file.view', '/parts/{pid}/files/name/{filename}')
+    config.add_route('file.save', '/parts/{pid}/files/id/{fid}/save')
+    config.add_route('part.reset-files', '/parts/{pid}/reset_files')
     config.add_route('userpartprogress.download', '/users/{uid}/progress/{pid}/download')
 
 
 @view_config(route_name='modules')
-@render({'text/html': 'module/list.html'})
+@render({'text/html': 'part/list.html'})
 @current_user()
 def modules(request):
     u"""Handles the ``/modules`` URL, displaying all available
     :class:`~wte.models.Module`.
     """
     dbsession = DBSession()
-    modules = dbsession.query(Module).filter(Module.status==u'available').all()
+    modules = dbsession.query(Part).filter(and_(Part.type==u'module',
+                                                Part.status==u'available')).all()
     return {'modules': modules,
             'crumbs': [{'title': 'Modules', 'url': request.route_url('modules'), 'current': True}]}
 
 
 @view_config(route_name='user.modules')
-@render({'text/html': 'module/user.html'})
+@render({'text/html': 'part/list.html'})
 @current_user()
 def user_modules(request):
     u"""Handles the ``/users/{uid}/modules`` URL, displaying all the
@@ -90,33 +91,12 @@ def user_modules(request):
     user = dbsession.query(User).filter(User.id==request.matchdict['uid']).first()
     if user:
         if user.allow('view', request.current_user):
+            modules = dbsession.query(Part).join(UserPartRole).filter(and_(Part.type == u'module',
+                                                                           UserPartRole.user_id == request.matchdict[u'uid']))
             return {'user': user,
+                    'modules': modules,
                     'crumbs': [{'title': user.display_name, 'url': request.route_url('user.view', uid=user.id)},
                                {'title': 'Modules', 'url': request.route_url('modules'), 'current': True}]}
-        else:
-            unauthorised_redirect(request)
-    else:
-        raise HTTPNotFound()
-
-
-@view_config(route_name='module.view')
-@render({'text/html': 'module/view.html'})
-@current_user()
-def view_module(request):
-    u"""Handles the ``/modules/{mid}`` URL, displaying the
-    :class:`~wte.models.Module` and its child :class:`~wte.models.Part`.
-    
-    Requires that the user has "view" rights on the
-    :class:`~wte.models.Module`.
-    """
-    dbsession = DBSession()
-    module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
-    if module:
-        if is_authorised(u':module.allow("view" :current)', {'module': module,
-                                                             'current': request.current_user}):
-            return {'module': module,
-                    'crumbs': [{'title': 'Modules', 'url': request.route_url('modules')},
-                               {'title': module.title, 'url': request.route_url('module.view', mid=module.id), 'current': True}]}
         else:
             unauthorised_redirect(request)
     else:
@@ -169,10 +149,11 @@ def get_user_part_progress(dbsession, user, part):
                         found = True
                         break
                 if not found:
-                    user_file = File(order=template.order,
-                                     filename=template.filename,
-                                     mimetype=template.mimetype,
-                                     content=template.content)
+                    user_file = Asset(filename=template.filename,
+                                      mimetype=template.mimetype,
+                                      order=template.order,
+                                      data=template.data,
+                                      type=u'file')
                     dbsession.add(user_file)
                     progress.files.append(user_file)
             for template in templates:
@@ -197,22 +178,14 @@ def view_part(request):
     :class:`~wte.models.Part`.
     """
     dbsession = DBSession()
-    module = dbsession.query(Module).filter(Module.id == request.matchdict['mid']).first()
-    part = dbsession.query(Part).filter(and_(Part.id == request.matchdict['pid'],
-                                             Part.module_id==request.matchdict['mid'])).first()
-    if module and part:
+    part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
+    if part:
         if part.allow('view', request.current_user):
             progress = get_user_part_progress(dbsession, request.current_user, part)
-            dbsession.add(module)
-            crumbs = [{'title': 'Modules', 'url': request.route_url('modules')},
-                      {'title': module.title, 'url': request.route_url('module.view', mid=module.id)}]
-            tmp = part
-            while tmp:
-                crumbs.insert(2, {'title': tmp.title, 'url': request.route_url('part.view', mid=module.id, pid=tmp.id)})
-                tmp = tmp.parent
-            crumbs[-1]['current'] = True
-            return {'module': module,
-                    'part': part,
+            crumbs = create_part_crumbs(request,
+                                        part,
+                                        None)
+            return {'part': part,
                     'crumbs': crumbs,
                     'progress': progress}
         else:
@@ -233,10 +206,8 @@ def view_file(request):
     :class:`~wte.models.User`.
     """
     dbsession = DBSession()
-    module = dbsession.query(Module).filter(Module.id==request.matchdict[u'mid']).first()
-    part = dbsession.query(Part).filter(and_(Part.id==request.matchdict[u'pid'],
-                                             Part.module_id==request.matchdict[u'mid'])).first()
-    if module and part:
+    part = dbsession.query(Part).filter(Part.id==request.matchdict[u'pid']).first()
+    if part:
         if part.allow('view', request.current_user):
             progress = get_user_part_progress(dbsession, request.current_user, part)
             for user_file in progress.files:
@@ -245,7 +216,7 @@ def view_file(request):
                     if 'download' in request.params:
                         headers.append(('Content-Disposition',
                                         str('attachment; filename="%s"' % (user_file.filename))))
-                    return Response(body=user_file.content,
+                    return Response(body=user_file.data,
                                     headerlist=headers)
             raise HTTPNotFound()
         else:
@@ -267,10 +238,8 @@ def save_file(request):
     :class:`~wte.models.User`.
     """
     dbsession = DBSession()
-    module = dbsession.query(Module).filter(Module.id==request.matchdict[u'mid']).first()
-    part = dbsession.query(Part).filter(and_(Part.id==request.matchdict[u'pid'],
-                                             Part.module_id==request.matchdict[u'mid'])).first()
-    if module and part:
+    part = dbsession.query(Part).filter(Part.id==request.matchdict[u'pid']).first()
+    if part:
         if part.allow('view', request.current_user):
             progress = get_user_part_progress(dbsession, request.current_user, part)
             for user_file in progress.files:
@@ -278,7 +247,7 @@ def save_file(request):
                     if 'content' in request.params:
                         with transaction.manager:
                             dbsession.add(user_file)
-                            user_file.content = request.params['content']
+                            user_file.data = request.params['content'].encode('utf-8')
                         return {'status': 'saved'}
                     else:
                         return {'status': 'no-changes'}
@@ -301,13 +270,10 @@ def reset_files(request):
     :class:`~wte.models.Module`.
     """
     dbsession = DBSession()
-    module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
-    part = dbsession.query(Part).filter(and_(Part.id==request.matchdict['pid'],
-                                             Part.module_id==request.matchdict['mid'])).first()
-    if module and part:
+    part = dbsession.query(Part).filter(Part.id==request.matchdict['pid']).first()
+    if part:
         if part.allow('view', request.current_user):
             crumbs = create_part_crumbs(request,
-                                        module,
                                         part,
                                         {'title': 'Discard all Changes',
                                          'url': request.current_route_url()})
@@ -317,12 +283,11 @@ def reset_files(request):
                     for user_file in progress.files:
                         if 'filename' not in request.params\
                                 or request.params['filename'] == user_file.filename:
+                            progress.files.remove(user_file)
                             dbsession.delete(user_file)
                 raise HTTPSeeOther(request.route_url('part.view',
-                                                     mid=request.matchdict['mid'],
                                                      pid=request.matchdict['pid']))
-            return {'module': module,
-                    'part': part,
+            return {'part': part,
                     'crumbs': crumbs}
         else:
             unauthorised_redirect(request)
@@ -340,20 +305,11 @@ def view_asset(request):
     :class:`~wte.models.Module`.
     """
     dbsession = DBSession()
-    module = dbsession.query(Module).filter(Module.id==request.matchdict[u'mid']).first()
-    part = dbsession.query(Part).filter(and_(Part.id==request.matchdict[u'pid'],
-                                             Part.module_id==request.matchdict[u'mid'])).first()
-    if part.type == u'tutorial':
-        pid = part.id
-    elif part.type == u'page':
-        pid = part.parent.id
-    elif part.type == u'exercise':
-        pid = None
-    elif part.type == u'task':
-        pid = part.id
-    asset = dbsession.query(Asset).filter(and_(Asset.filename==request.matchdict[u'filename'],
-                                               Asset.part_id==pid)).first()
-    if module and part and asset:
+    part = dbsession.query(Part).filter(Part.id==request.matchdict[u'pid']).first()
+    if part.type == u'page':
+        part = part.parent
+    asset = dbsession.query(Asset).filter(Asset.filename==request.matchdict[u'filename']).first()
+    if part and asset and part in asset.parts:
         if part.allow('view', request.current_user):
             return Response(body=asset.data,
                             headerlist=[('Content-Type', str(asset.mimetype))])

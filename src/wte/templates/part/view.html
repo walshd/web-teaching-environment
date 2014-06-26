@@ -5,6 +5,7 @@
     <title>${part.title}</title>
   </head>
   <body>
+    <xi:include href="_module.html" py:if="part.type == 'module'"/>
     <xi:include href="_tutorial.html" py:if="part.type == 'tutorial'"/>
     <xi:include href="_page.html" py:if="part.type == 'page'"/>
     <xi:include href="_exercise.html" py:if="part.type == 'exercise'"/>

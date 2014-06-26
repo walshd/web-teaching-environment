@@ -33,6 +33,7 @@ Base = declarative_base()
 DB_VERSION = u''
 """The currently required database version."""
 
+
 class DBUpgradeException(Exception):
     """The :class:`~wte.models.DBUpgradeException` is used to indicate that
     the database requires an upgrade before the Web Teaching Environment system
@@ -52,6 +53,7 @@ You are currently running version '%s', but version '%s' is required. Please run
 alembic -c config.ini upgrade to upgrade the database and then start the application
 again.
 """ % (self.current, self.required)
+
     
 def check_database_version():
     """Checks that the current version of the database matches the version specified
@@ -69,6 +71,7 @@ def check_database_version():
                 raise DBUpgradeException(result[0], DB_VERSION)
     except OperationalError:
         raise DBUpgradeException('no version-information found', DB_VERSION)
+
 
 class User(Base):
     u"""The :class:`~wte.models.User` represents a users in the WTE. Which
@@ -103,7 +106,6 @@ class User(Base):
     
     permissions = relationship('Permission', backref='users', secondary='users_permissions')
     permission_groups = relationship('PermissionGroup', backref='users', secondary='users_permission_groups')
-    modules = relationship('UserModuleRole', backref=u'user', cascade=u'all,delete')
     parts = relationship('UserPartProgress', backref=u'user', cascade=u'all,delete')
     
     def __init__(self, email, display_name, password=None):
@@ -210,6 +212,7 @@ class User(Base):
         return False
 
 Index('users_email_ix', User.email)
+
     
 users_permissions = Table('users_permissions', Base.metadata,
                           Column('user_id', ForeignKey('users.id', name='users_permissions_users_fk'), primary_key=True),
@@ -217,6 +220,7 @@ users_permissions = Table('users_permissions', Base.metadata,
 u""":class:`sqlalchemy.Table` to link :class:`~wte.models.User` and
 :class:`~wte.models.Permission`.
 """
+
 
 class Permission(Base):
     u"""The :class:`~wte.models.Permission` class represents a single
@@ -242,6 +246,7 @@ class Permission(Base):
 
 Index('permissions_name_ix', Permission.name)
 
+
 class PermissionGroup(Base):
     u"""The :class:`~wte.models.PermissionGroup` groups together one or more
     :class:`~wte.models.Permission` for easier administration.
@@ -262,6 +267,7 @@ class PermissionGroup(Base):
     title = Column(Unicode(255))
     
     permissions = relationship('Permission', backref='permission_groups', secondary='permission_groups_permissions')
+
     
 groups_permissions = Table('permission_groups_permissions', Base.metadata,
                            Column('permission_group_id', ForeignKey(PermissionGroup.id, name='permission_groups_permissions_groups_fk'), primary_key=True),
@@ -277,81 +283,19 @@ u""":class:`sqlalchemy.Table` to link :class:`~wte.models.User` and
 :class:`~wte.models.PermissionGroup`.
 """
 
-class UserModuleRole(Base):
+
+class UserPartRole(Base):
     
-    __tablename__ = u'users_modules'
+    __tablename__ = u'users_parts'
     
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey(User.id, name=u'users_modules_user_id_fk'))
-    module_id = Column(Integer, ForeignKey('modules.id', name=u'users_modules_module_id_fk'))
+    user_id = Column(Integer, ForeignKey(User.id, name=u'users_parts_user_id_fk'))
+    part_id = Column(Integer, ForeignKey('parts.id', name=u'users_parts_part_id_fk'))
     role = Column(Unicode(255))
     
-class Module(Base):
-    u"""The :class:`~wte.models.Module` class represents a teaching module that
-    contains one or more :class:`~wte.models.Part`.
-    
-    Instances of :class:`~wte.models.Module` have the following attributes:
-    
-    * ``id`` -- The unique database identifier
-    * ``owner_id`` -- The unique database identifier of the
-      :class:`~wte.models.User` who created this :class:`~wte.models.Module`
-    * ``owner`` -- The :class:`~wte.models.User` who created this
-      :class:`~wte.models.Module`
-    * ``status`` -- The status determines the access level
-    * ``title`` -- The title displayed for this :class:`~wte.models.Module`
-    * ``tutorials`` -- List of :class:`~wte.models.Part` contained in this
-      :class:`~wte.models.Module`
-    """
-    __tablename__ = u'modules'
-    
-    id = Column(Integer, primary_key=True)
-    title = Column(Unicode(255))
-    status = Column(Unicode(255))
-    
-    users = relationship(u'UserModuleRole', backref=u'module', cascade=u'all,delete')
-    parts = relationship(u'Part',
-                         cascade=u'all,delete',
-                         primaryjoin=u'and_(Module.id == Part.module_id, Part.parent_id == None)',
-                         order_by=u'Part.order')
-    
-    def allow(self, action, user):
-        """Checks whether the given ``user`` is allowed to perform the given
-        ``action``. Supports the following actions: view, edit, delete.
-        
-        :param action: The action to check for
-        :type action: `unicode`
-        :param user: The user to check
-        :type user: :class:`~wte.models.User`
-        :return: ``True`` if the ``user`` may perform the action, ``False``
-                 otherwise
-        :rtype: `bool`
-        """
-        for user_asc in self.users:
-            if user_asc.user == user:
-                if action == u'view':
-                    return True
-                elif action == u'edit' and user_asc.role == u'owner':
-                    return True
-                elif action == u'delete' and user_asc.role == u'owner':
-                    return True
-        return False
-    
-    def has_role(self, role, user):
-        """Checks whether the given ``user`` has the given ``role`` with this
-        :class:`~wte.models.Module`.
-        
-        :param role: The role to check for
-        :type role: `unicode`
-        :param user: The user to check the ``role`` for
-        :type user: :class:`~wte.models.User`
-        :return: ``True`` if the ``user`` has the given ``role``, ``False``
-                 otherwise
-        :rtype: `bool`
-        """
-        for user_asc in self.users:
-            if user_asc.user == user and user_asc.role == role:
-                return True
-        return False
+    user = relationship(User)
+    part = relationship(u'Part')
+
 
 class Part(Base):
     u"""The :class:`~wte.models.Part` class represents either a tutorial or
@@ -376,7 +320,6 @@ class Part(Base):
     __tablename__ = u'parts'
     
     id = Column(Integer, primary_key=True)
-    module_id = Column(Integer, ForeignKey(u'modules.id', name=u'sessions_module_id_fk'))
     parent_id = Column(Integer, ForeignKey(u'parts.id', name=u'parts_parent_id_fk'))
     order = Column(Integer)
     title = Column(Unicode(255))
@@ -385,12 +328,32 @@ class Part(Base):
     content = Column(UnicodeText)
     compiled_content = Column(UnicodeText)
     
-    module = relationship(u'Module')
-    children = relationship(u'Part', backref=backref(u'parent', remote_side=[id]), cascade=u'all,delete', order_by=u'Part.order')
-    templates = relationship(u'Template', backref=u'part', cascade=u'all,delete', order_by=u'Template.order')
-    assets = relationship(u'Asset', backref=u'part', cascade=u'all,delete', order_by=u'Asset.id')
-    users = relationship(u'UserPartProgress', cascade=u'all,delete', primaryjoin=u'Part.id==UserPartProgress.part_id')
+    children = relationship(u'Part',
+                            backref=backref(u'parent', remote_side=[id]),
+                            cascade=u'all,delete',
+                            order_by=u'Part.order')
+    templates = relationship(u'Asset',
+                             cascade=u'all,delete',
+                             secondary=u'parts_assets',
+                             secondaryjoin=u"and_(Asset.id==parts_assets.c.asset_id, Asset.type=='template')",
+                             order_by=u'Asset.order')
+    assets = relationship(u'Asset',
+                          cascade=u'all,delete',
+                          secondary=u'parts_assets',
+                          secondaryjoin=u"and_(Asset.id==parts_assets.c.asset_id, Asset.type=='asset')",
+                          order_by=u'Asset.order')
+    users = relationship(u'UserPartRole',
+                         cascade=u'all,delete')
+    progress = relationship(u'UserPartProgress',
+                            cascade=u'all,delete',
+                            primaryjoin=u'Part.id==UserPartProgress.part_id')
 
+    def root(self):
+        if self.parent:
+            return self.parent.root()
+        else:
+            return self
+        
     def allow(self, action, user):
         """Checks whether the given ``user`` is allowed to perform the given
         ``action``. Supports the following action: view.
@@ -403,13 +366,45 @@ class Part(Base):
                  otherwise
         :rtype: `bool`
         """
-        if self.module.allow('view', user) and (self.status == u'available'
-                                                or self.module.allow('edit', user)
-                                                or self.module.allow('delete', user)):
-            return True
+        if action == u'view':
+            root = self.root()
+            if user.has_permission('admin.modules.view'):
+                return True
+            elif root.has_role('owner', user):
+                return True
+            elif root.has_role('student', user):
+                if self.status == u'available':
+                    return True
+            elif self.type == u'module' and self.status == u'available':
+                return True
+        elif action == u'edit':
+            if user.has_permission('admin.modules.edit'):
+                return True
+            elif self.has_role(u'owner', user):
+                return True
+            elif self.parent:
+                return self.parent.allow(action, user)
+        elif action == u'delete':
+            if user.has_permission('admin.modules.delete'):
+                return True
+            elif self.has_role(u'owner', user):
+                return True
+            elif self.parent:
+                return self.parent.allow(action, user)
         return False
     
-Index('parts_module_id_ix', Part.module_id)
+    def has_role(self, role, user):
+        if isinstance(role, list):
+            for sub_role in role:
+                if self.has_role(sub_role, user):
+                    return True
+        else:
+            for user_role in self.users:
+                if user_role.role == role and user_role.user == user:
+                    return True
+        return False
+    
+Index('parts_parent_id_ix', Part.parent_id)
 
 
 @listens_for(Part.content, 'set')
@@ -449,7 +444,10 @@ class UserPartProgress(Base):
     
     part = relationship(u'Part', foreign_keys=[part_id])
     current = relationship(u'Part', foreign_keys=[current_id])
-    files = relationship(u'File', cascade="all,delete", order_by=u'File.order')
+    files = relationship(u'Asset',
+                         cascade="all,delete",
+                         secondary=u'progress_assets',
+                         order_by=u'Asset.order')
 
     def allow(self, action, user):
         if user.id == self.user_id:
@@ -460,71 +458,41 @@ Index('user_part_progress_user_id_ix', UserPartProgress.user_id)
 Index('user_part_progress_part_id_ix', UserPartProgress.part_id)
 Index('user_part_progress_user_id_part_id_ix', UserPartProgress.user_id, UserPartProgress.part_id)
 
-class Template(Base):
-    u"""The :class:`~wte.models.Template` represents a file template used in a
-    :class:`~wte.models.Part`.
-    
-    Instances of :class:`~wte.models.Template` have the following attributes:
-    
-    * ``id`` -- The unique database identifier
-    * ``content`` -- The template file content
-    * ``filename`` -- The template's filename
-    * ``mimetype`` -- The template's mimetype
-    * ``order`` -- The order of the template
-    * ``part_id`` -- The unique database identifier of the 
-      :class:`~wte.models.Part` that contains this
-      :class:`~wte.models.Template`
-    * ``part`` -- The :class:`~wte.models.Part`` this
-      :class:`~wte.models.Template`` belongs to
-    """
-    __tablename__ = u'templates'
-    
-    id = Column(Integer, primary_key=True)
-    part_id = Column(Integer, ForeignKey(u'parts.id', name=u'templates_part_id_fk'))
-    order = Column(Integer)
-    filename = Column(Unicode(255))
-    mimetype = Column(Unicode(255))
-    content = Column(UnicodeText)
-
-Index('templates_part_id_ix', Template.part_id)
-    
-class File(Base):
-    u"""The :class:`~wte.models.File` represents a file used in a
-    :class:`~wte.models.Part` by a :class:`~wte.models.User` via the
-    :class:`~wte.models.UserPartProgress`.
-    
-    Instances of :class:`~wte.models.File` have the following attributes:
-    
-    * ``id`` -- The unique database identifier
-    * ``content`` -- The file content
-    * ``filename`` -- The file's name
-    * ``mimetype`` -- The file's mimetype
-    * ``order`` -- The order of the template
-    * ``progress_id`` -- The unique database identifier of the 
-      :class:`~wte.models.UserPartProgress` that contains this
-      :class:`~wte.models.File`
-    * ``progress`` -- The :class:`~wte.models.UserPartProgress`` this
-      :class:`~wte.models.File`` belongs to
-    """
-    __tablename__ = u'files'
-    
-    id = Column(Integer, primary_key=True)
-    progress_id = Column(Integer, ForeignKey(u'user_part_progress.id', name=u'files_progress_id_fk'))
-    order = Column(Integer)
-    filename = Column(Unicode(255))
-    mimetype = Column(Unicode(255))
-    content = Column(UnicodeText)
-
 
 class Asset(Base):
     
     __tablename__ = u'assets'
     
     id = Column(Integer, primary_key=True)
-    part_id = Column(Integer, ForeignKey(u'parts.id', name=u'assets_part_id_fk'))
+    type = Column(Unicode(255))
     filename = Column(Unicode(255))
     mimetype = Column(Unicode(255))
+    order = Column(Integer)
     data = Column(LargeBinary)
+    
+    parts = relationship('Part',
+                         secondary='parts_assets')
 
-Index(u'assets_part_id_ix', Asset.part_id)
 Index(u'assets_filename_ix', Asset.filename)
+Index(u'assets_type_ix', Asset.type)
+
+
+parts_assets = Table('parts_assets', Base.metadata,
+                     Column('part_id',
+                            ForeignKey('parts.id',
+                                       name='parts_assets_part_id_fk'),
+                            primary_key=True),
+                     Column('asset_id',
+                            ForeignKey('assets.id',
+                                       name='parts_assets_asset_id_fk'),
+                            primary_key=True))
+
+progress_assets = Table('progress_assets', Base.metadata,
+                        Column('progress_id',
+                               ForeignKey('user_part_progress.id',
+                                          name='progress_assets_progress_id_fk'),
+                               primary_key=True),
+                        Column('asset_id',
+                               ForeignKey('assets.id',
+                                          name='parts_assets_asset_id_fk'),
+                               primary_key=True))

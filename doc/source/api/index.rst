@@ -21,7 +21,6 @@ API Documentation
    wte_views_frontend
    wte_views_module
    wte_views_part
-   wte_views_template
    wte_views_user
    wte_util
    

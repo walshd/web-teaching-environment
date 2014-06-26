@@ -14,15 +14,16 @@ Routes are defined in :func:`~wte.views.part.init`.
 import transaction
 import formencode
 
-from pyramid.httpexceptions import (HTTPSeeOther, HTTPNotFound)
+from pyramid.httpexceptions import (HTTPSeeOther, HTTPNotFound, HTTPForbidden)
 from pyramid.view import view_config
 from pywebtools.renderer import render
-from pywebtools.auth import is_authorised
+from pywebtools import text
 from sqlalchemy import and_
 
 from wte.decorators import current_user
+from wte.models import (DBSession, Part, UserPartRole, Asset, UserPartProgress)
+from wte.text_formatter import compile_rst
 from wte.util import (unauthorised_redirect)
-from wte.models import (DBSession, Module, Part, Template)
 
 def init(config):
     u"""Adds the part-specific backend routes (route name, URL pattern
@@ -35,9 +36,12 @@ def init(config):
     * ``part.delete`` -- ``/modules/{mid}/parts/{pid}/delete``
       -- :func:`~wte.views.part.delete`
     """
-    config.add_route('part.new', '/modules/{mid}/parts/new')
-    config.add_route('part.edit', '/modules/{mid}/parts/{pid}/edit')
-    config.add_route('part.delete', '/modules/{mid}/parts/{pid}/delete')
+    config.add_route('part.new', '/parts/new/{new_type}')
+    config.add_route('part.edit', '/parts/{pid}/edit')
+    config.add_route('part.delete', '/parts/{pid}/delete')
+    config.add_route('part.preview', '/parts/{pid}/rst_preview')
+    config.add_route('part.register', '/parts/{pid}/register')
+    config.add_route('part.deregister', '/parts/{pid}/deregister')
 
 
 class NewPartSchema(formencode.Schema):
@@ -52,25 +56,22 @@ class NewPartSchema(formencode.Schema):
                             formencode.validators.OneOf([u'unavailable',
                                                          u'available']))
     u"""The part's status"""
-    type = formencode.All(formencode.validators.UnicodeString(not_empty=True),
-                          formencode.validators.OneOf([u'tutorial',
-                                                       u'page',
-                                                       u'exercise',
-                                                       u'task']))
-    u"""The part's status"""
     
 
-def create_part_crumbs(request, module, part, current):
-    crumbs = [{'title': 'Modules', 'url': request.route_url('modules')},
-              {'title': module.title, 'url': request.route_url('module.view', mid=module.id)}]
+def create_part_crumbs(request, part, current):
+    crumbs = []
     while part:
-        crumbs.insert(2, {'title': part.title,
-                          'url': request.route_url('part.view', mid=module.id, pid=part.id)})
+        crumbs.append({'title': part.title,
+                          'url': request.route_url('part.view', pid=part.id)})
         part = part.parent
-    current['current'] = True
+    crumbs.append({'title': 'Modules',
+                   'url': request.route_url('modules')})
+    crumbs.reverse()
     if current:
         crumbs.append(current)
+    crumbs[-1]['current'] = True
     return crumbs
+
 
 @view_config(route_name='part.new')
 @render({'text/html': 'part/new.html'})
@@ -83,62 +84,80 @@ def new(request):
     :class:`~wte.models.Module`.
     """
     dbsession = DBSession()
-    module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
     parent = dbsession.query(Part).filter(Part.id==request.params[u'parent_id']).first() if u'parent_id' in request.params else None
-    if module:
-        if is_authorised(u':module.allow("edit" :current)', {'module': module,
-                                                             'current': request.current_user}):
-            if parent:
-                if parent.type == u'tutorial':
-                    available_types = [('page', 'Page')]
-                elif parent.type == u'exercise':
-                    available_types = [('task', 'Task')]
-                else:
-                    available_types = []
-            else:
-                available_types = [('tutorial', 'Tutorial'), ('exercise', 'Exercise')]
-            crumbs = create_part_crumbs(request,
-                                        module,
-                                        parent,
-                                        {'title': 'Add Part',
-                                         'url': request.route_url('part.new', mid=module.id)})
-            if request.method == u'POST':
-                try:
-                    params = NewPartSchema().to_python(request.params)
-                    dbsession = DBSession()
-                    with transaction.manager:
-                        dbsession.add(module)
-                        if parent:
-                            dbsession.add(parent)
-                            max_order = [p.order + 1 for p in parent.children]
-                        else:
-                            max_order = [p.order + 1 for p in module.parts]
-                        max_order.append(0)
-                        max_order = max(max_order)
-                        
-                        new_part = Part(title=params['title'],
-                                        status=params['status'],
-                                        type=params['type'],
-                                        parent=parent,
-                                        module=module,
-                                        order=max_order)
-                        dbsession.add(new_part)
-                    dbsession.add(new_part)
-                    request.session.flash('Your new %s has been created' % (params['type']), queue='info')
-                    raise HTTPSeeOther(request.route_url('part.edit', mid=request.matchdict['mid'], pid=new_part.id))
-                except formencode.Invalid as e:
-                    e.params = request.params
-                    return {'e': e,
-                            'module': module,
-                            'available_types': available_types,
-                            'crumbs': crumbs}
-            return {'module': module,
-                    'available_types': available_types,
-                    'crumbs': crumbs}
-        else:
+    if parent and not parent.allow('edit', request.current_user):
             unauthorised_redirect(request)
+    if request.matchdict['new_type'] == 'module':
+        if not request.current_user.has_permission('modules.create'):
+            raise unauthorised_redirect(request)
+        elif parent:
+            request.session.flash('You cannot create a new module here', queue='error')
+            raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
+    elif request.matchdict['new_type'] == 'tutorial':
+        if not parent:
+            request.session.flash('You cannot create a new tutorial without a parent', queue='error')
+            raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
+        elif parent.type != u'module':
+            request.session.flash('You can only add tutorials to a module', queue='error')
+            raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
+    elif request.matchdict['new_type'] == 'page':
+        if not parent:
+            request.session.flash('You cannot create a new tutorial without a parent', queue='error')
+            raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
+        elif parent.type != u'tutorial':
+            request.session.flash('You can only add pages to a tutorial', queue='error')
+            raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
+    elif request.matchdict['new_type'] == 'exercise':
+        if not parent:
+            request.session.flash('You cannot create a new exercise without a parent', queue='error')
+            raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
+        elif parent.type != u'module':
+            request.session.flash('You can only add exercises to a module', queue='error')
+            raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
+    elif request.matchdict['new_type'] == 'task':
+        if not parent:
+            request.session.flash('You cannot create a new task without a parent', queue='error')
+            raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
+        elif parent.type != u'exercise':
+            request.session.flash('You can only add tasks to a task', queue='error')
+            raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
     else:
-        raise HTTPNotFound()
+        request.session.flash('You cannot create a new part of that type', queue='error')
+        raise HTTPSeeOther(request.route_url('modules'))
+    crumbs = create_part_crumbs(request,
+                                parent,
+                                {'title': 'Add %s' % (text.title(request.matchdict['new_type'])),
+                                 'url': request.current_route_url()})
+    if request.method == u'POST':
+        try:
+            params = NewPartSchema().to_python(request.params)
+            dbsession = DBSession()
+            with transaction.manager:
+                if parent:
+                    dbsession.add(parent)
+                    max_order = [p.order + 1 for p in parent.children]
+                else:
+                    max_order = []
+                max_order.append(0)
+                max_order = max(max_order)
+                
+                new_part = Part(title=params['title'],
+                                status=params['status'],
+                                type=request.matchdict['new_type'],
+                                parent=parent,
+                                order=max_order)
+                if request.matchdict['new_type'] == 'module':
+                    new_part.users.append(UserPartRole(user=request.current_user,
+                                                       role=u'owner'))
+                dbsession.add(new_part)
+            dbsession.add(new_part)
+            request.session.flash('Your new %s has been created' % (request.matchdict['new_type']), queue='info')
+            raise HTTPSeeOther(request.route_url('part.edit', pid=new_part.id))
+        except formencode.Invalid as e:
+            e.params = request.params
+            return {'e': e,
+                    'crumbs': crumbs}
+    return {'crumbs': crumbs}
 
 
 class EditPartSchema(formencode.Schema):
@@ -170,14 +189,10 @@ def edit(request):
     :class:`~wte.models.Module`.
     """
     dbsession = DBSession()
-    module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
-    part = dbsession.query(Part).filter(and_(Part.id==request.matchdict['pid'],
-                                             Part.module_id==request.matchdict['mid'])).first()
-    if module and part:
-        if is_authorised(u':module.allow("edit" :current)', {'module': module,
-                                                             'current': request.current_user}):
+    part = dbsession.query(Part).filter(Part.id==request.matchdict['pid']).first()
+    if part:
+        if part.allow('edit', request.current_user):
             crumbs = create_part_crumbs(request,
-                                        module,
                                         part,
                                         {'title': 'Edit',
                                          'url': request.current_route_url()})
@@ -192,26 +207,23 @@ def edit(request):
                         if params['child_part_id']:
                             for idx, cpid in enumerate(params['child_part_id']):
                                 child_part = dbsession.query(Part).filter(and_(Part.id == cpid,
-                                                                               Part.module_id == request.matchdict['mid'])).first()
+                                                                               Part.parent_id == part.id)).first()
                                 if child_part:
                                     child_part.order = idx
                         if params['template_id']:
                             for idx, tid in enumerate(params['template_id']):
-                                template = dbsession.query(Template).filter(and_(Template.id == tid,
-                                                                                 Template.part_id == request.matchdict['pid'])).first()
+                                template = dbsession.query(Asset).filter(Asset.id == tid).first()
                                 if template:
                                     template.order = idx
                     dbsession.add(part)
                     request.session.flash('The %s has been updated' % (part.type), queue='info')
-                    raise HTTPSeeOther(request.route_url('part.view', mid=request.matchdict['mid'], pid=request.matchdict['pid']))
+                    raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
                 except formencode.Invalid as e:
                     e.params = request.params
                     return {'e': e,
-                            'module': module,
                             'part': part,
                             'crumbs': crumbs}
-            return {'module': module,
-                    'part': part,
+            return {'part': part,
                     'crumbs': crumbs}
         else:
             unauthorised_redirect(request)
@@ -230,18 +242,13 @@ def delete(request):
     :class:`~wte.models.Module`.
     """
     dbsession = DBSession()
-    module = dbsession.query(Module).filter(Module.id==request.matchdict['mid']).first()
-    part = dbsession.query(Part).filter(and_(Part.id==request.matchdict['pid'],
-                                             Part.module_id==request.matchdict['mid'])).first()
-    if module and part:
-        if is_authorised(u':module.allow("edit" :current)', {'module': module,
-                                                             'current': request.current_user}):
+    part = dbsession.query(Part).filter(Part.id==request.matchdict['pid']).first()
+    if part:
+        if part.allow('delete', request.current_user):
             crumbs = create_part_crumbs(request,
-                                        module,
                                         part,
                                         {'title': 'Delete',
                                          'url': request.route_url('part.delete',
-                                                                  mid=module.id,
                                                                   pid=part.id)})
             if request.method == u'POST':
                 part_type = part.type
@@ -251,13 +258,126 @@ def delete(request):
                 request.session.flash('The %s has been deleted' % (part_type), queue='info')
                 if parent:
                     dbsession.add(parent)
-                    raise HTTPSeeOther(request.route_url('part.view', mid=request.matchdict['mid'], pid=parent.id))
+                    raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
                 else:
-                    raise HTTPSeeOther(request.route_url('module.view', mid=request.matchdict['mid']))
-            return {'module': module,
-                    'part': part,
+                    raise HTTPSeeOther(request.route_url('modules'))
+            return {'part': part,
                     'crumbs': crumbs}
         else:
             unauthorised_redirect(request)
+    else:
+        raise HTTPNotFound()
+
+
+@view_config(route_name='part.preview')
+@render({'application/json': True})
+@current_user()
+def preview(request):
+    u"""Handles the ``/modules/{mid}/tutorials/{tid}/pages/{pid}/preview`` URL,
+    generating an HTML preview of the submitted ReST. The ReST text to render
+    has to be set as the ``content`` parameter.
+    
+    Requires that the user has "edit" rights on the current
+    :class:`~wte.models.Module`.
+    """
+    dbsession = DBSession()
+    part = dbsession.query(Part).filter(Part.id==request.matchdict['pid']).first()
+    if part:
+        if part.allow('edit', request.current_user):
+            if 'content' in request.params:
+                return {'content': compile_rst(request.params['content'])}
+            else:
+                raise HTTPNotFound()
+        else:
+            raise HTTPForbidden()
+    else:
+        raise HTTPNotFound()
+
+
+@view_config(route_name='part.register')
+@render({'text/html': 'part/register.html'})
+@current_user()
+def register(request):
+    u"""Handles the ``/modules/{mid}/tutorials/{tid}/pages/{pid}/preview`` URL,
+    generating an HTML preview of the submitted ReST. The ReST text to render
+    has to be set as the ``content`` parameter.
+    
+    Requires that the user has "edit" rights on the current
+    :class:`~wte.models.Module`.
+    """
+    dbsession = DBSession()
+    part = dbsession.query(Part).filter(Part.id==request.matchdict['pid']).first()
+    if part:
+        if part.type != 'module':
+            request.session.flash('You can only register for modules', queue='error')
+            raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
+        if part.has_role(['student', 'owner'], request.current_user):
+            request.session.flash('You are already registered for this module', queue='info')
+            raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
+        crumbs = create_part_crumbs(request,
+                                    part,
+                                    {'title': 'Register',
+                                     'url': request.route_url('part.register',
+                                                              pid=part.id)})
+        if request.method == 'POST':
+            with transaction.manager:
+                dbsession.add(UserPartRole(user=request.current_user,
+                                           part=part,
+                                           role=u'student'))
+            request.session.flash('You have registered for the module', queue='info')
+            raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
+        return {'part': part,
+                'crumbs': crumbs}
+    else:
+        raise HTTPNotFound()
+
+
+def get_all_parts(part):
+    parts = [part]
+    for child in part.children:
+        parts.extend(get_all_parts(child))
+    return parts
+
+
+@view_config(route_name='part.deregister')
+@render({'text/html': 'part/deregister.html'})
+@current_user()
+def deregister(request):
+    u"""Handles the ``/modules/{mid}/tutorials/{tid}/pages/{pid}/preview`` URL,
+    generating an HTML preview of the submitted ReST. The ReST text to render
+    has to be set as the ``content`` parameter.
+    
+    Requires that the user has "edit" rights on the current
+    :class:`~wte.models.Module`.
+    """
+    dbsession = DBSession()
+    part = dbsession.query(Part).filter(Part.id==request.matchdict['pid']).first()
+    if part:
+        if not part.has_role('student', request.current_user):
+            request.session.flash('You are not registered for this module', queue='info')
+            raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
+        crumbs = create_part_crumbs(request,
+                                    part,
+                                    {'title': 'De-Register',
+                                     'url': request.route_url('part.deregister',
+                                                              pid=part.id)})
+        if request.method == 'POST':
+            with transaction.manager:
+                dbsession.add(part)
+                role = dbsession.query(UserPartRole).filter(and_(UserPartRole.part_id == request.matchdict['pid'],
+                                                                 UserPartRole.user_id == request.current_user.id,
+                                                                 UserPartRole.role == u'student')).first()
+                if role:
+                    dbsession.delete(role)
+                parts = get_all_parts(part)
+                for child_part in parts:
+                    progress = dbsession.query(UserPartProgress).filter(and_(UserPartProgress.part_id == child_part.id,
+                                                                             UserPartProgress.user_id == request.current_user.id)).first()
+                    if progress:
+                        dbsession.delete(progress)
+            request.session.flash('You have de-registered from the module', queue='info')
+            raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
+        return {'part': part,
+                'crumbs': crumbs}
     else:
         raise HTTPNotFound()

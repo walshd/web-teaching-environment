@@ -8,8 +8,8 @@
     <div class="row left">
       <article class="small-12 medium-10 large-8 column">
         <h1>${asset.filename} - Delete</h1>
-        <form action="${r.route_url('asset.delete', mid=module.id, pid=part.id, aid=asset.id)}" method="post">
-          <p>Please confirm that you wish to delete the asset &quot;${asset.filename}
+        <form action="${r.route_url('asset.delete', pid=part.id, aid=asset.id)}" method="post">
+          <p>Please confirm that you wish to delete the ${asset.type} &quot;${asset.filename}
             (${asset.mimetype})&quot;.</p>
           <div class="text-right">
             ${h.form.tags.submit('Delete', class_='button small alert')}

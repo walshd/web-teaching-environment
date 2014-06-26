@@ -1,0 +1,31 @@
+<article class="row left" xmlns:py="http://genshi.edgewall.org/">
+  <section class="small-12 column">
+    <h1>${part.title}</h1>
+    ${h.Markup(part.compiled_content)}
+    <div>
+      <section>
+        <ul class="no-symbol">
+          <li py:for="child in part.children" py:if="child.allow('view', r.current_user)" class="panel clearfix">
+            <span class="right">
+              <a py:if="child.allow('edit', r.current_user)" href="${r.route_url('part.edit', pid=child.id)}" class="button tiny">Edit</a>
+              <a py:if="child.allow('delete', r.current_user)" href="${r.route_url('part.delete', pid=child.id)}" class="button tiny alert">Delete</a>
+            </span>
+            <h3><a href="${r.route_url('part.view', pid=child.id)}">${child.title}</a></h3>
+          </li>
+        </ul>
+      </section>
+      <div>
+        <a py:if="not part.has_role(['student', 'owner'], r.current_user)" href="${r.route_url('part.register', pid=part.id)}" class="button small">Register</a>
+        <a py:if="part.has_role('student', r.current_user)" href="${r.route_url('part.deregister', pid=part.id)}" class="button small">De-register</a>
+        <py:if test="part.allow('edit', r.current_user)">
+          <a href="${r.route_url('part.edit', pid=part.id)}" class="button small">Edit</a>
+          <a href="${r.route_url('part.new', new_type='tutorial', _query=[('parent_id', part.id)])}" class="button small">Add Tutorial</a>
+          <a href="${r.route_url('part.new', new_type='exercise', _query=[('parent_id', part.id)])}" class="button small">Add Exercise</a>
+        </py:if>
+        <py:if test="part.allow('delete', r.current_user)">
+          <a href="${r.route_url('part.delete', pid=part.id)}" class="button small alert">Delete</a>
+        </py:if>
+      </div>
+    </div>
+  </section>
+</article>

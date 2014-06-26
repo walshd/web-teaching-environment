@@ -2,38 +2,38 @@
   <section id="textbook" class="small-12 medium-4 large-3 column">
     <h1>${part.title}</h1>
     ${Markup(part.compiled_content)}
-    <section py:if="not module.has_role('student', r.current_user) and part.templates">
+    <section py:if="not part.has_role('student', r.current_user) and part.templates">
       <h2>Templates</h2>
       <ul class="no-symbol">
         <li py:for="template in part.templates" class="panel clearfix">
-          <span py:if="h.auth.is_authorised(r.current_user, 'edit', module)" class="right">
-            <a href="${r.route_url('template.edit', mid=module.id, pid=part.id, tid=template.id)}" class="button tiny">Edit</a>
-            <a href="${r.route_url('template.delete', mid=module.id, pid=part.id, tid=template.id)}" class="button tiny alert">Delete</a>
+          <span py:if="part.allow('edit', r.current_user)" class="right">
+            <a href="${r.route_url('asset.edit', pid=part.id, aid=template.id)}" class="button tiny">Edit</a>
+            <a href="${r.route_url('asset.delete', pid=part.id, aid=template.id)}" class="button tiny alert">Delete</a>
           </span>
           <h3>${template.filename} (${template.mimetype})</h3>
         </li>
       </ul>
     </section>
-    <section py:if="part.assets">
+    <section py:if="not part.has_role('student', r.current_user) and part.assets">
       <h2>Assets</h2>
       <ul class="no-symbol">
         <li py:for="asset in part.assets" class="panel clearfix">
-          <span py:if="h.auth.is_authorised(r.current_user, 'edit', module)" class="right">
-            <a href="${r.route_url('asset.edit', mid=module.id, pid=part.id, aid=asset.id)}" class="button tiny">Edit</a>
-            <a href="${r.route_url('asset.delete', mid=module.id, pid=part.id, aid=asset.id)}" class="button tiny alert">Delete</a>
+          <span py:if="part.allow('edit', r.current_user)" class="right">
+            <a href="${r.route_url('asset.edit', pid=part.id, aid=asset.id)}" class="button tiny">Edit</a>
+            <a href="${r.route_url('asset.delete', pid=part.id, aid=asset.id)}" class="button tiny alert">Delete</a>
           </span>
-          <h3><a href="${r.route_url('asset.view', mid=module.id, pid=part.id, filename=asset.filename)}">${asset.filename} (${asset.mimetype})</a></h3>
+          <h3><a href="${r.route_url('asset.view', pid=part.id, filename=asset.filename)}">${asset.filename} (${asset.mimetype})</a></h3>
         </li>
       </ul>
     </section>
     <div>
-      <py:if test="h.auth.is_authorised(r.current_user, 'edit', module)">
-        <a href="${r.route_url('part.edit', mid=module.id, pid=part.id)}" class="button small">Edit</a>
-        <a href="${r.route_url('template.new', mid=module.id, pid=part.id)}" class="button small">Add Template</a>
-        <a href="${r.route_url('asset.new', mid=module.id, pid=part.id)}" class="button small">Add Asset</a>
+      <py:if test="part.allow('edit', r.current_user)">
+        <a href="${r.route_url('part.edit', pid=part.id)}" class="button small">Edit</a>
+        <a href="${r.route_url('asset.new', pid=part.id, new_type='template')}" class="button small">Add Template</a>
+        <a href="${r.route_url('asset.new', pid=part.id, new_type='asset')}" class="button small">Add Asset</a>
       </py:if>
-      <py:if test="h.auth.is_authorised(r.current_user, 'delete', module)">
-        <a href="${r.route_url('part.delete', mid=module.id, pid=part.id)}" class="button small alert">Delete</a>
+      <py:if test="part.allow('delete', r.current_user)">
+        <a href="${r.route_url('part.delete', pid=part.id)}" class="button small alert">Delete</a>
       </py:if>
     </div>
   </section>
@@ -43,28 +43,28 @@
         <ul>
           <li><a href="${r.route_url('userpartprogress.download', uid=r.current_user.id, pid=progress.id)}">Download the Workspace</a></li>
           <li class="divider"></li>
-          <li><a href="${r.route_url('part.reset-files', mid=module.id, pid=part.id)}">Discard all Changes</a></li>
+          <li><a href="${r.route_url('part.reset-files', pid=part.id)}">Discard all Changes</a></li>
         </ul>
       </div>
       <dl class="tabs" data-tab="">
         <dd py:for="idx, file in enumerate(progress.files)" id="${h.frontend.html_id(file.filename)}-tab" class="${'active' if idx == 0 else ''}"><a href="#${h.frontend.html_id(file.filename)}"><img src="${r.static_url('wte:static/img/spinner-small.gif')}" class="hidden"/> ${file.filename}</a>
           <div class="menu section"><a href="#" class=""><img src="${r.static_url('wte:static/img/menu-icon.svg')}" alt="Menu" class="small"/></a>
             <ul>
-              <li><a href="${r.route_url('file.view', mid=module.id, pid=part.id, filename=file.filename, _query=[('download', 'true')])}">Download</a></li>
+              <li><a href="${r.route_url('file.view', pid=part.id, filename=file.filename, _query=[('download', 'true')])}">Download</a></li>
               <li class="divider"></li>
-              <li><a href="${r.route_url('part.reset-files', mid=module.id, pid=part.id, _query=[('filename', file.filename)])}">Discard all Changes</a></li>
+              <li><a href="${r.route_url('part.reset-files', pid=part.id, _query=[('filename', file.filename)])}">Discard all Changes</a></li>
             </ul>
           </div>
         </dd>
       </dl>
       <form class="tabs-content">
         <div py:for="idx, file in enumerate(progress.files)" class="content ${'active' if idx == 0 else ''}" id="${h.frontend.html_id(file.filename)}">
-          ${h.form.tags.textarea('', file.content, None, data_wte_mimetype=file.mimetype, data_wte_fileid=file.id)}
+          ${h.form.tags.textarea('', file.data.decode('utf-8') if file.data else '', None, data_wte_mimetype=file.mimetype, data_wte_fileid=file.id)}
         </div>
       </form>
     </section>
     <section id="viewer">
-      <iframe src="${r.route_url('file.view', mid=module.id, pid=part.id, filename=h.frontend.primary_filename(progress))}"></iframe>
+      <iframe src="${r.route_url('file.view', pid=part.id, filename=h.frontend.primary_filename(progress))}"></iframe>
     </section>
   </section>
     <script src="${r.static_url('wte:static/js/codemirror/codemirror.js')}"></script>
@@ -88,7 +88,7 @@
         $(window).on('resize', resize_page);
         $('#files').tabbedEditor({
             viewer: $('#viewer iframe'),
-            save_url: '${r.route_url('file.save', mid=module.id, pid=part.id, fid='FID')}'
+            save_url: '${r.route_url('file.save', pid=part.id, fid='FID')}'
         });
         $('.menu').dropdownMenu();
     });

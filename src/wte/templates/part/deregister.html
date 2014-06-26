@@ -2,15 +2,15 @@
 <html xmlns:py="http://genshi.edgewall.org/" xmlns:xi="http://www.w3.org/2001/XInclude">
   <xi:include href="../layout/layout.html"/>
   <head>
-    <title>${module.title} - De-Registration</title>
+    <title>${part.title} - De-Registration</title>
   </head>
   <body>
     <div class="row left">
       <article class="small-12 medium-10 large-8 column">
-        <h1>${module.title} - De-Registration</h1>
-        <form action="${r.route_url('module.deregister', mid=module.id)}" method="post">
+        <h1>${part.title} - De-Registration</h1>
+        <form action="${r.route_url('part.deregister', pid=part.id)}" method="post">
           <p>Please confirm that you wish to de-register from the module
-            &quot;${module.title}&quot;. This will also delete all progress
+            &quot;${part.title}&quot;. This will also delete all progress
             you have made on module's tutorials and all work you have done
             on the exercises.</p>
           <div class="text-right">

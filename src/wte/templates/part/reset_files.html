@@ -8,7 +8,7 @@
     <div class="row left">
       <article class="small-12 medium-10 large-8 column">
         <h1>Discard all Changes</h1>
-        <form action="${r.route_url('part.reset-files', mid=module.id, pid=part.id)}" method="post">
+        <form action="${r.route_url('part.reset-files', pid=part.id)}" method="post">
           <py:if test="'filename' in r.params">${h.form.tags.hidden_field('filename', r.params['filename'])}</py:if>
           <p py:if="'filename' in r.params">Please confirm that you wish to discard all changes
             you made to the file &quot;${r.params['filename']}&quot; and reset it to its initial
@@ -16,7 +16,7 @@
           <p py:if="'filename' not in r.params">Please confirm that you wish to discard all the
             changes you made to the files and reset them to their initial content.</p>
           <div class="text-right">
-            <a href="${r.route_url('part.view', mid=module.id, pid=part.id)}" class="button small">Don't Discard</a>
+            <a href="${r.route_url('part.view', pid=part.id)}" class="button small">Don't Discard</a>
             ${h.form.tags.submit('Discard', class_='button small alert')}
           </div>
         </form>
