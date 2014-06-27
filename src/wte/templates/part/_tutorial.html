@@ -6,7 +6,7 @@
       <section py:if="part.children">
         <h2>Pages</h2>
         <ul class="no-symbol">
-          <li py:if="part.allow('view', r.current_user)" py:for="child in part.children" class="panel clearfix">
+          <li py:if="part.allow('view', r.current_user)" py:for="child in part.children" class="panel clearfix status-${child.status}">
             <span class="right">
               <a py:if="child.allow('edit', r.current_user)" href="${r.route_url('part.edit', pid=child.id)}" class="button tiny">Edit</a>
               <a py:if="child.allow('delete', r.current_user)" href="${r.route_url('part.delete', pid=child.id)}" class="button tiny alert">Delete</a>

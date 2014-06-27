@@ -17,6 +17,10 @@ ul.no-symbol > li, ol.no-symbol > li {
 .hidden {
     display: none;
 }
+.panel.status-unavailable {
+    border-style: dashed;
+    background: none repeat scroll 0% 0% #FDFDFD;
+}
 
 /**
  * jQuery UI styles
