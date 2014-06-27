@@ -194,3 +194,32 @@
 	   	}
 	};
 }(jQuery));
+
+(function ($) {
+	/**
+	 * The fancyFlash jQuery plugin provides a more fancy display of the flash messages.
+	 */
+	var methods = {
+		init: function(options) {
+			return this.each(function() {
+				var component = $(this);
+				component.css('position', 'absolute').css('z-index', '1000').css('width', '30em');
+				component.position({
+					my: 'right+10px top+5px',
+					at: 'right bottom',
+					of: $('nav.top-bar')
+				});
+			});
+		}
+	};
+		
+	$.fn.fancyFlash = function(method) {
+	    if(methods[method]) {
+	   		return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
+	    } else if(typeof method === 'object' || !method) {
+	   		return methods.init.apply(this, arguments);
+	   	} else {
+	   		$.error('Method ' +  method + ' does not exist on jQuery.fancyFlash');
+	   	}
+	};
+}(jQuery));
