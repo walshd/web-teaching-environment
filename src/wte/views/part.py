@@ -4,8 +4,8 @@ u"""
 :mod:`wte.views.part` -- Part Backend
 #####################################
 
-The :mod:`~wte.views.part` module provides the backend functionality for
-creating, editing, and deleting :class:`~wte.models.Part`.
+The :mod:`~wte.views.part` module provides the functionality for
+creating, viewing, editing, and deleting :class:`~wte.models.Part`.
 
 Routes are defined in :func:`~wte.views.part.init`.
 
@@ -30,19 +30,119 @@ def init(config):
     u"""Adds the part-specific backend routes (route name, URL pattern
     handler):
 
-    * ``part.new`` -- ``/modules/{mid}/parts/new`` --
+    * ``part.new`` -- ``/parts/new`` --
       :func:`~wte.views.part.new`
-    * ``part.edit`` -- ``/modules/{mid}/parts/{pid}/edit`` --
+    * ``part.view`` -- ``/parts/{pid}`` --
+      :func:`~wte.views.frontend.view_part`
+    * ``part.edit`` -- ``/parts/{pid}/edit`` --
       :func:`~wte.views.part.edit`
-    * ``part.delete`` -- ``/modules/{mid}/parts/{pid}/delete``
+    * ``part.delete`` -- ``/parts/{pid}/delete``
       -- :func:`~wte.views.part.delete`
+    * ``part.delete`` -- ``/parts/{pid}/delete``
+      -- :func:`~wte.views.part.delete`
+    * ``part.register`` -- ``/parts/{pid}/register``
+      -- :func:`~wte.views.part.register`
+    * ``part.deregister`` -- ``/parts/{pid}/deregister``
+      -- :func:`~wte.views.part.deregister`
     """
     config.add_route('part.new', '/parts/new/{new_type}')
+    config.add_route('part.view', '/parts/{pid}')
     config.add_route('part.edit', '/parts/{pid}/edit')
     config.add_route('part.delete', '/parts/{pid}/delete')
     config.add_route('part.preview', '/parts/{pid}/rst_preview')
     config.add_route('part.register', '/parts/{pid}/register')
     config.add_route('part.deregister', '/parts/{pid}/deregister')
+
+
+def get_user_part_progress(dbsession, user, part):
+    u"""Returns the :class:`~wte.models.UserPartProgress` for the given
+    ``user`` and ``part. If none exists, then a new one is instantiated. If
+    the :class:`~wte.models.UserPartProgress` points to a current page that
+    is different to ``page``, then the :class:`~wte.models.UserPartProgress`
+    is updated.
+
+    :param user: The user to get the progress for
+    :type user: :class:`~wte.models.User`
+    :param part: The part to get the progress for
+    :type part: :class:`~wte.models.Part`
+    :return: The :class:`~wte.models.UserPartProgress`
+    :rtype: :class:`~wte.models.UserPartProgress`
+    """
+    if part.type in [u'tutorial', u'task']:
+        progress = dbsession.query(UserPartProgress).\
+            filter(and_(UserPartProgress.user_id == user.id,
+                        UserPartProgress.part_id == part.id)).first()
+        if not progress:
+            progress = UserPartProgress(user_id=user.id,
+                                        part_id=part.id)
+    elif part.type == u'page':
+        progress = dbsession.query(UserPartProgress).\
+            filter(and_(UserPartProgress.user_id == user.id,
+                        UserPartProgress.part_id == part.parent.id)).first()
+        if not progress:
+            progress = UserPartProgress(user_id=user.id,
+                                        part_id=part.parent.id,
+                                        current_id=part.id)
+    else:
+        progress = None
+    if progress:
+        with transaction.manager:
+            dbsession.add(progress)
+            dbsession.add(part)
+            if part.type == u'page':
+                templates = part.parent.templates
+            else:
+                templates = part.templates
+            for template in templates:
+                found = False
+                for user_file in progress.files:
+                    if user_file.filename == template.filename and user_file.mimetype == template.mimetype:
+                        found = True
+                        break
+                if not found:
+                    user_file = Asset(filename=template.filename,
+                                      mimetype=template.mimetype,
+                                      order=template.order,
+                                      data=template.data,
+                                      type=u'file')
+                    dbsession.add(user_file)
+                    progress.files.append(user_file)
+            for template in templates:
+                for user_file in progress.files:
+                    if user_file.filename == template.filename and user_file.mimetype == template.mimetype:
+                        user_file.order = template.order
+                        break
+        dbsession.add(part)
+        dbsession.add(progress)
+        dbsession.add(user)
+    return progress
+
+
+@view_config(route_name='part.view')
+@render({'text/html': 'part/view.html'})
+@current_user()
+def view_part(request):
+    u"""Handles the ``parts/{pid}`` URL, displaying the
+    :class:`~wte.models.Part`.
+
+    Requires that the user has "view" rights on the
+    :class:`~wte.models.Part`.
+    """
+    dbsession = DBSession()
+    part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
+    if part:
+        if part.allow('view', request.current_user):
+            progress = get_user_part_progress(dbsession, request.current_user, part)
+            crumbs = create_part_crumbs(request,
+                                        part,
+                                        None)
+            return {'part': part,
+                    'crumbs': crumbs,
+                    'progress': progress}
+        else:
+            unauthorised_redirect(request)
+    else:
+        raise HTTPNotFound()
 
 
 class NewPartSchema(formencode.Schema):
@@ -59,7 +159,16 @@ class NewPartSchema(formencode.Schema):
     u"""The part's status"""
 
 
-def create_part_crumbs(request, part, current):
+def create_part_crumbs(request, part, current=None):
+    u"""Creates the list of breadcrumbs for a given ``part``.
+
+    :param part: The part to create the breadcrumbs to
+    :type part: :class:`~wte.models.Part`
+    :param current: The final, current breadcrumb
+    :type current: ``dict``
+    :return: A list of `dict` for use in the breadcrumbs
+    :rtype: ``list``
+    """
     crumbs = []
     while part:
         crumbs.append({'title': part.title,
@@ -78,11 +187,16 @@ def create_part_crumbs(request, part, current):
 @render({'text/html': 'part/new.html'})
 @current_user()
 def new(request):
-    u"""Handles the ``/modules/{mid}/parts/new`` URL, providing the UI and
+    u"""Handles the ``/parts/new`` URL, providing the UI and
     backend for creating a new :class:`~wte.models.Part`.
 
-    Requires that the user has "edit" rights on the current
-    :class:`~wte.models.Module`.
+    The required permissions depend on the type of :class:`~wte.models.Part`
+    to create:
+    * `module` -- User permission "modules.create"
+    * `tutorial` -- "edit" permission on the parent :class:`~wte.models.Part`
+    * `page` -- "edit" permission on the parent :class:`~wte.models.Part`
+    * `exercise` -- "edit" permission on the parent :class:`~wte.models.Part`
+    * `task` -- "edit" permission on the parent :class:`~wte.models.Part`
     """
     dbsession = DBSession()
     parent = dbsession.query(Part).\
@@ -185,11 +299,10 @@ class EditPartSchema(formencode.Schema):
 @render({'text/html': 'part/edit.html'})
 @current_user()
 def edit(request):
-    u"""Handles the ``/modules/{mid}/parts/{pid}/edit`` URL,
+    u"""Handles the ``/parts/{pid}/edit`` URL,
     providing the UI and backend for editing a :class:`~wte.models.Part`.
 
-    Requires that the user has "edit" rights on the current
-    :class:`~wte.models.Module`.
+    Requires that the user has "edit" rights on the :class:`~wte.models.Part`.
     """
     dbsession = DBSession()
     part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
@@ -241,8 +354,7 @@ def delete(request):
     u"""Handles the ``/modules/{mid}/parts/{pid}/delete`` URL, providing
     the UI and backend for deleting a :class:`~wte.models.Part`.
 
-    Requires that the user has "edit" rights on the current
-    :class:`~wte.models.Module`.
+    Requires that the user has "delete" rights on the :class:`~wte.models.Part`.
     """
     dbsession = DBSession()
     part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
@@ -276,12 +388,10 @@ def delete(request):
 @render({'application/json': True})
 @current_user()
 def preview(request):
-    u"""Handles the ``/modules/{mid}/tutorials/{tid}/pages/{pid}/preview`` URL,
-    generating an HTML preview of the submitted ReST. The ReST text to render
-    has to be set as the ``content`` parameter.
+    u"""Handles the ``/parts/{pid}/rst_preview`` URL, generating an HTML preview of
+    the submitted ReST. The ReST text to render has to be set as the ``content`` parameter.
 
-    Requires that the user has "edit" rights on the current
-    :class:`~wte.models.Module`.
+    Requires that the user has "edit" rights on the current :class:`~wte.models.Part`.
     """
     dbsession = DBSession()
     part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
@@ -301,12 +411,8 @@ def preview(request):
 @render({'text/html': 'part/register.html'})
 @current_user()
 def register(request):
-    u"""Handles the ``/modules/{mid}/tutorials/{tid}/pages/{pid}/preview`` URL,
-    generating an HTML preview of the submitted ReST. The ReST text to render
-    has to be set as the ``content`` parameter.
-
-    Requires that the user has "edit" rights on the current
-    :class:`~wte.models.Module`.
+    u"""Handles the ``/parts/{pid}/register`` URL, to allow users to register
+    for a :class:`~wte.models.Part` that is a "module".
     """
     dbsession = DBSession()
     part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
@@ -335,24 +441,19 @@ def register(request):
         raise HTTPNotFound()
 
 
-def get_all_parts(part):
-    parts = [part]
-    for child in part.children:
-        parts.extend(get_all_parts(child))
-    return parts
-
-
 @view_config(route_name='part.deregister')
 @render({'text/html': 'part/deregister.html'})
 @current_user()
 def deregister(request):
-    u"""Handles the ``/modules/{mid}/tutorials/{tid}/pages/{pid}/preview`` URL,
-    generating an HTML preview of the submitted ReST. The ReST text to render
-    has to be set as the ``content`` parameter.
-
-    Requires that the user has "edit" rights on the current
-    :class:`~wte.models.Module`.
+    u"""Handles the ``/parts/{pid}/deregister`` URL, to allow users to de-register
+    from a :class:`~wte.models.Part` that is a "module".
     """
+    def get_all_parts(part):
+        parts = [part]
+        for child in part.children:
+            parts.extend(get_all_parts(child))
+        return parts
+
     dbsession = DBSession()
     part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
     if part:

@@ -86,6 +86,8 @@ class User(Base):
     * ``email`` -- The e-mail address used for login and communication
     * ``login_limit`` -- Login limitation counter to stop brute-force login
       attacks
+    * ``parts`` -- The :class:`~wte.models.UserPartProgress` belonging to this
+      :class:`~wte.modes.User`
     * ``password`` -- The hashed password
     * ``permissions`` -- The :class:`~wte.models.User`'s list of
       :class:`~wte.models.Permission`.
@@ -97,7 +99,6 @@ class User(Base):
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True)
-
     email = Column(Unicode(255), unique=True)
     salt = Column(Unicode(255))
     password = Column(Unicode(255))
@@ -304,7 +305,19 @@ u""":class:`sqlalchemy.Table` to link :class:`~wte.models.User` and
 
 
 class UserPartRole(Base):
+    u"""The :class:`~wte.models.UserPartRole` links users to :class:`~wte.models.Part`
+    that have a type "module". They represent the role the :class:`~wte.models.User`
+    plays for that :class:`~wte.models.Part`.
 
+    Instances of :class:`~wte.models.UserPartRole` have the following attributes:
+
+    * ``id`` -- The unique database identifier
+    * ``part_id`` -- The unique database identifier of the linked :class:`~wte.models.Part`
+    * ``part`` -- The linked :class:`~wte.models.Part`
+    * ``role`` -- The role the :class:`~wte.models.User` plays in the :class:`~wte.models.Part`
+    * ``user_id`` -- The unique database identifier of the linked :class:`~wte.models.User`
+    * ``user`` -- The linked :class:`~wte.models.User`
+    """
     __tablename__ = u'users_parts'
 
     id = Column(Integer, primary_key=True)
@@ -317,24 +330,28 @@ class UserPartRole(Base):
 
 
 class Part(Base):
-    u"""The :class:`~wte.models.Part` class represents either a tutorial or
-    exercise. If a tutorial, then it consists of one or more
-    :class:`~wte.models.Page`.
+    u"""The :class:`~wte.models.Part` class represents the parts from which the teaching
+    content is constructed. It supports the following types: module, tutorial, page,
+    exercise, and task.
 
     Instances of :class:`~wte.models.Part` have the following attributes:
 
     * ``id`` -- The unique database identifier
-    * ``module_id`` -- The unique identifier of the :class:`~wte.models.Module`
-      that contains this :class:`~wte.models.Part`
-    * ``module`` -- The :class:`~wte.models.Module` that contains this
+    * ``assets`` -- List of :class:`~wte.models.Asset` that act as asset files
+    * ``children`` -- List of :class:`~wte.models.Part` contained in this
       :class:`~wte.models.Part`
+    * ``compiled_content`` -- The compiled HTML generated from the ReST ``content``
+    * ``content`` -- The ReST content for the :class:`~wte.models.Part`
     * ``order`` -- The ordering position of this :class:`~wte.models.Part`
-    * ``pages`` -- List of :class:`~wte.models.Page` contained in this
-      :class:`~wte.models.Part`
+    * ``parent_id`` -- The unique database identifier of the parent :class:`~wte.models.Part`
+    * ``parent`` -- The parent :class:`~wte.models.Part`
+    * ``progress`` -- The :class:`~wte.models.UserPartProgress` linked to this :class:`~wte.models.Part`
     * ``status`` -- The :class:`~wte.models.Part`'s availability status
+    * ``templates`` -- List of :class:`~wte.models.Asset` that act as template files
     * ``title`` -- The title displayed for this :class:`~wte.models.Part`
-    * ``type`` -- Whether the :class:`~wte.models.Part` is a tutorial or
-      exercise.
+    * ``type`` -- Whether the :class:`~wte.models.Part` is a module, tutorial, page,
+      exercise, or task.
+    * ``users`` -- The :class:`~wte.models.User` that are linked to this :class:`~wte.models.Part`
     """
     __tablename__ = u'parts'
 
@@ -368,6 +385,12 @@ class Part(Base):
                             primaryjoin=u'Part.id==UserPartProgress.part_id')
 
     def root(self):
+        u"""Gets the root :class:`~wte.models.Part` for the current :class:`~wte.models.Part`.
+        If the :class:`~wte.models.Part` has no parent, then returns itself.
+
+        :return: The root :class:`~wte.models.Part`
+        :rtype: :class:`~wte.models.Part`
+        """
         if self.parent:
             return self.parent.root()
         else:
@@ -413,6 +436,17 @@ class Part(Base):
         return False
 
     def has_role(self, role, user):
+        u"""Checks if the given ``user`` has the given ``role`` for this :class:`~wte.models.Part`.
+        If a ``list`` is specified as the ``role``, then the ``user`` must have at least one of the
+        specified roles.
+
+        :param role: The role the user must have.
+        :type role: ``unicode`` or ``list``
+        :param user: The user that has to have the role
+        :type user: :class:`~wte.models.User`
+        :return: ``True`` if the :class:`~wte.models.User` has the given role, ``False`` otherwise
+        :rtype: ``bool``
+        """
         if isinstance(role, list):
             for sub_role in role:
                 if self.has_role(sub_role, user):
@@ -435,17 +469,15 @@ def compile_page_content(target, value, old_value, initiator):
 
 class UserPartProgress(Base):
     u"""The :class:`~wte.models.UserPartProgress` represents the progress a
-    :class:`~wte.models.User` has made through the :class:`~wte.models.Page`
-    of a :class:`~wte.models.Part` as a tutorial or on the content of a
-    :class:`~wte.models.Part` as an exercise.
+    :class:`~wte.models.User` has made through a :class:`~wte.models.Part`.
 
     Instances of :class:`~wte.models.UserPartProgress` have the following
     attributes:
 
     * ``id`` -- The unique database identifier
-    * ``current_page`` -- The current :class:`~wte.models.Page`
-    * ``page_id`` -- The unique identifier of the current
-      :class:`~wte.models.Page`
+    * ``current_id`` -- The unique database identifier of the current :class:`~wte.models.Part`
+    * ``current`` -- The current :class:`~wte.models.Part`
+    * ``files`` -- The :class:`~wte.models.Asset` that are linked to this :class:`~wte.models.UserPartProgress`
     * ``part_id`` -- The unique identifier of the :class:`~wte.models.Part`
     * ``part`` -- The :class:`~wte.models.Part` that this represents the
       progress in
@@ -461,6 +493,7 @@ class UserPartProgress(Base):
     part_id = Column(Integer, ForeignKey(Part.id, name=u'user_part_progress_part_id_fk'))
     current_id = Column(Integer, ForeignKey(Part.id, name=u'user_part_progress_current_id_fk'))
 
+    user = relationship(u'User')
     part = relationship(u'Part', foreign_keys=[part_id])
     current = relationship(u'Part', foreign_keys=[current_id])
     files = relationship(u'Asset',
@@ -479,6 +512,19 @@ Index('user_part_progress_user_id_part_id_ix', UserPartProgress.user_id, UserPar
 
 
 class Asset(Base):
+    u"""The class:`~wte.models.Asset` represents any kind of file data. What role the
+    :class:`~wte.models.Asset` is used in depends on the ``type``.
+
+    Instances of :class:`~wte.models.Asset` have the following attributes:
+
+    * ``id`` -- The unique database identifier
+    * ``data`` -- The actual file content
+    * ``filename`` -- The filename used for accessing this :class:`~wte.models.Asset`
+    * ``mimetype`` -- The mimetype of this :class:`~wte.models.Asset`
+    * ``order`` -- The order to display this :class:`~wte.models.Asset` in
+    * ``parts`` -- The :class:`~wte.models.Part` that this :class:`~wte.models.Asset` is used in
+    * ``type`` -- The type of :class:`~wte.models.Asset` it is (asset, template, file)
+    """
 
     __tablename__ = u'assets'
 
@@ -505,6 +551,9 @@ parts_assets = Table('parts_assets', Base.metadata,
                             ForeignKey('assets.id',
                                        name='parts_assets_asset_id_fk'),
                             primary_key=True))
+u""":class:`sqlalchemy.Table` to link :class:`~wte.models.Part` and
+:class:`~wte.models.Asset`.
+"""
 
 progress_assets = Table('progress_assets', Base.metadata,
                         Column('progress_id',
@@ -515,3 +564,6 @@ progress_assets = Table('progress_assets', Base.metadata,
                                ForeignKey('assets.id',
                                           name='parts_assets_asset_id_fk'),
                                primary_key=True))
+u""":class:`sqlalchemy.Table` to link :class:`~wte.models.Part` and
+:class:`~wte.models.Asset`.
+"""

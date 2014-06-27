@@ -26,34 +26,28 @@ from wte.decorators import current_user
 from wte.models import (DBSession, Part, User, UserPartProgress,
                         Asset, UserPartRole)
 from wte.util import (unauthorised_redirect)
-from wte.views.part import create_part_crumbs
+from wte.views.part import (create_part_crumbs, get_user_part_progress)
 
 
 def init(config):
-    u"""Adds the frontend-specific backend routes (route name, URL pattern
+    u"""Adds the frontend-specific routes (route name, URL pattern
     handler):
 
     * ``modules`` -- ``/modules`` -- :func:`~wte.views.frontend.modules`
-    * ``module.view`` -- ``/modules/{mid}`` --
-      :func:`~wte.views.frontend.view_module`
-    * ``part.view`` -- ``/modules/{mid}/parts/{pid}`` --
-      :func:`~wte.views.frontend.view_part`
     * ``user.modules`` -- ``/users/{uid}/modules`` --
       :func:`~wte.views.frontend.user_modules`
-    * ``asset.view`` -- ``/modules/{mid}/parts/{pid}/files/name/assets/{filename}``
+    * ``asset.view`` -- ``/parts/{pid}/files/name/assets/{filename}``
       -- :func:`~wte.views.frontend.view_asset`
-    * ``file.view`` -- ``/modules/{mid}/parts/{pid}/files/name/{filename}``
+    * ``file.view`` -- ``/parts/{pid}/files/name/{filename}``
       -- :func:`~wte.views.frontend.view_file`
-    * ``file.save`` -- ``/modules/{mid}/parts/{pid}/files/id/{fid}/save``
+    * ``file.save`` -- ``/parts/{pid}/files/id/{fid}/save``
       -- :func:`~wte.views.frontend.save_file`
-    * ``part.reset-files`` -- ``/modules/{mid}/parts/{pid}/reset_files`` --
+    * ``part.reset-files`` -- ``/parts/{pid}/reset_files`` --
       :func:`~wte.views.part.reset_files`
     * ``userpartprogress.download`` -- ``/users/{uid}/progress/{pid}/download``
       -- :func:`~wte.views.frontend.download_part_progress`
     """
     config.add_route('modules', '/modules')
-    config.add_route('module.view', '/modules/{mid}')
-    config.add_route('part.view', '/parts/{pid}')
     config.add_route('user.modules', '/users/{uid}/modules')
     config.add_route('asset.view', '/parts/{pid}/files/name/assets/{filename}')
     config.add_route('file.view', '/parts/{pid}/files/name/{filename}')
@@ -66,8 +60,7 @@ def init(config):
 @render({'text/html': 'part/list.html'})
 @current_user()
 def modules(request):
-    u"""Handles the ``/modules`` URL, displaying all available
-    :class:`~wte.models.Module`.
+    u"""Handles the ``/modules`` URL, displaying all available modules.
     """
     dbsession = DBSession()
     modules = dbsession.query(Part).filter(and_(Part.type == u'module',
@@ -81,7 +74,7 @@ def modules(request):
 @current_user()
 def user_modules(request):
     u"""Handles the ``/users/{uid}/modules`` URL, displaying all the
-    :class:`~wte.models.Module` of the :class:`~wte.models.User`.
+    modules that the  :class:`~wte.models.User` as created or registered for.
 
     Requires that the current user has "view" rights for the
     :class:`~wte.models.User`.
@@ -103,106 +96,14 @@ def user_modules(request):
         raise HTTPNotFound()
 
 
-def get_user_part_progress(dbsession, user, part):
-    u"""Returns the :class:`~wte.models.UserPartProgress` for the given
-    ``user`` and ``part. If none exists, then a new one is instantiated. If
-    the :class:`~wte.models.UserPartProgress` points to a current page that
-    is different to ``page``, then the :class:`~wte.models.UserPartProgress`
-    is updated.
-
-    :param user: The user to get the progress for
-    :type user: :class:`~wte.models.User`
-    :param part: The part to get the progress for
-    :type part: :class:`~wte.models.Part`
-    :return: The :class:`~wte.models.UserPartProgress`
-    :rtype: :class:`~wte.models.UserPartProgress`
-    """
-    if part.type in [u'tutorial', u'task']:
-        progress = dbsession.query(UserPartProgress).\
-            filter(and_(UserPartProgress.user_id == user.id,
-                        UserPartProgress.part_id == part.id)).first()
-        if not progress:
-            progress = UserPartProgress(user_id=user.id,
-                                        part_id=part.id)
-    elif part.type == u'page':
-        progress = dbsession.query(UserPartProgress).\
-            filter(and_(UserPartProgress.user_id == user.id,
-                        UserPartProgress.part_id == part.parent.id)).first()
-        if not progress:
-            progress = UserPartProgress(user_id=user.id,
-                                        part_id=part.parent.id,
-                                        current_id=part.id)
-    else:
-        progress = None
-    if progress:
-        with transaction.manager:
-            dbsession.add(progress)
-            dbsession.add(part)
-            if part.type == u'page':
-                templates = part.parent.templates
-            else:
-                templates = part.templates
-            for template in templates:
-                found = False
-                for user_file in progress.files:
-                    if user_file.filename == template.filename and user_file.mimetype == template.mimetype:
-                        found = True
-                        break
-                if not found:
-                    user_file = Asset(filename=template.filename,
-                                      mimetype=template.mimetype,
-                                      order=template.order,
-                                      data=template.data,
-                                      type=u'file')
-                    dbsession.add(user_file)
-                    progress.files.append(user_file)
-            for template in templates:
-                for user_file in progress.files:
-                    if user_file.filename == template.filename and user_file.mimetype == template.mimetype:
-                        user_file.order = template.order
-                        break
-        dbsession.add(part)
-        dbsession.add(progress)
-        dbsession.add(user)
-    return progress
-
-
-@view_config(route_name='part.view')
-@render({'text/html': 'part/view.html'})
-@current_user()
-def view_part(request):
-    u"""Handles the ``/modules/{mid}/parts/{pid}`` URL, displaying the
-    :class:`~wte.models.Part`.
-
-    Requires that the user has "view" rights on the
-    :class:`~wte.models.Part`.
-    """
-    dbsession = DBSession()
-    part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
-    if part:
-        if part.allow('view', request.current_user):
-            progress = get_user_part_progress(dbsession, request.current_user, part)
-            crumbs = create_part_crumbs(request,
-                                        part,
-                                        None)
-            return {'part': part,
-                    'crumbs': crumbs,
-                    'progress': progress}
-        else:
-            unauthorised_redirect(request)
-    else:
-        raise HTTPNotFound()
-
-
 @view_config(route_name='file.view')
 @current_user()
 def view_file(request):
-    u"""Handles the ``/modules/{mid}/parts/{ptid}/pages/{pid}/users/{uid}/files/name/{filename}``
-    URL, sending back the correct :class:`~wte.models.File`.
+    u"""Handles the ``parts/{ptid}/pages/{pid}/users/{uid}/files/name/{filename}``
+    URL, sending back the correct :class:`~wte.models.Asset`.
 
-    Requires that the user has "view" rights on the
-    :class:`~wte.models.Module`. It will also only send a
-    :class:`~wte.models.File` belonging to the current
+    Requires that the user has "view" rights on the :class:`~wte.models.Part`.
+    It will also only send an :class:`~wte.models.Asset` belonging to the current
     :class:`~wte.models.User`.
     """
     dbsession = DBSession()
@@ -229,13 +130,12 @@ def view_file(request):
 @render({'application/json': True})
 @current_user()
 def save_file(request):
-    u"""Handles the ``/modules/{mid}/parts/{pid}/files/id/{fid}/save``
-    URL, updating the :class:`~wte.models.File` content.
+    u"""Handles the ``/parts/{pid}/files/id/{fid}/save``
+    URL, updating the :class:`~wte.models.Asset`'s content.
 
-    Requires that the user has "view" rights on the
-    :class:`~wte.models.Module`. It will also only update a
-    :class:`~wte.models.File` belonging to the current
-    :class:`~wte.models.User`.
+    Requires that the user has "view" rights on the :class:`~wte.models.Part`.
+    It will also only update an :class:`~wte.models.Asset` belonging to the
+    current :class:`~wte.models.User`.
     """
     dbsession = DBSession()
     part = dbsession.query(Part).filter(Part.id == request.matchdict[u'pid']).first()
@@ -262,12 +162,12 @@ def save_file(request):
 @render({'text/html': 'part/reset_files.html'})
 @current_user()
 def reset_files(request):
-    u"""Handles the ``/modules/{mid}/parts/{pid}/reset_files`` URL, providing
-    the UI and backend for resetting all :class:`~wte.models.File` of a
-    :class:`~wte.models.Part`
+    u"""Handles the ``/parts/{pid}/reset_files`` URL, providing
+    the UI and backend for resetting all :class:`~wte.models.Assets` of a
+    :class:`~wte.models.Part` to the default for the current user.
 
-    Requires that the user has "edit" rights on the current
-    :class:`~wte.models.Module`.
+    Requires that the user has "view" rights on the current
+    :class:`~wte.models.Part`.
     """
     dbsession = DBSession()
     part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
@@ -298,18 +198,19 @@ def reset_files(request):
 @view_config(route_name='asset.view')
 @current_user()
 def view_asset(request):
-    u"""Handles the ``/modules/{mid}/parts/{pid}/files/assets/{filename}``
+    u"""Handles the ``/parts/{pid}/files/name/assets/{filename}``
     URL, sending back the correct :class:`~wte.models.Asset`.
 
-    Requires that the user has "view" rights on the
-    :class:`~wte.models.Module`.
+    Requires that the user has "view" rights on the :class:`~wte.models.Part`.
     """
     dbsession = DBSession()
     part = dbsession.query(Part).filter(Part.id == request.matchdict[u'pid']).first()
     if part.type == u'page':
         part = part.parent
-    asset = dbsession.query(Asset).filter(Asset.filename == request.matchdict[u'filename']).first()
-    if part and asset and part in asset.parts:
+    asset = dbsession.query(Asset).join(Part.assets).\
+        filter(and_(Asset.filename == request.matchdict[u'filename'],
+                    Part.id == part.id)).first()
+    if part and asset:
         if part.allow('view', request.current_user):
             return Response(body=asset.data,
                             headerlist=[('Content-Type', str(asset.mimetype))])

@@ -19,6 +19,7 @@ from pyramid.httpexceptions import (HTTPSeeOther, HTTPNotFound)
 from pyramid.view import view_config
 from pywebtools import text
 from pywebtools.renderer import render
+from sqlalchemy import and_
 
 from wte.decorators import current_user
 from wte.models import (DBSession, Part, Asset)
@@ -30,11 +31,11 @@ def init(config):
     u"""Adds the asset-specific backend routes (route name, URL pattern
     handler):
 
-    * ``asset.new`` -- ``/modules/{mid}/parts/{pid}/assets/new`` --
+    * ``asset.new`` -- ``/parts/{pid}/assets/new/{new_type}`` --
       :func:`~wte.views.asset.new`
-    * ``asset.edit`` -- ``/modules/{mid}/parts/{pid}/assets/{aid}/edit`` --
+    * ``asset.edit`` -- ``/parts/{pid}/assets/{aid}/edit`` --
       :func:`~wte.views.asset.edit`
-    * ``asset.delete`` -- ``/modules/{mid}parts/{pid}/assets/{aid}/delete`` --
+    * ``asset.delete`` -- ``/parts/{pid}/assets/{aid}/delete`` --
       :func:`~wte.views.asset.delete`
     """
     config.add_route('asset.new', '/parts/{pid}/assets/new/{new_type}')
@@ -56,11 +57,10 @@ class NewAssetSchema(formencode.Schema):
 @render({'text/html': 'asset/new.html'})
 @current_user()
 def new(request):
-    u"""Handles the ``/modules/{mid}/parts/{pid}/assets/new`` URL, providing the UI and
-    backend for creating a new :class:`~wte.models.Part`.
+    u"""Handles the ``/parts/{pid}/assets/new/{new_type}`` URL, providing the UI and
+    backend for creating a new :class:`~wte.models.Asset`.
 
-    Requires that the user has "edit" rights on the current
-    :class:`~wte.models.Module`.
+    Requires that the user has "edit" rights on the current :class:`~wte.models.Part`.
     """
     dbsession = DBSession()
     part = dbsession.query(Part).filter(Part.id == request.matchdict[u'pid']).first()
@@ -132,15 +132,16 @@ class EditAssetSchema(formencode.Schema):
 @render({'text/html': 'asset/edit.html'})
 @current_user()
 def edit(request):
-    u"""Handles the ``/modules/{mid}/parts/{pid}/assets/new`` URL, providing
-    the UI and backend for creating a new :class:`~wte.models.Asset`.
+    u"""Handles the ``/parts/{pid}/assets/{aid}/edit`` URL, providing
+    the UI and backend for editing :class:`~wte.models.Asset`.
 
-    Requires that the user has "edit" rights on the current
-    :class:`~wte.models.Module`.
+    Requires that the user has "edit" rights on the current :class:`~wte.models.Part`.
     """
     dbsession = DBSession()
     part = dbsession.query(Part).filter(Part.id == request.matchdict[u'pid']).first()
-    asset = dbsession.query(Asset).filter(Asset.id == request.matchdict[u'aid']).first()
+    asset = dbsession.query(Asset).join(Part.assets).\
+        filter(and_(Asset.id == request.matchdict[u'aid'],
+                    Part.id == request.matchdict[u'pid'])).first()
     if part and asset:
         if part.allow('edit', request.current_user):
             crumbs = create_part_crumbs(request,
@@ -191,15 +192,16 @@ def edit(request):
 @render({'text/html': 'asset/delete.html'})
 @current_user()
 def delete(request):
-    u"""Handles the ``/modules/{mid}/parts/{pid}/assets/{aid}/delete`` URL,
-    providing the UI and backend for creating a new :class:`~wte.models.Asset`.
+    u"""Handles the ``/parts/{pid}/assets/{aid}/delete`` URL,
+    providing the UI and backend for deleting :class:`~wte.models.Asset`.
 
-    Requires that the user has "edit" rights on the current
-    :class:`~wte.models.Module`.
+    Requires that the user has "edit" rights on the current :class:`~wte.models.Part`.
     """
     dbsession = DBSession()
     part = dbsession.query(Part).filter(Part.id == request.matchdict[u'pid']).first()
-    asset = dbsession.query(Asset).filter(Asset.id == request.matchdict[u'aid']).first()
+    asset = dbsession.query(Asset).join(Part.assets).\
+        filter(and_(Asset.id == request.matchdict[u'aid'],
+                    Part.id == request.matchdict[u'pid'])).first()
     if part and asset:
         if part.allow('edit', request.current_user):
             crumbs = create_part_crumbs(request,
