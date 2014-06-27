@@ -455,6 +455,8 @@ class Part(Base):
             for user_role in self.users:
                 if user_role.role == role and user_role.user == user:
                     return True
+        if self.parent:
+            return self.parent.has_role(role, user)
         return False
 
 Index('parts_parent_id_ix', Part.parent_id)

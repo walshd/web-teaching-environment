@@ -91,6 +91,7 @@ def get_user_part_progress(dbsession, user, part):
             dbsession.add(part)
             if part.type == u'page':
                 templates = part.parent.templates
+                progress.current_id = part.id
             else:
                 templates = part.templates
             for template in templates:
