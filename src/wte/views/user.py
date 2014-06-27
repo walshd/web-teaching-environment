@@ -17,7 +17,6 @@ import uuid
 from pyramid.httpexceptions import (HTTPSeeOther, HTTPNotFound)
 from pyramid.view import view_config
 from pywebtools.renderer import render
-from pywebtools.auth import is_authorised
 from sqlalchemy import and_
 
 from wte.decorators import current_user
@@ -64,11 +63,10 @@ def users(request):
     :class:`~wte.models.User` has the "admin.users"
     :class:`~wte.models.Permission`.
     """
-    if is_authorised(u':user.has_permission("admin.users")', {'user': request.current_user}):
-        pass
+    if request.current_user.has_permission('admin.users'):
+        return {'crumbs': [{'title': 'Users', 'url': request.route_url('users'), 'current': True}]}
     else:
         unauthorised_redirect(request)
-    return {'crumbs': [{'title': 'Users', 'url': request.route_url('users'), 'current': True}]}
 
 
 class PasswordValidator(formencode.FancyValidator):
@@ -374,8 +372,7 @@ def view(request):
     dbsession = DBSession()
     user = dbsession.query(User).filter(User.id == request.matchdict['uid']).first()
     if user:
-        if is_authorised(u':user.allow("view" :current)', {'user': user,
-                                                           'current': request.current_user}):
+        if user.allow('view', request.current_user):
             return {'user': user,
                     'crumbs': [{'title': user.display_name,
                                 'url': request.route_url('user.view', uid=user.id), 'current': True}]}
@@ -408,8 +405,7 @@ def edit(request):
     dbsession = DBSession()
     user = dbsession.query(User).filter(User.id == request.matchdict['uid']).first()
     if user:
-        if is_authorised(u':user.allow("edit" :current)', {'user': user,
-                                                           'current': request.current_user}):
+        if user.allow('edit', request.current_user):
             if request.method == 'POST':
                 try:
                     params = EditSchema().to_python(request.params,
@@ -451,8 +447,7 @@ def permissions(request):
     :class:`~wte.models.PermissionGroup` that the :class:`~wte.models.User`
     belongs to.
     """
-    if is_authorised(u':user.has_permission("admin.users.permissions")',
-                     {'user': request.current_user}):
+    if request.current_user.has_permission('admin.users.permissions'):
         dbsession = DBSession()
         user = dbsession.query(User).filter(User.id == request.matchdict['uid']).first()
         if user:
@@ -498,8 +493,7 @@ def delete(request):
     dbsession = DBSession()
     user = dbsession.query(User).filter(User.id == request.matchdict['uid']).first()
     if user:
-        if is_authorised(u':user.allow("delete" :current)', {'user': user,
-                                                             'current': request.current_user}):
+        if user.allow('delete', request.current_user):
             if request.method == 'POST':
                 with transaction.manager:
                     dbsession.delete(user)
