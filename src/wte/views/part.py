@@ -52,6 +52,7 @@ def init(config):
     config.add_route('part.preview', '/parts/{pid}/rst_preview')
     config.add_route('part.register', '/parts/{pid}/register')
     config.add_route('part.deregister', '/parts/{pid}/deregister')
+    config.add_route('part.change_status', '/parts/{pid}/change_status')
 
 
 def get_user_part_progress(dbsession, user, part):
@@ -486,5 +487,54 @@ def deregister(request):
             raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
         return {'part': part,
                 'crumbs': crumbs}
+    else:
+        raise HTTPNotFound()
+
+
+class ChangeStatusSchema(formencode.Schema):
+    u"""The :class:`~wte.views.part.ChangeStatusSchema` handles the validation
+    for editing :class:`~wte.models.Part`.
+    """
+    status = formencode.All(formencode.validators.UnicodeString(not_empty=True),
+                            formencode.validators.OneOf([u'unavailable',
+                                                         u'available']))
+    u"""The part's status"""
+
+
+@view_config(route_name='part.change_status')
+@render({'text/html': 'part/change_status.html'})
+@current_user()
+def change_status(request):
+    u"""Handles the ``/parts/{pid}/change_status`` URL,
+    providing the UI and backend for changing the status of a :class:`~wte.models.Part`.
+
+    Requires that the user has "edit" rights on the :class:`~wte.models.Part`.
+    """
+    dbsession = DBSession()
+    part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
+    if part:
+        if part.allow('edit', request.current_user):
+            crumbs = create_part_crumbs(request,
+                                        part,
+                                        {'title': 'Change Status',
+                                         'url': request.current_route_url()})
+            if request.method == u'POST':
+                try:
+                    params = ChangeStatusSchema().to_python(request.params)
+                    with transaction.manager:
+                        dbsession.add(part)
+                        part.status = params['status']
+                    dbsession.add(part)
+                    request.session.flash('The %s is now %s' % (part.type, part.status), queue='info')
+                    raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
+                except formencode.Invalid as e:
+                    e.params = request.params
+                    return {'e': e,
+                            'part': part,
+                            'crumbs': crumbs}
+            return {'part': part,
+                    'crumbs': crumbs}
+        else:
+            unauthorised_redirect(request)
     else:
         raise HTTPNotFound()

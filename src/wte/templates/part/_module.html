@@ -3,6 +3,8 @@
     <div py:if="part.has_role('owner', r.current_user)" class="menu inline"><a href="#" class=""><img src="${r.static_url('wte:static/img/menu-icon.svg')}" alt="Menu"/></a>
       <ul>
         <py:if test="part.allow('edit', r.current_user)">
+          <li py:if="part.status == 'unavailable'"><a href="${r.route_url('part.change_status', pid=part.id, _query=[('status', 'available')])}">Make Available</a></li>
+          <li py:if="part.status == 'available'"><a href="${r.route_url('part.change_status', pid=part.id, _query=[('status', 'unavailable')])}">Make Unavailable</a></li>
           <li><a href="${r.route_url('part.edit', pid=part.id)}">Edit</a></li>
           <li><a href="${r.route_url('part.new', new_type='tutorial', _query=[('parent_id', part.id)])}">Add Tutorial</a></li>
           <li><a href="${r.route_url('part.new', new_type='exercise', _query=[('parent_id', part.id)])}">Add Exercise</a></li>
@@ -18,6 +20,8 @@
         <li py:for="child in part.children" py:if="child.allow('view', r.current_user)" class="panel clearfix status-${child.status}">
           <div py:if="child.allow('edit', r.current_user) or child.allow('delete', r.current_user)" class="menu inline"><a href="#" class=""><img src="${r.static_url('wte:static/img/menu-icon.svg')}" alt="Menu" class="small"/></a>
             <ul>
+              <li py:if="child.status == 'unavailable'"><a href="${r.route_url('part.change_status', pid=child.id, _query=[('status', 'available')])}">Make Available</a></li>
+              <li py:if="child.status == 'available'"><a href="${r.route_url('part.change_status', pid=child.id, _query=[('status', 'unavailable')])}">Make Unavailable</a></li>
               <li><a py:if="child.allow('edit', r.current_user)" href="${r.route_url('part.edit', pid=child.id)}">Edit</a></li>
               <li class="divider"></li>
               <li><a py:if="child.allow('delete', r.current_user)" href="${r.route_url('part.delete', pid=child.id)}" class="alert">Delete</a></li>
