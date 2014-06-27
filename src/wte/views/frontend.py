@@ -17,7 +17,6 @@ import transaction
 from pyramid.httpexceptions import (HTTPNotFound, HTTPSeeOther)
 from pyramid.response import Response
 from pyramid.view import view_config
-from pywebtools.auth import is_authorised
 from pywebtools.renderer import render
 from sqlalchemy import and_
 from StringIO import StringIO

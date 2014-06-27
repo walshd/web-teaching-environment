@@ -15,15 +15,13 @@ import transaction
 import formencode
 
 from mimetypes import guess_type
-from pyramid.httpexceptions import (HTTPSeeOther, HTTPNotFound, HTTPForbidden)
+from pyramid.httpexceptions import (HTTPSeeOther, HTTPNotFound)
 from pyramid.view import view_config
 from pywebtools import text
 from pywebtools.renderer import render
-from sqlalchemy import and_
 
 from wte.decorators import current_user
 from wte.models import (DBSession, Part, Asset)
-from wte.text_formatter import compile_rst
 from wte.views.part import create_part_crumbs
 from wte.util import (unauthorised_redirect)
 
