@@ -108,7 +108,7 @@ class User(Base):
 
     permissions = relationship('Permission', backref='users', secondary='users_permissions')
     permission_groups = relationship('PermissionGroup', backref='users', secondary='users_permission_groups')
-    parts = relationship('UserPartProgress', backref=u'user', cascade=u'all,delete')
+    parts = relationship('UserPartProgress', cascade=u'all,delete')
 
     def __init__(self, email, display_name, password=None):
         u"""Constructs a new :class:`~wte.models.User` with the given email
