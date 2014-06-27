@@ -371,6 +371,9 @@ def delete(request):
                 part_type = part.type
                 parent = part.parent
                 with transaction.manager:
+                    dbsession.add(part)
+                    for progress in dbsession.query(UserPartProgress).filter(UserPartProgress.current_id==part.id):
+                        progress.current_id = None
                     dbsession.delete(part)
                 request.session.flash('The %s has been deleted' % (part_type), queue='info')
                 if parent:
