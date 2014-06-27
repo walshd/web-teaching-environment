@@ -16,7 +16,7 @@ from genshi.builder import tag, Markup
 def html_id(text):
     u"""Turns a given text into a valid HTML id attribute value. Removes
     spaces and full-stops.
-    
+
     :param text: The text to convert
     :type text: `unicode`
     :return: The corresponding HTML id
@@ -33,7 +33,7 @@ CODEMIRROR_MODES = {'text/html': ['javascript', 'css', 'xml', 'htmlmixed'],
 def codemirror_scripts(request, mimetypes):
     u"""Generates the ``<script>`` tags necessary to load the CodeMirror mode
     JS files for the given list of ``mimetypes``.
-    
+
     :param request: The request to use for generating URLs
     :type request: `~pyramid.request.Request`
     :param mimetypes: The mimetypes to load the CodeMirror modes for
@@ -51,7 +51,7 @@ def codemirror_scripts(request, mimetypes):
 def page_pagination(request, part):
     u"""Generates the pagination UI for the individual page display of a
     :class:`~wte.models.Part`.
-    
+
     :param request: The current request
     :type request: :class:`~pyramid.request.Request`
     :param part: The current parte to display pagination for
@@ -72,23 +72,28 @@ def page_pagination(request, part):
     items = []
     if prev_page:
         items.append(tag.li(tag.a(Markup('&laquo; Previous page'),
-                                  href=request.route_url('part.view', mid=prev_page.module_id, pid=prev_page.id))))
+                                  href=request.route_url('part.view',
+                                                         mid=prev_page.module_id,
+                                                         pid=prev_page.id))))
     else:
         items.append(tag.li(Markup('&laquo; Previous page'),
                             class_='disabled'))
     if next_page:
         items.append(tag.li(tag.a(Markup('Next page &raquo;'),
-                                  href=request.route_url('part.view', mid=next_page.module_id, pid=next_page.id))))
+                                  href=request.route_url('part.view',
+                                                         mid=next_page.module_id,
+                                                         pid=next_page.id))))
     else:
         items.append(tag.li(Markup('Previous page &raquo;'),
                             class_='disabled'))
     return tag.ul(items,
                   class_='pagination')
 
+
 def primary_filename(progress):
     u"""Returns the filename of the first :class:`~wte.models.File` from the
     :class:`~wte.models.UserPartProgress` that has the mimetype "text/html".
-    
+
     :param progress: The :class:`~wte.models.UserPartProgress` to get the files
                      from
     :type progress: :class:`~wte.models.UserPartProgress`

@@ -12,7 +12,7 @@ consulte the following documentation: :mod:`pywebtools.text`,
 .. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
 
-from genshi.builder import Markup
-from pywebtools import text
+from genshi.builder import Markup  # NOQA
+from pywebtools import text  # NOQA
 
-from . import form, frontend
+from . import form, frontend  # NOQA

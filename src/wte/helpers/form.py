@@ -18,10 +18,10 @@ def field(name, label, form_tag, size=None, e=None, **kwargs):
     the actual form tag, it calls the function passed into the ``form_tag``
     parameter. The ``form_tag`` parameter is passed all extra keyword
     parameters.
-    
+
     Best used with the functions defined in :mod:`pywebtools.form`, which
     is available as :data:`wte.helpers.form.tags`.
-    
+
     :param name: The form field's name
     :type name: `unicode`
     :param label: The form field's label
