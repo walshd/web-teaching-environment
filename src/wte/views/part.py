@@ -25,10 +25,11 @@ from wte.models import (DBSession, Part, UserPartRole, Asset, UserPartProgress)
 from wte.text_formatter import compile_rst
 from wte.util import (unauthorised_redirect)
 
+
 def init(config):
     u"""Adds the part-specific backend routes (route name, URL pattern
     handler):
-    
+
     * ``part.new`` -- ``/modules/{mid}/parts/new`` --
       :func:`~wte.views.part.new`
     * ``part.edit`` -- ``/modules/{mid}/parts/{pid}/edit`` --
@@ -56,13 +57,13 @@ class NewPartSchema(formencode.Schema):
                             formencode.validators.OneOf([u'unavailable',
                                                          u'available']))
     u"""The part's status"""
-    
+
 
 def create_part_crumbs(request, part, current):
     crumbs = []
     while part:
         crumbs.append({'title': part.title,
-                          'url': request.route_url('part.view', pid=part.id)})
+                       'url': request.route_url('part.view', pid=part.id)})
         part = part.parent
     crumbs.append({'title': 'Modules',
                    'url': request.route_url('modules')})
@@ -79,12 +80,14 @@ def create_part_crumbs(request, part, current):
 def new(request):
     u"""Handles the ``/modules/{mid}/parts/new`` URL, providing the UI and
     backend for creating a new :class:`~wte.models.Part`.
-    
+
     Requires that the user has "edit" rights on the current
     :class:`~wte.models.Module`.
     """
     dbsession = DBSession()
-    parent = dbsession.query(Part).filter(Part.id==request.params[u'parent_id']).first() if u'parent_id' in request.params else None
+    parent = dbsession.query(Part).\
+        filter(Part.id == request.params[u'parent_id']).first()\
+        if u'parent_id' in request.params else None
     if parent and not parent.allow('edit', request.current_user):
             unauthorised_redirect(request)
     if request.matchdict['new_type'] == 'module':
@@ -140,7 +143,7 @@ def new(request):
                     max_order = []
                 max_order.append(0)
                 max_order = max(max_order)
-                
+
                 new_part = Part(title=params['title'],
                                 status=params['status'],
                                 type=request.matchdict['new_type'],
@@ -184,12 +187,12 @@ class EditPartSchema(formencode.Schema):
 def edit(request):
     u"""Handles the ``/modules/{mid}/parts/{pid}/edit`` URL,
     providing the UI and backend for editing a :class:`~wte.models.Part`.
-    
+
     Requires that the user has "edit" rights on the current
     :class:`~wte.models.Module`.
     """
     dbsession = DBSession()
-    part = dbsession.query(Part).filter(Part.id==request.matchdict['pid']).first()
+    part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
     if part:
         if part.allow('edit', request.current_user):
             crumbs = create_part_crumbs(request,
@@ -237,12 +240,12 @@ def edit(request):
 def delete(request):
     u"""Handles the ``/modules/{mid}/parts/{pid}/delete`` URL, providing
     the UI and backend for deleting a :class:`~wte.models.Part`.
-    
+
     Requires that the user has "edit" rights on the current
     :class:`~wte.models.Module`.
     """
     dbsession = DBSession()
-    part = dbsession.query(Part).filter(Part.id==request.matchdict['pid']).first()
+    part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
     if part:
         if part.allow('delete', request.current_user):
             crumbs = create_part_crumbs(request,
@@ -276,12 +279,12 @@ def preview(request):
     u"""Handles the ``/modules/{mid}/tutorials/{tid}/pages/{pid}/preview`` URL,
     generating an HTML preview of the submitted ReST. The ReST text to render
     has to be set as the ``content`` parameter.
-    
+
     Requires that the user has "edit" rights on the current
     :class:`~wte.models.Module`.
     """
     dbsession = DBSession()
-    part = dbsession.query(Part).filter(Part.id==request.matchdict['pid']).first()
+    part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
     if part:
         if part.allow('edit', request.current_user):
             if 'content' in request.params:
@@ -301,12 +304,12 @@ def register(request):
     u"""Handles the ``/modules/{mid}/tutorials/{tid}/pages/{pid}/preview`` URL,
     generating an HTML preview of the submitted ReST. The ReST text to render
     has to be set as the ``content`` parameter.
-    
+
     Requires that the user has "edit" rights on the current
     :class:`~wte.models.Module`.
     """
     dbsession = DBSession()
-    part = dbsession.query(Part).filter(Part.id==request.matchdict['pid']).first()
+    part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
     if part:
         if part.type != 'module':
             request.session.flash('You can only register for modules', queue='error')
@@ -346,12 +349,12 @@ def deregister(request):
     u"""Handles the ``/modules/{mid}/tutorials/{tid}/pages/{pid}/preview`` URL,
     generating an HTML preview of the submitted ReST. The ReST text to render
     has to be set as the ``content`` parameter.
-    
+
     Requires that the user has "edit" rights on the current
     :class:`~wte.models.Module`.
     """
     dbsession = DBSession()
-    part = dbsession.query(Part).filter(Part.id==request.matchdict['pid']).first()
+    part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
     if part:
         if not part.has_role('student', request.current_user):
             request.session.flash('You are not registered for this module', queue='info')
@@ -364,15 +367,17 @@ def deregister(request):
         if request.method == 'POST':
             with transaction.manager:
                 dbsession.add(part)
-                role = dbsession.query(UserPartRole).filter(and_(UserPartRole.part_id == request.matchdict['pid'],
-                                                                 UserPartRole.user_id == request.current_user.id,
-                                                                 UserPartRole.role == u'student')).first()
+                role = dbsession.query(UserPartRole).\
+                    filter(and_(UserPartRole.part_id == request.matchdict['pid'],
+                                UserPartRole.user_id == request.current_user.id,
+                                UserPartRole.role == u'student')).first()
                 if role:
                     dbsession.delete(role)
                 parts = get_all_parts(part)
                 for child_part in parts:
-                    progress = dbsession.query(UserPartProgress).filter(and_(UserPartProgress.part_id == child_part.id,
-                                                                             UserPartProgress.user_id == request.current_user.id)).first()
+                    progress = dbsession.query(UserPartProgress).\
+                        filter(and_(UserPartProgress.part_id == child_part.id,
+                                    UserPartProgress.user_id == request.current_user.id)).first()
                     if progress:
                         dbsession.delete(progress)
             request.session.flash('You have de-registered from the module', queue='info')

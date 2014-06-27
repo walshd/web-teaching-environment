@@ -16,11 +16,13 @@ from pyramid.httpexceptions import HTTPSeeOther
 from email.mime.text import MIMEText
 from email.utils import formatdate
 
+
 class State(object):
     u"""The :class:`~wte.util.State` provides a blank state object for use
     with Formencode validation. Any parameters passed to the constructor are
     automatically set as attributes of the :class:`~wte.util.State`.
     """
+
     def __init__(self, **kwargs):
         u"""Any parameters passed to the constructor are automatically set as
         attributes of the :class:`~wte.util.State`.
@@ -35,7 +37,7 @@ def unauthorised_redirect(request, redirect_to=None):
     If the user is logged in, it will redirect to the root page or to the
     ``redirect_to`` URL if specified. If the user is not logged in, it will
     always redirect to the login page.
-    
+
     :param request: The pyramid request
     :param redirect_to: The URL to redirect to, if the user is currently
                         logged in.
@@ -51,11 +53,12 @@ def unauthorised_redirect(request, redirect_to=None):
         request.session.flash('Please log in to access this area.', queue='auth')
         raise HTTPSeeOther(request.route_url('user.login', _query={'return_to': request.current_route_url()}))
 
+
 def send_email(request, recipient, sender, subject, text):
     u"""Sends an e-mail based on the settings in the configuration file. If
     the configuration does not have e-mail settings or if there is an
     exception sending the e-mail, then it will log an error.
-    
+
     :param request: The current request used to access the settings
     :type request: :class:`pyramid.request.Request`
     :param recipient: The recipient's e-mail address
@@ -85,20 +88,21 @@ def send_email(request, recipient, sender, subject, text):
             smtp.quit()
         except Exception as e:
             logging.getLogger("wte").error(unicode(e))
-            print text # TODO: Remove
+            print text  # TODO: Remove
     else:
         logging.getLogger("wte").error('Could not send e-mail as "email.smtp_host" setting not specified')
+
 
 def convert_type(value, target_type, default=None):
     u"""Attempts to convert the ``value`` to the given ``target_type``. Will
     return ``default`` if the conversion fails.
-    
+
     Supported ``target_type`` values are:
-    
+
     * `int` -- Convert to an integer value
     * `boolean` -- Convert to a boolean value (``True`` if the value is the
       ``unicode`` string "true" in any capitalisation
-    
+
     :param value: The value to convert
     :type value: `unicode`
     :param target_type: The target type to convert to
@@ -121,11 +125,14 @@ def convert_type(value, target_type, default=None):
     else:
         return default
 
+
 CACHED_SETTINGS = {}
+
+
 def get_config_setting(request, key, target_type=None, default=None):
     u"""Gets a configuration setting from the application configuration.
     Settings are cached for faster access.
-    
+
     :param request: The request used to access the configuration settings
     :type request: :class:`~pyramid.request.Request`
     :param key: The configuration key

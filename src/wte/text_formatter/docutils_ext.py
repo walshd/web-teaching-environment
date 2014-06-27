@@ -58,6 +58,7 @@ from docutils.parsers.rst import directives, Directive
 from pygments import highlight
 from pygments.lexers import get_lexer_by_name, TextLexer
 
+
 class Pygments(Directive):
     """ Source code syntax hightlighting.
     """

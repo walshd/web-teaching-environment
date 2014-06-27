@@ -14,18 +14,19 @@ from pywebtools.renderer import request_from_args
 
 from wte.models import (DBSession, User)
 
+
 def current_user():
     """Inserts the currently logged in :class:`~wte.models.User` into the
     `request` parameter under the attribute ``current_user``. If there is no
     logged in user, then an anonymous :class:`~wte.models.User` is created.
-    
+
     Used in view functions.
     """
     def wrapper(f, *args, **kwargs):
         request = request_from_args(*args)
         if 'uid' in request.session:
             dbsession = DBSession()
-            user = dbsession.query(User).filter(User.id==request.session['uid']).first()
+            user = dbsession.query(User).filter(User.id == request.session['uid']).first()
             if user:
                 user.logged_in = True
                 request.current_user = user

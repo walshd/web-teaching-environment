@@ -14,6 +14,7 @@ from genshi.template import TemplateLoader, loader, NewTextTemplate
 
 from wte.scripts.main import get_user_parameter
 
+
 def init(subparsers):
     u"""Initialises the :class:`~argparse.ArgumentParser`, adding the
     "generate-config" command.
@@ -22,7 +23,8 @@ def init(subparsers):
     parser.add_argument('--filename', default='production.ini', help='Configuration file name')
     parser.add_argument('--sqla-connection-string', default=None, help='SQLAlchemy database connection string')
     parser.set_defaults(func=generate_config)
-    
+
+
 def generate_config(args):
     u"""Generates a configuration file based on the default_config.txt template.
     """
@@ -34,8 +36,7 @@ def generate_config(args):
         params['sqlalchemy_url'] = args.sqla_connection_string
     else:
         params['sqlalchemy_url'] = get_user_parameter('SQL Alchemy Connection String', 'sqlite:///%(here)s/wte_test.db')
-    
+
     with open(args.filename, 'w') as out_f:
         for data in tmpl.generate(**params).render('text'):
             out_f.write(data)
-    

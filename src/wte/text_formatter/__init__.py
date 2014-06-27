@@ -8,14 +8,15 @@ the student.
 
 .. moduleauthor:: Mark Hall <mark.hall@mail.room3b.eu>
 """
-from . import docutils_ext
-
 from docutils import core
+
+from . import docutils_ext  # NOQA
+
 
 def compile_rst(text):
     u"""Compiles the given ReStructuredText into HTML. Returns only the actual
     content of the generated HTML document, without headers or footers.
-    
+
     :param text: The ReST to compile
     :type text: `unicode`
     :return: The body content of the generated HTML

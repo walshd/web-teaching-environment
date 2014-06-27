@@ -26,7 +26,7 @@ from wte.models import (DBSession, User, Permission, PermissionGroup)
 
 def init(config):
     """Adds the user-specific routes (route name, URL pattern, handler):
-    
+
     * ``users`` -- ``/users`` -- :func:`~wte.views.user.users`
     * ``user.login`` -- ``/users/login`` -- :func:`~wte.views.user.login`
     * ``user.logout`` -- ``/users/logout`` -- :func:`~wte.views.user.logout`
@@ -72,20 +72,20 @@ def users(request):
 class PasswordValidator(formencode.FancyValidator):
     u"""The :class:`~wte.views.user.PasswordValidator` handles the checking of
     user-provided passwords against the database to allow / dissallow login.
-    
+
     Login is disallowed, if the password does not match the e-mail address or
     if the :class:`~wte.models.User`'s ``validation_token`` is still set,
     meaning they have not confirmed their registration.
-    
+
     Requires a SQLAlchemy database session to be available via
     ``state.dbsession``.
     """
-    
+
     messages = {'nologin': 'No user exists with the given e-mail address or the password does not match',
                 'noconfirmed': 'You must confirm your registration before being able to log in'}
-    
+
     def _validate_python(self, value, state):
-        user = state.dbsession.query(User).filter(User.email==value['email'].lower()).first()
+        user = state.dbsession.query(User).filter(User.email == value['email'].lower()).first()
         if user:
             if user.validation_token:
                 raise formencode.api.Invalid(self.message('noconfirmed', state), value, state)
@@ -105,7 +105,7 @@ class LoginSchema(formencode.Schema):
     u"""E-mail address to log in with"""
     password = formencode.validators.UnicodeString(not_empty=True)
     u"""Password to log in with"""
-    
+
     chained_validators = [PasswordValidator()]
 
 
@@ -127,7 +127,7 @@ def login(request):
         try:
             dbsession = DBSession()
             params = LoginSchema().to_python(request.params, State(dbsession=dbsession))
-            user = dbsession.query(User).filter(User.email==params['email'].lower()).first()
+            user = dbsession.query(User).filter(User.email == params['email'].lower()).first()
             request.current_user = user
             request.current_user.logged_in = True
             request.session['uid'] = user.id
@@ -165,9 +165,9 @@ class UniqueEmailValidator(formencode.FancyValidator):
     :class:`~wte.models.User` with that `id` can have the same e-mail address.
     """
     messages = {'existing': 'A user with this e-mail address already exists'}
-    
+
     def _validate_python(self, value, state):
-        user = state.dbsession.query(User).filter(User.email==value).first()
+        user = state.dbsession.query(User).filter(User.email == value).first()
         if user and (not hasattr(state, 'userid') or user.id != state.userid):
             raise formencode.Invalid(self.message('existing', state), value, state)
 
@@ -185,9 +185,9 @@ class RegisterSchema(formencode.Schema):
     u"""Confirmation of the registration e-mail address"""
     name = formencode.validators.UnicodeString(not_empty=True)
     u"""Name of the registering user"""
-    
+
     chained_validators = [formencode.validators.FieldsMatch('email',
-                                                 'email_confirm')]
+                                                            'email_confirm')]
 
 
 @view_config(route_name='user.register')
@@ -213,14 +213,19 @@ def register(request):
                                           default='no-reply@example.com'),
                        'Please confirm your registration',
                        '''Hello %s,
-                       
-Thank you for registering with the Web Teaching Environment. To complete your registration, please click on the following link or copy it into your browser:
+
+Thank you for registering with the Web Teaching Environment. To complete your
+registration, please click on the following link or copy it into your browser:
 
 %s
 
 Best Regards,
-Web Teaching Environment''' % (user.display_name, request.route_url('user.confirm', uid=user.id, token=user.validation_token)))
-            request.session.flash('Your registration has been successful. A confirmation e-mail has been sent to the e-mail address you specified.', queue='info')
+Web Teaching Environment''' % (user.display_name,
+                               request.route_url('user.confirm',
+                                                 uid=user.id,
+                                                 token=user.validation_token)))
+            request.session.flash('''Your registration has been successful. A confirmation e-mail has been sent to
+ the e-mail address you specified.''', queue='info')
             raise HTTPSeeOther(request.route_url('root'))
         except formencode.Invalid as e:
             e.params = request.params
@@ -238,7 +243,7 @@ def confirm(request):
     u"""Handles the "/users/{uid}/confirm/{token}" URL, validating that the
     user with the given ``{uid}`` received the ``{token}`` at the given e-mail
     address.
-    
+
     If confirmed, will send an e-mail with a new, random password.
     """
     dbsession = DBSession()
@@ -256,8 +261,9 @@ def confirm(request):
                                       default='no-reply@example.com'),
                    'Log in to the Web Teaching Environment',
                    '''Hello %s,
-                       
-Thank you for confirming your registration with the Web Teaching Environment. You can now log in using the following credentials:
+
+Thank you for confirming your registration with the Web Teaching Environment.
+You can now log in using the following credentials:
 
 Username: %s
 Password: %s
@@ -266,7 +272,7 @@ Best Regards,
 Web Teaching Environment''' % (user.display_name, user.email, new_password))
     else:
         user = dbsession.query(User).filter(and_(User.id == request.matchdict['uid'],
-                                                 User.validation_token == None)).first()
+                                                 User.validation_token is None)).first()
         if user:
             status = u'confirmed'
         else:
@@ -316,8 +322,9 @@ def forgotten_password(request):
                                                   default='no-reply@example.com'),
                                'Please confirm your registration',
                                '''Hello %s,
-                       
-Thank you for registering with the Web Teaching Environment. To complete your registration, please click on the following link or copy it into your browser:
+
+Thank you for registering with the Web Teaching Environment. To complete your
+registration, please click on the following link or copy it into your browser:
 
 %s
 
@@ -340,7 +347,8 @@ Web Teaching Environment''' % (user.display_name, request.route_url('user.confir
                                'Log in to the Web Teaching Environment',
                                '''Hello %s,
 
-Thank you for confirming your registration with the Web Teaching Environment. You can now log in using the following credentials:
+Thank you for confirming your registration with the Web Teaching Environment.
+You can now log in using the following credentials:
 
 Username: %s
 Password: %s

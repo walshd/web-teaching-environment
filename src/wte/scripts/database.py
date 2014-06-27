@@ -11,11 +11,11 @@ creating the initial database.
 """
 import transaction
 
-from pkg_resources import resource_stream
 from pyramid.paster import (get_appsettings, setup_logging)
 from sqlalchemy import engine_from_config
 
 from wte.models import (Base, DBSession, User, Permission, PermissionGroup)
+
 
 def init(subparsers):
     u"""Initialises the :class:`~argparse.ArgumentParser`, adding the
@@ -25,6 +25,7 @@ def init(subparsers):
     parser.add_argument('configuration', help='WTE configuration file')
     parser.add_argument('--drop-existing', action='store_true', default=False, help='Drop any existing tables')
     parser.set_defaults(func=initialise_database)
+
 
 def initialise_database(args):
     u"""Initialises the database schema and adds the default
@@ -43,7 +44,7 @@ def initialise_database(args):
     with transaction.manager:
         admin_user = User(email=u'admin@example.com', display_name=u'Admin', password=u'password')
         dbsession.add(admin_user)
-        
+
         group = PermissionGroup(title=u'User Admin')
         dbsession.add(group)
         group.permissions.append(Permission(name=u'admin.users.view', title=u'View all users'))
@@ -51,7 +52,7 @@ def initialise_database(args):
         group.permissions.append(Permission(name=u'admin.users.delete', title=u'Delete all users'))
         group.permissions.append(Permission(name=u'admin.users.permissions', title=u'Edit user permissions'))
         admin_user.permission_groups.append(group)
-        
+
         group = PermissionGroup(title=u'Content Admin')
         dbsession.add(group)
         create_module_perm = Permission(name=u'modules.create', title=u'Create a new module')

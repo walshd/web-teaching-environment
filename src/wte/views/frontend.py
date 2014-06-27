@@ -32,7 +32,7 @@ from wte.views.part import create_part_crumbs
 def init(config):
     u"""Adds the frontend-specific backend routes (route name, URL pattern
     handler):
-    
+
     * ``modules`` -- ``/modules`` -- :func:`~wte.views.frontend.modules`
     * ``module.view`` -- ``/modules/{mid}`` --
       :func:`~wte.views.frontend.view_module`
@@ -70,8 +70,8 @@ def modules(request):
     :class:`~wte.models.Module`.
     """
     dbsession = DBSession()
-    modules = dbsession.query(Part).filter(and_(Part.type==u'module',
-                                                Part.status==u'available')).all()
+    modules = dbsession.query(Part).filter(and_(Part.type == u'module',
+                                                Part.status == u'available')).all()
     return {'modules': modules,
             'crumbs': [{'title': 'Modules', 'url': request.route_url('modules'), 'current': True}]}
 
@@ -82,16 +82,17 @@ def modules(request):
 def user_modules(request):
     u"""Handles the ``/users/{uid}/modules`` URL, displaying all the
     :class:`~wte.models.Module` of the :class:`~wte.models.User`.
-    
+
     Requires that the current user has "view" rights for the
     :class:`~wte.models.User`.
     """
     dbsession = DBSession()
-    user = dbsession.query(User).filter(User.id==request.matchdict['uid']).first()
+    user = dbsession.query(User).filter(User.id == request.matchdict['uid']).first()
     if user:
         if user.allow('view', request.current_user):
-            modules = dbsession.query(Part).join(UserPartRole).filter(and_(Part.type == u'module',
-                                                                           UserPartRole.user_id == request.matchdict[u'uid']))
+            modules = dbsession.query(Part).join(UserPartRole).\
+                filter(and_(Part.type == u'module',
+                            UserPartRole.user_id == request.matchdict[u'uid']))
             return {'user': user,
                     'modules': modules,
                     'crumbs': [{'title': user.display_name, 'url': request.route_url('user.view', uid=user.id)},
@@ -108,7 +109,7 @@ def get_user_part_progress(dbsession, user, part):
     the :class:`~wte.models.UserPartProgress` points to a current page that
     is different to ``page``, then the :class:`~wte.models.UserPartProgress`
     is updated.
-    
+
     :param user: The user to get the progress for
     :type user: :class:`~wte.models.User`
     :param part: The part to get the progress for
@@ -172,7 +173,7 @@ def get_user_part_progress(dbsession, user, part):
 def view_part(request):
     u"""Handles the ``/modules/{mid}/parts/{pid}`` URL, displaying the
     :class:`~wte.models.Part`.
-    
+
     Requires that the user has "view" rights on the
     :class:`~wte.models.Part`.
     """
@@ -198,14 +199,14 @@ def view_part(request):
 def view_file(request):
     u"""Handles the ``/modules/{mid}/parts/{ptid}/pages/{pid}/users/{uid}/files/name/{filename}``
     URL, sending back the correct :class:`~wte.models.File`.
-    
+
     Requires that the user has "view" rights on the
     :class:`~wte.models.Module`. It will also only send a
     :class:`~wte.models.File` belonging to the current
     :class:`~wte.models.User`.
     """
     dbsession = DBSession()
-    part = dbsession.query(Part).filter(Part.id==request.matchdict[u'pid']).first()
+    part = dbsession.query(Part).filter(Part.id == request.matchdict[u'pid']).first()
     if part:
         if part.allow('view', request.current_user):
             progress = get_user_part_progress(dbsession, request.current_user, part)
@@ -230,14 +231,14 @@ def view_file(request):
 def save_file(request):
     u"""Handles the ``/modules/{mid}/parts/{pid}/files/id/{fid}/save``
     URL, updating the :class:`~wte.models.File` content.
-    
+
     Requires that the user has "view" rights on the
     :class:`~wte.models.Module`. It will also only update a
     :class:`~wte.models.File` belonging to the current
     :class:`~wte.models.User`.
     """
     dbsession = DBSession()
-    part = dbsession.query(Part).filter(Part.id==request.matchdict[u'pid']).first()
+    part = dbsession.query(Part).filter(Part.id == request.matchdict[u'pid']).first()
     if part:
         if part.allow('view', request.current_user):
             progress = get_user_part_progress(dbsession, request.current_user, part)
@@ -264,12 +265,12 @@ def reset_files(request):
     u"""Handles the ``/modules/{mid}/parts/{pid}/reset_files`` URL, providing
     the UI and backend for resetting all :class:`~wte.models.File` of a
     :class:`~wte.models.Part`
-    
+
     Requires that the user has "edit" rights on the current
     :class:`~wte.models.Module`.
     """
     dbsession = DBSession()
-    part = dbsession.query(Part).filter(Part.id==request.matchdict['pid']).first()
+    part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
     if part:
         if part.allow('view', request.current_user):
             crumbs = create_part_crumbs(request,
@@ -299,15 +300,15 @@ def reset_files(request):
 def view_asset(request):
     u"""Handles the ``/modules/{mid}/parts/{pid}/files/assets/{filename}``
     URL, sending back the correct :class:`~wte.models.Asset`.
-    
+
     Requires that the user has "view" rights on the
     :class:`~wte.models.Module`.
     """
     dbsession = DBSession()
-    part = dbsession.query(Part).filter(Part.id==request.matchdict[u'pid']).first()
+    part = dbsession.query(Part).filter(Part.id == request.matchdict[u'pid']).first()
     if part.type == u'page':
         part = part.parent
-    asset = dbsession.query(Asset).filter(Asset.filename==request.matchdict[u'filename']).first()
+    asset = dbsession.query(Asset).filter(Asset.filename == request.matchdict[u'filename']).first()
     if part and asset and part in asset.parts:
         if part.allow('view', request.current_user):
             return Response(body=asset.data,
@@ -317,13 +318,14 @@ def view_asset(request):
     else:
         raise HTTPNotFound()
 
+
 @view_config(route_name='userpartprogress.download')
 @current_user()
 def download_part_progress(request):
     u"""Handles the ``/users/{uid}/progress/{pid}/download``
     URL, sending back the complete project associated with the
     :class:`~wte.models.UserPartProgress`.
-    
+
     Requires that the user has "view" rights on the
     :class:`~wte.models.UserPartProgress`.
     """

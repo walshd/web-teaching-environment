@@ -11,10 +11,11 @@ application ``WTE``, via the :func:`~wte.scripts.main.main` function.
 """
 from argparse import ArgumentParser
 
+
 def get_user_parameter(prompt, default=''):
     u"""The :func:`~wte.scripts.main.get_user_parameter` function provides a
     generic helper function that prompts the user for a value.
-    
+
     :param prompt: The prompt to display to the user
     :type prompt: `unicode`
     :param default: The default value to return if the user does not provide
@@ -33,6 +34,7 @@ def get_user_parameter(prompt, default=''):
     else:
         return response
 
+
 def main():
     u"""The :func:`~wte.scripts.main.main` function handles the creation of
     the :class:`~argparse.ArgumentParser` that processes the administrative
@@ -45,10 +47,10 @@ def main():
 
     parser = ArgumentParser(description='WTE administration application')
     subparsers = parser.add_subparsers()
-    
+
     configuration.init(subparsers)
     database.init(subparsers)
-    
+
     args = parser.parse_args()
 
     args.func(args)

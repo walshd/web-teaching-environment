@@ -14,17 +14,16 @@ initialises the routes that are handled by that module.
 """
 from pyramid.view import view_config
 from pywebtools.renderer import render
-from pywebtools.auth import is_authorised
-from sqlalchemy import and_
 
 from wte.decorators import current_user
 from . import (user, frontend, part, asset)
 
+
 def init(config, settings):
     u"""Adds the following routes (route name, URL pattern, handler):
-    
+
     * ``root`` -- ``/`` -- :func:`~wte.views.root`
-    
+
     Then calls the ``init`` function on all modules within :mod:`~wte.views`
     """
     config.add_route('root', '/')
@@ -33,6 +32,7 @@ def init(config, settings):
     part.init(config)
     asset.init(config)
     frontend.init(config)
+
 
 @view_config(route_name='root')
 @render({'text/html': 'root.html'})

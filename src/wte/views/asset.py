@@ -29,7 +29,7 @@ from wte.util import (unauthorised_redirect)
 def init(config):
     u"""Adds the asset-specific backend routes (route name, URL pattern
     handler):
-    
+
     * ``asset.new`` -- ``/modules/{mid}/parts/{pid}/assets/new`` --
       :func:`~wte.views.asset.new`
     * ``asset.edit`` -- ``/modules/{mid}/parts/{pid}/assets/{aid}/edit`` --
@@ -58,12 +58,12 @@ class NewAssetSchema(formencode.Schema):
 def new(request):
     u"""Handles the ``/modules/{mid}/parts/{pid}/assets/new`` URL, providing the UI and
     backend for creating a new :class:`~wte.models.Part`.
-    
+
     Requires that the user has "edit" rights on the current
     :class:`~wte.models.Module`.
     """
     dbsession = DBSession()
-    part = dbsession.query(Part).filter(Part.id==request.matchdict[u'pid']).first()
+    part = dbsession.query(Part).filter(Part.id == request.matchdict[u'pid']).first()
     if part:
         if part.allow('edit', request.current_user):
             crumbs = create_part_crumbs(request,
@@ -96,7 +96,8 @@ def new(request):
                         elif request.matchdict['new_type'] == 'asset':
                             part.assets.append(new_asset)
                     dbsession.add(part)
-                    request.session.flash('Your new %s has been created' % (request.matchdict['new_type']), queue='info')
+                    request.session.flash('Your new %s has been created' % (request.matchdict['new_type']),
+                                          queue='info')
                     raise HTTPSeeOther(request.route_url('part.view', pid=part.id))
                 except formencode.Invalid as e:
                     e.params = request.params
@@ -125,7 +126,7 @@ class EditAssetSchema(formencode.Schema):
     u"""The asset's file content"""
     content = formencode.validators.UnicodeString(if_missing=None)
     u"""The asset's content"""
-    
+
 
 @view_config(route_name='asset.edit')
 @render({'text/html': 'asset/edit.html'})
@@ -133,13 +134,13 @@ class EditAssetSchema(formencode.Schema):
 def edit(request):
     u"""Handles the ``/modules/{mid}/parts/{pid}/assets/new`` URL, providing
     the UI and backend for creating a new :class:`~wte.models.Asset`.
-    
+
     Requires that the user has "edit" rights on the current
     :class:`~wte.models.Module`.
     """
     dbsession = DBSession()
-    part = dbsession.query(Part).filter(Part.id==request.matchdict[u'pid']).first()
-    asset = dbsession.query(Asset).filter(Asset.id==request.matchdict[u'aid']).first()
+    part = dbsession.query(Part).filter(Part.id == request.matchdict[u'pid']).first()
+    asset = dbsession.query(Asset).filter(Asset.id == request.matchdict[u'aid']).first()
     if part and asset:
         if part.allow('edit', request.current_user):
             crumbs = create_part_crumbs(request,
@@ -192,13 +193,13 @@ def edit(request):
 def delete(request):
     u"""Handles the ``/modules/{mid}/parts/{pid}/assets/{aid}/delete`` URL,
     providing the UI and backend for creating a new :class:`~wte.models.Asset`.
-    
+
     Requires that the user has "edit" rights on the current
     :class:`~wte.models.Module`.
     """
     dbsession = DBSession()
-    part = dbsession.query(Part).filter(Part.id==request.matchdict[u'pid']).first()
-    asset = dbsession.query(Asset).filter(Asset.id==request.matchdict[u'aid']).first()
+    part = dbsession.query(Part).filter(Part.id == request.matchdict[u'pid']).first()
+    asset = dbsession.query(Asset).filter(Asset.id == request.matchdict[u'aid']).first()
     if part and asset:
         if part.allow('edit', request.current_user):
             crumbs = create_part_crumbs(request,
@@ -211,7 +212,7 @@ def delete(request):
                     asset_type = asset.type
                     with transaction.manager:
                         dbsession.add(asset)
-                        asset.parts= []
+                        asset.parts = []
                         dbsession.delete(asset)
                     dbsession.add(part)
                     request.session.flash('Your %s has been deleted' % (asset_type), queue='info')
