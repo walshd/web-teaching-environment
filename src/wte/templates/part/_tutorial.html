@@ -3,15 +3,15 @@
     <div py:if="part.has_role('owner', r.current_user)" class="menu inline"><a href="#" class=""><img src="${r.static_url('wte:static/img/menu-icon.svg')}" alt="Menu"/></a>
       <ul>
         <py:if test="part.allow('edit', r.current_user)">
-          <li py:if="part.status == 'unavailable'"><a href="${r.route_url('part.change_status', pid=part.id, _query=[('status', 'available')])}">Make Available</a></li>
-          <li py:if="part.status == 'available'"><a href="${r.route_url('part.change_status', pid=part.id, _query=[('status', 'unavailable')])}">Make Unavailable</a></li>
+          <li py:if="part.status == 'unavailable'"><a href="${r.route_url('part.change_status', pid=part.id, _query=[('status', 'available')])}" class="post-link">Make Available</a></li>
+          <li py:if="part.status == 'available'"><a href="${r.route_url('part.change_status', pid=part.id, _query=[('status', 'unavailable')])}" class="post-link">Make Unavailable</a></li>
           <li><a href="${r.route_url('part.edit', pid=part.id)}">Edit</a></li>
           <li><a href="${r.route_url('part.new', new_type='page', _query=[('parent_id', part.id)])}">Add Page</a></li>
           <li></li>
           <li><a href="${r.route_url('asset.new', pid=part.id, new_type='asset')}">Add Asset</a></li>
         </py:if>
         <li class="divider"></li>
-        <li py:if="part.allow('delete', r.current_user)"><a href="${r.route_url('part.delete', pid=part.id)}" class="alert">Delete</a></li>
+        <li py:if="part.allow('delete', r.current_user)"><a href="${r.route_url('part.delete', pid=part.id)}" class="alert post-link" data-wte-confirm="${h.frontend.confirm_delete('tutorial', part.title, True)}">Delete</a></li>
       </ul>
     </div>
     <h1>${part.title}</h1>
@@ -23,11 +23,11 @@
           <li py:if="part.allow('view', r.current_user)" py:for="child in part.children" class="panel clearfix status-${child.status}">
             <div class="menu inline"><a href="#" class=""><img src="${r.static_url('wte:static/img/menu-icon.svg')}" alt="Menu" class="small"/></a>
               <ul>
-                <li py:if="child.status == 'unavailable'"><a href="${r.route_url('part.change_status', pid=child.id, _query=[('status', 'available')])}">Make Available</a></li>
-                <li py:if="child.status == 'available'"><a href="${r.route_url('part.change_status', pid=child.id, _query=[('status', 'unavailable')])}">Make Unavailable</a></li>
+                <li py:if="child.status == 'unavailable'"><a href="${r.route_url('part.change_status', pid=child.id, _query=[('status', 'available')])}" class="post-link">Make Available</a></li>
+                <li py:if="child.status == 'available'"><a href="${r.route_url('part.change_status', pid=child.id, _query=[('status', 'unavailable')])}" class="post-link">Make Unavailable</a></li>
                 <li><a py:if="child.allow('edit', r.current_user)" href="${r.route_url('part.edit', pid=child.id)}">Edit</a></li>
                 <li class="divider"></li>
-                <li><a py:if="child.allow('delete', r.current_user)" href="${r.route_url('part.delete', pid=child.id)}" class="alert">Delete</a></li>
+                <li><a py:if="child.allow('delete', r.current_user)" href="${r.route_url('part.delete', pid=child.id)}" class="alert post-link" data-wte-confirm="${h.frontend.confirm_delete('page', child.title)}">Delete</a></li>
               </ul>
             </div>
             <h3><a href="${r.route_url('part.view', pid=child.id)}">${child.title}</a></h3>
@@ -42,7 +42,7 @@
               <ul>
                 <li><a href="${r.route_url('asset.edit', pid=part.id, aid=template.id)}">Edit</a></li>
                 <li class="divider"></li>
-                <li><a href="${r.route_url('asset.delete', pid=part.id, aid=template.id)}" class="alert">Delete</a></li>
+                <li><a href="${r.route_url('asset.delete', pid=part.id, aid=template.id)}" class="alert post-link" data-wte-confirm="${h.frontend.confirm_delete('template', template.filename)}">Delete</a></li>
               </ul>
             </div>
             <h3>${template.filename} (${template.mimetype})</h3>
@@ -57,7 +57,7 @@
               <ul>
                 <li><a href="${r.route_url('asset.edit', pid=part.id, aid=asset.id)}">Edit</a></li>
                 <li class="divider"></li>
-                <li><a href="${r.route_url('asset.delete', pid=part.id, aid=asset.id)}" class="alert">Delete</a></li>
+                <li><a href="${r.route_url('asset.delete', pid=part.id, aid=asset.id)}" class="alert post-link" data-wte-confirm="${h.frontend.confirm_delete('asset', asset.filename)}">Delete</a></li>
               </ul>
             </div>
             <h3><a href="${r.route_url('asset.view', mid=-1, pid=part.id, filename=asset.filename)}">${asset.filename} (${asset.mimetype})</a></h3>

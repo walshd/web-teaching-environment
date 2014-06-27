@@ -24,6 +24,9 @@
     <div id="busy"><img src="${r.static_url('wte:static/img/spinner.gif')}" alt="The application is currently busy working on something for you."/></div>
     <script src="${r.static_url('wte:static/js/foundation/vendor/fastclick.js')}"></script>
     <script src="${r.static_url('wte:static/js/foundation/foundation.min.js')}"></script>
-    <script>$(document).foundation();</script>
+    <script>
+    $(document).foundation();
+    $('.post-link').postLink();
+    </script>
   </body>
 </html>

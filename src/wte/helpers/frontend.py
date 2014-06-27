@@ -9,6 +9,7 @@ render the frontend page displays.
 
 .. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
+import json
 
 from genshi.builder import tag, Markup
 
@@ -103,3 +104,28 @@ def primary_filename(progress):
         return files[0].filename
     else:
         return ''
+
+
+def confirm_delete(obj_type, title, has_parts=False):
+    u"""Generates the confirmation JSON object for use with the jQuery.postLink() plugin.
+
+    :param obj_type: The type of object that is being deleted
+    :type obj_type: ``unicode``
+    :param title: The title of the object that is being delete
+    :type title: ``unicode``
+    :param has_parts: Whether to add the suffix " and all its parts"
+    :type has_parts: ``bool``
+    :return: JSON object
+    :rtype: ``unicode``
+    """
+    msg = 'Please confirm that you wish to delete the %s "%s"' % (obj_type, title)
+    if has_parts:
+        msg = '%s and all its parts.' % (msg)
+    else:
+        msg = '%s.' % (msg)
+    options = {'title': 'Delete this %s' % (obj_type),
+               'msg': msg,
+               'cancel': {'label': "Don't delete"},
+               'ok': {'label': 'Delete',
+                      'class_': 'alert'}}
+    return json.dumps(options)

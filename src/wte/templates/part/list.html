@@ -14,12 +14,12 @@
             <div py:if="part.allow('edit', r.current_user) or part.allow('delete', r.current_user)" class="menu inline"><a href="#" class=""><img src="${r.static_url('wte:static/img/menu-icon.svg')}" alt="Menu" class="small"/></a>
               <ul>
                 <py:if test="part.allow('edit', r.current_user)">
-                  <li py:if="part.status == 'unavailable'"><a href="${r.route_url('part.change_status', pid=part.id, _query=[('status', 'available')])}">Make Available</a></li>
-                  <li py:if="part.status == 'available'"><a href="${r.route_url('part.change_status', pid=part.id, _query=[('status', 'unavailable')])}">Make Unavailable</a></li>
+                  <li py:if="part.status == 'unavailable'"><a href="${r.route_url('part.change_status', pid=part.id, _query=[('status', 'available')])}" class="post-link">Make Available</a></li>
+                  <li py:if="part.status == 'available'"><a href="${r.route_url('part.change_status', pid=part.id, _query=[('status', 'unavailable')])}" class="post-link">Make Unavailable</a></li>
                   <li><a href="${r.route_url('part.edit', pid=part.id)}">Edit</a></li>
                 </py:if>
                 <li class="divider"></li>
-                <li py:if="part.allow('delete', r.current_user)"><a href="${r.route_url('part.delete', pid=part.id)}" class="alert">Delete</a></li>
+                <li py:if="part.allow('delete', r.current_user)"><a href="${r.route_url('part.delete', pid=part.id)}" class="alert post-link" data-wte-confirm="${h.frontend.confirm_delete('module', part.title, True)}">Delete</a></li>
               </ul>
             </div>
             <h3><a href="${r.route_url('part.view', pid=part.id)}">${part.title}</a></h3>
