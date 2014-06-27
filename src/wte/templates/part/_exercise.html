@@ -1,27 +1,34 @@
 <article class="row left" xmlns:py="http://genshi.edgewall.org/">
   <section class="small-12 column">
+    <div py:if="part.has_role('owner', r.current_user)" class="menu inline"><a href="#" class=""><img src="${r.static_url('wte:static/img/menu-icon.svg')}" alt="Menu"/></a>
+      <ul>
+        <py:if test="part.allow('edit', r.current_user)">
+          <li><a href="${r.route_url('part.edit', pid=part.id)}">Edit</a></li>
+          <li><a href="${r.route_url('part.new', new_type='task', _query=[('parent_id', part.id)])}">Add Task</a></li>
+        </py:if>
+        <li class="divider"></li>
+        <li py:if="part.allow('delete', r.current_user)"><a href="${r.route_url('part.delete', pid=part.id)}" class="alert">Delete</a></li>
+      </ul>
+    </div>
     <h1>${part.title}</h1>
     ${h.Markup(part.compiled_content)}
     <section py:if="part.children">
       <h2>Tasks</h2>
       <ul class="no-symbol">
         <li py:if="child.allow('view', r.current_user)" py:for="child in part.children" class="panel clearfix status-${child.status}">
-          <span class="right">
-            <a py:if="child.allow('edit', r.current_user)" href="${r.route_url('part.edit', pid=child.id)}" class="button tiny">Edit</a>
-            <a py:if="child.allow('delete', r.current_user)" href="${r.route_url('part.delete', pid=child.id)}" class="button tiny alert">Delete</a>
-          </span>
+          <div py:if="child.allow('edit', r.current_user) or child.allow('delete', r.current_user)" class="menu inline"><a href="#" class=""><img src="${r.static_url('wte:static/img/menu-icon.svg')}" alt="Menu" class="small"/></a>
+            <ul>
+              <li><a py:if="child.allow('edit', r.current_user)" href="${r.route_url('part.edit', pid=child.id)}">Edit</a></li>
+              <li class="divider"></li>
+              <li><a py:if="child.allow('delete', r.current_user)" href="${r.route_url('part.delete', pid=child.id)}" class="alert">Delete</a></li>
+            </ul>
+          </div>
           <h3><a href="${r.route_url('part.view', pid=child.id)}">${child.title}</a></h3>
         </li>
       </ul>
     </section>
-    <div>
-      <py:if test="part.allow('edit', r.current_user)">
-        <a href="${r.route_url('part.edit', pid=part.id)}" class="button small">Edit</a>
-        <a href="${r.route_url('part.new', new_type='task',_query=[('parent_id', part.id)])}" class="button small">Add Task</a>
-      </py:if>
-      <py:if test="part.allow('delete', r.current_user)">
-        <a href="${r.route_url('part.delete', pid=part.id)}" class="button small alert">Delete</a>
-      </py:if>
-    </div>
   </section>
+  <script>
+  $('.menu').dropdownMenu();
+  </script>
 </article>

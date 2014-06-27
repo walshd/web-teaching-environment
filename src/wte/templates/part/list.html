@@ -11,12 +11,14 @@
         <ul class="no-symbol">
           <li py:if="not modules" class="panel callout">There are currently no modules available.</li>
           <li py:for="part in modules" class="panel clearfix">
-            <span class="right">
-              <a py:if="part.allow('edit', r.current_user)" href="${r.route_url('part.edit', pid=part.id)}" class="button tiny">Edit</a>
-              <a py:if="part.allow('delete', r.current_user)" href="${r.route_url('part.delete', pid=part.id)}" class="button tiny alert">Delete</a>
-            </span>
-            <h3 py:if="part.allow('view', r.current_user)"><a href="${r.route_url('part.view', pid=part.id)}">${part.title}</a></h3>
-            <h3 py:if="not part.allow('view', r.current_user)"><a href="${r.route_url('module.register', mid=module.id)}">${part.title}</a></h3>
+            <div py:if="part.allow('edit', r.current_user) or part.allow('delete', r.current_user)" class="menu inline"><a href="#" class=""><img src="${r.static_url('wte:static/img/menu-icon.svg')}" alt="Menu" class="small"/></a>
+              <ul>
+                <li><a py:if="part.allow('edit', r.current_user)" href="${r.route_url('part.edit', pid=part.id)}">Edit</a></li>
+                <li class="divider"></li>
+                <li><a py:if="part.allow('delete', r.current_user)" href="${r.route_url('part.delete', pid=part.id)}" class="alert">Delete</a></li>
+              </ul>
+            </div>
+            <h3><a href="${r.route_url('part.view', pid=part.id)}">${part.title}</a></h3>
           </li>
         </ul>
         <div>
@@ -24,5 +26,8 @@
         </div>
       </article>
     </div>
+    <script>
+    $('.menu').dropdownMenu();
+    </script>
   </body>
 </html>

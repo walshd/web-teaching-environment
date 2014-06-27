@@ -1,17 +1,18 @@
 <article class="rows" xmlns:py="http://genshi.edgewall.org/">
   <section id="textbook" class="small-12 medium-6 large-4 column">
+    <div py:if="part.has_role('owner', r.current_user)" class="menu inline" data-wte-menu-position="right"><a href="#" class=""><img src="${r.static_url('wte:static/img/menu-icon.svg')}" alt="Menu"/></a>
+      <ul>
+        <py:if test="part.allow('edit', r.current_user)">
+          <li><a href="${r.route_url('part.edit', pid=part.id)}">Edit</a></li>
+        </py:if>
+        <li class="divider"></li>
+        <li py:if="part.allow('delete', r.current_user)"><a href="${r.route_url('part.delete', pid=part.id)}" class="alert">Delete</a></li>
+      </ul>
+    </div>
     <h1>${part.title}</h1>
     ${Markup(part.compiled_content)}
     <div class="pagination-centered">
       ${h.frontend.page_pagination(r, part)}
-    </div>
-    <div>
-      <py:if test="part.allow('edit', r.current_user)">
-        <a href="${r.route_url('part.edit', pid=part.id)}" class="button small">Edit</a>
-      </py:if>
-      <py:if test="part.allow('delete', r.current_user)">
-        <a href="${r.route_url('part.delete', pid=part.id)}" class="button small alert">Delete</a>
-      </py:if>
     </div>
   </section>
   <section id="editor" class="small-12 medium-6 large-8">

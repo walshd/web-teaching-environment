@@ -22,11 +22,20 @@
 			return this.each(function() {
 				var component = $(this);
 				var menu = component.data('wte-menu');
-				menu.show().position({
-					my: 'left top',
-					at: 'left bottom',
-					of: component.data('wte-menu-button')
-				});
+				component.css('z-index', '100');
+				if(component.data('wte-menu-position') == 'right') {
+					menu.show().position({
+						my: 'right top',
+						at: 'right bottom',
+						of: component.data('wte-menu-button')
+					});
+				} else {
+					menu.show().position({
+						my: 'left top',
+						at: 'left bottom',
+						of: component.data('wte-menu-button')
+					});
+				}
 				setTimeout(function() {
 					$(document).on('click.wte-menu', function(ev) {
 						component.dropdownMenu('hide');
@@ -38,6 +47,7 @@
 			return this.each(function() {
 				var component = $(this);
 				var menu = component.data('wte-menu');
+				component.css('z-index', '');
 				menu.hide();
 				$(document).off('click.wte-menu');
 			});

@@ -81,6 +81,13 @@ img.medium {
     background: #eeeeee;
     color: #222;
 }
+.menu li a.alert {
+    background: #f04124;
+    color: #fff;
+}
+.menu li a.alert:hover {
+    background: cf2a0e;
+}
 .menu li.divider {
     border-bottom: 1px solid #ccc;
 }
