@@ -73,7 +73,6 @@ def page_pagination(request, part):
     if prev_page:
         items.append(tag.li(tag.a(Markup('&laquo; Previous page'),
                                   href=request.route_url('part.view',
-                                                         mid=prev_page.module_id,
                                                          pid=prev_page.id))))
     else:
         items.append(tag.li(Markup('&laquo; Previous page'),
@@ -81,7 +80,6 @@ def page_pagination(request, part):
     if next_page:
         items.append(tag.li(tag.a(Markup('Next page &raquo;'),
                                   href=request.route_url('part.view',
-                                                         mid=next_page.module_id,
                                                          pid=next_page.id))))
     else:
         items.append(tag.li(Markup('Previous page &raquo;'),
