@@ -66,6 +66,7 @@ def modules(request):
     modules = dbsession.query(Part).filter(and_(Part.type == u'module',
                                                 Part.status == u'available')).all()
     return {'modules': modules,
+            'title': 'Currently Available Modules',
             'crumbs': [{'title': 'Modules', 'url': request.route_url('modules'), 'current': True}]}
 
 
@@ -87,8 +88,8 @@ def user_modules(request):
             modules = dbsession.query(Part).join(UserPartRole).\
                 filter(and_(Part.type == u'module',
                             UserPartRole.user_id == request.matchdict[u'uid']))
-            return {'user': user,
-                    'modules': modules,
+            return {'modules': modules,
+                    'title': 'My Modules',
                     'crumbs': [{'title': user.display_name, 'url': request.route_url('user.view', uid=user.id)},
                                {'title': 'Modules', 'url': request.route_url('modules'), 'current': True}]}
         else:
