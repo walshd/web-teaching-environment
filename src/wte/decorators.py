@@ -40,7 +40,12 @@ def current_user():
         return f(*args, **kwargs)
     return decorator(wrapper)
 
+
 def require_logged_in():
+    u"""Checks that the current user is logged in, otherwise redirects to the login
+    page. Requires that the :func:`~wte.decorators.current_user` decorator is run
+    first.
+    """
     def wrapper(f, *args, **kwargs):
         request = request_from_args(*args)
         if request.current_user.logged_in:

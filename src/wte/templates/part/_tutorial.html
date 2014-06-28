@@ -31,6 +31,7 @@
               </ul>
             </div>
             <h3><a href="${r.route_url('part.view', pid=child.id)}">${child.title}</a></h3>
+            ${h.frontend.part_summary(child)}
           </li>
         </ul>
       </section>

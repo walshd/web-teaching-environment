@@ -10,6 +10,7 @@ render the frontend page displays.
 .. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
 import json
+import re
 
 from genshi.builder import tag, Markup
 
@@ -129,3 +130,23 @@ def confirm_delete(obj_type, title, has_parts=False):
                'ok': {'label': 'Delete',
                       'class_': 'alert'}}
     return json.dumps(options)
+
+
+def part_summary(part):
+    u"""Generates summary text for a :class:`~wte.models.Part` by extracting the first HTML element
+    from the ``compiled_content``. Due to the use of ReST, this should in most cases be the first
+    paragraph.
+
+    :param part: The :class:`~wte.models.Part` to generate the summary for
+    :type part: :class:`~wte.models.Part`
+    :return: The first HTML element
+    :rtype: :class:`~genshi.builder.Markup`
+    """
+    content = part.compiled_content
+    if content:
+        m = re.search(r'<([a-zA-Z+])>', content)
+        if m:
+            start = content.find('<%s>' % (m.group(1)))
+            end = content.find('</%s>' % (m.group(1))) + len(m.group(1)) + 3
+            return Markup(content[start:end])
+    return None

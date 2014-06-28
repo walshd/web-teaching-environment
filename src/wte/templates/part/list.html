@@ -26,6 +26,7 @@
               <a py:if="part.allow('view', r.current_user)" href="${r.route_url('part.view', pid=part.id)}">${part.title}</a>
               <span py:if="not part.allow('view', r.current_user)">${part.title}</span>
             </h3>
+            ${h.frontend.part_summary(part)}
           </li>
         </ul>
         <div>
