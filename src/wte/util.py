@@ -30,7 +30,7 @@ class State(object):
         self.__dict__.update(kwargs)
 
 
-def unauthorised_redirect(request, redirect_to=None):
+def unauthorised_redirect(request, redirect_to=None, message=None):
     """Provides standardised handling of "unauthorised" redirection. Depending
     on whether the user is currently logged in, it will set the appropriate
     error message into the session flash and redirect to the appropriate page.
@@ -42,15 +42,23 @@ def unauthorised_redirect(request, redirect_to=None):
     :param redirect_to: The URL to redirect to, if the user is currently
                         logged in.
     :type redirect_to: `unicode`
+    :param message: The message to show to the user
+    :type message: ``unicode``
     """
     if request.current_user.logged_in:
-        request.session.flash('You are not authorised to access this area.', queue='auth')
+        if message:
+            request.session.flash(message, queue='auth')
+        else:
+            request.session.flash('You are not authorised to access this area.', queue='auth')
         if redirect_to:
             raise HTTPSeeOther(redirect_to)
         else:
             raise HTTPSeeOther(request.route_url('root'))
     else:
-        request.session.flash('Please log in to access this area.', queue='auth')
+        if message:
+            request.session.flash(message, queue='auth')
+        else:
+            request.session.flash('Please log in to access this area.', queue='auth')
         raise HTTPSeeOther(request.route_url('user.login', _query={'return_to': request.current_route_url()}))
 
 

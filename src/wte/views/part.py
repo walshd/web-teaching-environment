@@ -20,7 +20,7 @@ from pywebtools.renderer import render
 from pywebtools import text
 from sqlalchemy import and_
 
-from wte.decorators import current_user
+from wte.decorators import (current_user, require_logged_in)
 from wte.models import (DBSession, Part, UserPartRole, Asset, UserPartProgress)
 from wte.text_formatter import compile_rst
 from wte.util import (unauthorised_redirect)
@@ -123,6 +123,7 @@ def get_user_part_progress(dbsession, user, part):
 @view_config(route_name='part.view')
 @render({'text/html': 'part/view.html'})
 @current_user()
+@require_logged_in()
 def view_part(request):
     u"""Handles the ``parts/{pid}`` URL, displaying the
     :class:`~wte.models.Part`.
@@ -188,6 +189,7 @@ def create_part_crumbs(request, part, current=None):
 @view_config(route_name='part.new')
 @render({'text/html': 'part/new.html'})
 @current_user()
+@require_logged_in()
 def new(request):
     u"""Handles the ``/parts/new`` URL, providing the UI and
     backend for creating a new :class:`~wte.models.Part`.
@@ -300,6 +302,7 @@ class EditPartSchema(formencode.Schema):
 @view_config(route_name='part.edit')
 @render({'text/html': 'part/edit.html'})
 @current_user()
+@require_logged_in()
 def edit(request):
     u"""Handles the ``/parts/{pid}/edit`` URL,
     providing the UI and backend for editing a :class:`~wte.models.Part`.
@@ -352,6 +355,7 @@ def edit(request):
 @view_config(route_name='part.delete')
 @render({'text/html': 'part/delete.html'})
 @current_user()
+@require_logged_in()
 def delete(request):
     u"""Handles the ``/modules/{mid}/parts/{pid}/delete`` URL, providing
     the UI and backend for deleting a :class:`~wte.models.Part`.
@@ -392,6 +396,7 @@ def delete(request):
 @view_config(route_name='part.preview')
 @render({'application/json': True})
 @current_user()
+@require_logged_in()
 def preview(request):
     u"""Handles the ``/parts/{pid}/rst_preview`` URL, generating an HTML preview of
     the submitted ReST. The ReST text to render has to be set as the ``content`` parameter.
@@ -415,6 +420,7 @@ def preview(request):
 @view_config(route_name='part.register')
 @render({'text/html': 'part/register.html'})
 @current_user()
+@require_logged_in()
 def register(request):
     u"""Handles the ``/parts/{pid}/register`` URL, to allow users to register
     for a :class:`~wte.models.Part` that is a "module".
@@ -449,6 +455,7 @@ def register(request):
 @view_config(route_name='part.deregister')
 @render({'text/html': 'part/deregister.html'})
 @current_user()
+@require_logged_in()
 def deregister(request):
     u"""Handles the ``/parts/{pid}/deregister`` URL, to allow users to de-register
     from a :class:`~wte.models.Part` that is a "module".
@@ -507,6 +514,7 @@ class ChangeStatusSchema(formencode.Schema):
 @view_config(route_name='part.change_status')
 @render({'text/html': 'part/change_status.html'})
 @current_user()
+@require_logged_in()
 def change_status(request):
     u"""Handles the ``/parts/{pid}/change_status`` URL,
     providing the UI and backend for changing the status of a :class:`~wte.models.Part`.

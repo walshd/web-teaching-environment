@@ -22,7 +22,7 @@ from sqlalchemy import and_
 from StringIO import StringIO
 from zipfile import ZipFile
 
-from wte.decorators import current_user
+from wte.decorators import (current_user, require_logged_in)
 from wte.models import (DBSession, Part, User, UserPartProgress,
                         Asset, UserPartRole)
 from wte.util import (unauthorised_redirect)
@@ -72,6 +72,7 @@ def modules(request):
 @view_config(route_name='user.modules')
 @render({'text/html': 'part/list.html'})
 @current_user()
+@require_logged_in()
 def user_modules(request):
     u"""Handles the ``/users/{uid}/modules`` URL, displaying all the
     modules that the  :class:`~wte.models.User` as created or registered for.
@@ -98,6 +99,7 @@ def user_modules(request):
 
 @view_config(route_name='file.view')
 @current_user()
+@require_logged_in()
 def view_file(request):
     u"""Handles the ``parts/{ptid}/pages/{pid}/users/{uid}/files/name/{filename}``
     URL, sending back the correct :class:`~wte.models.Asset`.
@@ -129,6 +131,7 @@ def view_file(request):
 @view_config(route_name='file.save')
 @render({'application/json': True})
 @current_user()
+@require_logged_in()
 def save_file(request):
     u"""Handles the ``/parts/{pid}/files/id/{fid}/save``
     URL, updating the :class:`~wte.models.Asset`'s content.
@@ -161,6 +164,7 @@ def save_file(request):
 @view_config(route_name='part.reset-files')
 @render({'text/html': 'part/reset_files.html'})
 @current_user()
+@require_logged_in()
 def reset_files(request):
     u"""Handles the ``/parts/{pid}/reset_files`` URL, providing
     the UI and backend for resetting all :class:`~wte.models.Assets` of a
@@ -197,6 +201,7 @@ def reset_files(request):
 
 @view_config(route_name='asset.view')
 @current_user()
+@require_logged_in()
 def view_asset(request):
     u"""Handles the ``/parts/{pid}/files/name/assets/{filename}``
     URL, sending back the correct :class:`~wte.models.Asset`.
@@ -222,6 +227,7 @@ def view_asset(request):
 
 @view_config(route_name='userpartprogress.download')
 @current_user()
+@require_logged_in()
 def download_part_progress(request):
     u"""Handles the ``/users/{uid}/progress/{pid}/download``
     URL, sending back the complete project associated with the

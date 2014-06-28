@@ -408,6 +408,8 @@ class Part(Base):
                  otherwise
         :rtype: `bool`
         """
+        if not user.logged_in:
+            return False
         if action == u'view':
             root = self.root()
             if user.has_permission('admin.modules.view'):
@@ -504,6 +506,17 @@ class UserPartProgress(Base):
                          order_by=u'Asset.order')
 
     def allow(self, action, user):
+        """Checks whether the given ``user`` is allowed to perform the given
+        ``action``. Supports the following action: view.
+
+        :param action: The action to check for
+        :type action: `unicode`
+        :param user: The user to check
+        :type user: :class:`~wte.models.User`
+        :return: ``True`` if the ``user`` may perform the action, ``False``
+                 otherwise
+        :rtype: `bool`
+        """
         if user.id == self.user_id:
             return True
         return False

@@ -13,6 +13,7 @@ from decorator import decorator
 from pywebtools.renderer import request_from_args
 
 from wte.models import (DBSession, User)
+from wte.util import unauthorised_redirect
 
 
 def current_user():
@@ -37,4 +38,14 @@ def current_user():
             request.current_user = User('anonymous@example.com', 'Anonymous')
             request.current_user.logged_in = False
         return f(*args, **kwargs)
+    return decorator(wrapper)
+
+def require_logged_in():
+    def wrapper(f, *args, **kwargs):
+        request = request_from_args(*args)
+        if request.current_user.logged_in:
+            return f(*args, **kwargs)
+        else:
+            unauthorised_redirect(request,
+                                  message=u'You must log-in or register to access this area')
     return decorator(wrapper)

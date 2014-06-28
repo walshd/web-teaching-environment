@@ -19,7 +19,7 @@ from pyramid.view import view_config
 from pywebtools.renderer import render
 from sqlalchemy import and_
 
-from wte.decorators import current_user
+from wte.decorators import (current_user, require_logged_in)
 from wte.util import (unauthorised_redirect, State, send_email, get_config_setting)
 from wte.models import (DBSession, User, Permission, PermissionGroup)
 
@@ -374,6 +374,7 @@ Web Teaching Environment''' % (user.display_name, user.email, new_password))
 @view_config(route_name='user.view')
 @render({'text/html': 'users/view.html'})
 @current_user()
+@require_logged_in()
 def view(request):
     u"""Handles the "/users/{uid}" URL, showing the user's profile.
     """
@@ -406,6 +407,7 @@ class EditSchema(formencode.Schema):
 @view_config(route_name='user.edit')
 @render({'text/html': 'users/edit.html'})
 @current_user()
+@require_logged_in()
 def edit(request):
     u"""Handles the "/users/{uid}/edit" URL, providing the form and backend
     functionality to update the user's profile.
@@ -449,6 +451,7 @@ def edit(request):
 @view_config(route_name='user.permissions')
 @render({'text/html': 'users/permissions.html'})
 @current_user()
+@require_logged_in()
 def permissions(request):
     u"""Handles the "/users/{uid}/permissions" URL, providing the form and
     backend functionality for setting the :class:`~wte.models.Permission` and
@@ -493,6 +496,7 @@ def permissions(request):
 @view_config(route_name='user.delete')
 @render({'text/html': 'users/delete.html'})
 @current_user()
+@require_logged_in()
 def delete(request):
     u"""Handles the "/users/{uid}/delete" URL, providing the form and backend
     functionality for deleting a :class:`~wte.models.User`. Also deletes all

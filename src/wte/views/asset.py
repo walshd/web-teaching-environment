@@ -21,7 +21,7 @@ from pywebtools import text
 from pywebtools.renderer import render
 from sqlalchemy import and_
 
-from wte.decorators import current_user
+from wte.decorators import (current_user, require_logged_in)
 from wte.models import (DBSession, Part, Asset)
 from wte.views.part import create_part_crumbs
 from wte.util import (unauthorised_redirect)
@@ -56,6 +56,7 @@ class NewAssetSchema(formencode.Schema):
 @view_config(route_name='asset.new')
 @render({'text/html': 'asset/new.html'})
 @current_user()
+@require_logged_in()
 def new(request):
     u"""Handles the ``/parts/{pid}/assets/new/{new_type}`` URL, providing the UI and
     backend for creating a new :class:`~wte.models.Asset`.
@@ -131,6 +132,7 @@ class EditAssetSchema(formencode.Schema):
 @view_config(route_name='asset.edit')
 @render({'text/html': 'asset/edit.html'})
 @current_user()
+@require_logged_in()
 def edit(request):
     u"""Handles the ``/parts/{pid}/assets/{aid}/edit`` URL, providing
     the UI and backend for editing :class:`~wte.models.Asset`.
@@ -191,6 +193,7 @@ def edit(request):
 @view_config(route_name='asset.delete')
 @render({'text/html': 'asset/delete.html'})
 @current_user()
+@require_logged_in()
 def delete(request):
     u"""Handles the ``/parts/{pid}/assets/{aid}/delete`` URL,
     providing the UI and backend for deleting :class:`~wte.models.Asset`.
