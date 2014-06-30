@@ -26,6 +26,7 @@
             <h3>
               <a py:if="part.allow('view', r.current_user)" href="${r.route_url('part.view', pid=part.id)}">${part.title}</a>
               <span py:if="not part.allow('view', r.current_user)">${part.title}</span>
+              <small py:if="part.status == 'unavailable'" class="label radius">Unavailable</small>
             </h3>
             ${h.frontend.part_summary(part)}
           </li>

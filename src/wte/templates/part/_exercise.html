@@ -12,7 +12,7 @@
         <li py:if="part.allow('delete', r.current_user)"><a href="${r.route_url('part.delete', pid=part.id)}" class="alert post-link" data-wte-confirm="${h.frontend.confirm_delete('exercise', part.title, True)}">Delete</a></li>
       </ul>
     </div>
-    <h1>${part.title}</h1>
+    <h1>${part.title}<small py:if="part.status == 'unavailable'" class="label radius">Unavailable</small></h1>
     ${h.Markup(part.compiled_content)}
     <section py:if="part.children">
       <h2>Tasks</h2>
@@ -27,7 +27,7 @@
               <li><a py:if="child.allow('delete', r.current_user)" href="${r.route_url('part.delete', pid=child.id)}" class="alert post-link" data-wte-confirm="${h.frontend.confirm_delete('task', child.title)}">Delete</a></li>
             </ul>
           </div>
-          <h3><a href="${r.route_url('part.view', pid=child.id)}">${child.title}</a></h3>
+          <h3><a href="${r.route_url('part.view', pid=child.id)}">${child.title}</a><small py:if="child.status == 'unavailable'" class="label radius">Unavailable</small></h3>
           ${h.frontend.part_summary(child)}
         </li>
       </ul>

@@ -5,6 +5,7 @@
 .panel .button {margin-bottom: 0;}
 table input[type=checkbox], table input[type=submit], table select {margin-bottom: 0;}
 table tfoot ul.pagination {margin:0;}
+h1 .label, h2 .label, h3 .label, h4 .label, h5 .label, h6 .label {vertical-align: top; margin-left: 1em;}
 
 /**
  * Generic styles
