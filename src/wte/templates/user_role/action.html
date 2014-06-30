@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:py="http://genshi.edgewall.org/" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xi:include href="../layout/layout.html"/>
+  <head>
+    <title>${part.title} - Update Users</title>
+  </head>
+  <body>
+    <article class="row left">
+      <div class="row.left clearfix">
+        <h1 class="small-12 medium-10 large-8 column">${part.title} - Update Users</h1>
+      </div>
+      <section class="small-12 medium-10 large-8 column">
+        <form action="${r.route_url('part.users.update', pid=part.id)}" method="post">
+          ${h.form.tags.hidden_field('action', params['action'])}
+          <py:for each="role_id in params['role_id']">${h.form.tags.hidden_field('role_id', role_id)}</py:for>
+          <section py:if="params['action'] == 'remove'">
+            <p>The following users will be removed from the module: ${', '.join([r.user.display_name for r in users])}.</p>
+          </section>
+          <section py:if="params['action'] == 'change_role'">
+            <p>The following users will be assigned a new role: ${', '.join([r.user.display_name for r in users])}.</p>
+            <div class="clearfix">
+              ${h.form.field('role', 'Role', h.form.tags.select, size='small-12', e=e, value='', options=[('owner', 'Owner'), ('tutor', 'Tutor'), ('student', 'Student')])}
+            </div>
+          </section>
+          <section py:if="params['action'] == 'block'">
+            <p>The following users will be blocked from the module: ${', '.join([r.user.display_name for r in users])}.</p>
+          </section>
+          <section class="text-right">
+            ${h.form.tags.submit('Apply Changes', class_='button small')}
+          </section>
+        </form>
+      </section>
+    </article>
+  </body>
+</html>

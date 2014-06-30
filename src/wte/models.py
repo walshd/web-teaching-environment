@@ -414,7 +414,7 @@ class Part(Base):
             root = self.root()
             if user.has_permission('admin.modules.view'):
                 return True
-            elif root.has_role('owner', user):
+            elif root.has_role(['owner', 'tutor'], user):
                 return True
             elif root.has_role('student', user):
                 if self.status == u'available':
@@ -435,6 +435,14 @@ class Part(Base):
                 return True
             elif self.parent:
                 return self.parent.allow(action, user)
+        elif action == u'users':
+            if self.type == u'module':
+                if self.has_role('owner', user):
+                    return True
+                else:
+                    return False
+            elif self.parent:
+                self.parent.allow(action, user)
         return False
 
     def has_role(self, role, user):

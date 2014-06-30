@@ -21,5 +21,6 @@ API Documentation
    wte_views_frontend
    wte_views_part
    wte_views_user
+   wte_views_user_role
    wte_util
    

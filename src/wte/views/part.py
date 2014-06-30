@@ -163,12 +163,13 @@ class NewPartSchema(formencode.Schema):
 
 
 def create_part_crumbs(request, part, current=None):
-    u"""Creates the list of breadcrumbs for a given ``part``.
+    u"""Creates the list of breadcrumbs for a given ``part``. If the ``current`` is a ``list``,
+    then all will be added to the end of the crumbs.
 
     :param part: The part to create the breadcrumbs to
     :type part: :class:`~wte.models.Part`
     :param current: The final, current breadcrumb
-    :type current: ``dict``
+    :type current: ``dict`` or ``list``
     :return: A list of `dict` for use in the breadcrumbs
     :rtype: ``list``
     """
@@ -181,7 +182,10 @@ def create_part_crumbs(request, part, current=None):
                    'url': request.route_url('modules')})
     crumbs.reverse()
     if current:
-        crumbs.append(current)
+        if isinstance(current, list):
+            crumbs.extend(current)
+        else:
+            crumbs.append(current)
     crumbs[-1]['current'] = True
     return crumbs
 
@@ -452,6 +456,20 @@ def register(request):
         raise HTTPNotFound()
 
 
+def get_all_parts(part):
+    u"""Recursively returns the :class:`~wte.models.Part` and all its children.
+
+    :param part: The :class:`~wte.models.Part` for which to find it children
+    :type part: :class:`~wte.models.Part`
+    :return: The ``part`` and all its children
+    :rtype: ``list``
+    """
+    parts = [part]
+    for child in part.children:
+        parts.extend(get_all_parts(child))
+    return parts
+
+
 @view_config(route_name='part.deregister')
 @render({'text/html': 'part/deregister.html'})
 @current_user()
@@ -460,12 +478,6 @@ def deregister(request):
     u"""Handles the ``/parts/{pid}/deregister`` URL, to allow users to de-register
     from a :class:`~wte.models.Part` that is a "module".
     """
-    def get_all_parts(part):
-        parts = [part]
-        for child in part.children:
-            parts.extend(get_all_parts(child))
-        return parts
-
     dbsession = DBSession()
     part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
     if part:

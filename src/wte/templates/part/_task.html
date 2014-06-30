@@ -1,6 +1,6 @@
 <article xmlns:py="http://genshi.edgewall.org/">
   <section id="textbook" class="small-12 medium-4 large-3 column">
-    <div py:if="part.has_role('owner', r.current_user)" class="menu inline" data-wte-menu-position="right"><a href="#" class=""><img src="${r.static_url('wte:static/img/menu-icon.svg')}" alt="Menu"/></a>
+    <div py:if="part.allow('edit', r.current_user) or part.allow('delete', r.current_user)" class="menu inline" data-wte-menu-position="right"><a href="#" class=""><img src="${r.static_url('wte:static/img/menu-icon.svg')}" alt="Menu"/></a>
       <ul>
         <py:if test="part.allow('edit', r.current_user)">
           <li py:if="part.status == 'unavailable'"><a href="${r.route_url('part.change_status', pid=part.id, _query=[('status', 'available')])}" class="post-link">Make Available</a></li>
