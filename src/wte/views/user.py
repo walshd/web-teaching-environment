@@ -423,7 +423,7 @@ def edit(request):
                     with transaction.manager:
                         dbsession.add(user)
                         user.email = params['email']
-                        user.name = params['name']
+                        user.display_name = params['name']
                         if params['password']:
                             user.new_password(params['password'])
                     request.session.flash('Profile updated', queue='info')
