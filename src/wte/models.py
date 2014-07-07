@@ -108,7 +108,7 @@ class User(Base):
 
     permissions = relationship('Permission', backref='users', secondary='users_permissions')
     permission_groups = relationship('PermissionGroup', backref='users', secondary='users_permission_groups')
-    parts = relationship('UserPartProgress', cascade=u'all,delete')
+    parts = relationship('UserPartProgress', cascade=u'all')
 
     def __init__(self, email, display_name, password=None):
         u"""Constructs a new :class:`~wte.models.User` with the given email
@@ -369,19 +369,23 @@ class Part(Base):
                             cascade=u'all,delete',
                             order_by=u'Part.order')
     templates = relationship(u'Asset',
-                             cascade=u'all,delete',
                              secondary=u'parts_assets',
                              secondaryjoin=u"and_(Asset.id==parts_assets.c.asset_id, Asset.type=='template')",
-                             order_by=u'Asset.order')
+                             order_by=u'Asset.order',
+                             viewonly=True)
     assets = relationship(u'Asset',
-                          cascade=u'all,delete',
                           secondary=u'parts_assets',
                           secondaryjoin=u"and_(Asset.id==parts_assets.c.asset_id, Asset.type=='asset')",
-                          order_by=u'Asset.order')
+                          order_by=u'Asset.order',
+                          viewonly=True)
+    all_assets = relationship(u'Asset',
+                              cascade=u'all',
+                              secondary=u'parts_assets',
+                              backref=u'parts')
     users = relationship(u'UserPartRole',
-                         cascade=u'all,delete')
+                         cascade=u'all')
     progress = relationship(u'UserPartProgress',
-                            cascade=u'all,delete',
+                            cascade=u'all',
                             primaryjoin=u'Part.id==UserPartProgress.part_id')
 
     def root(self):
@@ -509,7 +513,7 @@ class UserPartProgress(Base):
     part = relationship(u'Part', foreign_keys=[part_id])
     current = relationship(u'Part', foreign_keys=[current_id])
     files = relationship(u'Asset',
-                         cascade="all,delete",
+                         cascade="all",
                          secondary=u'progress_assets',
                          order_by=u'Asset.order')
 
@@ -557,9 +561,6 @@ class Asset(Base):
     mimetype = Column(Unicode(255))
     order = Column(Integer)
     data = Column(LargeBinary)
-
-    parts = relationship('Part',
-                         secondary='parts_assets')
 
 Index(u'assets_filename_ix', Asset.filename)
 Index(u'assets_type_ix', Asset.type)

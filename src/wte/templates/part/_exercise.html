@@ -6,7 +6,10 @@
           <li py:if="part.status == 'unavailable'"><a href="${r.route_url('part.change_status', pid=part.id, _query=[('status', 'available')])}" class="post-link">Make Available</a></li>
           <li py:if="part.status == 'available'"><a href="${r.route_url('part.change_status', pid=part.id, _query=[('status', 'unavailable')])}" class="post-link">Make Unavailable</a></li>
           <li><a href="${r.route_url('part.edit', pid=part.id)}">Edit</a></li>
+          <li class="divider"></li>
           <li><a href="${r.route_url('part.new', new_type='task', _query=[('parent_id', part.id)])}">Add Task</a></li>
+          <li><a href="${r.route_url('part.export', pid=part.id)}" class="post-link">Export</a></li>
+          <li><a href="${r.route_url('part.import', _query=[('parent_id', part.id)])}">Import</a></li>
         </py:if>
         <li class="divider"></li>
         <li py:if="part.allow('delete', r.current_user)"><a href="${r.route_url('part.delete', pid=part.id)}" class="alert post-link" data-wte-confirm="${h.frontend.confirm_delete('exercise', part.title, True)}">Delete</a></li>
@@ -20,9 +23,13 @@
         <li py:if="child.allow('view', r.current_user)" py:for="child in part.children" class="panel clearfix status-${child.status}">
           <div py:if="child.allow('edit', r.current_user) or child.allow('delete', r.current_user)" class="menu inline"><a href="#" class=""><img src="${r.static_url('wte:static/img/menu-icon.svg')}" alt="Menu" class="small"/></a>
             <ul>
-              <li py:if="child.status == 'unavailable'"><a href="${r.route_url('part.change_status', pid=child.id, _query=[('status', 'available')])}" class="post-link">Make Available</a></li>
-              <li py:if="child.status == 'available'"><a href="${r.route_url('part.change_status', pid=child.id, _query=[('status', 'unavailable')])}" class="post-link">Make Unavailable</a></li>
-              <li><a py:if="child.allow('edit', r.current_user)" href="${r.route_url('part.edit', pid=child.id)}">Edit</a></li>
+              <py:if test="child.allow('edit', r.current_user)"> 
+                <li py:if="child.status == 'unavailable'"><a href="${r.route_url('part.change_status', pid=child.id, _query=[('status', 'available')])}" class="post-link">Make Available</a></li>
+                <li py:if="child.status == 'available'"><a href="${r.route_url('part.change_status', pid=child.id, _query=[('status', 'unavailable')])}" class="post-link">Make Unavailable</a></li>
+                <li><a href="${r.route_url('part.edit', pid=child.id)}">Edit</a></li>
+                <li class="divider"></li>
+                <li><a href="${r.route_url('part.export', pid=child.id)}">Export</a></li>
+              </py:if>
               <li class="divider"></li>
               <li><a py:if="child.allow('delete', r.current_user)" href="${r.route_url('part.delete', pid=child.id)}" class="alert post-link" data-wte-confirm="${h.frontend.confirm_delete('task', child.title)}">Delete</a></li>
             </ul>

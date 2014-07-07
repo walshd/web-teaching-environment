@@ -17,6 +17,12 @@
                   <li py:if="part.status == 'unavailable'"><a href="${r.route_url('part.change_status', pid=part.id, _query=[('status', 'available')])}" class="post-link">Make Available</a></li>
                   <li py:if="part.status == 'available'"><a href="${r.route_url('part.change_status', pid=part.id, _query=[('status', 'unavailable')])}" class="post-link">Make Unavailable</a></li>
                   <li><a href="${r.route_url('part.edit', pid=part.id)}">Edit</a></li>
+                  <li class="divider"></li>
+                  <li><a href="${r.route_url('part.new', new_type='tutorial', _query=[('parent_id', part.id)])}">Add Tutorial</a></li>
+                  <li><a href="${r.route_url('part.new', new_type='exercise', _query=[('parent_id', part.id)])}">Add Exercise</a></li>
+                  <li><a href="${r.route_url('part.export', pid=part.id)}" class="post-link">Export</a></li>
+                  <li><a href="${r.route_url('part.import', _query=[('parent_id', part.id)])}">Import</a></li>
+                  <li class="divider"></li>
                   <li><a href="${r.route_url('part.users', pid=part.id)}">Users</a></li>
                 </py:if>
                 <li class="divider"></li>
@@ -32,6 +38,7 @@
           </li>
         </ul>
         <div>
+          <a py:if="r.current_user.has_permission('modules.create')" href="${r.route_url('part.import')}" class="button small">Import Module</a>
           <a py:if="r.current_user.has_permission('modules.create')" href="${r.route_url('part.new', new_type='module')}" class="button small">New Module</a>
         </div>
       </article>

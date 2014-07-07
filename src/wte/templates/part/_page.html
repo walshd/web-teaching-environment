@@ -6,6 +6,8 @@
           <li py:if="part.status == 'unavailable'"><a href="${r.route_url('part.change_status', pid=part.id, _query=[('status', 'available')])}" class="post-link">Make Available</a></li>
           <li py:if="part.status == 'available'"><a href="${r.route_url('part.change_status', pid=part.id, _query=[('status', 'unavailable')])}" class="post-link">Make Unavailable</a></li>
           <li><a href="${r.route_url('part.edit', pid=part.id)}">Edit</a></li>
+          <li class="divider"></li>
+          <li><a href="${r.route_url('part.export', pid=part.id)}" class="post-link">Export</a></li>
         </py:if>
         <li class="divider"></li>
         <li py:if="part.allow('delete', r.current_user)"><a href="${r.route_url('part.delete', pid=part.id)}" class="alert post-link" data-wte-confirm="${h.frontend.confirm_delete('page', part.title)}">Delete</a></li>

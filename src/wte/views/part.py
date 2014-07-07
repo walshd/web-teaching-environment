@@ -11,19 +11,26 @@ Routes are defined in :func:`~wte.views.part.init`.
 
 .. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
-import transaction
 import formencode
+import json
+import transaction
 
 from pyramid.httpexceptions import (HTTPSeeOther, HTTPNotFound, HTTPForbidden)
+from pyramid.response import Response
 from pyramid.view import view_config
 from pywebtools.renderer import render
 from pywebtools import text
 from sqlalchemy import and_
+try:
+    from cStringIO import StringIO
+except:
+    from StringIO import StringIO
+from zipfile import ZipFile, ZIP_DEFLATED, ZIP_STORED, BadZipfile
 
 from wte.decorators import (current_user, require_logged_in)
 from wte.models import (DBSession, Part, UserPartRole, Asset, UserPartProgress)
 from wte.text_formatter import compile_rst
-from wte.util import (unauthorised_redirect)
+from wte.util import (unauthorised_redirect, State)
 
 
 def init(config):
@@ -46,6 +53,7 @@ def init(config):
       -- :func:`~wte.views.part.deregister`
     """
     config.add_route('part.new', '/parts/new/{new_type}')
+    config.add_route('part.import', '/parts/import')
     config.add_route('part.view', '/parts/{pid}')
     config.add_route('part.edit', '/parts/{pid}/edit')
     config.add_route('part.delete', '/parts/{pid}/delete')
@@ -53,6 +61,7 @@ def init(config):
     config.add_route('part.register', '/parts/{pid}/register')
     config.add_route('part.deregister', '/parts/{pid}/deregister')
     config.add_route('part.change_status', '/parts/{pid}/change_status')
+    config.add_route('part.export', '/parts/{pid}/export')
 
 
 def get_user_part_progress(dbsession, user, part):
@@ -380,7 +389,7 @@ def delete(request):
                 parent = part.parent
                 with transaction.manager:
                     dbsession.add(part)
-                    for progress in dbsession.query(UserPartProgress).filter(UserPartProgress.current_id==part.id):
+                    for progress in dbsession.query(UserPartProgress).filter(UserPartProgress.current_id == part.id):
                         progress.current_id = None
                     dbsession.delete(part)
                 request.session.flash('The %s has been deleted' % (part_type), queue='info')
@@ -561,3 +570,244 @@ def change_status(request):
             unauthorised_redirect(request)
     else:
         raise HTTPNotFound()
+
+
+@view_config(route_name='part.export')
+@current_user()
+@require_logged_in()
+def export(request):
+    u"""Handles the ``/parts/{pid}/export`` URL, providing the UI and backend
+    for exporting a :class:`~wte.models.Part`.
+
+    Requires that the user has "edit" rights on the :class:`~wte.models.Part`.
+    """
+    def part_as_dict(part, assets):
+        data = {'type': part.type,
+                'title': part.title,
+                'status': part.status,
+                'order': part.order,
+                'content': part.content}
+        if part.children:
+            data['children'] = [part_as_dict(child, assets) for child in part.children]
+        if part.all_assets:
+            data['assets'] = []
+            for asset in part.all_assets:
+                data['assets'].append({'id': len(assets),
+                                       'filename': asset.filename,
+                                       'mimetype': asset.mimetype,
+                                       'type': asset.type,
+                                       'order': asset.order})
+                assets.append((len(assets), asset.id))
+        return data
+    dbsession = DBSession()
+    part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
+    if part:
+        if part.allow('edit', request.current_user):
+            crumbs = create_part_crumbs(request,
+                                        part,
+                                        {'title': 'Export',
+                                         'url': request.current_route_url()})
+            if request.method == u'POST':
+                body = StringIO()
+                body_zip = ZipFile(body, 'w')
+                assets = []
+                data = part_as_dict(part, assets)
+                body_zip.writestr('content.json', json.dumps(data), ZIP_DEFLATED)
+                for export_id, asset_id in assets:
+                    asset = dbsession.query(Asset).filter(Asset.id == asset_id).first()
+                    if asset:
+                        if asset.mimetype.startswith('text'):
+                            body_zip.writestr('assets/%s' % (export_id), asset.data, ZIP_DEFLATED)
+                        else:
+                            body_zip.writestr('assets/%s' % (export_id), asset.data, ZIP_STORED)
+                body_zip.close()
+                return Response(body=str(body.getvalue()),
+                                headers=[('Content-Type', 'application/zip'),
+                                         ('Content-Disposition', str('attachment; filename="%s.zip"' % (part.title)))])
+
+            @render({'text/html': 'part/export.html'})
+            def render_form(request):
+                return {'part': part,
+                        'crumbs': crumbs}
+            return render_form(request)
+        else:
+            unauthorised_redirect(request)
+    else:
+        raise HTTPNotFound()
+
+
+class ImportPartConverter(formencode.FancyValidator):
+    u"""The :class:`~wte.views.part.ImportPartConverter` converts a :class:`~cgi.FieldStorage`
+    into a (``dict``, :class:`~zipfile.ZipFile`) ``tuple``. Checks that the uploaded
+    zip file is actually a valid file and that it can be imported with the given parent
+    :class:`~wte.models.Part`. The ``dict`` contains the :class:`~wte.models.Part` data to
+    import.
+    """
+    messages = {'notzip': 'Only ZIP files can be imported',
+                'invalidstructure': 'The ZIP file does not have the correct internal structure',
+                'nopart': 'The ZIP file does not contain any data to import',
+                'invalidpart': 'You cannot import a %(part_type)s here'}
+
+    def _convert_to_python(self, value, state):
+        u"""Convert the submitted ``value`` into a (``dict``, :class:`~zipfile.ZipFile`)
+        ``tuple``. Checks that the uploaded file is a valid ZIP file and contains the
+        "content.json" file.
+
+        :param value: The uploaded file
+        :type value: `~cgi.FieldStorage`
+        :param state: The state object
+        :return: The converted part import data
+        :rtype: (``dict``, :class:`~zipfile.ZipFile`) ``tuple``
+        """
+        try:
+            zip_file = ZipFile(value.file)
+            zip_file.getinfo('content.json')
+            data = json.load(zip_file.open('content.json'))
+            return (data, zip_file)
+        except BadZipfile:
+            raise formencode.api.Invalid(self.message('notzip', state), value, state)
+        except KeyError:
+            zip_file.close()
+            raise formencode.api.Invalid(self.message('invalidstructure', state), value, state)
+        except ValueError:
+            zip_file.close()
+            raise formencode.api.Invalid(self.message('nopart', state), value, state)
+
+    def _validate_python(self, value, state):
+        u"""Checks that the uploaded "content.json" file is actually valid. Checks that the
+        JSON data is catually a ``dict`` and that it has the minium fields "title" and "type".
+        Also checks if there is a ``state.parent`` object, whether the :class:`~wte.models.Part`
+        data to import can be imported into the ``state.parent`` :class:`~wte.models.Part`.
+        """
+        (data, zip_file) = value
+        if not isinstance(data, dict):
+            zip_file.close()
+            raise formencode.api.Invalid(self.message('nopart', state), value, state)
+        if 'title' not in data or 'type' not in data:
+            zip_file.close()
+            raise formencode.api.Invalid(self.message('nopart', state), value, state)
+        if not state.parent and data['type'] != 'module':
+            zip_file.close()
+            raise formencode.api.Invalid(self.message('invalidpart', state, part_type=data['type']), value, state)
+        if state.parent:
+            if state.parent.type == 'module':
+                if data['type'] not in ['tutorial', 'exercise']:
+                    raise formencode.api.Invalid(self.message('invalidpart',
+                                                              state,
+                                                              part_type=data['type']),
+                                                 value,
+                                                 state)
+            elif state.parent.type == 'tutorial':
+                if data['type'] != 'page':
+                    raise formencode.api.Invalid(self.message('invalidpart', state, part_type=data['type']),
+                                                 value,
+                                                 state)
+            elif state.parent.type == 'exercise':
+                if data['type'] != 'task':
+                    raise formencode.api.Invalid(self.message('invalidpart', state, part_type=data['type']),
+                                                 value,
+                                                 state)
+            else:
+                raise formencode.api.Invalid(self.message('invalidpart', state, part_type=data['type']),
+                                             value,
+                                             state)
+
+
+class ImportPartSchema(formencode.Schema):
+    u"""The :class:`~wte.views.part.ImportPartSchema` validates the request to import
+    a :class:`~wte.models.Part` (and any children and :class:`~wte.models.Asset`).
+
+    Uses the :class:`~wte.views.part.ImportPartConverter` to actually check whether the
+    uploaded file is a valid export generated from :func:`~wte.views.part.export`.
+    """
+
+    parent_id = formencode.validators.Int(if_missing=None)
+    file = formencode.compound.Pipe(formencode.validators.FieldStorageUploadConverter(not_empty=True),
+                                    ImportPartConverter())
+
+
+@view_config(route_name='part.import')
+@render({'text/html': 'part/import.html'})
+@current_user()
+@require_logged_in()
+def import_file(request):
+    u"""Handles the ``/parts/import`` URL, providing the UI and
+    backend for importing a :class:`~wte.models.Part`.
+
+    The required permissions depend on the type of :class:`~wte.models.Part`
+    to create:
+    * `module` -- User permission "modules.create"
+    * `tutorial` -- "edit" permission on the parent :class:`~wte.models.Part`
+    * `page` -- "edit" permission on the parent :class:`~wte.models.Part`
+    * `exercise` -- "edit" permission on the parent :class:`~wte.models.Part`
+    * `task` -- "edit" permission on the parent :class:`~wte.models.Part`
+    """
+    def recursive_import(data, zip_file):
+        part = Part(type=data['type'],
+                    title=data['title'],
+                    status=u'unavailable')
+        if 'order' in data:
+            try:
+                part.order = int(data['order'])
+            except ValueError:
+                part.order = 0
+        if 'content' in data:
+            part.content = data['content']
+        if 'assets' in data:
+            for tmpl in data['assets']:
+                if 'filename' in tmpl and 'mimetype' in tmpl and 'id' in tmpl and 'type' in tmpl:
+                    try:
+                        content = zip_file.open('assets/%i' % (tmpl['id']))
+                        asset = Asset(filename=tmpl['filename'],
+                                      mimetype=tmpl['mimetype'],
+                                      data=content.read(),
+                                      type=tmpl['type'])
+                        if 'order' in tmpl:
+                            try:
+                                asset.order = int(tmpl['order'])
+                            except ValueError:
+                                asset.order = 0
+                        part.all_assets.append(asset)
+                    except:
+                        pass
+        if 'children' in data:
+            for child in data['children']:
+                child_part = recursive_import(child, zip_file)
+                part.children.append(child_part)
+                child_part.parent = part
+        return part
+
+    dbsession = DBSession()
+    parent = dbsession.query(Part).\
+        filter(Part.id == request.params[u'parent_id']).first()\
+        if u'parent_id' in request.params else None
+    if parent and not parent.allow('edit', request.current_user):
+        unauthorised_redirect(request)
+    elif not parent and not request.current_user.has_permission('modules.create'):
+        unauthorised_redirect(request)
+    crumbs = create_part_crumbs(request,
+                                parent,
+                                {'title': 'Import',
+                                 'url': request.current_route_url()})
+    if request.method == u'POST':
+        try:
+            params = ImportPartSchema().to_python(request.params, State(parent=parent))
+            with transaction.manager:
+                if parent:
+                    dbsession.add(parent)
+                part = recursive_import(params['file'][0], params['file'][1])
+                dbsession.add(part)
+                params['file'][1].close()
+                if part.type == u'module':
+                    part.users.append(UserPartRole(user=request.current_user,
+                                                   role=u'owner'))
+                if parent:
+                    parent.children.append(part)
+            dbsession.add(part)
+            request.session.flash('Your %s has been imported' % (part.type), queue='info')
+            raise HTTPSeeOther(request.route_url('part.view', pid=part.id))
+        except formencode.Invalid as e:
+            e.params = request.params
+            return {'e': e,
+                    'crumbs': crumbs}
+    return {'crumbs': crumbs}
