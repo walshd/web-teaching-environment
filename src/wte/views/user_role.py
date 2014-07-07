@@ -266,7 +266,7 @@ def update(request):
 
 class AddUserSchema(formencode.Schema):
     u"""The :class:`~wte.views.user_role.AddUserSchema` handles the
-    validation of a adding a :class:`~wte.models.User` to a 
+    validation of a adding a :class:`~wte.models.User` to a
     :class:`~wte.models.Part`..
     """
     user_id = formencode.ForEach(formencode.validators.Int(not_empty=True),
