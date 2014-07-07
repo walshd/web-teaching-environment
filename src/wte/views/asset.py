@@ -92,10 +92,7 @@ def new(request):
                                           order=new_order,
                                           data=params['data'].file.read() if params['data'] is not None else None)
                         dbsession.add(new_asset)
-                        if request.matchdict['new_type'] == 'template':
-                            part.templates.append(new_asset)
-                        elif request.matchdict['new_type'] == 'asset':
-                            part.assets.append(new_asset)
+                        part.all_assets.append(new_asset)
                     dbsession.add(part)
                     request.session.flash('Your new %s has been created' % (request.matchdict['new_type']),
                                           queue='info')
@@ -163,12 +160,22 @@ def edit(request):
                             if mimetype[0]:
                                 mimetype = mimetype[0]
                             else:
-                                mimetype = params['mimetype']
+                                if params['mimetype']:
+                                    mimetype = params['mimetype'] != 'other'
+                                else:
+                                    mimetype = params['mimetype_other']
                         if params['content'] is not None:
                             asset.data = params['content'].encode('utf-8')
-                            mimetype = params['mimetype']
+                            if params['mimetype']:
+                                mimetype = params['mimetype'] != 'other'
+                            else:
+                                mimetype = params['mimetype_other']
                         else:
-                            mimetype = params['mimetype']
+                            if params['mimetype'] != 'other':
+                                mimetype = params['mimetype']
+                            else:
+                                mimetype = params['mimetype_other']
+                        print params
                         asset.mimetype = mimetype
                     dbsession.add(part)
                     dbsession.add(asset)
