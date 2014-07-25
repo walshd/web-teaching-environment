@@ -3,6 +3,7 @@
   <xi:include href="../layout/layout.html"/>
   <head>
     <title>${part.title}</title>
+    <script src="${r.static_url('wte:static/js/mathjax/MathJax.js', _query=[('config', 'default')])}"></script>
   </head>
   <body>
     <xi:include href="_module.html" py:if="part.type == 'module'"/>
