@@ -36,6 +36,8 @@ def init(config):
     * ``modules`` -- ``/modules`` -- :func:`~wte.views.frontend.modules`
     * ``user.modules`` -- ``/users/{uid}/modules`` --
       :func:`~wte.views.frontend.user_modules`
+    * ``user.projects`` -- ``/users/{uid}/projects`` --
+      :func:`~wte.views.frontend.user_projects`
     * ``asset.view`` -- ``/parts/{pid}/files/name/assets/{filename}``
       -- :func:`~wte.views.frontend.view_asset`
     * ``file.view`` -- ``/parts/{pid}/files/name/{filename}``
@@ -49,6 +51,7 @@ def init(config):
     """
     config.add_route('modules', '/modules')
     config.add_route('user.modules', '/users/{uid}/modules')
+    config.add_route('user.projects', '/users/{uid}/projects')
     config.add_route('asset.view', '/parts/{pid}/files/name/assets/{filename}')
     config.add_route('file.view', '/parts/{pid}/files/name/{filename}')
     config.add_route('file.save', '/parts/{pid}/files/id/{fid}/save')
@@ -67,6 +70,7 @@ def modules(request):
                                                 Part.status == u'available')).all()
     return {'modules': modules,
             'title': 'Currently Available Modules',
+            'missing' : 'There are currently no modules available.',
             'crumbs': [{'title': 'Modules', 'url': request.route_url('modules'), 'current': True}]}
 
 
@@ -87,11 +91,41 @@ def user_modules(request):
         if user.allow('view', request.current_user):
             modules = dbsession.query(Part).join(UserPartRole).\
                 filter(and_(Part.type == u'module',
-                            UserPartRole.user_id == request.matchdict[u'uid']))
+                            UserPartRole.user_id == request.matchdict[u'uid'])).all()
             return {'modules': modules,
                     'title': 'My Modules',
+                    'missing': 'You have not yet created any modules.',
                     'crumbs': [{'title': user.display_name, 'url': request.route_url('user.view', uid=user.id)},
-                               {'title': 'Modules', 'url': request.route_url('modules'), 'current': True}]}
+                               {'title': 'Modules', 'url': request.route_url('user.modules', uid=request.matchdict['uid']), 'current': True}]}
+        else:
+            unauthorised_redirect(request)
+    else:
+        raise HTTPNotFound()
+
+
+@view_config(route_name='user.projects')
+@render({'text/html': 'part/list.html'})
+@current_user()
+@require_logged_in()
+def user_projects(request):
+    u"""Handles the ``/users/{uid}/projects`` URL, displaying all the
+    projects that the  :class:`~wte.models.User` as created.
+
+    Requires that the current user has "view" rights for the
+    :class:`~wte.models.User`.
+    """
+    dbsession = DBSession()
+    user = dbsession.query(User).filter(User.id == request.matchdict['uid']).first()
+    if user:
+        if user.allow('view', request.current_user):
+            modules = dbsession.query(Part).join(UserPartRole).\
+                filter(and_(Part.type == u'project',
+                            UserPartRole.user_id == request.matchdict[u'uid'])).all()
+            return {'modules': modules,
+                    'title': 'My Projects',
+                    'missing': 'You have not yet created any projects.',
+                    'crumbs': [{'title': user.display_name, 'url': request.route_url('user.view', uid=user.id)},
+                               {'title': 'Projects', 'url': request.route_url('modules'), 'current': True}]}
         else:
             unauthorised_redirect(request)
     else:
@@ -251,10 +285,13 @@ def download_part_progress(request):
                                           progress.part.parent.title,
                                           progress.part.title)
                 filename = '%s - %s.zip' % (progress.part.parent.title, progress.part.title)
+            elif progress.part.type == u'project':
+                basepath = '%s/' % (progress.part.title)
+                filename = '%s.zip' % (progress.part.title)
             body = StringIO()
             zipfile = ZipFile(body, mode='w')
             for user_file in progress.files:
-                zipfile.writestr('%s%s' % (basepath, user_file.filename), user_file.content.encode('utf8'))
+                zipfile.writestr('%s%s' % (basepath, user_file.filename), user_file.data.encode('utf8'))
             for asset in progress.part.assets:
                 zipfile.writestr('%s/assets/%s' % (basepath, asset.filename), asset.data)
             zipfile.close()

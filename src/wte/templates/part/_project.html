@@ -1,0 +1,78 @@
+<article class="rows" xmlns:py="http://genshi.edgewall.org/">
+  <section id="editor" class="small-12 medium-12 large-12">
+    <section id="files">
+      <div class="menu section"><a href="#" class=""><img src="${r.static_url('wte:static/img/menu-icon.svg')}" alt="Menu"/></a>
+        <ul>
+          <py:if test="part.allow('edit', r.current_user)">
+            <li><a href="${r.route_url('part.edit', pid=part.id)}">Edit</a></li>
+            <li class="divider"></li>
+            <li><a href="${r.route_url('asset.new', pid=part.id, new_type='file')}">Add File</a></li>
+            <li><a href="${r.route_url('asset.new', pid=part.id, new_type='asset')}">Add Asset</a></li>
+            <li><a href="${r.route_url('userpartprogress.download', uid=r.current_user.id, pid=progress.id)}">Download the Project</a></li>
+          </py:if>
+          <li class="divider"></li>
+          <py:if test="part.allow('delete', r.current_user)">
+            <li><a href="${r.route_url('part.delete', pid=part.id)}" class="alert post-link" data-wte-confirm="${h.frontend.confirm_delete(part.type, part.title, False)}">Delete</a></li>
+          </py:if>
+        </ul>
+      </div>
+      <dl class="tabs" data-tab="">
+        <dd py:for="idx, file in enumerate(progress.files)" id="${h.frontend.html_id(file.filename)}-tab" class="${'active' if idx == 0 else ''}"><a href="#${h.frontend.html_id(file.filename)}"><img src="${r.static_url('wte:static/img/spinner-small.gif')}" class="hidden"/> ${file.filename}</a>
+          <div class="menu section"><a href="#" class=""><img src="${r.static_url('wte:static/img/menu-icon.svg')}" alt="Menu" class="small"/></a>
+            <ul>
+              <li><a href="${r.route_url('file.view', pid=part.id, filename=file.filename, _query=[('download', 'true')])}">Download</a></li>
+              <li class="divider"></li>
+              <li><a href="${r.route_url('part.reset-files', pid=part.id, _query=[('filename', file.filename)])}" class="alert post-link" data-wte-confirm="${h.frontend.confirm_delete('file', file.filename, False)}">Delete</a></li>
+            </ul>
+          </div>
+        </dd>
+        <dd py:for="idx, file in enumerate(part.assets)" id="asset-${file.id}-tab" class="${'active' if idx == 0 and not progress.files else ''}"><a href="#asset-${file.id}"><img src="${r.static_url('wte:static/img/spinner-small.gif')}" class="hidden"/> ${file.filename}</a>
+          <div class="menu section"><a href="#" class=""><img src="${r.static_url('wte:static/img/menu-icon.svg')}" alt="Menu" class="small"/></a>
+            <ul>
+              <li><a href="${r.route_url('file.view', pid=part.id, filename='assets/%s' % (file.filename), _query=[('download', 'true')])}">Download</a></li>
+              <li class="divider"></li>
+              <li><a href="${r.route_url('asset.delete', pid=part.id, aid=file.id)}" class="alert post-link" data-wte-confirm="${h.frontend.confirm_delete('asset', file.filename, False)}">Delete</a></li>
+            </ul>
+          </div>
+        </dd>
+      </dl>
+      <form class="tabs-content">
+        <div py:for="idx, file in enumerate(progress.files)" class="content ${'active' if idx == 0 else ''}" id="${h.frontend.html_id(file.filename)}">
+          ${h.form.tags.textarea('', file.data.decode('utf-8') if file.data else '', None, data_wte_mimetype=file.mimetype, data_wte_fileid=file.id)}
+        </div>
+        <div py:for="idx, file in enumerate(part.assets)" class="content ${'active' if idx == 0 and not progress.files else ''}" id="asset-${file.id}">
+          <img py:if="file.mimetype.startswith('image/')" src="${r.route_url('file.view', pid=part.id, filename='assets/%s' % (file.filename))}"/>
+        </div>
+      </form>
+    </section>
+    <section id="viewer">
+      <iframe src="${r.route_url('file.view', pid=part.id, filename=h.frontend.primary_filename(progress))}"></iframe>
+    </section>
+  </section>
+    <script src="${r.static_url('wte:static/js/codemirror/codemirror.js')}"></script>
+    ${h.frontend.codemirror_scripts(r, [f.mimetype for f in progress.files])}
+    <script>
+    function resize_page() {
+        var win_height = $(window).innerHeight();
+        $('nav.top-bar').each(function() {
+            win_height = win_height - $(this).outerHeight(true);
+        });
+        $('#textbook').css('height', win_height + 'px');
+        $('#editor').css('height', win_height + 'px');
+        $('#files').css('height', (win_height / 2) + 'px');
+        $('#files .content').each(function() {
+            $(this).css('height', (win_height / 2) - $('#files .tabs').outerHeight(true) + 'px');
+        });
+        $('#viewer').css('height', (win_height / 2) + 'px');
+    }
+    $(document).ready(function() {
+        resize_page();
+        $(window).on('resize', resize_page);
+        $('#files').tabbedEditor({
+            viewer: $('#viewer iframe'),
+            save_url: '${r.route_url('file.save', pid=part.id, fid='FID')}'
+        });
+        $('.menu').dropdownMenu();
+    });
+    </script>
+</article>

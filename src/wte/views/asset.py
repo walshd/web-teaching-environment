@@ -23,7 +23,7 @@ from sqlalchemy import and_
 
 from wte.decorators import (current_user, require_logged_in)
 from wte.models import (DBSession, Part, Asset)
-from wte.views.part import create_part_crumbs
+from wte.views.part import (create_part_crumbs, get_user_part_progress)
 from wte.util import (unauthorised_redirect)
 
 
@@ -73,10 +73,15 @@ def new(request):
                                          'url': request.current_route_url()})
             if request.method == u'POST':
                 try:
-                    params = NewAssetSchema().to_python(request.params)
+                    schema = NewAssetSchema()
+                    if request.matchdict['new_type'] == 'asset':
+                        schema.fields['data'].not_empty = True
+                    params = schema.to_python(request.params)
                     dbsession = DBSession()
+                    progress = get_user_part_progress(dbsession, request.current_user, part)
                     with transaction.manager:
                         dbsession.add(part)
+                        dbsession.add(progress)
                         mimetype = guess_type(params['filename'])
                         if params['data'] is not None:
                             mimetype = guess_type(params['data'].filename)
@@ -84,6 +89,8 @@ def new(request):
                             new_order = [a.order for a in part.templates]
                         elif request.matchdict['new_type'] == 'asset':
                             new_order = [a.order for a in part.assets]
+                        elif request.matchdict['new_type'] == 'file':
+                            new_order = [a.order for a in progress.files]
                         new_order.append(0)
                         new_order = max(new_order) + 1
                         new_asset = Asset(filename=params['filename'],
@@ -92,7 +99,10 @@ def new(request):
                                           order=new_order,
                                           data=params['data'].file.read() if params['data'] is not None else None)
                         dbsession.add(new_asset)
-                        part.all_assets.append(new_asset)
+                        if part.type == 'project' and request.matchdict['new_type'] == 'file':
+                            progress.files.append(new_asset)
+                        else:
+                            part.all_assets.append(new_asset)
                     dbsession.add(part)
                     request.session.flash('Your new %s has been created' % (request.matchdict['new_type']),
                                           queue='info')

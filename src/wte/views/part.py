@@ -78,7 +78,7 @@ def get_user_part_progress(dbsession, user, part):
     :return: The :class:`~wte.models.UserPartProgress`
     :rtype: :class:`~wte.models.UserPartProgress`
     """
-    if part.type in [u'tutorial', u'task']:
+    if part.type in [u'tutorial', u'task', u'project']:
         progress = dbsession.query(UserPartProgress).\
             filter(and_(UserPartProgress.user_id == user.id,
                         UserPartProgress.part_id == part.id)).first()
@@ -183,12 +183,18 @@ def create_part_crumbs(request, part, current=None):
     :rtype: ``list``
     """
     crumbs = []
-    while part:
+    recurse_part = part
+    while recurse_part:
         crumbs.append({'title': part.title,
                        'url': request.route_url('part.view', pid=part.id)})
-        part = part.parent
-    crumbs.append({'title': 'Modules',
-                   'url': request.route_url('modules')})
+        recurse_part = recurse_part.parent
+    if part:
+        if part.type == 'project':
+            crumbs.append({'title': 'My Projects',
+                           'url': request.route_url('user.projects', uid=request.current_user.id)})
+        else:
+            crumbs.append({'title': 'Modules',
+                           'url': request.route_url('modules')})
     crumbs.reverse()
     if current:
         if isinstance(current, list):
@@ -255,6 +261,12 @@ def new(request):
         elif parent.type != u'exercise':
             request.session.flash('You can only add tasks to a task', queue='error')
             raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
+    elif request.matchdict['new_type'] == 'project':
+        if not request.current_user.has_permission('projects.create'):
+            raise unauthorised_redirect(request)
+        elif parent:
+            request.session.flash('You cannot create a new project here', queue='error')
+            raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
     else:
         request.session.flash('You cannot create a new part of that type', queue='error')
         raise HTTPSeeOther(request.route_url('modules'))
@@ -283,10 +295,16 @@ def new(request):
                 if request.matchdict['new_type'] == 'module':
                     new_part.users.append(UserPartRole(user=request.current_user,
                                                        role=u'owner'))
+                elif request.matchdict['new_type'] == 'project':
+                    new_part.users.append(UserPartRole(user=request.current_user,
+                                                       role=u'owner'))
                 dbsession.add(new_part)
             dbsession.add(new_part)
             request.session.flash('Your new %s has been created' % (request.matchdict['new_type']), queue='info')
-            raise HTTPSeeOther(request.route_url('part.edit', pid=new_part.id))
+            if request.matchdict['new_type'] == 'project':
+                raise HTTPSeeOther(request.route_url('part.view', pid=new_part.id))
+            else:
+                raise HTTPSeeOther(request.route_url('part.edit', pid=new_part.id))
         except formencode.Invalid as e:
             e.params = request.params
             return {'e': e,
@@ -353,6 +371,7 @@ def edit(request):
                     request.session.flash('The %s has been updated' % (part.type), queue='info')
                     raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
                 except formencode.Invalid as e:
+                    print(e)
                     e.params = request.params
                     return {'e': e,
                             'part': part,
@@ -397,7 +416,11 @@ def delete(request):
                     dbsession.add(parent)
                     raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
                 else:
-                    raise HTTPSeeOther(request.route_url('modules'))
+                    dbsession.add(request.current_user)
+                    if part_type == 'project':
+                        raise HTTPSeeOther(request.route_url('user.projects', uid=request.current_user.id))
+                    else:
+                        raise HTTPSeeOther(request.route_url('user.modules', uid=request.current_user.id))
             return {'part': part,
                     'crumbs': crumbs}
         else:
