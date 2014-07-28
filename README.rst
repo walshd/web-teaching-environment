@@ -33,7 +33,7 @@ Getting Started
 
 .. _`virtualenv`: http://virtualenv.readthedocs.org
 .. _`virtualenvwrapper`: http://virtualenvwrapper.readthedocs.org
-.. _`wirtualenvwrapper_win`: https://pypi.python.org/pypi/virtualenvwrapper-win
+.. _`virtualenvwrapper_win`: https://pypi.python.org/pypi/virtualenvwrapper-win
 .. _`pycryptopp`: https://pypi.python.org/pypi/pycryptopp
 .. _`PyCrypto`: https://www.dlitz.net/software/pycrypto/
 .. _`PostgreSQL`: http://www.postgresql.org/
