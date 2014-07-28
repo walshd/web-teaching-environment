@@ -185,8 +185,8 @@ def create_part_crumbs(request, part, current=None):
     crumbs = []
     recurse_part = part
     while recurse_part:
-        crumbs.append({'title': part.title,
-                       'url': request.route_url('part.view', pid=part.id)})
+        crumbs.append({'title': recurse_part.title,
+                       'url': request.route_url('part.view', pid=recurse_part.id)})
         recurse_part = recurse_part.parent
     if part:
         if part.type == 'project':
