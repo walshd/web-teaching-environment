@@ -14,7 +14,7 @@ Getting Started
 - Create a new Python `virtualenv`_. If you have never used Python
   virtualenvironments, then read up on them first. For ease of interaction with
   Python virtualenvs, you can use `virtualenvwrapper`_ or
-  `virtualenvwrapper_win`_;
+  `virtualenvwrapper-win`_;
 
 - Setup the development environment and install the required packages:
   ``python setup.py develop``;
@@ -33,7 +33,7 @@ Getting Started
 
 .. _`virtualenv`: http://virtualenv.readthedocs.org
 .. _`virtualenvwrapper`: http://virtualenvwrapper.readthedocs.org
-.. _`virtualenvwrapper_win`: https://pypi.python.org/pypi/virtualenvwrapper-win
+.. _`virtualenvwrapper-win`: https://pypi.python.org/pypi/virtualenvwrapper-win
 .. _`pycryptopp`: https://pypi.python.org/pypi/pycryptopp
 .. _`PyCrypto`: https://www.dlitz.net/software/pycrypto/
 .. _`PostgreSQL`: http://www.postgresql.org/
