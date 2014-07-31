@@ -50,7 +50,7 @@ img.medium {
  * Drop-down menu styles
  */
 .menu {
-    z-index: 99;
+    z-index: 98;
 }
 .menu.section {
     position: absolute;
