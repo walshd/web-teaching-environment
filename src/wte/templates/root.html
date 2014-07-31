@@ -5,8 +5,30 @@
     <title>Web Teaching Environment</title>
   </head>
   <body>
-    <article class="small-12 column">
-      <h1>Web Teaching Environment</h1>
-    </article>
+    <div class="row">
+      <article class="small-12 column">
+        <h1>Web Teaching Environment</h1>
+        <div data-equalizer="">
+        <section class="small-12 medium-4 column">
+          <div class="panel" data-equalizer-watch="">
+            <h3>1. <a href="${r.route_url('user.register')}">Register</a> or <a href="${r.route_url('user.login')}">Log-in</a></h3>
+            <p>Register with your University e-mail address.</p>
+          </div>
+        </section>
+        <section class="small-12 medium-4 column">
+          <div class="panel" data-equalizer-watch="">
+            <h3>2. <a href="${r.route_url('modules')}">Choose a Module</a></h3>
+            <p>Choose to follow any of the available modules.</p>
+          </div>
+        </section>
+        <section class="small-12 medium-4 column">
+          <div class="panel" data-equalizer-watch="">
+            <h3>3. Learn!</h3>
+            <p>Follow the tutorials and do the exercises to become proficient.</p>
+          </div>
+        </section>
+        </div>
+      </article>
+    </div>
   </body>
 </html>

@@ -41,4 +41,5 @@ def init(config, settings):
 def root(request):
     u"""Handles the ``/`` route.
     """
-    return {}
+    return {'crumbs': [{'title': 'Modules',
+                        'url': request.route_url('modules')}]}
