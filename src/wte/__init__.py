@@ -28,7 +28,8 @@ def main(global_config, **settings):
     check_database_version()
     settings['genshi.template_path'] = 'wte:templates'
     renderer.init(settings, template_defaults={'text/html': {'h': helpers,
-                                                             'crumbs': []}})
+                                                             'crumbs': [],
+                                                             'include_footer': True}})
     session_factory = session_factory_from_settings(settings)
     config = Configurator(settings=settings, session_factory=session_factory)
 

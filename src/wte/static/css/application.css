@@ -203,3 +203,15 @@ img.medium {
     height: 100%;
     border: 0;
 }
+
+/**
+ * Footer styles
+ */
+
+footer {
+    clear: both;
+    margin-top: 1em;
+    padding-top: 0.5em;
+    border-top: 1px solid #222222;
+    font-size: 0.6rem;
+}
