@@ -150,7 +150,8 @@ def view_part(request):
                                         None)
             return {'part': part,
                     'crumbs': crumbs,
-                    'progress': progress}
+                    'progress': progress,
+                    'include_footer': part.type not in [u'task', u'page', u'project']}
         else:
             unauthorised_redirect(request)
     else:
