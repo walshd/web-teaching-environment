@@ -49,7 +49,7 @@ class NewAssetSchema(formencode.Schema):
     """
     filename = formencode.validators.UnicodeString(not_empty=True)
     u"""The asset's filename"""
-    data = formencode.validators.FieldStorageUploadConverter()
+    data = formencode.validators.FieldStorageUploadConverter(not_empty=False)
     u"""The asset's data"""
 
 
