@@ -137,6 +137,9 @@ img.medium {
     padding: 0.0625rem 0.625rem;
     visibility: hidden;
 }
+div.source {
+    margin-bottom: 1.25rem;
+}
 
 /**
  * Editor styles
