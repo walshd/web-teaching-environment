@@ -8,6 +8,7 @@
           <li><a href="${r.route_url('part.edit', pid=part.id)}">Edit</a></li>
           <li class="divider"></li>
           <li><a href="${r.route_url('part.new', new_type='page', _query=[('parent_id', part.id)])}">Add Page</a></li>
+          <li><a href="${r.route_url('asset.new', pid=part.id, new_type='template')}">Add Template</a></li>
           <li><a href="${r.route_url('asset.new', pid=part.id, new_type='asset')}">Add Asset</a></li>
           <li><a href="${r.route_url('part.export', pid=part.id)}" class="post-link">Export</a></li>
           <li><a href="${r.route_url('part.import', _query=[('parent_id', part.id)])}">Import</a></li>
