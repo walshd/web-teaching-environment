@@ -90,6 +90,12 @@
 		        component.find('.tabs').on('toggled', function (event, tab) {
 		            tab.children('textarea').data('wte-cm').refresh();
 		        });
+		        component.data('wte-viewer-scroll-timeout', setTimeout(function() {
+		        	component.tabbedEditor('save_scroll');
+		        }, 100));
+		        options.viewer.on('load', function() {
+		        	options.viewer.contents().scrollTop(component.data('wte-viewer-scroll-top'));
+		        });
 			});
 		},
 		save: function(tab, textarea) {
@@ -98,6 +104,7 @@
 				tab.find('img').show();
 				url = component.data('wte-options').save_url;
 		        url = url.replace('FID', textarea.data('wte-fileid'));
+		        clearTimeout(component.data('wte-viewer-scroll-timeout'));
 		        $.ajax(url, {
 		            type: 'POST',
 		            data: {'content': textarea.data('wte-cm').getValue()},
@@ -112,6 +119,15 @@
 		        }).always(function() {
 					tab.find('img').hide();
 		        });
+			});
+		},
+		save_scroll: function() {
+			return this.each(function() {
+				var component = $(this);
+				component.data('wte-viewer-scroll-top', component.data('wte-options').viewer.contents().scrollTop());
+		        component.data('wte-viewer-scroll-timeout', setTimeout(function() {
+		        	component.tabbedEditor('save_scroll');
+		        }, 100));
 			});
 		}
 	};
