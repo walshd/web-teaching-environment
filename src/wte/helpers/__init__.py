@@ -16,3 +16,8 @@ from genshi.builder import Markup  # NOQA
 from pywebtools import text  # NOQA
 
 from . import form, frontend  # NOQA
+from wte.util import VERSION
+
+
+def version():
+    return VERSION
