@@ -46,6 +46,13 @@
       </form>
     </section>
     <section id="viewer">
+      <div class="view-options">
+        <div class="menu"><a href="#" class=""><img src="${r.static_url('wte:static/img/menu-icon.svg')}" alt="Menu"/></a>
+          <ul>
+            <li><a href="${r.route_url('file.view', pid=part.id, filename=h.frontend.primary_filename(progress))}" target="wte_fullscreen" title="View the page in a new tab or window">Open in new Tab / Window</a></li>
+          </ul>
+        </div>
+      </div>
       <iframe src="${r.route_url('file.view', pid=part.id, filename=h.frontend.primary_filename(progress))}"></iframe>
     </section>
   </section>
