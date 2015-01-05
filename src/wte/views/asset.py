@@ -166,18 +166,18 @@ def edit(request):
                         asset.filename = params['filename']
                         if params['data'] is not None:
                             asset.data = params['data'].file.read()
-                            mimetype = guess_type(params['content'].filename)
+                            mimetype = guess_type(params['data'].filename)
                             if mimetype[0]:
                                 mimetype = mimetype[0]
                             else:
-                                if params['mimetype']:
-                                    mimetype = params['mimetype'] != 'other'
+                                if params['mimetype'] != 'other':
+                                    mimetype = params['mimetype']
                                 else:
                                     mimetype = params['mimetype_other']
-                        if params['content'] is not None:
+                        elif params['content'] is not None:
                             asset.data = params['content'].encode('utf-8')
-                            if params['mimetype']:
-                                mimetype = params['mimetype'] != 'other'
+                            if params['mimetype'] != 'other':
+                                mimetype = params['mimetype']
                             else:
                                 mimetype = params['mimetype_other']
                         else:
