@@ -29,7 +29,8 @@ def html_id(text):
 
 CODEMIRROR_MODES = {'text/html': ['javascript', 'css', 'xml', 'htmlmixed'],
                     'text/css': ['css'],
-                    'text/javascript': ['javascript']}
+                    'text/javascript': ['javascript'],
+                    'text/x-rst': ['python', 'stex', ('../addon/mode', 'overlay'), 'rst']}
 
 
 def codemirror_scripts(request, mimetypes):
@@ -45,8 +46,13 @@ def codemirror_scripts(request, mimetypes):
     modes = []
     for mimetype in mimetypes:
         if mimetype in CODEMIRROR_MODES:
-            modes.extend(CODEMIRROR_MODES[mimetype])
-    return tag([tag.script(src=request.static_url('wte:static/js/codemirror/mode/%s/%s.js' % (mode, mode)))
+            for mode in CODEMIRROR_MODES[mimetype]:
+                if isinstance(mode, tuple):
+                    modes.append(mode)
+                else:
+                    modes.append((mode, mode))
+            #modes.extend(CODEMIRROR_MODES[mimetype])
+    return tag([tag.script(src=request.static_url('wte:static/js/codemirror/mode/%s/%s.js' % mode))
                 for mode in modes])
 
 
