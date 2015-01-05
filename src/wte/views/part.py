@@ -640,10 +640,13 @@ def export(request):
                 for export_id, asset_id in assets:
                     asset = dbsession.query(Asset).filter(Asset.id == asset_id).first()
                     if asset:
-                        if asset.mimetype.startswith('text'):
-                            body_zip.writestr('assets/%s' % (export_id), asset.data, ZIP_DEFLATED)
+                        if asset.data:
+                            if asset.mimetype.startswith('text'):
+                                body_zip.writestr('assets/%s' % (export_id), asset.data, ZIP_DEFLATED)
+                            else:
+                                body_zip.writestr('assets/%s' % (export_id), asset.data, ZIP_STORED)
                         else:
-                            body_zip.writestr('assets/%s' % (export_id), asset.data, ZIP_STORED)
+                            body_zip.writestr('assets/%s' % (export_id), '', ZIP_DEFLATED)
                 body_zip.close()
                 return Response(body=str(body.getvalue()),
                                 headers=[('Content-Type', 'application/zip'),
