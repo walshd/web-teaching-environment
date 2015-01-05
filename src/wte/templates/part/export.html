@@ -13,6 +13,7 @@
         <p>Export &quot;${part.title}&quot; into a file for backup purposes or to transfer the
           module to another Web Teaching Environment.</p>
         <div class="text-right">
+          <a href="${r.route_url('part.view', pid=part.id)}" class="button small secondary">Don't Export</a>
           ${h.form.tags.submit('Export', class_='button small')}
         </div>
       </form>

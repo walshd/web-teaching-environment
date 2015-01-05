@@ -12,6 +12,7 @@
           <p>Please confirm that you wish to delete the ${part.type} &quot;${part.title}&quot; and
             all child parts.</p>
           <div class="text-right">
+            <a href="${r.route_url('part.view', pid=part.id)}" class="button small secondary">Don't Delete</a>
             ${h.form.tags.submit('Delete', class_='button small alert')}
           </div>
         </form>

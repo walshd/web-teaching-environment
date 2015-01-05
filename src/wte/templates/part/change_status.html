@@ -14,6 +14,7 @@
           ${h.form.field('status', 'Status', h.form.tags.select, size='small-12', e=e, value=r.params['status'] if 'status' in r.params else part.status, options=[('unavailable', 'Unavailable'), ('available', 'Available')])}
         </div>
         <div class="text-right">
+          <a href="${r.route_url('part.view', pid=part.id)}" class="button small secondary">Don't Update</a>
           ${h.form.tags.submit('Update', class_='button small')}
         </div>
       </form>

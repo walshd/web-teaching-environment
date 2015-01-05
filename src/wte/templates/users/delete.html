@@ -12,6 +12,7 @@
           delete the user &quot;${user.display_name}&quot;. This step cannot
           be undone.</p>
         <div class="small-12 medium-6 large-4 text-right">
+          <a href="${r.route_url('user.view', uid=user.id)}" class="button small secondary">Don't Delete</a>
           ${h.form.tags.submit('Delete', class_='button small alert')}
         </div>
       </form>

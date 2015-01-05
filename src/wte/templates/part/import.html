@@ -14,6 +14,8 @@
             ${h.form.field('file', 'File', h.form.tags.file_input_field, size='small-12', e=e, value=u'unavailable', options=[('unavailable', 'Unavailable'), ('available', 'Available')])}
           </div>
           <div class="text-right">
+            <a py:if="'parent_id' not in r.params" href="${r.route_url('modules')}" class="button small secondary">Don't Import</a>
+            <a py:if="'parent_id' in r.params" href="${r.route_url('part.view', pid=r.params['parent_id'])}" class="button small secondary">Don't Import</a>
             ${h.form.tags.submit('Import', class_='button small')}
           </div>
         </form>

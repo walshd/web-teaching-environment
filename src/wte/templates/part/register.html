@@ -10,6 +10,7 @@
         <h1>${part.title} - Registration</h1>
         <form action="${r.route_url('part.register', pid=part.id)}" method="post">
           <div class="text-right">
+            <a py:if="'parent_id' in r.params" href="${r.route_url('part.view', pid=part.id)}" class="button small secondary">Don't Register</a>
             ${h.form.tags.submit('Register', class_='button small')}
           </div>
         </form>

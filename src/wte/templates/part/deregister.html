@@ -14,6 +14,7 @@
             you have made on module's tutorials and all work you have done
             on the exercises.</p>
           <div class="text-right">
+            <a href="${r.route_url('part.view', pid=part.id)}" class="button small secondary">Don't Deregister</a>
             ${h.form.tags.submit('Deregister', class_='button small')}
           </div>
         </form>

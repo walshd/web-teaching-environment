@@ -219,7 +219,7 @@ def delete(request):
     """
     dbsession = DBSession()
     part = dbsession.query(Part).filter(Part.id == request.matchdict[u'pid']).first()
-    asset = dbsession.query(Asset).join(Part.assets).\
+    asset = dbsession.query(Asset).join(Part.all_assets).\
         filter(and_(Asset.id == request.matchdict[u'aid'],
                     Part.id == request.matchdict[u'pid'])).first()
     if part and asset:

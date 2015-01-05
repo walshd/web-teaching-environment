@@ -39,6 +39,7 @@
           </tbody>
         </table>
         <div class="text-right">
+          <a href="${r.route_url('user.view', uid=user.id)}" class="button small secondary">Don't Update</a>
           ${h.form.tags.submit('Update', class_='button small')}
         </div>
       </form>
