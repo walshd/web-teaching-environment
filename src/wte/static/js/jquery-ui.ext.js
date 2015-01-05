@@ -10,8 +10,7 @@
                 var button = component.children('a');
                 component.data('wte-menu', menu);
                 component.data('wte-menu-button', button);
-                menu.css('width', menu.outerWidth() + 'px').css('position',
-                        'absolute');
+                menu.css('width', menu.outerWidth() + 'px').css('position', 'absolute');
                 menu.hide();
                 button.on('click', function(ev) {
                     ev.preventDefault(true);
@@ -57,13 +56,11 @@
 
     $.fn.dropdownMenu = function(method) {
         if (methods[method]) {
-            return methods[method].apply(this, Array.prototype.slice.call(
-                    arguments, 1));
+            return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
         } else if (typeof method === 'object' || !method) {
             return methods.init.apply(this, arguments);
         } else {
-            $.error('Method ' + method
-                    + ' does not exist on jQuery.dropdownMenu');
+            $.error('Method ' + method + ' does not exist on jQuery.dropdownMenu');
         }
     };
 }(jQuery));
@@ -77,36 +74,27 @@
             return this.each(function() {
                 var component = $(this);
                 component.data('wte-options', options);
-                component.find('textarea').each(
-                        function() {
-                            var textarea = $(this);
-                            var tab = component
-                                    .find('#' + textarea.parent().attr('id')
-                                            + '-tab > a');
-                            cm = CodeMirror.fromTextArea(this, {
-                                mode : textarea.data('wte-mimetype')
-                            });
-                            cm.on('change', function(cm, changes) {
-                                clearTimeout(textarea.data('wte-timeout'));
-                                tab.css('color', '#aa0000');
-                                textarea.data('wte-timeout', setTimeout(
-                                        function() {
-                                            component.tabbedEditor('save', tab,
-                                                    textarea);
-                                        }, 1000));
-                            });
-                            textarea.data('wte-cm', cm);
+                component.find('textarea').each(function() {
+                    var textarea = $(this);
+                    var tab = component.find('#' + textarea.parent().attr('id') + '-tab > a');
+                    var cm = CodeMirror.fromTextArea(this, {
+                        mode : textarea.data('wte-mimetype')
+                    });
+                    cm.on('change', function(cm, changes) {
+                        clearTimeout(textarea.data('wte-timeout'));
+                        tab.css('color', '#aa0000');
+                        textarea.data('wte-timeout', setTimeout(function() {
+                            component.tabbedEditor('save', tab, textarea);
+                            }, 1000));
                         });
+                    textarea.data('wte-cm', cm);
+                });
                 component.find('.tabs').on('toggled', function(event, tab) {
                     tab.children('textarea').data('wte-cm').refresh();
                 });
-                component.data('wte-viewer-scroll-timeout', setTimeout(
-                        function() {
-                            component.tabbedEditor('save_scroll');
-                        }, 100));
                 options.viewer.on('load', function() {
-                    options.viewer.contents().scrollTop(
-                            component.data('wte-viewer-scroll-top'));
+                    options.viewer.contents().scrollTop(component.data('wte-viewer-scroll-top'));
+                    component.tabbedEditor('save_scroll');
                 });
             });
         },
@@ -138,25 +126,21 @@
         save_scroll : function() {
             return this.each(function() {
                 var component = $(this);
-                component.data('wte-viewer-scroll-top', component
-                        .data('wte-options').viewer.contents().scrollTop());
-                component.data('wte-viewer-scroll-timeout', setTimeout(
-                        function() {
-                            component.tabbedEditor('save_scroll');
-                        }, 100));
+                component.data('wte-viewer-scroll-top', component.data('wte-options').viewer.contents().scrollTop());
+                component.data('wte-viewer-scroll-timeout', setTimeout(function() {
+                    component.tabbedEditor('save_scroll');
+                }, 100));
             });
         }
     };
 
     $.fn.tabbedEditor = function(method) {
         if (methods[method]) {
-            return methods[method].apply(this, Array.prototype.slice.call(
-                    arguments, 1));
+            return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
         } else if (typeof method === 'object' || !method) {
             return methods.init.apply(this, arguments);
         } else {
-            $.error('Method ' + method
-                    + ' does not exist on jQuery.dropdownMenu');
+            $.error('Method ' + method + ' does not exist on jQuery.dropdownMenu');
         }
     };
 }(jQuery));
@@ -202,21 +186,18 @@
                             ev.preventDefault();
                             dlg.foundation().foundation('reveal', 'close');
                         });
-                        dlg.find('a.ok').on(
-                                'click',
-                                function(ev) {
-                                    ev.preventDefault();
-                                    var frm = $('<form action="'
-                                            + component.attr('href')
-                                            + '" method="post"></form>');
-                                    $('body').append(frm);
-                                    frm.submit();
-                                });
+                        dlg.find('a.ok').on('click', function(ev) {
+                            ev.preventDefault();
+                            var frm = $('<form action="'
+                                    + component.attr('href')
+                                    + '" method="post"></form>');
+                            $('body').append(frm);
+                            frm.submit();
+                        });
                         dlg.foundation().foundation('reveal', 'open');
-                        $(document).on('closed.fndtn.reveal', '[data-reveal]',
-                                function() {
-                                    dlg.remove();
-                                });
+                        $(document).on('closed.fndtn.reveal', '[data-reveal]', function() {
+                            dlg.remove();
+                        });
                     } else {
                         var frm = $('<form action="' + component.attr('href')
                                 + '" method="post"></form>');
@@ -230,8 +211,7 @@
 
     $.fn.postLink = function(method) {
         if (methods[method]) {
-            return methods[method].apply(this, Array.prototype.slice.call(
-                    arguments, 1));
+            return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
         } else if (typeof method === 'object' || !method) {
             return methods.init.apply(this, arguments);
         } else {
@@ -249,10 +229,8 @@
             return this
                     .each(function() {
                         var component = $(this);
-                        component.css('position', 'absolute').css('z-index',
-                                '1000').css('width', '30em');
-                        component.find('.column, .columns').css(
-                                'padding-right', '5px');
+                        component.css('position', 'absolute').css('z-index', '1000').css('width', '30em');
+                        component.find('.column, .columns').css('padding-right', '5px');
                         component.position({
                             my : 'right top+5px',
                             at : 'right bottom',
@@ -271,14 +249,11 @@
 
     $.fn.fancyFlash = function(method) {
         if (methods[method]) {
-            return methods[method].apply(this, Array.prototype.slice.call(
-                    arguments, 1));
+            return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
         } else if (typeof method === 'object' || !method) {
             return methods.init.apply(this, arguments);
         } else {
-            $
-                    .error('Method ' + method
-                            + ' does not exist on jQuery.fancyFlash');
+            $.error('Method ' + method + ' does not exist on jQuery.fancyFlash');
         }
     };
 }(jQuery));
