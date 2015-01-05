@@ -9,7 +9,7 @@
     <div class="row.left clearfix">
       <h1 class="small-12 medium-6 large-6 column">${part.title} - Edit</h1>
     </div>
-    <article class="small-12 medium-6 large-6 column">
+    <article id="editor" class="small-12 medium-6 large-6 column">
       <form action="${r.route_url('part.edit', pid=part.id)}" method="post">
         <div class="clearfix">
           ${h.form.field('title', 'Title', h.form.tags.text_field, size='small-12', e=e, default=part.title)}
@@ -56,8 +56,8 @@
         }).success(function(data) {
             $('#textbook').html(data.content);
             MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
-        }).always(function() {
         });
+        $('#textbook').css('height', $('#editor').height() + 'px');
     }
     $('#page-content').keyup(function() {
         clearTimeout(code_change_timer);
