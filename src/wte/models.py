@@ -480,7 +480,10 @@ Index('parts_parent_id_ix', Part.parent_id)
 def compile_page_content(target, value, old_value, initiator):
     u"""SQLAlchemy event listener that automatically compiles the ReST content
     of a :class:`~wte.models.Page` to HTML when it is set / updated."""
-    target.compiled_content = compile_rst(value)
+    if value:
+        target.compiled_content = compile_rst(value)
+    else:
+        target.compiled_content = ''
 
 
 class UserPartProgress(Base):
