@@ -72,4 +72,18 @@
 #textbook .source #textbook .source .vg { color: #40ffff } /* Name.Variable.Global */
 #textbook .source .vi { color: #40ffff } /* Name.Variable.Instance */
 #textbook .source .il { color: #3677a9 } /* Literal.Number.Integer.Long */
- 
+
+#textbook tt.docutils.literal {
+    font-family:"Consolas","Deja Vu Sans Mono","Bitstream Vera Sans Mono",monospace;
+    padding: 0px 0.2rem;
+    border: 1px solid #dfdfdf;
+    border-radius: 3px;
+}
+#textbook .no-select {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
