@@ -554,6 +554,8 @@ class ChangeStatusSchema(formencode.Schema):
                             formencode.validators.OneOf([u'unavailable',
                                                          u'available']))
     u"""The part's status"""
+    return_to = formencode.validators.String(if_missing=None)
+    u"""Return to this URL"""
 
 
 @view_config(route_name='part.change_status')
@@ -582,7 +584,10 @@ def change_status(request):
                         part.status = params['status']
                     dbsession.add(part)
                     request.session.flash('The %s is now %s' % (part.type, part.status), queue='info')
-                    raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
+                    if params['return_to']:
+                        raise HTTPSeeOther(params['return_to'])
+                    else:
+                        raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
                 except formencode.Invalid as e:
                     e.params = request.params
                     return {'e': e,

@@ -60,6 +60,26 @@ img.medium {
 }
 
 /**
+ * Menu-bar styles
+ */
+.menubar {
+    padding: 0;
+    margin: 0;
+}
+.menubar > li {
+    display: inline-block;
+    list-style-type: none;
+    padding-left: 0.3rem;
+}
+.menubar > li > a, .menubar > li > div.menu > a {
+    color: #222;
+    font-size: 1.2rem;
+}
+.menubar > li > a:hover, .menubar > li > div.menu > a:hover {
+    color: #0078a0;
+}
+
+/**
  * Drop-down menu styles
  */
 .menu {
