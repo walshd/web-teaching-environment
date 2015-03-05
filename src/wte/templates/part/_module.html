@@ -1,41 +1,96 @@
 <article class="row left" xmlns:py="http://genshi.edgewall.org/">
   <section class="small-12 column">
-    <div py:if="part.allow('edit', r.current_user) or part.allow('delete', r.current_user)" class="menu inline"><a href="#" class=""><img src="${r.static_url('wte:static/img/menu-icon.svg')}" alt="Menu"/></a>
-      <ul>
-        <py:if test="part.allow('edit', r.current_user)">
-          <li py:if="part.status == 'unavailable'"><a href="${r.route_url('part.change_status', pid=part.id, _query=[('status', 'available')])}" class="post-link">Make Available</a></li>
-          <li py:if="part.status == 'available'"><a href="${r.route_url('part.change_status', pid=part.id, _query=[('status', 'unavailable')])}" class="post-link">Make Unavailable</a></li>
-          <li><a href="${r.route_url('part.edit', pid=part.id)}">Edit</a></li>
-          <li class="divider"></li>
-          <li><a href="${r.route_url('part.new', new_type='tutorial', _query=[('parent_id', part.id)])}">Add Tutorial</a></li>
-          <li><a href="${r.route_url('part.new', new_type='exercise', _query=[('parent_id', part.id)])}">Add Exercise</a></li>
-          <li><a href="${r.route_url('part.export', pid=part.id)}" class="post-link">Export</a></li>
-          <li><a href="${r.route_url('part.import', _query=[('parent_id', part.id)])}">Import</a></li>
-          <li class="divider"></li>
-          <li><a href="${r.route_url('part.users', pid=part.id)}">Users</a></li>
-        </py:if>
-        <li class="divider"></li>
-        <li py:if="part.allow('delete', r.current_user)"><a href="${r.route_url('part.delete', pid=part.id)}" class="alert post-link" data-wte-confirm="${h.frontend.confirm_delete('module', part.title, True)}">Delete</a></li>
-      </ul>
-    </div>
+            <div py:if="part.allow('edit', r.current_user) or part.allow('delete', r.current_user)" class="right">
+              ${h.frontend.menubar([
+                {'group': 'status', 'items': [
+                  {'visible': part.allow('edit', r.current_user) and part.type != 'project',
+                   'icon': 'fi-lock' if part.status == 'available' else 'fi-unlock',
+                   'label': 'Make Unavailable' if part.status == 'available' else 'Make Available',
+                   'href': r.route_url('part.change_status', pid=part.id, _query=[('status', 'unavailable' if part.status == 'available' else 'available'), ('return_to', r.current_route_url())]),
+                   'class': 'post-link',
+                   'highlight': True}]},
+                {'group': 'edit', 'items': [
+                  {'visible': part.allow('edit', r.current_user),
+                   'icon': 'fi-pencil',
+                   'label': 'Edit',
+                   'href': r.route_url('part.edit', pid=part.id),
+                   'highlight': True}]},
+                {'group': 'add', 'items': [
+                  {'visible': part.allow('edit', r.current_user),
+                   'icon': 'fi-plus',
+                   'label': 'Add Tutorial',
+                   'href': r.route_url('part.new', new_type='tutorial', _query=[('parent_id', part.id)]),
+                   'highlight': True},
+                  {'visible': part.allow('edit', r.current_user),
+                   'icon': 'fi-plus',
+                   'label': 'Add Exercise',
+                   'href': r.route_url('part.new', new_type='exercise', _query=[('parent_id', part.id)]),
+                   'highlight': True}]},
+                {'group': 'importexport', 'items': [
+                  {'visible': part.allow('edit', r.current_user) and part.type != 'project',
+                   'label': 'Import',
+                   'href': r.route_url('part.import', _query=[('parent_id', part.id)])},
+                  {'visible': part.allow('edit', r.current_user),
+                   'label': 'Export',
+                   'href': r.route_url('part.export', pid=part.id),
+                   'class': 'post-link'}]},
+                {'group': 'users', 'items': [
+                  {'visible': part.allow('edit', r.current_user),
+                   'label': 'Users',
+                   'href': r.route_url('part.users', pid=part.id)}]},
+                {'group': 'delete', 'items': [
+                  {'visible': part.allow('delete', r.current_user),
+                   'label': 'Delete',
+                   'href': r.route_url('part.delete', pid=part.id),
+                   'class': 'alert post-link',
+                   'confirm': h.frontend.confirm_delete(part.type, part.title, True)}]},
+              ])}
+            </div>
     <h1>${part.title}<small py:if="part.status == 'unavailable'" class="label radius">Unavailable</small></h1>
     ${h.Markup(part.compiled_content)}
     <section>
       <ul class="no-symbol">
         <li py:for="child in part.children" py:if="child.allow('view', r.current_user)" class="panel clearfix status-${child.status}">
-          <div py:if="child.allow('edit', r.current_user) or child.allow('delete', r.current_user)" class="menu inline"><a href="#" class=""><img src="${r.static_url('wte:static/img/menu-icon.svg')}" alt="Menu" class="small"/></a>
-            <ul>
-              <py:if test="child.allow('edit', r.current_user)">
-                <li py:if="child.status == 'unavailable'"><a href="${r.route_url('part.change_status', pid=child.id, _query=[('status', 'available')])}" class="post-link">Make Available</a></li>
-                <li py:if="child.status == 'available'"><a href="${r.route_url('part.change_status', pid=child.id, _query=[('status', 'unavailable')])}" class="post-link">Make Unavailable</a></li>
-                <li><a href="${r.route_url('part.edit', pid=child.id)}">Edit</a></li>
-                <li class="divider"></li>
-                <li><a href="${r.route_url('part.export', pid=child.id)}" class="post-link">Export</a></li>
-                <li><a href="${r.route_url('part.import', _query=[('parent_id', child.id)])}">Import</a></li>
-              </py:if>
-              <li class="divider"></li>
-              <li><a py:if="child.allow('delete', r.current_user)" href="${r.route_url('part.delete', pid=child.id)}" class="alert post-link" data-wte-confirm="${h.frontend.confirm_delete(child.type, child.title, True)}">Delete</a></li>
-            </ul>
+          <div py:if="part.allow('edit', r.current_user) or part.allow('delete', r.current_user)" class="right">
+            ${h.frontend.menubar([
+              {'group': 'status', 'items': [
+                {'visible': child.allow('edit', r.current_user),
+                 'icon': 'fi-lock' if child.status == 'available' else 'fi-unlock',
+                 'label': 'Make Unavailable' if child.status == 'available' else 'Make Available',
+                 'href': r.route_url('part.change_status', pid=child.id, _query=[('status', 'unavailable' if child.status == 'available' else 'available'), ('return_to', r.current_route_url())]),
+                 'class': 'post-link',
+                 'highlight': True}]},
+              {'group': 'edit', 'items': [
+                {'visible': child.allow('edit', r.current_user),
+                 'icon': 'fi-pencil',
+                 'label': 'Edit',
+                 'href': r.route_url('part.edit', pid=child.id),
+                 'highlight': True}]},
+              {'group': 'add', 'items': [
+                {'visible': child.allow('edit', r.current_user) and child.type == 'tutorial',
+                 'label': 'Add Page',
+                 'href': r.route_url('part.new', new_type='page', _query=[('parent_id', child.id)])},
+                {'visible': child.allow('edit', r.current_user) and child.type == 'tutorial',
+                 'label': 'Add Template',
+                 'href': r.route_url('asset.new', pid=child.id, new_type='template')},
+                {'visible': child.allow('edit', r.current_user) and child.type == 'tutorial',
+                 'label': 'Add Asset',
+                 'href': r.route_url('asset.new', pid=child.id, new_type='asset')}]},
+              {'group': 'importexport', 'items': [
+                {'visible': child.allow('edit', r.current_user) and child.type == 'tutorial',
+                 'label': 'Import',
+                 'href': r.route_url('part.import', _query=[('parent_id', child.id)])},
+                {'visible': child.allow('edit', r.current_user),
+                 'label': 'Export',
+                 'href': r.route_url('part.export', pid=child.id),
+                 'class': 'post-link'}]},
+              {'group': 'delete', 'items': [
+                {'visible': child.allow('delete', r.current_user),
+                 'label': 'Delete',
+                 'href': r.route_url('part.delete', pid=child.id),
+                 'class': 'alert post-link',
+                 'confirm': h.frontend.confirm_delete(child.type, child.title, True)}]},
+            ])}
           </div>
           <h3><a href="${r.route_url('part.view', pid=child.id)}">${child.title}</a><small py:if="child.status == 'unavailable'" class="label radius">Unavailable</small></h3>
           ${h.frontend.part_summary(child)}

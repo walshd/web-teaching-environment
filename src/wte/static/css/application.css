@@ -69,7 +69,7 @@ img.medium {
 .menubar > li {
     display: inline-block;
     list-style-type: none;
-    padding-left: 0.3rem;
+    padding-left: 0.4rem;
 }
 .menubar > li > a, .menubar > li > div.menu > a {
     color: #222;
@@ -128,6 +128,9 @@ img.medium {
 }
 .menu li.divider {
     border-bottom: 1px solid #ccc;
+}
+.menu li.divider + li.divider {
+    display: none;
 }
 
 /**
