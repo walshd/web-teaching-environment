@@ -1,39 +1,71 @@
 <article class="rows" xmlns:py="http://genshi.edgewall.org/">
   <section id="editor" class="small-12 medium-12 large-12">
     <section id="files">
-      <div class="menu section"><a href="#" class=""><img src="${r.static_url('wte:static/img/menu-icon.svg')}" alt="Menu"/></a>
-        <ul>
-          <py:if test="part.allow('edit', r.current_user)">
-            <li><a href="${r.route_url('part.edit', pid=part.id)}">Edit</a></li>
-            <li class="divider"></li>
-            <li><a href="${r.route_url('asset.new', pid=part.id, new_type='file')}">Add File</a></li>
-            <li><a href="${r.route_url('asset.new', pid=part.id, new_type='asset')}">Add Asset</a></li>
-            <li><a href="${r.route_url('userpartprogress.download', uid=r.current_user.id, pid=progress.id)}">Download the Project</a></li>
-          </py:if>
-          <li class="divider"></li>
-          <py:if test="part.allow('delete', r.current_user)">
-            <li><a href="${r.route_url('part.delete', pid=part.id)}" class="alert post-link" data-wte-confirm="${h.frontend.confirm_delete(part.type, part.title, False)}">Delete</a></li>
-          </py:if>
-        </ul>
+      <div class="right">
+        ${h.frontend.menubar([
+          {'group': 'download', 'items': [
+            {'visible': True,
+             'label': 'Download the Project',
+             'href': r.route_url('userpartprogress.download', uid=r.current_user.id, pid=progress.id)}]},
+          {'group': 'edit', 'items': [
+            {'visible': part.allow('edit', r.current_user),
+             'icon': 'fi-pencil',
+             'label': 'Edit',
+             'href': r.route_url('part.edit', pid=part.id),
+             'highlight': True}]},
+          {'group': 'add', 'items': [
+            {'visible': part.allow('edit', r.current_user),
+             'label': 'Add File',
+             'icon': 'fi-plus',
+             'href': r.route_url('asset.new', pid=part.id, new_type='file'),
+             'highlight': True},
+            {'visible': part.allow('edit', r.current_user),
+             'label': 'Add Asset',
+             'icon': 'fi-plus',
+             'href': r.route_url('asset.new', pid=part.id, new_type='asset'),
+             'highlight': True}]},
+          {'group': 'delete', 'items': [
+            {'visible': part.allow('delete', r.current_user),
+             'label': 'Delete',
+             'href': r.route_url('part.delete', pid=part.id),
+             'class': 'alert post-link',
+             'confirm': h.frontend.confirm_delete(part.type, part.title, False)}]},
+        ], class_='margin-top-right')}
       </div>
       <dl class="tabs" data-tab="">
-        <dd py:for="idx, file in enumerate(progress.files)" id="${h.frontend.html_id(file.filename)}-tab" class="${'active' if idx == 0 else ''}"><a href="#${h.frontend.html_id(file.filename)}"><img src="${r.static_url('wte:static/img/spinner-small.gif')}" class="hidden"/> ${file.filename}</a>
-          <div class="menu section"><a href="#" class=""><img src="${r.static_url('wte:static/img/menu-icon.svg')}" alt="Menu" class="small"/></a>
-            <ul>
-              <li><a href="${r.route_url('file.view', pid=part.id, filename=file.filename, _query=[('download', 'true')])}">Download</a></li>
-              <li class="divider"></li>
-              <li><a href="${r.route_url('part.reset-files', pid=part.id, _query=[('filename', file.filename)])}" class="alert post-link" data-wte-confirm="${h.frontend.confirm_delete('file', file.filename, False)}">Delete</a></li>
-            </ul>
+        <dd py:for="idx, file in enumerate(progress.files)" id="${h.frontend.html_id(file.filename)}-tab" class="${'active' if idx == 0 else ''}">
+          <div class="right">
+            ${h.frontend.menubar([
+              {'group': 'download', 'items': [
+                {'visible': True,
+                 'label': 'Download',
+                 'href': r.route_url('file.view', pid=part.id, filename=file.filename, _query=[('download', 'true')])}]},
+              {'group': 'reset', 'items': [
+                {'visible': True,
+                 'label': 'Delete',
+                 'href': r.route_url('part.reset-files', pid=part.id, _query=[('filename', file.filename)]),
+                 'class': 'alert post-link',
+                 'confirm': h.frontend.confirm_action('Delete File', 'Please confirm that you wish to delete the file "%s".' % (file.filename), "Don't Delete", {'label': 'Delete', 'class_': 'alert'})}]}
+            ], class_='margin-top-right')}
           </div>
+          <a href="#${h.frontend.html_id(file.filename)}"><img src="${r.static_url('wte:static/img/spinner-small.gif')}" class="hidden"/> ${file.filename}</a>
         </dd>
-        <dd py:for="idx, file in enumerate(part.assets)" id="asset-${file.id}-tab" class="${'active' if idx == 0 and not progress.files else ''}"><a href="#asset-${file.id}"><img src="${r.static_url('wte:static/img/spinner-small.gif')}" class="hidden"/> ${file.filename}</a>
-          <div class="menu section"><a href="#" class=""><img src="${r.static_url('wte:static/img/menu-icon.svg')}" alt="Menu" class="small"/></a>
-            <ul>
-              <li><a href="${r.route_url('file.view', pid=part.id, filename='assets/%s' % (file.filename), _query=[('download', 'true')])}">Download</a></li>
-              <li class="divider"></li>
-              <li><a href="${r.route_url('asset.delete', pid=part.id, aid=file.id)}" class="alert post-link" data-wte-confirm="${h.frontend.confirm_delete('asset', file.filename, False)}">Delete</a></li>
-            </ul>
+        <dd py:for="idx, file in enumerate(part.assets)" id="asset-${file.id}-tab" class="${'active' if idx == 0 and not progress.files else ''}">
+          <div class="right">
+            ${h.frontend.menubar([
+              {'group': 'edit', 'items': [
+                {'visible': True,
+                 'label': 'Download',
+                 'href': r.route_url('file.view', pid=part.id, filename='assets/%s' % (file.filename), _query=[('download', 'true')])}]},
+              {'group': 'delete', 'items': [
+                {'visible': True,
+                 'label': 'Delete',
+                 'href': r.route_url('asset.delete', pid=part.id, aid=file.id),
+                 'class': 'alert post-link',
+                 'confirm': h.frontend.confirm_delete('asset', file.filename, False)}]},
+            ], class_='margin-top-right')}
           </div>
+          <a href="#asset-${file.id}"><img src="${r.static_url('wte:static/img/spinner-small.gif')}" class="hidden"/> ${file.filename}</a>
         </dd>
       </dl>
       <form class="tabs-content">

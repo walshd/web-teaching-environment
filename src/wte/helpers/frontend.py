@@ -113,6 +113,26 @@ def primary_filename(progress):
         return ''
 
 
+def confirm_action(title, message, cancel, ok):
+    u"""Generates a confirmation JSON object for use with the jQuery.postLink() plugin.
+    
+    :param title: The title of the confirmation dialog box
+    :type title: ``unicode``
+    :param message: The main message to show
+    :type message: ``unicode``
+    :param cancel: The cancel button's settings
+    :type cancel: ``dict`` or ``unicode``
+    :param ok: The ok button's settings
+    :type ok: ``dict`` or ``unicode``
+    :return: JSON object
+    :rtype: ``unicode``
+    """
+    return json.dumps({'title': title,
+                       'msg': message,
+                       'cancel': cancel if isinstance(cancel, dict) else {'label': cancel},
+                       'ok': ok if isinstance(ok, dict) else {'label': ok}})
+
+
 def confirm_delete(obj_type, title, has_parts=False):
     u"""Generates the confirmation JSON object for use with the jQuery.postLink() plugin.
 
@@ -130,12 +150,11 @@ def confirm_delete(obj_type, title, has_parts=False):
         msg = '%s and all its parts.' % (msg)
     else:
         msg = '%s.' % (msg)
-    options = {'title': 'Delete this %s' % (obj_type),
-               'msg': msg,
-               'cancel': {'label': "Don't delete"},
-               'ok': {'label': 'Delete',
-                      'class_': 'alert'}}
-    return json.dumps(options)
+    return confirm_action('Delete this %s' % (obj_type),
+                          msg,
+                          "Don't delete",
+                          {'label': 'Delete',
+                           'class_': 'alert'})
 
 
 def part_summary(part):
@@ -158,7 +177,7 @@ def part_summary(part):
     return None
 
 
-def menubar(menu):
+def menubar(menu, drop_down_menu_left=True, class_=None):
     u"""Generates a menu bar for a nested set of menu groups and menu items. Each menu group is specified as
     a ``dict`` with the following keys:
     
@@ -180,6 +199,10 @@ def menubar(menu):
     
     :param menu: The list of menu groups and items
     :type menu: ``list``
+    :param drop_down_menu_left: Whether the drop-down menus should be left (True) or right-aligned (False)
+    :type drop_down_menu_left: ``bool``
+    :param class_: Additional CSS classes to add to the main menubar element
+    :type class_: ``unicode``
     :return: The generated HTML elements
     :rtype: :class:`~genshi.builder.tag`"""
     full_menu = []
@@ -192,7 +215,8 @@ def menubar(menu):
                 full_menu.append(tag.li(tag.a(item['label'],
                                               href=item['href'],
                                               class_=item['class'] if 'class' in item else None,
-                                              data_wte_confirm=item['confirm'] if 'confirm' in item else None)))
+                                              data_wte_confirm=item['confirm'] if 'confirm' in item else None,
+                                              target=item['target'] if 'target' in item else None)))
                 if 'highlight' in item and item['highlight'] and 'icon' in item:
                     item['group'] = group['group']
                     highlight.append(item)
@@ -210,18 +234,22 @@ def menubar(menu):
             items.append(tag.li(tag.a(tag.span(class_=item['icon']), title=group[0]['label'],
                                       href=item['href'],
                                       class_=item['class'] if 'class' in item else None,
-                                      data_wte_confirm=item['confirm'] if 'confirm' in item else None)))
+                                      data_wte_confirm=item['confirm'] if 'confirm' in item else None,
+                                      target=item['target'] if 'target' in item else None)))
         else:
             sub_menu = []
             for item in group:
                 sub_menu.append(tag.li(tag.a(item['label'],
                                              href=item['href'],
                                              class_=item['class'] if 'class' in item else None,
-                                             data_wte_confirm=item['confirm'] if 'confirm' in item else None)))
+                                             data_wte_confirm=item['confirm'] if 'confirm' in item else None,
+                                             target=item['target'] if 'target' in item else None)))
             items.append(tag.li(tag.div(tag.a(tag.span(class_=group[0]['icon']), href='#'),
                                         tag.ul(sub_menu),
-                                        class_='menu')))
+                                        class_='menu',
+                                        data_wte_menu_position='left' if drop_down_menu_left else 'right')))
     items.append(tag.li(tag.div(tag.a(tag.span(class_='fi-list'), href='#', title='All actions'),
                                 tag.ul(full_menu),
-                                class_='menu')))
-    return tag.ul(items, class_='menubar')
+                                class_='menu',
+                                data_wte_menu_position='left' if drop_down_menu_left else 'right')))
+    return tag.ul(items, class_='menubar %s' % (class_) if class_ else 'menubar')
