@@ -67,7 +67,7 @@ def modules(request):
     """
     dbsession = DBSession()
     modules = dbsession.query(Part).filter(and_(Part.type == u'module',
-                                                Part.status == u'available')).all()
+                                                Part.status == u'available')).order_by(Part.title).all()
     return {'modules': modules,
             'title': 'Currently Available Modules',
             'missing' : 'There are currently no modules available.',
@@ -91,7 +91,7 @@ def user_modules(request):
         if user.allow('view', request.current_user):
             modules = dbsession.query(Part).join(UserPartRole).\
                 filter(and_(Part.type == u'module',
-                            UserPartRole.user_id == request.matchdict[u'uid'])).all()
+                            UserPartRole.user_id == request.matchdict[u'uid'])).order_by(Part.title).all()
             return {'modules': modules,
                     'title': 'My Modules',
                     'missing': 'You have not yet created any modules.',
