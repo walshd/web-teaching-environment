@@ -98,9 +98,10 @@ def send_email(request, recipient, sender, subject, text):
             smtp.quit()
         except Exception as e:
             logging.getLogger("wte").error(unicode(e))
-            print text  # TODO: Remove
+            print(text)  # TODO: Remove
     else:
         logging.getLogger("wte").error('Could not send e-mail as "email.smtp_host" setting not specified')
+        print(text)  # TODO: Remove
 
 
 def convert_type(value, target_type, default=None):
