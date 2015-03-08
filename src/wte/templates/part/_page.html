@@ -115,6 +115,15 @@
     }
     $(document).ready(function() {
         resize_page();
+        setTimeout(function() {
+            resize_page();
+        }, 100);
+        setTimeout(function() {
+            resize_page();
+        }, 500);
+        setTimeout(function() {
+            resize_page();
+        }, 1000);
         $(window).on('resize', resize_page);
         $('#files').tabbedEditor({
         	viewer: $('#viewer iframe'),
