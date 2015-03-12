@@ -126,7 +126,7 @@ class User(Base):
         if password:
             self.new_password(password)
         else:
-            self.salt = u''.join(unichr(random.randint(0, 127)) for _ in range(32))
+            self.new_salt()
             self.password = u''
         self.login_limit = 0
         self.preferences_ = {}
@@ -135,14 +135,25 @@ class User(Base):
     def init(self):
         self.preferences_ = {}
 
+    def new_salt(self):
+        """Generates a new :data:`~wte.models.User.salt``. Will use
+        ``os.urandom`` if available and the standard pseudo-random if not.
+        """
+        try:
+            rng = random.SystemRandom()
+            self.salt = u''.join(unichr(rng.randint(32, 127)) for _ in range(32))
+        except:
+            self.salt = u''.join(unichr(random.randint(32, 127)) for _ in range(32))
+
     def new_password(self, password):
         """Sets the given ``password`` as the :class:`~wte.models.User`'s new
-        password. Will also generate a new :data:`~wte.models.User.salt`.
+        password. Calls :func:`~wte.models.User.new_salt` to generate a new
+        salt for the password.
 
         :param password: The new cleartext password
         :type password: `unicode`
         """
-        self.salt = u''.join(unichr(random.randint(0, 127)) for _ in range(32))
+        self.new_salt()
         self.password = unicode(hashlib.sha512('%s$$%s' % (self.salt, password)).hexdigest())
 
     def random_password(self):
