@@ -17,7 +17,7 @@
             ${h.form.field('mimetype_other', '', h.form.tags.text_field, size='small-12', e=e, default=asset.mimetype)}
           </div>
           <div class="clearfix" py:if="asset.mimetype.startswith('text/')">
-            ${h.form.field('content', 'Content', h.form.tags.textarea, size='small-12', style='height:20em;', e=e, default=asset.data if asset.data else '')}
+            ${h.form.field('content', 'Content', h.form.tags.textarea, size='small-12', style='height:20em;', e=e, default=asset.data.decode('utf8') if asset.data else '')}
           </div>
           <div class="clearfix" py:if="not asset.mimetype.startswith('text/')">
             ${h.form.field('data', 'File (leave empty to keep the file unchanged)', h.form.tags.file_input_field, size='small-12', e=e)}
