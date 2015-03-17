@@ -276,22 +276,19 @@ def download_part_progress(request):
         filter(UserPartProgress.id == request.matchdict['pid']).first()
     if progress:
         if progress.allow('view', request.current_user):
-            if progress.part.type == u'tutorial':
-                basepath = '%s/%s/' % (progress.part.module.title,
-                                       progress.part.title)
-                filename = '%s - %s.zip' % (progress.part.module.title, progress.part.title)
-            elif progress.part.type == u'task':
-                basepath = '%s/%s/%s/' % (progress.part.module.title,
-                                          progress.part.parent.title,
-                                          progress.part.title)
-                filename = '%s - %s.zip' % (progress.part.parent.title, progress.part.title)
-            elif progress.part.type == u'project':
-                basepath = '%s/' % (progress.part.title)
-                filename = '%s.zip' % (progress.part.title)
+            basepath = progress.part.title
+            filename = progress.part.title
+            parent = progress.part.parent
+            while parent:
+                basepath = '%s/%s' % (parent.title, basepath)
+                filename = '%s - %s' % (parent.title, filename)
+                parent = parent.parent
+            basepath = '%s/' % (basepath)
+            filename = '%s.zip' % (filename)
             body = StringIO()
             zipfile = ZipFile(body, mode='w')
             for user_file in progress.files:
-                zipfile.writestr('%s%s' % (basepath, user_file.filename), user_file.data.encode('utf8'))
+                zipfile.writestr('%s%s' % (basepath, user_file.filename), user_file.data)
             for asset in progress.part.assets:
                 zipfile.writestr('%s/assets/%s' % (basepath, asset.filename), asset.data)
             zipfile.close()
