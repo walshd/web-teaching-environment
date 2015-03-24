@@ -81,7 +81,21 @@
                         mode : textarea.data('wte-mimetype'),
                         lineNumbers: true,
                         gutters: ['CodeMirror-linenumbers'],
-                        matchBrackets: true
+                        matchBrackets: true,
+                        indentUnit: 4
+                    });
+                    cm.setOption("extraKeys", {
+                    	Tab: function(cm) {
+                    		if(cm.somethingSelected()) {
+                                cm.indentSelection("add");
+                                return;
+                            } else {
+                                cm.execCommand("insertSoftTab");
+                            }
+                    	},
+                    	'Shift-Tab': function(cm) {
+                            cm.indentSelection("subtract");
+                        }
                     });
                     cm.on('change', function(cm, changes) {
                         clearTimeout(textarea.data('wte-timeout'));
