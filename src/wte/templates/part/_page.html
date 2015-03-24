@@ -99,6 +99,7 @@
   </section>
     <script src="${r.static_url('wte:static/js/codemirror/codemirror.js')}"></script>
     ${h.frontend.codemirror_scripts(r, [f.mimetype for f in progress.files])}
+    <script src="${r.static_url('wte:static/js/codemirror/addon/edit/matchbrackets.js')}"></script>
     <script>
     function resize_page() {
         var win_height = $(window).innerHeight();

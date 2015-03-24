@@ -78,7 +78,10 @@
                     var textarea = $(this);
                     var tab = component.find('#' + textarea.parent().attr('id') + '-tab > a');
                     var cm = CodeMirror.fromTextArea(this, {
-                        mode : textarea.data('wte-mimetype')
+                        mode : textarea.data('wte-mimetype'),
+                        lineNumbers: true,
+                        gutters: ['CodeMirror-linenumbers'],
+                        matchBrackets: true
                     });
                     cm.on('change', function(cm, changes) {
                         clearTimeout(textarea.data('wte-timeout'));
