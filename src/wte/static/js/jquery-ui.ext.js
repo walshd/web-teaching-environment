@@ -77,13 +77,21 @@
                 component.find('textarea').each(function() {
                     var textarea = $(this);
                     var tab = component.find('#' + textarea.parent().attr('id') + '-tab > a');
-                    var cm = CodeMirror.fromTextArea(this, {
+                    var options = {
                         mode : textarea.data('wte-mimetype'),
                         lineNumbers: true,
-                        gutters: ['CodeMirror-linenumbers'],
-                        matchBrackets: true,
-                        indentUnit: 4
-                    });
+                        indentUnit: 4,
+                    };
+                    var override_options = textarea.data('wte-cm-options');
+                    if(override_options) {
+                    	options = $.extend(options, override_options);
+                    }
+                    /*                        lint: textarea.data('wte-mimetype') == 'application/javascript',
+                        gutters: ['CodeMirror-lint-markers'],
+                        matchBrackets: CodeMirror.prototype.matchBrackets ? true : false,
+                        matchTags: CodeMirror.commands.toMatchingTag ? true : false,
+*/
+                    var cm = CodeMirror.fromTextArea(this, options);
                     cm.setOption("extraKeys", {
                     	Tab: function(cm) {
                     		if(cm.somethingSelected()) {

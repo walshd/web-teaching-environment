@@ -27,11 +27,31 @@ def html_id(text):
     return text.replace(' ', '_').replace('.', '_')
 
 
-CODEMIRROR_MODES = {'text/html': ['javascript', 'css', 'xml', 'htmlmixed'],
-                    'text/css': ['css'],
-                    'text/javascript': ['javascript'],
-                    'text/x-rst': ['python', 'stex', ('../addon/mode', 'overlay'), 'rst']}
-
+CODEMIRROR_MODES = {'text/html': ['javascript',
+                                  'css',
+                                  'xml',
+                                  'htmlmixed',
+                                  ('../addon/fold/', 'xml-fold'),
+                                  ('../addon/edit', 'matchtags')],
+                    'text/css': ['css',
+                                 ('../addon/edit', 'matchbrackets'),
+                                 ('../addon/lint', 'lint'),
+                                 ('../addon/lint', 'csslint'),
+                                 ('../addon/lint', 'css-lint')],
+                    'text/javascript': ['javascript',
+                                        ('../addon/edit', 'matchbrackets'),
+                                        ('../addon/lint', 'lint'),
+                                        ('../addon/lint', 'jshint'),
+                                        ('../addon/lint', 'javascript-lint')],
+                    'application/javascript': ['javascript',
+                                               ('../addon/edit', 'matchbrackets'),
+                                               ('../addon/lint', 'lint'),
+                                               ('../addon/lint', 'jshint'),
+                                               ('../addon/lint', 'javascript-lint')],
+                    'text/x-rst': ['python',
+                                   'stex',
+                                   ('../addon/mode', 'overlay'),
+                                   'rst']}
 
 def codemirror_scripts(request, mimetypes):
     u"""Generates the ``<script>`` tags necessary to load the CodeMirror mode
@@ -51,9 +71,37 @@ def codemirror_scripts(request, mimetypes):
                     modes.append(mode)
                 else:
                     modes.append((mode, mode))
-            #modes.extend(CODEMIRROR_MODES[mimetype])
-    return tag([tag.script(src=request.static_url('wte:static/js/codemirror/mode/%s/%s.js' % mode))
-                for mode in modes])
+    scripts = [request.static_url('wte:static/js/codemirror/codemirror.js')]
+    for mode in modes:
+        script = request.static_url('wte:static/js/codemirror/mode/%s/%s.js' % mode)
+        if script not in scripts:
+            scripts.append(script)
+    return tag([tag.script(src=script) for script in scripts])
+
+
+CODEMIRROR_OPTIONS = {'text/html': {'matchTags': True},
+                      'text/css': {'gutters': ['CodeMirror-lint-markers'],
+                                   'matchBrackets': True,
+                                   'lint': True},
+                      'text/javascript': {'lint': True,
+                                          'gutters': ['CodeMirror-lint-markers'],
+                                          'matchBrackets': True},
+                      'application/javascript': {'gutters': ['CodeMirror-lint-markers'],
+                                                 'matchBrackets': True,
+                                                 'lint': True}}
+
+def codemirror_options(mimetype):
+    u"""Generates a JSON representation of CodeMirror options that are valid
+    for the given ``mimetype``.
+
+    :param mimetype: The mimetype to generate CodeMirror options for
+    :type mimetype: `unicode`
+    :return: The JSON representation of options
+    """
+    if mimetype in CODEMIRROR_OPTIONS:
+        return json.dumps(CODEMIRROR_OPTIONS[mimetype])
+    else:
+        return json.dumps({})
 
 
 def page_pagination(request, part):
