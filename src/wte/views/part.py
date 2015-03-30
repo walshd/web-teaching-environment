@@ -15,11 +15,13 @@ import formencode
 import json
 import transaction
 
+from genshi.template import TemplateLoader, loader
 from pyramid.httpexceptions import (HTTPSeeOther, HTTPNotFound, HTTPForbidden)
 from pyramid.response import Response
 from pyramid.view import view_config
 from pywebtools.renderer import render
 from pywebtools import text
+from pkg_resources import resource_string
 from sqlalchemy import and_
 try:
     from cStringIO import StringIO
@@ -27,10 +29,11 @@ except:
     from StringIO import StringIO
 from zipfile import ZipFile, ZIP_DEFLATED, ZIP_STORED, BadZipfile
 
-from wte.decorators import (current_user, require_logged_in)
+from wte.decorators import (current_user, require_logged_in, require_method)
 from wte.models import (DBSession, Part, UserPartRole, Asset, UserPartProgress)
 from wte.text_formatter import compile_rst
 from wte.util import (unauthorised_redirect, State)
+from wte import helpers
 
 
 def init(config):
@@ -39,6 +42,8 @@ def init(config):
 
     * ``part.new`` -- ``/parts/new`` --
       :func:`~wte.views.part.new`
+    * ``part.import`` -- ``/parts/import`` --
+      :func:`~wte.views.part.import_file`
     * ``part.view`` -- ``/parts/{pid}`` --
       :func:`~wte.views.frontend.view_part`
     * ``part.edit`` -- ``/parts/{pid}/edit`` --
@@ -47,10 +52,18 @@ def init(config):
       -- :func:`~wte.views.part.delete`
     * ``part.delete`` -- ``/parts/{pid}/delete``
       -- :func:`~wte.views.part.delete`
+    * ``part.preview`` -- ``/parts/{pid}/rst_preview`` --
+      :func:`~wte.views.part.preview`
     * ``part.register`` -- ``/parts/{pid}/register``
       -- :func:`~wte.views.part.register`
     * ``part.deregister`` -- ``/parts/{pid}/deregister``
       -- :func:`~wte.views.part.deregister`
+    * ``part.change_status`` -- ``/parts/{pid}/change_status``
+      -- :func:`~wte.views.part.change_status`
+    * ``part.export`` -- ``/parts/{pid}/export``
+      -- :func:`~wte.views.part.export`
+    * ``part.download`` -- ``/parts/{pid}/download``
+      -- :func:`~wte.views.part.download`
     """
     config.add_route('part.new', '/parts/new/{new_type}')
     config.add_route('part.import', '/parts/import')
@@ -62,6 +75,7 @@ def init(config):
     config.add_route('part.deregister', '/parts/{pid}/deregister')
     config.add_route('part.change_status', '/parts/{pid}/change_status')
     config.add_route('part.export', '/parts/{pid}/export')
+    config.add_route('part.download', '/parts/{pid}/download')
 
 
 def get_user_part_progress(dbsession, user, part):
@@ -602,11 +616,17 @@ def change_status(request):
 
 
 @view_config(route_name='part.export')
+@require_method('POST')
 @current_user()
 @require_logged_in()
 def export(request):
     u"""Handles the ``/parts/{pid}/export`` URL, providing the UI and backend
     for exporting a :class:`~wte.models.Part`.
+    
+    The difference between exporting and downloading
+    (:func:`~wte.views.part.download`) is that exporting creates an archive
+    that can be imported into another WTE instance, while downloading creates
+    an HTML version for offline viewing.
 
     Requires that the user has "edit" rights on the :class:`~wte.models.Part`.
     """
@@ -843,3 +863,51 @@ def import_file(request):
             return {'e': e,
                     'crumbs': crumbs}
     return {'crumbs': crumbs}
+
+
+@view_config(route_name='part.download')
+@require_method('POST')
+@current_user()
+@require_logged_in()
+def download(request):
+    u"""Handles the ``/parts/{pid}/download`` URL, providing the UI and backend
+    for downloading a :class:`~wte.models.Part`.
+    
+    The difference between exporting (:func:`~wte.views.part.export`) and
+    downloading is that exporting creates an archive that can be imported into
+    another WTE instance, while downloading creates an HTML version for
+    offline viewing.
+    """
+    def download_part(base_path, part, depth, body_zip, template_loader):
+        template= template_loader.load('part/download.html')
+        doctree = template.generate(part=part,
+                                    depth=depth,
+                                    h=helpers)
+        body_zip.writestr('%s/index.html' % (base_path), doctree.render('xhtml').encode('utf-8'))
+        for child in part.children:
+            download_part('%s/%s' % (base_path, child.id), child, depth + 1, body_zip, template_loader)
+        if part.type == 'tutorial' or part.type == 'task':
+            for template in part.templates:
+                body_zip.writestr('%s/workspace/%s' % (base_path, template.filename), template.data if template.data else '')
+            for asset in part.assets:
+                body_zip.writestr('%s/workspace/assets/%s' % (base_path, asset.filename), asset.data if asset.data else '')
+    dbsession = DBSession()
+    part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
+    if part:
+        if part.allow('view', request.current_user):
+            template_loader = TemplateLoader(loader.package('wte', 'templates'))
+            body = StringIO()
+            body_zip = ZipFile(body, 'w')
+            body_zip.writestr('%s/_static/normalize.css' % (part.title), resource_string('wte', 'static/css/normalize.css'))
+            body_zip.writestr('%s/_static/foundation.min.css' % (part.title), resource_string('wte', 'static/css/foundation.min.css'))
+            body_zip.writestr('%s/_static/docutils.css' % (part.title), resource_string('wte', 'static/css/docutils.css').replace('#textbook ', ''))
+            body_zip.writestr('%s/_static/application.css' % (part.title), resource_string('wte', 'static/css/application.css'))
+            download_part(part.title, part, 0, body_zip, template_loader)
+            body_zip.close()
+            return Response(body=str(body.getvalue()),
+                            headers=[('Content-Type', 'application/zip'),
+                                     ('Content-Disposition', str('attachment; filename="%s.zip"' % (part.title)))])
+        else:
+            unauthorised_redirect(request)
+    else:
+        raise HTTPNotFound()

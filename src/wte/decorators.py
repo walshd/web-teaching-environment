@@ -10,6 +10,7 @@ various functions.
 .. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
 from decorator import decorator
+from pyramid.httpexceptions import HTTPMethodNotAllowed
 from pywebtools.renderer import request_from_args
 
 from wte.models import (DBSession, User)
@@ -53,4 +54,22 @@ def require_logged_in():
         else:
             unauthorised_redirect(request,
                                   message=u'You must log-in or register to access this area')
+    return decorator(wrapper)
+
+
+def require_method(methods):
+    u"""Checks that the current request method is in the list of ``methods``
+    that are allowed for the given request.
+    
+    :param methods: The list of valid request methods
+    :type methods: `list` of `unicode`
+    """
+    if not isinstance(methods, list):
+        methods = [methods]
+    def wrapper(f, *args, **kwargs):
+        request = request_from_args(*args)
+        if request.method in methods:
+            return f(*args, **kwargs)
+        else:
+            raise HTTPMethodNotAllowed()
     return decorator(wrapper)

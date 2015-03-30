@@ -1,6 +1,6 @@
 <article class="row left" xmlns:py="http://genshi.edgewall.org/">
   <section class="small-12 column">
-    <div py:if="part.allow('edit', r.current_user) or part.allow('delete', r.current_user)" class="right">
+    <div class="right">
       ${h.frontend.menubar([
         {'group': 'status', 'items': [
           {'visible': part.allow('edit', r.current_user),
@@ -38,6 +38,10 @@
           {'visible': part.allow('edit', r.current_user),
            'label': 'Export',
            'href': r.route_url('part.export', pid=part.id),
+           'class': 'post-link'},
+          {'visible': True,
+           'label': 'Download',
+           'href': r.route_url('part.download', pid=part.id),
            'class': 'post-link'}]},
         {'group': 'delete', 'items': [
           {'visible': part.allow('delete', r.current_user),
