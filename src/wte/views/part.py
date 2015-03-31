@@ -622,7 +622,7 @@ def change_status(request):
 def export(request):
     u"""Handles the ``/parts/{pid}/export`` URL, providing the UI and backend
     for exporting a :class:`~wte.models.Part`.
-    
+
     The difference between exporting and downloading
     (:func:`~wte.views.part.download`) is that exporting creates an archive
     that can be imported into another WTE instance, while downloading creates
@@ -872,14 +872,14 @@ def import_file(request):
 def download(request):
     u"""Handles the ``/parts/{pid}/download`` URL, providing the UI and backend
     for downloading a :class:`~wte.models.Part`.
-    
+
     The difference between exporting (:func:`~wte.views.part.export`) and
     downloading is that exporting creates an archive that can be imported into
     another WTE instance, while downloading creates an HTML version for
     offline viewing.
     """
     def download_part(base_path, part, depth, body_zip, template_loader):
-        template= template_loader.load('part/download.html')
+        template = template_loader.load('part/download.html')
         doctree = template.generate(part=part,
                                     depth=depth,
                                     h=helpers)
@@ -888,9 +888,11 @@ def download(request):
             download_part('%s/%s' % (base_path, child.id), child, depth + 1, body_zip, template_loader)
         if part.type == 'tutorial' or part.type == 'task':
             for template in part.templates:
-                body_zip.writestr('%s/workspace/%s' % (base_path, template.filename), template.data if template.data else '')
+                body_zip.writestr('%s/workspace/%s' % (base_path, template.filename),
+                                  template.data if template.data else '')
             for asset in part.assets:
-                body_zip.writestr('%s/workspace/assets/%s' % (base_path, asset.filename), asset.data if asset.data else '')
+                body_zip.writestr('%s/workspace/assets/%s' % (base_path, asset.filename),
+                                  asset.data if asset.data else '')
     dbsession = DBSession()
     part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
     if part:
@@ -898,10 +900,14 @@ def download(request):
             template_loader = TemplateLoader(loader.package('wte', 'templates'))
             body = StringIO()
             body_zip = ZipFile(body, 'w')
-            body_zip.writestr('%s/_static/normalize.css' % (part.title), resource_string('wte', 'static/css/normalize.css'))
-            body_zip.writestr('%s/_static/foundation.min.css' % (part.title), resource_string('wte', 'static/css/foundation.min.css'))
-            body_zip.writestr('%s/_static/docutils.css' % (part.title), resource_string('wte', 'static/css/docutils.css').replace('#textbook ', ''))
-            body_zip.writestr('%s/_static/application.css' % (part.title), resource_string('wte', 'static/css/application.css'))
+            body_zip.writestr('%s/_static/normalize.css' % (part.title),
+                              resource_string('wte', 'static/css/normalize.css'))
+            body_zip.writestr('%s/_static/foundation.min.css' % (part.title),
+                              resource_string('wte', 'static/css/foundation.min.css'))
+            body_zip.writestr('%s/_static/docutils.css' % (part.title),
+                              resource_string('wte', 'static/css/docutils.css').replace('#textbook ', ''))
+            body_zip.writestr('%s/_static/application.css' % (part.title),
+                              resource_string('wte', 'static/css/application.css'))
             download_part(part.title, part, 0, body_zip, template_loader)
             body_zip.close()
             return Response(body=str(body.getvalue()),

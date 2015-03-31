@@ -53,6 +53,7 @@ CODEMIRROR_MODES = {'text/html': ['javascript',
                                    ('../addon/mode', 'overlay'),
                                    'rst']}
 
+
 def codemirror_scripts(request, mimetypes):
     u"""Generates the ``<script>`` tags necessary to load the CodeMirror mode
     JS files for the given list of ``mimetypes``.
@@ -76,7 +77,7 @@ def codemirror_scripts(request, mimetypes):
         script = request.static_url('wte:static/js/codemirror/mode/%s/%s.js' % mode)
         if script not in scripts:
             scripts.append(script)
-    return tag([tag.script(src=script) for script in scripts])
+    return tag([tag.script(src=s) for s in scripts])
 
 
 CODEMIRROR_OPTIONS = {'text/html': {'matchTags': True},
@@ -89,6 +90,7 @@ CODEMIRROR_OPTIONS = {'text/html': {'matchTags': True},
                       'application/javascript': {'gutters': ['CodeMirror-lint-markers'],
                                                  'matchBrackets': True,
                                                  'lint': True}}
+
 
 def codemirror_options(mimetype):
     u"""Generates a JSON representation of CodeMirror options that are valid
@@ -163,7 +165,7 @@ def primary_filename(progress):
 
 def confirm_action(title, message, cancel, ok):
     u"""Generates a confirmation JSON object for use with the jQuery.postLink() plugin.
-    
+
     :param title: The title of the confirmation dialog box
     :type title: ``unicode``
     :param message: The main message to show
@@ -228,12 +230,12 @@ def part_summary(part):
 def menubar(menu, drop_down_menu_left=True, class_=None):
     u"""Generates a menu bar for a nested set of menu groups and menu items. Each menu group is specified as
     a ``dict`` with the following keys:
-    
+
     * *group*: the name of the group
     * *items*: a list of menu item ``dict``
-    
+
     Each menu item is specified as a ``dict``, which has the following keys:
-    
+
     * *visible*: whether the element is displayed (``True``/``False``)
     * *label*: the label text to show
     * *href*: the href for the menu link
@@ -241,10 +243,10 @@ def menubar(menu, drop_down_menu_left=True, class_=None):
     * *icon*: a foundation icon to show for the menu link [optional]
     * *confirm*: confirmation text to show before the link is followed [optional]
     * *highlight*: whether to also show the item at the top-level of the menubar (``True``/``False``) [optional]
-    
+
     Menu items that are marked as 'highlight: ``True`` and have an 'icon' set, will be shown at the top level of
     the menubar. All other items are shown in a drop-down menu.
-    
+
     :param menu: The list of menu groups and items
     :type menu: ``list``
     :param drop_down_menu_left: Whether the drop-down menus should be left (True) or right-aligned (False)

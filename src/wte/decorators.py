@@ -60,12 +60,13 @@ def require_logged_in():
 def require_method(methods):
     u"""Checks that the current request method is in the list of ``methods``
     that are allowed for the given request.
-    
+
     :param methods: The list of valid request methods
     :type methods: `list` of `unicode`
     """
     if not isinstance(methods, list):
         methods = [methods]
+
     def wrapper(f, *args, **kwargs):
         request = request_from_args(*args)
         if request.method in methods:

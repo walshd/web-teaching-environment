@@ -70,7 +70,7 @@ def modules(request):
                                                 Part.status == u'available')).order_by(Part.title).all()
     return {'modules': modules,
             'title': 'Currently Available Modules',
-            'missing' : 'There are currently no modules available.',
+            'missing': 'There are currently no modules available.',
             'crumbs': [{'title': 'Modules', 'url': request.route_url('modules'), 'current': True}]}
 
 
@@ -96,7 +96,9 @@ def user_modules(request):
                     'title': 'My Modules',
                     'missing': 'You have not yet created any modules.',
                     'crumbs': [{'title': user.display_name, 'url': request.route_url('user.view', uid=user.id)},
-                               {'title': 'Modules', 'url': request.route_url('user.modules', uid=request.matchdict['uid']), 'current': True}]}
+                               {'title': 'Modules',
+                                'url': request.route_url('user.modules', uid=request.matchdict['uid']),
+                                'current': True}]}
         else:
             unauthorised_redirect(request)
     else:
