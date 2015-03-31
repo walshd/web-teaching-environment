@@ -1,4 +1,3 @@
-
 syntax: regexp
 ^src/WebTeachingEnvironment\.egg-info$
 syntax: regexp
@@ -9,8 +8,11 @@ syntax: regexp
 ^.project$
 syntax: regexp
 ^.pydevproject$
-
 syntax: regexp
 ^dist$
 syntax: regexp
 ^doc/build$
+syntax: regexp
+^.tox$
+syntax: regexp
+^.coverage$
