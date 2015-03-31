@@ -64,7 +64,7 @@ def unauthorised_redirect(request, redirect_to=None, message=None):
         raise HTTPSeeOther(request.route_url('user.login', _query={'return_to': request.current_route_url()}))
 
 
-def send_email(request, recipient, sender, subject, text):
+def send_email(request, recipient, sender, subject, text):  # pragma: no cover
     u"""Sends an e-mail based on the settings in the configuration file. If
     the configuration does not have e-mail settings or if there is an
     exception sending the e-mail, then it will log an error.
