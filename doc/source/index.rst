@@ -12,6 +12,7 @@ Contents:
    :maxdepth: 2
 
    administrator/index
+   user/index
    api/index
 
 Indices and tables

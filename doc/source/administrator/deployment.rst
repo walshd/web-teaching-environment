@@ -12,14 +12,11 @@ Deploying with Apache2 & mod_wsgi
 To deploy the Experiment Support System via `Apache2`_ and `mod_wsgi`_ add the
 following settings to the VirtualHost configuration::
 
-    WSGIDaemonProcess wte user=www-data group=www-data processes=1 threads=10 python-path=/path/to/virtualenv/lib/python2.7/site-packages
+    WSGIDaemonProcess wte user=www-data group=www-data processes=1 threads=4 python-path=/path/to/virtualenv/lib/python2.7/site-packages
     WSGIScriptAlias /web-teaching-environment /path/to/the/application.wsgi
     <Location /wte>
         WSGIProcessGroup wte
     </Location>
-
-**Note**: Leave the ``processes`` value at 1. Use the ``threads`` option to
-specify how many parallel requests to support. 
 
 Then create the following script to to run the application via `WSGI`_. Adapt
 it by replacing the paths with the paths to where the Web Teaching Environment
