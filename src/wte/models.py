@@ -12,11 +12,13 @@ function, which compares the current Alembic version of the database to the
 required :data:`~wte.models.DB_VERSION` to ensure that the application does
 not run on an outdated database schema.
 """
+import json
 import random
 import hashlib
 
+from datetime import datetime
 from sqlalchemy import (Column, Index, ForeignKey, Integer, Unicode,
-                        UnicodeText, Table, LargeBinary)
+                        UnicodeText, Table, LargeBinary, DateTime)
 from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.event import listens_for
 from sqlalchemy.exc import OperationalError
@@ -30,7 +32,7 @@ from wte.text_formatter import compile_rst
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
 
-DB_VERSION = u''
+DB_VERSION = u'9ca3f8c12ed'
 """The currently required database version."""
 
 
@@ -358,6 +360,8 @@ class Part(Base):
     * ``parent`` -- The parent :class:`~wte.models.Part`
     * ``progress`` -- The :class:`~wte.models.UserPartProgress` linked to this :class:`~wte.models.Part`
     * ``status`` -- The :class:`~wte.models.Part`'s availability status
+    * ``tasks`` -- List of :class:`~wte.models.TimedTask` that are attached to this
+      :class:`~wte.models.Part`
     * ``templates`` -- List of :class:`~wte.models.Asset` that act as template files
     * ``title`` -- The title displayed for this :class:`~wte.models.Part`
     * ``type`` -- Whether the :class:`~wte.models.Part` is a module, tutorial, page,
@@ -398,6 +402,8 @@ class Part(Base):
     progress = relationship(u'UserPartProgress',
                             cascade=u'all',
                             primaryjoin=u'Part.id==UserPartProgress.part_id')
+    tasks = relationship(u'TimedTask',
+                         cascade=u'all')
 
     def root(self):
         u"""Gets the root :class:`~wte.models.Part` for the current :class:`~wte.models.Part`.
@@ -605,3 +611,64 @@ progress_assets = Table('progress_assets', Base.metadata,
 u""":class:`sqlalchemy.Table` to link :class:`~wte.models.Part` and
 :class:`~wte.models.Asset`.
 """
+
+
+class TimedTask(Base):
+    u"""The class:`~wte.models.TimedTask` represents a task that is to be run at a specific
+    time in the future.
+
+    Instances of :class:`~wte.models.TimedTask` have the following attributes:
+
+    * ``id`` -- The unique database identifier
+    * ``part_id`` -- The unique identifier of the :class:`~wte.models.Part` the
+      :class:`~wte.models.TimedTask` belongs to
+    * ``name`` -- The name of this :class:`~wte.models.TimedTask`
+    * ``title`` -- The title of this :class:`~wte.models.TimedTask`
+    * ``timestamp`` -- The timestamp at which to execute this :class:`~wte.models.TimedTask`
+    * ``_options`` -- The task options as JSON (do not use directly, use
+      :attr:`~wte.models.TimedTask.options`)
+    """
+
+    __tablename__ = 'timed_tasks'
+
+    id = Column(Integer, primary_key=True)
+    part_id = Column(Integer, ForeignKey('parts.id',
+                                         name='timed_tasks_part_id_fk'))
+    name = Column(Unicode(255))
+    title = Column(Unicode(255))
+    timestamp = Column(DateTime, index=True)
+    _options = Column(UnicodeText)
+    status = Column(Unicode(255))
+
+    __table_args__ = (Index('ix_timed_tasks_timestamp_status', 'timestamp', 'status'), )
+
+    def _get_options(self):
+        """Get / Set the options for this :class:`~wte.models.TimedTask`.
+
+        When setting options, the new options must be of type ``dict``.
+
+        When getting options, the options will be returned as a ``dict``.
+        """
+        if not hasattr(self, '_options_cache'):
+            if self._options:
+                self._options_cache = json.loads(self._options)
+            else:
+                self._options_cache = {}
+        return self._options_cache
+
+    def _set_options(self, options):
+        if hasattr(self, '_options_cache'):
+            del self._options_cache
+        if isinstance(options, dict):
+            self._options = json.dumps(options)
+        else:
+            self._options = json.dumps({})
+
+    options = property(_get_options, _set_options)
+
+    def _get_delta(self):
+        """Get the ``timedelta`` between the :class:`~wte.models.TimedTask`\'s
+        ``timestamp`` and ``datetime.now()``."""
+        return self.timestamp - datetime.now()
+
+    delta = property(_get_delta)

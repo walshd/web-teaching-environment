@@ -21,7 +21,9 @@ requires = [
     'decorator',
     'docutils',
     'pygments',
-    'formencode'
+    'formencode',
+    'alembic',
+    'inflect'
     ]
 
 setup(name='WebTeachingEnvironment',
