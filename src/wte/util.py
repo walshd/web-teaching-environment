@@ -1,20 +1,23 @@
 # -*- coding: utf-8 -*-
 u"""
-###########################################
-:mod:`wte.models.util` -- Utility functions
-###########################################
+####################################
+:mod:`wte.util` -- Utility functions
+####################################
 
-The :mod:`~wte.models.util` module provides various utility objects and
+The :mod:`~wte.util` module provides various utility objects and
 functions.
 
 .. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
 import logging
+import formencode
 import smtplib
 
+from datetime import datetime
 from pyramid.httpexceptions import HTTPSeeOther
 from email.mime.text import MIMEText
 from email.utils import formatdate
+
 
 VERSION = '0.99'
 
@@ -30,6 +33,72 @@ class State(object):
         attributes of the :class:`~wte.util.State`.
         """
         self.__dict__.update(kwargs)
+
+
+class DynamicSchema(formencode.Schema):
+    u"""The :class:`~wte.util.DynamicSchema` provides a dynamic
+    :class:`~formencode.schema.Schema` for which the validation fields are
+    defined from the ``list`` of (field-name,
+    :class:`~formencode.api.FancyValidator`) pairs passed to the
+    constructor.
+    """
+    accept_iterator = True
+
+    def __init__(self, fields=None, **kwargs):
+        formencode.Schema.__init__(self, **kwargs)
+        if fields:
+            for (name, validator) in fields:
+                self.add_field(name, validator)
+
+
+class DateValidator(formencode.FancyValidator):
+    u"""The :class:`~wte.util.DateValidator` provides date validation and
+    conversion from the formats "YYYY-MM-DD" or "DD/MM/YYYY" to a python
+    :class:`datetime.date`.
+    """
+
+    messages = {'invalid_format': 'Please enter a date either as YYYY-MM-DD or DD/MM/YYYY'}
+
+    def _convert_to_python(self, value, state):
+        u"""Try to convert from either "YYYY-MM-DD" or "DD-MM-YYYY" to a
+        :class:`datetime.date`. Raises :class:`~formencode.api.Invalid` if the
+        conversion fails.
+
+        :param value: The `unicode` value to convert
+        :param type: `unicode`
+        :return: The converted date
+        :return_type: :class:`datetime.date`.
+        """
+        try:
+            return datetime.strptime(value, '%Y-%m-%d').date()
+        except:
+            try:
+                return datetime.strptime(value, '%d/%m/%Y').date()
+            except:
+                raise formencode.api.Invalid(self.message('invalid_format', state), value, state)
+
+
+class TimeValidator(formencode.FancyValidator):
+    u"""The :class:`~wte.util.DateValidator` provides time validation and
+    conversion from the format "HH:MM" to a python :class:`datetime.time`.
+    """
+
+    messages = {'invalid_format': 'Please enter a time as HH:MM'}
+
+    def _convert_to_python(self, value, state):
+        u"""Try to convert from "HH:MM" to a :class:`datetime.time`. Raises
+        :class:`~formencode.api.Invalid` if the conversion fails.
+
+        :param value: The `unicode` value to convert
+        :param type: `unicode`
+        :return: The converted time
+        :return_type: :class:`datetime.time`
+        """
+        try:
+            return datetime.strptime(value, '%H:%M').time()
+        except Exception as e:
+            print(e)
+            raise formencode.api.Invalid(self.message('invalid_format', state), value, state)
 
 
 def unauthorised_redirect(request, redirect_to=None, message=None):

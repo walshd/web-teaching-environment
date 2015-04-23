@@ -9,10 +9,14 @@ render the frontend page displays.
 
 .. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
+import inflect
 import json
 import re
 
 from genshi.builder import tag, Markup
+
+
+inflector = inflect.engine()
 
 
 def html_id(text):
@@ -22,7 +26,7 @@ def html_id(text):
     :param text: The text to convert
     :type text: `unicode`
     :return: The corresponding HTML id
-    :rtype: `unicode`
+    :rtype: :func:`unicode`
     """
     return text.replace(' ', '_').replace('.', '_')
 
@@ -154,7 +158,7 @@ def primary_filename(progress):
                      from
     :type progress: :class:`~wte.models.UserPartProgress`
     :return: The filename as a string or the empty string
-    :rtype: `unicode`
+    :rtype: :func:`unicode`
     """
     files = [f for f in progress.files if f.mimetype == 'text/html']
     if files:
@@ -175,7 +179,7 @@ def confirm_action(title, message, cancel, ok):
     :param ok: The ok button's settings
     :type ok: ``dict`` or ``unicode``
     :return: JSON object
-    :rtype: ``unicode``
+    :rtype: :func:`unicode`
     """
     return json.dumps({'title': title,
                        'msg': message,
@@ -193,7 +197,7 @@ def confirm_delete(obj_type, title, has_parts=False):
     :param has_parts: Whether to add the suffix " and all its parts"
     :type has_parts: ``bool``
     :return: JSON object
-    :rtype: ``unicode``
+    :rtype: :func:`unicode`
     """
     msg = 'Please confirm that you wish to delete the %s "%s"' % (obj_type, title)
     if has_parts:
@@ -303,3 +307,39 @@ def menubar(menu, drop_down_menu_left=True, class_=None):
                                 class_='menu',
                                 data_wte_menu_position='left' if drop_down_menu_left else 'right')))
     return tag.ul(items, class_='menubar %s' % (class_) if class_ else 'menubar')
+
+
+def readable_timedelta(delta):
+    u"""Converts a :class:`datetime.timedelta` into a human-readable string.
+    
+    :param delta: The time-delta to convert
+    :type delta: :class:`datetime.timedelta`
+    :return: The human-readable string representation of the ``delta``
+    :rtype: :func:`unicode`
+    """
+    if delta.days < 0:
+        delta = abs(delta)
+        if delta.days > 60:
+            return 'about %i %s ago' % (delta.days / 30, inflector.plural('month', delta.days / 30))
+        elif delta.days > 14:
+            return 'about %i %s ago' % (delta.days / 7, inflector.plural('week', delta.days / 7))
+        elif delta.days > 0:
+            return '%i %s ago' % (delta.days, inflector.plural('day', delta.days))
+        elif delta.seconds > 3600:
+            return '%i %s ago' % (delta.seconds / 3600, inflector.plural('hour', delta.seconds / 3600))
+        elif delta.seconds > 60:
+            return '%i %s ago' % (delta.seconds / 60, inflector.plural('minute', delta.seconds / 60))
+        else:
+            return '%i %s ago' % (delta.seconds, inflector.plural('second', delta.seconds))
+    elif delta.days > 60:
+        return 'in about %i %s' % (delta.days / 30, inflector.plural('month', delta.days / 30))
+    elif delta.days > 14:
+        return 'in about %i %s' % (delta.days / 7, inflector.plural('week', delta.days / 7))
+    elif delta.days > 0:
+        return 'in %i %s' % (delta.days, inflector.plural('day', delta.days))
+    elif delta.seconds > 3600:
+        return 'in %i %s' % (delta.seconds / 3600, inflector.plural('hour', delta.seconds / 3600))
+    elif delta.seconds > 60:
+        return 'in %i %s' % (delta.seconds / 60, inflector.plural('minute', delta.seconds / 60))
+    else:
+        return 'in %i %s' % (delta.seconds, inflector.plural('second', delta.seconds))

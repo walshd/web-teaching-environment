@@ -11,10 +11,12 @@ creating the initial database.
 """
 import transaction
 
+from alembic import config, command
 from pyramid.paster import (get_appsettings, setup_logging)
 from sqlalchemy import engine_from_config
 
-from wte.models import (Base, DBSession, User, Permission, PermissionGroup)
+from wte.models import (Base, DBSession, User, Permission, PermissionGroup,
+                        DB_VERSION)
 
 
 def init(subparsers):
@@ -25,6 +27,12 @@ def init(subparsers):
     parser.add_argument('configuration', help='WTE configuration file')
     parser.add_argument('--drop-existing', action='store_true', default=False, help='Drop any existing tables')
     parser.set_defaults(func=initialise_database)
+    parser = subparsers.add_parser('update-database', help='Update the Web Teaching Environment database')
+    parser.add_argument('configuration', help='Configuration file')
+    parser.set_defaults(func=update_database)
+    parser = subparsers.add_parser('downgrade-database', help='Downgrade the Web Teaching Environment database')
+    parser.add_argument('configuration', help='Configuration file')
+    parser.set_defaults(func=downgrade_database)
 
 
 def initialise_database(args):
@@ -71,3 +79,15 @@ def initialise_database(args):
         group = PermissionGroup(title=u'Student')
         dbsession.add(group)
         group.permissions.append(create_project_perm)
+
+    
+def update_database(args):
+    alembic_config = config.Config(args.configuration, ini_section='app:main')
+    alembic_config.set_section_option('app:main', 'script_location', 'wte:migrations')
+    command.upgrade(alembic_config, DB_VERSION)
+
+
+def downgrade_database(args):
+    alembic_config = config.Config(args.configuration, ini_section='app:main')
+    alembic_config.set_section_option('app:main', 'script_location', 'wte:migrations')
+    command.downgrade(alembic_config, '-1')

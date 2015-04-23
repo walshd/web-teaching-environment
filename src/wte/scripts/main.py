@@ -43,13 +43,14 @@ def main():
     complete parser and then calls the appropriate function for the command
     the user provided on the command-line.
     """
-    from . import configuration, database
+    from . import configuration, database, timed_tasks
 
     parser = ArgumentParser(description='WTE administration application')
     subparsers = parser.add_subparsers()
 
     configuration.init(subparsers)
     database.init(subparsers)
+    timed_tasks.init(subparsers)
 
     args = parser.parse_args()
 
