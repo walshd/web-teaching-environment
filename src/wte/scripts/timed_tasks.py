@@ -32,15 +32,15 @@ def init(subparsers):
 
 def run_timed_tasks(args):
     u"""Runs all timed tasks where the timestamp is in the past and the status is "ready".
-    
+
     All :class:`~wte.models.TimedTask` that are to be run are given a unique "run-{random-number}"
     ``status`` to uniquely identify them for this run. Individual task runners are then
     responsible for setting that status to "completed" after the task completes successfully
     or to "failed" if it failed.
-    
+
     All task runners are run in independent :class:`threading.Thread`\ s. After all
     :class:`~threading.Thread` complete, any :class:`~wte.models.TimedTask` that still have
-    the unique "run-{random-number}" status are automatically set to the "failed" status. 
+    the unique "run-{random-number}" status are automatically set to the "failed" status.
     """
     settings = get_appsettings(args.configuration)
     setup_logging(args.configuration)

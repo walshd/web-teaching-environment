@@ -311,7 +311,7 @@ def menubar(menu, drop_down_menu_left=True, class_=None):
 
 def readable_timedelta(delta):
     u"""Converts a :class:`datetime.timedelta` into a human-readable string.
-    
+
     :param delta: The time-delta to convert
     :type delta: :class:`datetime.timedelta`
     :return: The human-readable string representation of the ``delta``

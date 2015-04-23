@@ -80,7 +80,7 @@ def initialise_database(args):
         dbsession.add(group)
         group.permissions.append(create_project_perm)
 
-    
+
 def update_database(args):
     alembic_config = config.Config(args.configuration, ini_section='app:main')
     alembic_config.set_section_option('app:main', 'script_location', 'wte:migrations')
