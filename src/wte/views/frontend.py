@@ -221,7 +221,7 @@ def reset_files(request):
             if request.method == u'POST':
                 with transaction.manager:
                     progress = get_user_part_progress(dbsession, request.current_user, part)
-                    for user_file in progress.files:
+                    for user_file in list(progress.files):
                         if 'filename' not in request.params\
                                 or request.params['filename'] == user_file.filename:
                             progress.files.remove(user_file)
