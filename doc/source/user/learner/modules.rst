@@ -1,0 +1,14 @@
+Available Modules
+=================
+
+The content in the Web Teaching Environment is organised in modules, which you
+can take. To find what modules are available, click on the
+:topbar_link:`Modules` link at the top of the page.
+
+This will take you to the list of publicly available modules. For each
+available module you can see the module's title and a brief summary of the
+module's content. Click on a module's title to see that module's full summary
+and to register to :doc:`take the module <take_module>`.
+
+.. note:: You must be :doc:`logged in <../login>` to see a module's detailed
+   information. 
