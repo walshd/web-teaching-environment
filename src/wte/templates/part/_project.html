@@ -78,6 +78,24 @@
       </form>
     </section>
     <section id="viewer">
+      <div class="view-options">
+        <div class="right">
+          ${h.frontend.menubar([
+            #{'group': 'options', 'items': [
+            #  {'visible': True,
+            #   'label': 'Reload',
+            #   'icon': 'fi-loop',
+            #   'href': '#',
+            #   'class': '',
+            #   'highlight': True}]},
+            {'group': 'options', 'items': [
+              {'visible': True,
+               'label': 'Open in new Tab / Window',
+               'href': r.route_url('file.view', pid=part.id, filename=h.frontend.primary_filename(progress)),
+               'target': 'wte_fullscreen'}]}
+          ])}
+        </div>
+      </div>
       <iframe src="${r.route_url('file.view', pid=part.id, filename=h.frontend.primary_filename(progress))}"></iframe>
     </section>
   </section>
