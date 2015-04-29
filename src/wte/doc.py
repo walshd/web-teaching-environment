@@ -11,6 +11,7 @@ processing.
 """
 from docutils import nodes
 
+
 def button_role(role, rawtext, text, node_id, inliner):
     u"""Handles adding the necessary inline styling to indicate buttons in the
     documentation."""
