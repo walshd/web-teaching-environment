@@ -7,8 +7,8 @@ API Documentation
 
    wte
    wte_decorators
+   wte_doc
    wte_helpers
-   wte_helpers_auth
    wte_helpers_form
    wte_helpers_frontend
    wte_models

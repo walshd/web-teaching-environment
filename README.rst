@@ -42,6 +42,10 @@ Getting Started
 Documentation
 -------------
 
+The documentation is `provided online`_.
+
+.. image:: https://readthedocs.org/projects/web-teaching-environment/badge/?version=latest
+
 To generate the documentation:
 
 - Activate the ``virtualenv``;
@@ -53,3 +57,4 @@ To generate the documentation:
 - Build the documentation: ``make html``.
 
 .. _`Sphinx`: http://sphinx-doc.org
+.. _`provided online`: http://web-teaching-environment.readthedocs.org/
