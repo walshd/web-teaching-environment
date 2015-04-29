@@ -8,19 +8,26 @@ This module contains docutils extensions (roles and directives) that provide
 the additional formatting support required by the
 :func:`~wte.text_formatter.compile_rst` function.
 """
+import re
 
-from docutils import nodes
-from docutils.parsers.rst import directives, Directive
-
+from docutils import nodes, utils
+from docutils.parsers.rst import directives, roles, Directive
 from pygments import highlight
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import get_lexer_by_name, TextLexer
+from pyramid.request import Request
+from pyramid.threadlocal import get_current_registry
+
+BASE_REQUEST = None
 
 
-def init():
+def init(settings):
     """Initialise and load the docutils extensions.
     """
+    global BASE_REQUEST
+    BASE_REQUEST = Request.blank('/', base_url=settings['app.base_url'])
     directives.register_directive('sourcecode', Pygments)
+    roles.register_local_role('crossref', crossref_role)
 
 
 class Pygments(Directive):
@@ -74,3 +81,38 @@ class Pygments(Directive):
         formatter = HtmlFormatter(noclasses=False, style='native', cssclass=u'source')
         parsed = highlight(u'\n'.join(self.content), lexer, formatter)
         return [nodes.raw('', parsed, format='html')]
+
+
+CROSSREF_PATTERN = re.compile(r'([0-9]+)|(?:(.*)<([0-9]+)>)')
+
+
+def crossref_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
+    """The :func:`~wte.text_formatter.docutils_ext.crossref_role` function
+    implements an additional docutils role that handles cross-references
+    between :class:`~wte.models.Part`\ s.
+    
+    Usage in ReST is \:crossref\:\`part_id\` or \:crossref\:\`link text
+    <part_id>\`.
+    """
+    from wte.models import (DBSession, Part)
+    result = []
+    messages = []
+    text = utils.unescape(text)
+    match = re.match(CROSSREF_PATTERN, text)
+    if match:
+        groups = match.groups()
+        target_id = groups[0] if groups[0] else groups[2]
+        dbsession = DBSession()
+        part = dbsession.query(Part).filter(Part.id == target_id).first()
+        if part:
+            result.append(nodes.reference(rawtext, groups[1] if groups[1] else part.title,
+                                          internal=False,
+                                          refuri=BASE_REQUEST.route_url('part.view',
+                                                                        pid=target_id)))
+        else:
+            messages.append(inliner.reporter.warning('There is no target to link to for "%s"' % (text), line=lineno))
+            result.append(inliner.problematic(rawtext, rawtext, messages[0]))
+    else:
+        messages.append(inliner.reporter.error('No valid link target identifier could be identified in "%s"' % (text), line=lineno))
+        result.append(inliner.problematic(rawtext, rawtext, messages[0]))
+    return result, messages

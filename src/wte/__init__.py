@@ -27,8 +27,6 @@ def main(global_config, **settings):
     DBSession.configure(bind=engine)
     Base.metadata.bind = engine
     check_database_version()
-    # Init docutils
-    text_formatter.init()
     # Init rendering
     settings['genshi.template_path'] = 'wte:templates'
     renderer.init(settings, template_defaults={'text/html': {'h': helpers,
@@ -40,6 +38,8 @@ def main(global_config, **settings):
     # Init routes
     config.add_static_view('static', 'static', cache_max_age=3600)
     views.init(config, settings)
+    # Init docutils
+    text_formatter.init(settings)
 
     config.scan()
     return config.make_wsgi_app()

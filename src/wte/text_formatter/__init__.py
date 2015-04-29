@@ -14,10 +14,10 @@ from docutils import core
 from . import docutils_ext  # NOQA
 
 
-def init():
+def init(settings):
     """Initialise the module and all docutils extensions.
     """
-    docutils_ext.init()
+    docutils_ext.init(settings)
 
 
 def compile_rst(text):

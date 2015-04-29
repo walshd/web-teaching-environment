@@ -4,6 +4,12 @@
 
 [app:main]
 
+# ***************************************
+# The base URL at which the WTE is served
+# ***************************************
+
+app.base_url = ${base_url}
+
 # *************************************
 # SQLAlchemy database connection string
 # *************************************
