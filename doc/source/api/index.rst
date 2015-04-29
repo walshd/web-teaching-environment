@@ -17,6 +17,9 @@ API Documentation
    wte_scripts_database
    wte_scripts_main
    wte_scripts_timed_tasks
+   wte_text_formatter
+   wte_text_formatter_docutils_ext
+   wte_util
    wte_views
    wte_views_asset
    wte_views_frontend
@@ -24,5 +27,4 @@ API Documentation
    wte_views_timed_tasks
    wte_views_user
    wte_views_user_role
-   wte_util
    

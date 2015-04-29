@@ -14,7 +14,7 @@ from pyramid_beaker import session_factory_from_settings
 from pywebtools import renderer
 from sqlalchemy import engine_from_config
 
-from wte import helpers, views
+from wte import helpers, views, text_formatter
 from wte.models import (DBSession, Base, check_database_version)
 
 
@@ -22,17 +22,22 @@ def main(global_config, **settings):
     """Constructs, initialises, and returns the Web Teaching Environment's
     ``WSGIApplication``.
     """
+    # Init Database
     engine = engine_from_config(settings, 'sqlalchemy.')
     DBSession.configure(bind=engine)
     Base.metadata.bind = engine
     check_database_version()
+    # Init docutils
+    text_formatter.init()
+    # Init rendering
     settings['genshi.template_path'] = 'wte:templates'
     renderer.init(settings, template_defaults={'text/html': {'h': helpers,
                                                              'crumbs': [],
                                                              'include_footer': True}})
+    # Init session
     session_factory = session_factory_from_settings(settings)
     config = Configurator(settings=settings, session_factory=session_factory)
-
+    # Init routes
     config.add_static_view('static', 'static', cache_max_age=3600)
     views.init(config, settings)
 

@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 u"""
+#########################
 :mod:`wte.text_formatter`
-=============================
+#########################
 
 This module contains functions for formatting the instruction texts shown to
 the student.
@@ -11,6 +12,12 @@ the student.
 from docutils import core
 
 from . import docutils_ext  # NOQA
+
+
+def init():
+    """Initialise the module and all docutils extensions.
+    """
+    docutils_ext.init()
 
 
 def compile_rst(text):
