@@ -28,6 +28,10 @@ def init(settings):
     BASE_REQUEST = Request.blank('/', base_url=settings['app.base_url'])
     directives.register_directive('sourcecode', Pygments)
     roles.register_local_role('crossref', crossref_role)
+    roles.register_local_role('code-html', inline_pygments_role)
+    roles.register_local_role('code-css', inline_pygments_role)
+    roles.register_local_role('code-javascript', inline_pygments_role)
+    roles.register_local_role('code-python', inline_pygments_role)
 
 
 class Pygments(Directive):
@@ -116,3 +120,18 @@ def crossref_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
         messages.append(inliner.reporter.error('No valid link target identifier could be identified in "%s"' % (text), line=lineno))
         result.append(inliner.problematic(rawtext, rawtext, messages[0]))
     return result, messages
+
+
+def inline_pygments_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
+    """The :func:`~wte.text_formatter.docutils_ext.inline_pygments_role`
+    function provides a docutils role that handles inline code highlighting
+    using Pygments. The name of the language to use for highlighting is taken
+    from the name of the role (which must be formatted ``code-language_name`.
+    """ 
+    try:
+        lexer = get_lexer_by_name(name[5:])
+    except ValueError:
+        lexer = TextLexer()
+    formatter = HtmlFormatter(nowrap=True)
+    parsed = highlight(text, lexer, formatter)
+    return [nodes.raw('', '<span class="source">%s</span>' % (parsed), format='html')], []
