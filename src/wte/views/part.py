@@ -371,6 +371,8 @@ def edit(request):
                         part.title = params['title']
                         part.status = params['status']
                         part.content = params['content']
+                        part.compiled_content = compile_rst(params['content'],
+                                                            request)
                         if params['child_part_id']:
                             for idx, cpid in enumerate(params['child_part_id']):
                                 child_part = dbsession.query(Part).filter(and_(Part.id == cpid,
@@ -459,7 +461,8 @@ def preview(request):
     if part:
         if part.allow('edit', request.current_user):
             if 'content' in request.params:
-                return {'content': compile_rst(request.params['content'])}
+                return {'content': compile_rst(request.params['content'],
+                                               request)}
             else:
                 raise HTTPNotFound()
         else:
@@ -805,6 +808,8 @@ def import_file(request):
                 part.order = 0
         if 'content' in data:
             part.content = data['content']
+            part.compiled_content = compile_rst(data['content'],
+                                                request)
         if 'assets' in data:
             for tmpl in data['assets']:
                 if 'filename' in tmpl and 'mimetype' in tmpl and 'id' in tmpl and 'type' in tmpl:

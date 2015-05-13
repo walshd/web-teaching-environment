@@ -9,6 +9,7 @@ the student.
 
 .. moduleauthor:: Mark Hall <mark.hall@mail.room3b.eu>
 """
+from copy import deepcopy
 from docutils import core
 
 from . import docutils_ext  # NOQA
@@ -26,7 +27,7 @@ def init(settings):
     SETTINGS['file_insertion_enabled'] = False
 
 
-def compile_rst(text):
+def compile_rst(text, request):
     u"""Compiles the given ReStructuredText into HTML. Returns only the actual
     content of the generated HTML document, without headers or footers.
 
@@ -35,5 +36,7 @@ def compile_rst(text):
     :return: The body content of the generated HTML
     :return_type: `unicode`
     """
-    parts = core.publish_parts(source=text, writer_name=u'html', settings_overrides=SETTINGS)
+    settings = deepcopy(SETTINGS)
+    settings['pyramid_request'] = request
+    parts = core.publish_parts(source=text, writer_name=u'html', settings_overrides=settings)
     return parts['body']

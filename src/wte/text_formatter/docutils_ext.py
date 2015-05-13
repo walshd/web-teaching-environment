@@ -17,14 +17,10 @@ from pygments.formatters import HtmlFormatter
 from pygments.lexers import get_lexer_by_name, TextLexer
 from pyramid.request import Request
 
-BASE_REQUEST = None
-
 
 def init(settings):
     """Initialise and load the docutils extensions.
     """
-    global BASE_REQUEST
-    BASE_REQUEST = Request.blank('/', base_url=settings['app.base_url'])
     directives.register_directive('sourcecode', Pygments)
     roles.register_local_role('crossref', crossref_role)
     roles.register_local_role('code-html', inline_pygments_role)
@@ -128,6 +124,7 @@ def crossref_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
     <part_id>\`.
     """
     from wte.models import (DBSession, Part)
+    request = inliner.document.settings.pyramid_request
     result = []
     messages = []
     text = utils.unescape(text)
@@ -140,8 +137,8 @@ def crossref_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
         if part:
             result.append(nodes.reference(rawtext, groups[1] if groups[1] else part.title,
                                           internal=False,
-                                          refuri=BASE_REQUEST.route_url('part.view',
-                                                                        pid=target_id)))
+                                          refuri=request.route_url('part.view',
+                                                                   pid=target_id)))
         else:
             messages.append(inliner.reporter.warning('There is no target to link to for "%s"' % (text), line=lineno))
             result.append(inliner.problematic(rawtext, rawtext, messages[0]))
