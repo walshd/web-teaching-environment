@@ -100,8 +100,6 @@ class Pygments(Directive):
     has_content = True
 
     def run(self):
-        print(self.arguments)
-        print(self.options)
         self.assert_has_content()
         try:
             lexer = get_lexer_by_name(self.arguments[0])
