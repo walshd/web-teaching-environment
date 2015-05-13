@@ -13,11 +13,17 @@ from docutils import core
 
 from . import docutils_ext  # NOQA
 
+SETTINGS = {}
+
 
 def init(settings):
     """Initialise the module and all docutils extensions.
     """
+    global SETTINGS
     docutils_ext.init(settings)
+    SETTINGS['initial_header_level'] = 2
+    SETTINGS['raw_enabled'] = False
+    SETTINGS['file_insertion_enabled'] = False
 
 
 def compile_rst(text):
@@ -29,5 +35,5 @@ def compile_rst(text):
     :return: The body content of the generated HTML
     :return_type: `unicode`
     """
-    parts = core.publish_parts(source=text, writer_name=u'html', settings_overrides={'initial_header_level': 2})
+    parts = core.publish_parts(source=text, writer_name=u'html', settings_overrides=SETTINGS)
     return parts['body']
