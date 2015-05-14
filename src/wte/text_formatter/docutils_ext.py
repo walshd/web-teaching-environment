@@ -14,7 +14,7 @@ from docutils import nodes, utils
 from docutils.parsers.rst import directives, roles, Directive
 from pygments import highlight
 from pygments.formatters import HtmlFormatter
-from pygments.lexers import get_lexer_by_name, TextLexer
+from pygments.lexers import get_lexer_by_name, TextLexer, get_all_lexers
 from pyramid.request import Request
 from sqlalchemy import and_
 
@@ -27,10 +27,9 @@ def init(settings):
     directives.register_directive('sourcecode', Pygments)
     roles.register_local_role('asset', asset_ref_role)
     roles.register_local_role('crossref', crossref_role)
-    roles.register_local_role('code-html', inline_pygments_role)
-    roles.register_local_role('code-css', inline_pygments_role)
-    roles.register_local_role('code-javascript', inline_pygments_role)
-    roles.register_local_role('code-python', inline_pygments_role)
+    for _, aliases, _, _ in get_all_lexers():
+        for alias in aliases: 
+            roles.register_local_role('code-%s' % (alias), inline_pygments_role)
 
 
 class HtmlTitleFormatter(HtmlFormatter):
