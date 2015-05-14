@@ -1,8 +1,8 @@
 /**
  * Pygments styles
  */
-#textbook div.source {background-color:#efefef; margin-left:1rem; padding-top: 0.3rem;}
-#textbook div.source div.title {font-size:0.7rem; text-transform:uppercase; margin-left: -1rem;}
+#textbook div.source.panel {margin-left:1rem; padding-top:0.3rem;}
+#textbook div.source div.title {font-size:0.7rem; text-transform:uppercase; margin-left: -2.25rem;}
 #textbook div.source div.title span.main {display:inline-block; color:#fff; background-color:#222; padding: 0.1rem 0.3rem; float:left; font-weight:bold;}
 #textbook div.source div.title:after {content: ' '; display:table; clear:both;}
 #textbook div.source.HTML div.title span.main {background-color:#070;}

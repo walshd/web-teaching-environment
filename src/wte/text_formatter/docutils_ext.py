@@ -44,7 +44,7 @@ class HtmlTitleFormatter(HtmlFormatter):
         return self._wrap_code(source)
 
     def _wrap_code(self, source):
-        yield 0, '<div class="source %s">' % (self.language if self.language else '')
+        yield 0, '<div class="source panel %s">' % (self.language if self.language else '')
         if self.language:
             yield 0, '<div class="title"><span class="main">%s</span>' % (self.language)
             if self.filename:
