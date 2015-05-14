@@ -16,12 +16,16 @@ from pygments import highlight
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import get_lexer_by_name, TextLexer
 from pyramid.request import Request
+from sqlalchemy import and_
+
+from wte.models import (DBSession, Asset, Part)
 
 
 def init(settings):
     """Initialise and load the docutils extensions.
     """
     directives.register_directive('sourcecode', Pygments)
+    roles.register_local_role('asset', asset_ref_role)
     roles.register_local_role('crossref', crossref_role)
     roles.register_local_role('code-html', inline_pygments_role)
     roles.register_local_role('code-css', inline_pygments_role)
@@ -162,3 +166,62 @@ def inline_pygments_role(name, rawtext, text, lineno, inliner, options={}, conte
     formatter = HtmlFormatter(nowrap=True)
     parsed = highlight(text, lexer, formatter)
     return [nodes.raw('', '<span class="source">%s</span>' % (parsed), format='html')], []
+
+
+ASSET_PATTERN = re.compile(r'((?:(parent):)?([a-zA-Z0-9_\-.]+)$)|((.+)(?:<(?:(parent):)?([a-zA-Z0-9_\-.]+)>)$)')
+
+
+def asset_ref_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
+    """The :func:`~wte.text_formatter.docutils_ext.asset_ref_role` functio
+    provides a docutils role that handles linking in :class:`~wte.models.Asset`
+    into the text. If the :class:`~wte.models.Asset` is an image, then the
+    image is loaded inline, otherwise a download link for all other types
+    of :class:`~wte.models.Asset` is created.
+    """
+    result = []
+    messages = []
+    settings = inliner.document.settings
+    request = settings.pyramid_request
+    if hasattr(settings, 'wte_part') and settings.wte_part:
+        dbsession = DBSession()
+        match = re.match(ASSET_PATTERN, text)
+        if match:
+            print(match.groups())
+            groups = match.groups()
+            if groups[0]:
+                title = None
+                parent = groups[1] == 'parent'
+                filename = groups[2]
+            else:
+                title = groups[4]
+                parent = groups[5] == 'parent'
+                filename = groups[6]
+            part_id = settings.wte_part.parent_id if parent else settings.wte_part.id
+            asset = dbsession.query(Asset).join(Asset.parts).filter(and_(Part.id == part_id,
+                                                                         Asset.filename == filename)).first()
+            if asset:
+                if asset.mimetype.startswith('image/'):
+                    result.append(nodes.image(rawtext,
+                                              uri=request.route_url('asset.view',
+                                                                    pid=part_id,
+                                                                    filename=asset.filename),
+                                              alt=title))
+                else:
+                    result.append(nodes.reference(rawtext,
+                                                  title if title else asset.filename,
+                                                  internal=False,
+                                                  refuri=request.route_url('asset.view',
+                                                                           pid=part_id,
+                                                                           filename=asset.filename,
+                                                                           _query=[('download', 'true')])))
+            else:
+                messages.append(inliner.reporter.error('No asset found for the filename "%s"' % (filename),
+                                                       line=lineno))
+        else:
+            messages.append(inliner.reporter.error('No asset found for the filename "%s"' % (text),
+                                                   line=lineno))
+    else:
+        messages.append(inliner.reporter.error('Internal error: no part set',
+                                               line=lineno))
+
+    return result, messages

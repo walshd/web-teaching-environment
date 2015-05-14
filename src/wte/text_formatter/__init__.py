@@ -27,7 +27,7 @@ def init(settings):
     SETTINGS['file_insertion_enabled'] = False
 
 
-def compile_rst(text, request):
+def compile_rst(text, request, part=None):
     u"""Compiles the given ReStructuredText into HTML. Returns only the actual
     content of the generated HTML document, without headers or footers.
 
@@ -38,5 +38,6 @@ def compile_rst(text, request):
     """
     settings = deepcopy(SETTINGS)
     settings['pyramid_request'] = request
+    settings['wte_part'] = part
     parts = core.publish_parts(source=text, writer_name=u'html', settings_overrides=settings)
     return parts['body']

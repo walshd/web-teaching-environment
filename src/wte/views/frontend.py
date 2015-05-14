@@ -254,8 +254,12 @@ def view_asset(request):
                     Part.id == part.id)).first()
     if part and asset:
         if part.allow('view', request.current_user):
+            headerlist = [('Content-Type', str(asset.mimetype))]
+            if 'download' in request.params:
+                if request.params['download'].lower() == 'true':
+                    headerlist.append(('Content-Disposition', str('attachment; filename="%s"' % (asset.filename))))
             return Response(body=asset.data,
-                            headerlist=[('Content-Type', str(asset.mimetype))])
+                            headerlist=headerlist)
         else:
             unauthorised_redirect(request)
     else:
