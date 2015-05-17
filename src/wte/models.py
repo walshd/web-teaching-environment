@@ -20,14 +20,11 @@ from datetime import datetime
 from sqlalchemy import (Column, Index, ForeignKey, Integer, Unicode,
                         UnicodeText, Table, LargeBinary, DateTime)
 from sqlalchemy.engine.reflection import Inspector
-from sqlalchemy.event import listens_for
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import (scoped_session, sessionmaker, relationship,
                             reconstructor, backref)
 from zope.sqlalchemy import ZopeTransactionExtension
-
-from wte.text_formatter import compile_rst
 
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
@@ -491,16 +488,6 @@ class Part(Base):
         return False
 
 Index('parts_parent_id_ix', Part.parent_id)
-
-
-@listens_for(Part.content, 'set')
-def compile_page_content(target, value, old_value, initiator):
-    u"""SQLAlchemy event listener that automatically compiles the ReST content
-    of a :class:`~wte.models.Page` to HTML when it is set / updated."""
-    if value:
-        target.compiled_content = compile_rst(value)
-    else:
-        target.compiled_content = ''
 
 
 class UserPartProgress(Base):

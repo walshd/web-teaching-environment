@@ -13,6 +13,7 @@ Routes are defined in :func:`~wte.views.part.init`.
 """
 import formencode
 import json
+import re
 import transaction
 
 from genshi.template import TemplateLoader, loader
@@ -371,6 +372,9 @@ def edit(request):
                         part.title = params['title']
                         part.status = params['status']
                         part.content = params['content']
+                        part.compiled_content = compile_rst(params['content'],
+                                                            request,
+                                                            part=part)
                         if params['child_part_id']:
                             for idx, cpid in enumerate(params['child_part_id']):
                                 child_part = dbsession.query(Part).filter(and_(Part.id == cpid,
@@ -459,7 +463,9 @@ def preview(request):
     if part:
         if part.allow('edit', request.current_user):
             if 'content' in request.params:
-                return {'content': compile_rst(request.params['content'])}
+                return {'content': compile_rst(request.params['content'],
+                                               request,
+                                               part=part)}
             else:
                 raise HTTPNotFound()
         else:
@@ -615,6 +621,25 @@ def change_status(request):
         raise HTTPNotFound()
 
 
+CROSSREF_PATTERN = re.compile(r':crossref:`(?:([0-9]+)|(?:(.*)<([0-9]+)>))`')
+
+
+def crossref_replace(match, mapping):
+    groups = match.groups()
+    part_id = groups[0] if groups[0] else groups[2]
+    title = None if groups[0] else groups[1]
+    if part_id in mapping:
+        if title:
+            return ':crossref:`%s<%s>`' % (title, mapping[part_id])
+        else:
+            return ':crossref:`%s`' % (mapping[part_id])
+    else:
+        if title:
+            return ':crossref:`%s<external>`' % (title)
+        else:
+            return ':crossref:`external`'
+
+
 @view_config(route_name='part.export')
 @require_method('POST')
 @current_user()
@@ -630,14 +655,16 @@ def export(request):
 
     Requires that the user has "edit" rights on the :class:`~wte.models.Part`.
     """
-    def part_as_dict(part, assets):
-        data = {'type': part.type,
+    def part_as_dict(part, assets, id_mapping):
+        data = {'id': len(id_mapping),
+                'type': part.type,
                 'title': part.title,
                 'status': part.status,
                 'order': part.order,
                 'content': part.content}
+        id_mapping[unicode(part.id)] = data['id']
         if part.children:
-            data['children'] = [part_as_dict(child, assets) for child in part.children]
+            data['children'] = [part_as_dict(child, assets, id_mapping) for child in part.children]
         if part.all_assets:
             data['assets'] = []
             for asset in part.all_assets:
@@ -648,6 +675,14 @@ def export(request):
                                        'order': asset.order})
                 assets.append((len(assets), asset.id))
         return data
+
+    def fix_references(data, id_mapping):
+        if 'content' in data and data['content']:
+            data['content'] = re.sub(CROSSREF_PATTERN, lambda m: crossref_replace(m, id_mapping), data['content'])
+        if 'children' in data:
+            data['children'] = [fix_references(child, id_mapping) for child in data['children']]
+        return data
+
     dbsession = DBSession()
     part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
     if part:
@@ -660,7 +695,9 @@ def export(request):
                 body = StringIO()
                 body_zip = ZipFile(body, 'w')
                 assets = []
-                data = part_as_dict(part, assets)
+                id_mapping = {}
+                data = part_as_dict(part, assets, id_mapping)
+                data = fix_references(data, id_mapping)
                 body_zip.writestr('content.json', json.dumps(data), ZIP_DEFLATED)
                 for export_id, asset_id in assets:
                     asset = dbsession.query(Asset).filter(Asset.id == asset_id).first()
@@ -794,10 +831,12 @@ def import_file(request):
     * `exercise` -- "edit" permission on the parent :class:`~wte.models.Part`
     * `task` -- "edit" permission on the parent :class:`~wte.models.Part`
     """
-    def recursive_import(data, zip_file):
+    def recursive_import(data, zip_file, id_mapping):
         part = Part(type=data['type'],
                     title=data['title'],
                     status=u'unavailable')
+        if 'id' in data:
+            id_mapping[unicode(data['id'])] = part
         if 'order' in data:
             try:
                 part.order = int(data['order'])
@@ -824,10 +863,21 @@ def import_file(request):
                         pass
         if 'children' in data:
             for child in data['children']:
-                child_part = recursive_import(child, zip_file)
+                child_part = recursive_import(child, zip_file, id_mapping)
                 part.children.append(child_part)
                 child_part.parent = part
         return part
+
+    def fix_references(part, dbsession, id_mapping):
+        dbsession.add(part)
+        if part.content:
+            part.content = re.sub(CROSSREF_PATTERN, lambda m: crossref_replace(m, id_mapping), part.content)
+            part.compiled_content = compile_rst(part.content,
+                                                request,
+                                                part=part)
+        if part.children:
+            for child in part.children:
+                fix_references(child, dbsession, id_mapping)
 
     dbsession = DBSession()
     parent = dbsession.query(Part).\
@@ -847,7 +897,8 @@ def import_file(request):
             with transaction.manager:
                 if parent:
                     dbsession.add(parent)
-                part = recursive_import(params['file'][0], params['file'][1])
+                id_mapping = {}
+                part = recursive_import(params['file'][0], params['file'][1], id_mapping)
                 dbsession.add(part)
                 params['file'][1].close()
                 if part.type == u'module':
@@ -855,6 +906,11 @@ def import_file(request):
                                                    role=u'owner'))
                 if parent:
                     parent.children.append(part)
+            with transaction.manager:
+                for key, value in id_mapping.items():
+                    dbsession.add(value)
+                    id_mapping[key] = value.id
+                fix_references(part, dbsession, id_mapping)
             dbsession.add(part)
             request.session.flash('Your %s has been imported' % (part.type), queue='info')
             raise HTTPSeeOther(request.route_url('part.view', pid=part.id))
