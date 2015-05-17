@@ -14,7 +14,7 @@
           <li><a href="${r.route_url('user.modules', uid=r.current_user.id)}">Modules</a></li>
           <li><a href="${r.route_url('user.projects', uid=r.current_user.id)}">Projects</a></li>
           <li class="divider"></li>
-          <li><a href="${r.route_url('user.logout')}">Log out</a></li>
+          <li><a href="${r.route_url('user.logout')}" class="post-link">Log out</a></li>
         </ul>
       </li>
       <li py:if="not r.current_user.logged_in"><a href="${r.route_url('user.register')}">Register</a></li>
