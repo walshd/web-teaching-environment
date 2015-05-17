@@ -53,16 +53,20 @@ def initialise_database(args):
         admin_user = User(email=u'admin@example.com', display_name=u'Admin', password=u'password')
         dbsession.add(admin_user)
 
-        group = PermissionGroup(title=u'User Admin')
+        admin_permission = Permission(name=u'admin', title=u'Administration Access')
+
+        group = PermissionGroup(title=u'User Administration')
         dbsession.add(group)
+        group.permissions.append(admin_permission)
         group.permissions.append(Permission(name=u'admin.users.view', title=u'View all users'))
         group.permissions.append(Permission(name=u'admin.users.edit', title=u'Edit all users'))
         group.permissions.append(Permission(name=u'admin.users.delete', title=u'Delete all users'))
         group.permissions.append(Permission(name=u'admin.users.permissions', title=u'Edit user permissions'))
         admin_user.permission_groups.append(group)
 
-        group = PermissionGroup(title=u'Content Admin')
+        group = PermissionGroup(title=u'Content Administration')
         dbsession.add(group)
+        group.permissions.append(admin_permission)
         create_module_perm = Permission(name=u'modules.create', title=u'Create a new module')
         group.permissions.append(create_module_perm)
         create_project_perm = Permission(name=u'projects.create', title=u'Create a new project')

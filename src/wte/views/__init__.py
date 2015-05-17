@@ -12,12 +12,12 @@ initialises the routes that are handled by that module.
 
 .. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
-from pyramid.httpexceptions import HTTPNotFound, HTTPInternalServerError
+from pyramid.httpexceptions import HTTPNotFound
 from pyramid.view import view_config
 from pywebtools.renderer import render
 
 from wte.decorators import current_user
-from . import (user, frontend, part, asset, user_role, timed_tasks)
+from . import (user, frontend, part, asset, user_role, timed_tasks, admin)
 
 
 def init(config, settings):
@@ -29,6 +29,7 @@ def init(config, settings):
     """
     config.add_route('root', '/')
 
+    admin.init(config)
     user.init(config)
     part.init(config)
     asset.init(config)

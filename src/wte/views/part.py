@@ -635,7 +635,7 @@ def crossref_replace(match, id_mapping):
     correct new target part identifier from the ``id_mapping``. If the
     identifier in the current cross-reference is not in the ``id_mapping``,
     then it is replaced with the string 'external'.
-    
+
     :param match: The regexp match
     :type match: :class:`~re.MatchObject`
     :param id_mapping: The identifier change mappings

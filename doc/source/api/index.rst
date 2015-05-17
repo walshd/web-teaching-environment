@@ -21,6 +21,7 @@ API Documentation
    wte_text_formatter_docutils_ext
    wte_util
    wte_views
+   wte_views_admin
    wte_views_asset
    wte_views_frontend
    wte_views_part

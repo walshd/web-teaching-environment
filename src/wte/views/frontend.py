@@ -93,10 +93,10 @@ def user_modules(request):
                 filter(and_(Part.type == u'module',
                             Part.status.in_([u'available', u'unavailable']),
                             UserPartRole.user_id == request.matchdict[u'uid'])).order_by(Part.title).all()
-            modules.extend(dbsession.query(Part).join(UserPartRole).\
-                filter(and_(Part.type == u'module',
-                            Part.status == u'archived',
-                            UserPartRole.user_id == request.matchdict[u'uid'])).order_by(Part.title).all())
+            modules.extend(dbsession.query(Part).join(UserPartRole).
+                           filter(and_(Part.type == u'module',
+                                       Part.status == u'archived',
+                                       UserPartRole.user_id == request.matchdict[u'uid'])).order_by(Part.title).all())
             return {'modules': modules,
                     'title': 'My Modules',
                     'missing': 'You have not yet created any modules.',
