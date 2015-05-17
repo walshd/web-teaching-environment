@@ -12,6 +12,7 @@ initialises the routes that are handled by that module.
 
 .. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
+from pyramid.httpexceptions import HTTPNotFound, HTTPInternalServerError
 from pyramid.view import view_config
 from pywebtools.renderer import render
 
@@ -44,3 +45,21 @@ def root(request):
     """
     return {'crumbs': [{'title': 'Modules',
                         'url': request.route_url('modules')}]}
+
+
+@view_config(context=HTTPNotFound)
+@render({'text/html': 'errors/404.html'})
+@current_user()
+def notfound_404(request):
+    u"""Handles 404 errors
+    """
+    return {'crumbs': []}
+
+
+@view_config(context=Exception)
+@render({'text/html': 'errors/500.html'})
+@current_user()
+def servererror_500(request):
+    u"""Handles 500 errors
+    """
+    return {'crumbs': []}
