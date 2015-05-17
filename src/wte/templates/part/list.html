@@ -14,12 +14,16 @@
             <div py:if="part.allow('edit', r.current_user) or part.allow('delete', r.current_user)" class="right">
               ${h.frontend.menubar([
                 {'group': 'status', 'items': [
-                  {'visible': part.allow('edit', r.current_user) and part.type != 'project',
+                  {'visible': part.allow('edit', r.current_user) and part.type not in ['project', 'page', 'task'],
                    'icon': 'fi-lock' if part.status == 'available' else 'fi-unlock',
                    'label': 'Make Unavailable' if part.status == 'available' else 'Make Available',
                    'href': r.route_url('part.change_status', pid=part.id, _query=[('status', 'unavailable' if part.status == 'available' else 'available'), ('return_to', r.current_route_url())]),
                    'class': 'post-link',
-                   'highlight': True}]},
+                   'highlight': True},
+                  {'visible': part.allow('edit', r.current_user) and part.type == 'module' and part.status != 'archived',
+                   'label': 'Archive',
+                   'href': r.route_url('part.change_status', pid=part.id, _query=[('status', 'archived'), ('return_to', r.current_route_url())]),
+                   'class': 'post-link'}]},
                 {'group': 'edit', 'items': [
                   {'visible': part.allow('edit', r.current_user),
                    'icon': 'fi-pencil',
@@ -60,7 +64,7 @@
             <h3>
               <a py:if="part.allow('view', r.current_user)" href="${r.route_url('part.view', pid=part.id)}">${part.title}</a>
               <span py:if="not part.allow('view', r.current_user)">${part.title}</span>
-              <small py:if="part.type != 'project' and part.status == 'unavailable'" class="label radius">Unavailable</small>
+              <small py:if="part.type != 'project' and part.status != 'available'" class="label radius">${h.text.title(part.status)}</small>
             </h3>
             ${h.frontend.part_summary(part)}
           </li>

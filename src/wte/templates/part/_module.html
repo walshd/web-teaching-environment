@@ -8,7 +8,11 @@
            'label': 'Make Unavailable' if part.status == 'available' else 'Make Available',
            'href': r.route_url('part.change_status', pid=part.id, _query=[('status', 'unavailable' if part.status == 'available' else 'available'), ('return_to', r.current_route_url())]),
            'class': 'post-link',
-           'highlight': True}]},
+           'highlight': True},
+          {'visible': part.allow('edit', r.current_user) and part.type == 'module' and part.status != 'archived',
+           'label': 'Archive',
+           'href': r.route_url('part.change_status', pid=part.id, _query=[('status', 'archived'), ('return_to', r.current_route_url())]),
+           'class': 'post-link'}]},
         {'group': 'edit', 'items': [
           {'visible': part.allow('edit', r.current_user),
            'icon': 'fi-pencil',
@@ -53,7 +57,7 @@
            'confirm': h.frontend.confirm_delete(part.type, part.title, True)}]},
       ])}
     </div>
-    <h1>${part.title}<small py:if="part.status == 'unavailable'" class="label radius">Unavailable</small></h1>
+    <h1>${part.title}<small py:if="part.status != 'available'" class="label radius">${h.text.title(part.status)}</small></h1>
     ${h.Markup(part.compiled_content)}
     <section>
       <ul class="no-symbol">

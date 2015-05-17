@@ -336,7 +336,8 @@ class EditPartSchema(formencode.Schema):
     u"""The part's title"""
     status = formencode.All(formencode.validators.UnicodeString(not_empty=True),
                             formencode.validators.OneOf([u'unavailable',
-                                                         u'available']))
+                                                         u'available',
+                                                         u'archived']))
     u"""The part's status"""
     content = formencode.validators.UnicodeString(not_empty=True)
     u"""The ReST content"""
@@ -491,6 +492,9 @@ def register(request):
         if part.has_role(['student', 'owner'], request.current_user):
             request.session.flash('You are already registered for this module', queue='info')
             raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
+        if part.status != 'available':
+            request.session.flash('You cannot register for this module as it is %s' % (part.status), queue='auth')
+            raise HTTPSeeOther(request.route_url('modules'))
         crumbs = create_part_crumbs(request,
                                     part,
                                     {'title': 'Register',
@@ -572,7 +576,8 @@ class ChangeStatusSchema(formencode.Schema):
     """
     status = formencode.All(formencode.validators.UnicodeString(not_empty=True),
                             formencode.validators.OneOf([u'unavailable',
-                                                         u'available']))
+                                                         u'available',
+                                                         u'archived']))
     u"""The part's status"""
     return_to = formencode.validators.String(if_missing=None)
     u"""Return to this URL"""
