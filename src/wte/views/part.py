@@ -624,15 +624,28 @@ def change_status(request):
 CROSSREF_PATTERN = re.compile(r':crossref:`(?:([0-9]+)|(?:(.*)<([0-9]+)>))`')
 
 
-def crossref_replace(match, mapping):
+def crossref_replace(match, id_mapping):
+    u"""The :func:`~wte.views.part.crossref_replace` function updates a single
+    cross-reference ReST role identified by the ``match`` parameter with the
+    correct new target part identifier from the ``id_mapping``. If the
+    identifier in the current cross-reference is not in the ``id_mapping``,
+    then it is replaced with the string 'external'.
+    
+    :param match: The regexp match
+    :type match: :class:`~re.MatchObject`
+    :param id_mapping: The identifier change mappings
+    :type id_mapping: `dict`
+    :return: The updated cross-reference
+    :return_type: `string`
+    """
     groups = match.groups()
     part_id = groups[0] if groups[0] else groups[2]
     title = None if groups[0] else groups[1]
-    if part_id in mapping:
+    if part_id in id_mapping:
         if title:
-            return ':crossref:`%s<%s>`' % (title, mapping[part_id])
+            return ':crossref:`%s<%s>`' % (title, id_mapping[part_id])
         else:
-            return ':crossref:`%s`' % (mapping[part_id])
+            return ':crossref:`%s`' % (id_mapping[part_id])
     else:
         if title:
             return ':crossref:`%s<external>`' % (title)
