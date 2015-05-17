@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:py="http://genshi.edgewall.org/" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xi:include href="../layout/layout.html"/>
+  <head>
+    <title>Delete Users</title>
+  </head>
+  <body>
+    <article class="row">
+      <div class="row.left clearfix">
+        <h1 class="small-12 column">Delete Users</h1>
+      </div>
+      <section class="small-12 column">
+        <form action="${r.route_url('users.action')}" method="post">
+          ${h.form.tags.hidden_field('action', params['action'])}
+          ${h.form.tags.hidden_field('confirm', 'true')}
+          <py:if test="'q' in params and params['q']">${h.form.tags.hidden_field('q', params['q'])}</py:if>
+          <py:if test="'status' in params and params['status']">${h.form.tags.hidden_field('status', params['status'])}</py:if>
+          <py:if test="'start' in params and params['start']">${h.form.tags.hidden_field('start', params['start'])}</py:if>
+          <py:for each="user_id in params['user_id']">${h.form.tags.hidden_field('user_id', user_id)}</py:for>
+          <section py:if="params['action'] == 'delete'">
+            <p>The following users will be delete from the system: ${', '.join([user.display_name for user in users])}.</p>
+          </section>
+          <section class="text-right">
+            <a href="${r.route_url('users', _query=query_params)}" class="button secondary small">Don't Apply</a>
+            ${h.form.tags.submit('Apply Changes', class_='button small')}
+          </section>
+        </form>
+      </section>
+    </article>
+  </body>
+</html>

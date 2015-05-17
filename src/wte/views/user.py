@@ -58,52 +58,6 @@ def init(config):
     config.add_route('user.delete', '/users/{uid}/delete')
 
 
-def users_query(dbsession, request, params):
-    u"""The :func:`~wte.views.user.users_query` function handles generating the
-    list of users and pages based on the given request params. This is used
-    by the :func:`~wte.views.user.users` and :func:`~wte.views.user.action`
-    functions.
-
-    :param dbsession: The database session to use
-    :type dbsession: :class:`~wte.models.DBSession`
-    :param request: The request to use for generating URLs
-    :type request: :class:`~pyramid.request.Request`
-    :param params: The parameters to use for generating the query
-    :type params: ``dict``
-    :return: Returns the SQLAlchemy query for users and a list of pages to be
-             used with the pagination helper
-    :return_type: ``tuple`` of :class:`~sqlalchemy.Query` and ``list``
-    """
-    users = dbsession.query(User)
-    query_params = []
-    if 'q' in params and params['q']:
-        users = users.filter(or_(User.display_name.contains(params['q']),
-                                 User.email.contains(params['q'])))
-        query_params.append(('q', params['q']))
-    if 'status' in params and params['status']:
-        if params['status'] == 'confirmed':
-            users = users.filter(User.validation_token == None)
-        else:
-            users = users.filter(User.validation_token != None)
-    start = 0
-    if 'start' in params:
-        try:
-            start = int(params['start'])
-        except ValueError:
-            pass
-    users = users.order_by(User.display_name)
-    users = users.offset(start).limit(30)
-    pages = [{'title': 'Show page:',
-              'url': '#',
-              'class': 'unavailable'}]
-    for idx in range(0, int(math.ceil(users.count() / 30.0))):
-        pages.append({'title': unicode(idx + 1),
-                      'url': request.route_url('users',
-                                               _query=query_params + [('start', idx * 30)]),
-                      'class': 'current' if idx == (start / 30) else None})
-    return users, pages
-
-
 @view_config(route_name='users')
 @render({'text/html': 'users/list.html'})
 @current_user()
@@ -114,7 +68,34 @@ def users(request):
     """
     if request.current_user.has_permission('admin.users.view'):
         dbsession = DBSession()
-        users, pages = users_query(dbsession, request, request.params)
+        users = dbsession.query(User)
+        query_params = []
+        if 'q' in request.params and request.params['q']:
+            users = users.filter(or_(User.display_name.contains(request.params['q']),
+                                     User.email.contains(request.params['q'])))
+            query_params.append(('q', request.params['q']))
+        if 'status' in request.params and request.params['status']:
+            query_params.append(('status', request.params['status']))
+            if request.params['status'] == 'confirmed':
+                users = users.filter(User.validation_token == None)
+            else:
+                users = users.filter(User.validation_token != None)
+        start = 0
+        if 'start' in request.params:
+            try:
+                start = int(request.params['start'])
+            except ValueError:
+                pass
+        users = users.order_by(User.display_name)
+        users = users.offset(start).limit(30)
+        pages = [{'title': 'Show page:',
+                  'url': '#',
+                  'class': 'unavailable'}]
+        for idx in range(0, int(math.ceil(users.count() / 30.0))):
+            pages.append({'title': unicode(idx + 1),
+                          'url': request.route_url('users',
+                                                   _query=query_params + [('start', idx * 30)]),
+                          'class': 'current' if idx == (start / 30) else None})
         return {'users': users,
                 'pages': pages,
                 'crumbs': [{'title': 'Users', 'url': request.route_url('users'), 'current': True}]}
@@ -129,6 +110,8 @@ class ActionSchema(formencode.Schema):
     action = formencode.All(formencode.validators.UnicodeString(not_empty=True),
                             formencode.validators.OneOf(['validate', 'password', 'delete']))
     u"""The action to apply"""
+    confirm = formencode.validators.StringBool(if_empty=False, if_missing=False)
+    u"""Whether the user has confirmed the action"""
     user_id = formencode.ForEach(formencode.validators.Int(), if_missing=None)
     q = formencode.validators.UnicodeString(if_empty=None, if_missing=None)
     u"""Optional query parameter for the redirect"""
@@ -139,7 +122,7 @@ class ActionSchema(formencode.Schema):
 
 
 @view_config(route_name='users.action')
-@render({'text/html': 'users/list.html'})
+@render({'text/html': 'users/action.html'})
 @current_user()
 def action(request):
     u"""Handles the ``/users/action`` URL, applying the given action to the
@@ -150,32 +133,34 @@ def action(request):
     if request.current_user.has_permission('admin.users.view'):
         dbsession = DBSession()
         try:
-            params = ActionSchema().to_python(request.POST)
-            with transaction.manager:
-                for user in dbsession.query(User).filter(User.id.in_(params['user_id'])):
-                    if params['action'] == 'validate':
-                        if user.validation_token is not None and user.allow('edit', request.current_user):
-                            process_confirmation(request, user)
-                    elif params['action'] == 'delete':
-                        if user.allow('delete', request.current_user):
-                            dbsession.delete(user)
-                    elif params['action'] == 'password':
-                        if user.validation_token is None and user.allow('edit', request.current_user):
-                            user.random_password()
             query_params = []
             for param in ['q', 'status', 'start']:
-                if param in params and params[param]:
-                    query_params.append((param, params[param]))
-            request.session.flash('Your action has been applied', queue='info')
+                if param in request.params and request.params[param]:
+                    query_params.append((param, request.params[param]))
+            params = ActionSchema().to_python(request.POST)
+            if params['action'] != 'delete' or params['confirm']:
+                with transaction.manager:
+                    for user in dbsession.query(User).filter(User.id.in_(params['user_id'])):
+                        if params['action'] == 'validate':
+                            if user.validation_token is not None and user.allow('edit', request.current_user):
+                                process_confirmation(request, user)
+                        elif params['action'] == 'delete':
+                            if user.allow('delete', request.current_user):
+                                dbsession.delete(user)
+                        elif params['action'] == 'password':
+                            if user.validation_token is None and user.allow('edit', request.current_user):
+                                user.random_password()
+                request.session.flash('Your action has been applied to the selected users', queue='info')
+                raise HTTPSeeOther(request.route_url('users', _query=query_params))
+            else:
+                return {'params': params,
+                        'users': dbsession.query(User).filter(User.id.in_(params['user_id'])),
+                        'query_params': query_params,
+                        'crumbs': [{'title': 'Users', 'url': request.route_url('users')},
+                                   {'title': 'Confirm', 'url': request.current_route_url(), 'current': True}]}
+        except formencode.Invalid:
+            request.session.flash('Please select the action you wish to apply and the users to apply it to', queue='error')
             raise HTTPSeeOther(request.route_url('users', _query=query_params))
-        except formencode.Invalid as e:
-            print(e)
-            e.params = request.POST
-            users, pages = users_query(dbsession, request, request.params)
-            return {'e': e,
-                    'users': users,
-                    'pages': pages,
-                    'crumbs': [{'title': 'Users', 'url': request.route_url('users'), 'current': True}]}
     else:
         unauthorised_redirect(request)
 

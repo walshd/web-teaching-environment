@@ -12,6 +12,8 @@
       <section class="small-12 medium-10 large-8 column">
         <form action="${r.route_url('part.users.update', pid=part.id)}" method="post">
           ${h.form.tags.hidden_field('action', params['action'])}
+          <py:if test="'q' in params and params['q']">${h.form.tags.hidden_field('q', params['q'])}</py:if>
+          <py:if test="'start' in params and params['start']">${h.form.tags.hidden_field('start', params['start'])}</py:if>
           <py:for each="role_id in params['role_id']">${h.form.tags.hidden_field('role_id', role_id)}</py:for>
           <section py:if="params['action'] == 'remove'">
             <p>The following users will be removed from the module: ${', '.join([r.user.display_name for r in users])}.</p>
@@ -26,6 +28,7 @@
             <p>The following users will be blocked from the module: ${', '.join([r.user.display_name for r in users])}.</p>
           </section>
           <section class="text-right">
+            <a href="${r.route_url('part.users', pid=part.id, _query=query_params)}" class="button secondary small">Don't Apply</a>
             ${h.form.tags.submit('Apply Changes', class_='button small')}
           </section>
         </form>

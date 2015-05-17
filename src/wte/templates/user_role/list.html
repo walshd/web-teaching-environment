@@ -72,6 +72,9 @@
               <a href="${r.route_url('part.users.add', pid=part.id)}" class="button tiny">Add a User</a>
             </div>
             <div class="small-8 medium-6 medium-offset-1 large-4 large-offset-3 column">
+              <py:if test="'q' in r.params and r.params['q']">${h.form.tags.hidden_field('q', r.params['q'])}</py:if>
+              <py:if test="'role' in r.params and r.params['role']">${h.form.tags.hidden_field('role', r.params['role'])}</py:if>
+              <py:if test="'start' in r.params and r.params['start']">${h.form.tags.hidden_field('start', r.params['start'])}</py:if>
               ${h.form.tags.select('action', '', [('', '--- Choose Action ---'), ('block', 'Block'), ('remove', 'Remove'), ('change_role', 'Change Role')], None)}
             </div>
             <div class="small-4 medium-2 column">
