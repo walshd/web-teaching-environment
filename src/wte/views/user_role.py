@@ -65,7 +65,8 @@ def users(request):
                 start = int(request.params['start']) if 'start' in request.params else 0
             except:
                 start = 0
-            query = dbsession.query(UserPartRole).join(User)
+            query = dbsession.query(UserPartRole).join(UserPartRole.user, UserPartRole.part).\
+                filter(Part.id == request.matchdict['pid'])
             query_params = []
             if 'role' in request.params:
                 if request.params['role'] == 'active':
@@ -231,6 +232,7 @@ def update(request):
                         dbsession.add(part)
                         parts = get_all_parts(part)
                         for role in users:
+                            dbsession.add(role)
                             for child_part in parts:
                                 progress = dbsession.query(UserPartProgress).\
                                     filter(and_(UserPartProgress.part_id == child_part.id,
