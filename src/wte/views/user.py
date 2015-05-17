@@ -433,7 +433,7 @@ def process_forgotten_password(request, user):
     generating a new password and sending the information e-mail. It can
     distinguish between :class:`~wte.models.User` who have been validated and
     those that have not yet and will send the appropriate e-mail.
-    
+
     :param request: The request to use for URL generation
     :type request: :class:`~pyramid.request.Request`
     :param user: The user to generate a new password for
