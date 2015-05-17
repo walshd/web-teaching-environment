@@ -184,7 +184,6 @@ def asset_ref_role(name, rawtext, text, lineno, inliner, options={}, content=[])
         dbsession = DBSession()
         match = re.match(ASSET_PATTERN, text)
         if match:
-            print(match.groups())
             groups = match.groups()
             if groups[0]:
                 title = None
