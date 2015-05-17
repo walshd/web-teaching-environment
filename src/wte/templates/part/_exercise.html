@@ -52,13 +52,6 @@
         <li py:if="child.allow('view', r.current_user)" py:for="child in part.children" class="panel clearfix status-${child.status}">
           <div py:if="child.allow('edit', r.current_user) or child.allow('delete', r.current_user)" class="right">
             ${h.frontend.menubar([
-              {'group': 'status', 'items': [
-                {'visible': child.allow('edit', r.current_user),
-                 'icon': 'fi-lock' if child.status == 'available' else 'fi-unlock',
-                 'label': 'Make Unavailable' if child.status == 'available' else 'Make Available',
-                 'href': r.route_url('part.change_status', pid=child.id, _query=[('status', 'unavailable' if child.status == 'available' else 'available'), ('return_to', r.current_route_url())]),
-                 'class': 'post-link',
-                 'highlight': True}]},
               {'group': 'edit', 'items': [
                 {'visible': child.allow('edit', r.current_user),
                  'icon': 'fi-pencil',

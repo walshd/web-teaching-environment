@@ -834,7 +834,7 @@ def import_file(request):
     def recursive_import(data, zip_file, id_mapping):
         part = Part(type=data['type'],
                     title=data['title'],
-                    status=u'unavailable')
+                    status=u'available' if data['type'] in ['page', 'task'] else u'unavailable')
         if 'id' in data:
             id_mapping[unicode(data['id'])] = part
         if 'order' in data:
