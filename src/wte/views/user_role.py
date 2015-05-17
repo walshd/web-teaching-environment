@@ -152,7 +152,7 @@ def action(request):
             query_params = []
             for param in ['q', 'role', 'start']:
                 if param in request.params and request.params[param]:
-                    query_params.append((param, request.params[param])) 
+                    query_params.append((param, request.params[param]))
             try:
                 params = ActionSchema().to_python(request.params)
             except formencode.api.Invalid:
@@ -217,7 +217,7 @@ def update(request):
             query_params = []
             for param in ['q', 'role', 'start']:
                 if param in request.params and request.params[param]:
-                    query_params.append((param, request.params[param])) 
+                    query_params.append((param, request.params[param]))
             try:
                 params = ActionSchema().to_python(request.params)
             except formencode.api.Invalid:
@@ -239,7 +239,8 @@ def update(request):
                             dbsession.add(role)
                             role.role = params['role']
                     request.session.flash("The users' roles have been updated", queue='info')
-                    raise HTTPSeeOther(request.route_url('part.users', pid=request.matchdict['pid'], _query=query_params))
+                    raise HTTPSeeOther(request.route_url('part.users', pid=request.matchdict['pid'],
+                                                         _query=query_params))
                 elif params['action'] == 'remove':
                     with transaction.manager:
                         dbsession.add(part)
@@ -254,14 +255,16 @@ def update(request):
                                     dbsession.delete(progress)
                             dbsession.delete(role)
                     request.session.flash('The users have been removed', queue='info')
-                    raise HTTPSeeOther(request.route_url('part.users', pid=request.matchdict['pid'], _query=query_params))
+                    raise HTTPSeeOther(request.route_url('part.users', pid=request.matchdict['pid'],
+                                                         _query=query_params))
                 elif params['action'] == 'block':
                     with transaction.manager:
                         for role in users:
                             dbsession.add(role)
                             role.role = u'block'
                     request.session.flash('The users have been blocked', queue='info')
-                    raise HTTPSeeOther(request.route_url('part.users', pid=request.matchdict['pid'], _query=query_params))
+                    raise HTTPSeeOther(request.route_url('part.users', pid=request.matchdict['pid'],
+                                                         _query=query_params))
             except formencode.api.Invalid as e:
                 e.params = request.params
                 return {'e': e,

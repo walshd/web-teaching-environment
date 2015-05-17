@@ -159,7 +159,8 @@ def action(request):
                         'crumbs': [{'title': 'Users', 'url': request.route_url('users')},
                                    {'title': 'Confirm', 'url': request.current_route_url(), 'current': True}]}
         except formencode.Invalid:
-            request.session.flash('Please select the action you wish to apply and the users to apply it to', queue='error')
+            request.session.flash('Please select the action you wish to apply and the users to apply it to',
+                                  queue='error')
             raise HTTPSeeOther(request.route_url('users', _query=query_params))
     else:
         unauthorised_redirect(request)
