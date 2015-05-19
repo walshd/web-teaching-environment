@@ -46,12 +46,10 @@ class DBUpgradeException(Exception):
         return "DBUpgradeException('%s', '%s'" % (self.current, self.required)
 
     def __str__(self):
-        return """A database upgrade is required.
-
-You are currently running version '%s', but version '%s' is required. Please run
-alembic -c config.ini upgrade to upgrade the database and then start the application
-again.
-""" % (self.current, self.required)
+        return "A database upgrade is required.\n\n" + \
+            "You are currently running version '%s', but version '%s' is " % (self.current, self.required) + \
+            " required. Please run WTE update-database config.ini upgrade to upgrade the database " + \
+            "and then start the application again."
 
 
 def check_database_version():
