@@ -349,7 +349,6 @@ DISPLAY_MODES = {'default': {'module': '_module.html',
                              'tutorial': '_tutorial.html',
                              'exercise': '_exercise.html'},
                  'three_pane_html': {'page': '_page.html',
-                                     'project': '_project.html',
                                      'task': '_task.html'}}
 
 
@@ -367,7 +366,6 @@ def template_for_part(part):
     display_mode = part.display_mode
     if display_mode == 'inherit':
         display_mode = part.parent.display_mode
-    print('Test')
     if display_mode in DISPLAY_MODES and part_type in DISPLAY_MODES[display_mode]:
         return '%s/%s' % (display_mode, DISPLAY_MODES[display_mode][part_type])
     elif part_type in DISPLAY_MODES['default']:
