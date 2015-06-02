@@ -185,6 +185,11 @@ class NewPartSchema(formencode.Schema):
                             formencode.validators.OneOf([u'unavailable',
                                                          u'available']))
     u"""The part's status"""
+    display_mode = formencode.All(formencode.validators.UnicodeString(not_empty=True),
+                                  formencode.validators.OneOf([u'default',
+                                                               u'three_pane_html',
+                                                               u'inherit']))
+    u"""The part's display mode"""
 
 
 def create_part_crumbs(request, part, current=None):
@@ -296,6 +301,7 @@ def new(request):
                 new_part = Part(title=params['title'],
                                 status=params['status'],
                                 type=request.matchdict['new_type'],
+                                display_mode=params['display_mode'],
                                 parent=parent,
                                 order=max_order)
                 if request.matchdict['new_type'] == 'module':
@@ -323,6 +329,11 @@ class EditPartSchema(formencode.Schema):
                                                          u'available',
                                                          u'archived']))
     u"""The part's status"""
+    display_mode = formencode.All(formencode.validators.UnicodeString(not_empty=True),
+                                  formencode.validators.OneOf([u'default',
+                                                               u'three_pane_html',
+                                                               u'inherit']))
+    u"""The part's display mode"""
     content = formencode.validators.UnicodeString(not_empty=True)
     u"""The ReST content"""
     child_part_id = formencode.ForEach(formencode.validators.Int, if_missing=None)
@@ -356,6 +367,7 @@ def edit(request):
                         dbsession.add(part)
                         part.title = params['title']
                         part.status = params['status']
+                        part.display_mode = params['display_mode']
                         part.content = params['content']
                         part.compiled_content = compile_rst(params['content'],
                                                             request,
