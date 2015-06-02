@@ -10,7 +10,6 @@ the additional formatting support required by the
 """
 import re
 
-from copy import copy
 from docutils import nodes, utils
 from docutils.parsers.rst import directives, roles, Directive
 from pygments import highlight
