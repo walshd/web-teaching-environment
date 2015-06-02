@@ -29,7 +29,7 @@ from zope.sqlalchemy import ZopeTransactionExtension
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
 
-DB_VERSION = u'4b401085b9e3'
+DB_VERSION = u'36a393fca848'
 """The currently required database version."""
 
 
@@ -350,6 +350,7 @@ class Part(Base):
       :class:`~wte.models.Part`
     * ``compiled_content`` -- The compiled HTML generated from the ReST ``content``
     * ``content`` -- The ReST content for the :class:`~wte.models.Part`
+    * ``display_mode`` -- The display template mode to use for the :class:`~wte.models.Part`
     * ``order`` -- The ordering position of this :class:`~wte.models.Part`
     * ``parent_id`` -- The unique database identifier of the parent :class:`~wte.models.Part`
     * ``parent`` -- The parent :class:`~wte.models.Part`
@@ -371,6 +372,7 @@ class Part(Base):
     title = Column(Unicode(255))
     status = Column(Unicode(255))
     type = Column(Unicode(255))
+    display_mode = Column(Unicode(255))
     content = Column(UnicodeText)
     compiled_content = Column(UnicodeText)
 

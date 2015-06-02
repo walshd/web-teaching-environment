@@ -6,11 +6,6 @@
     <script src="${r.static_url('wte:static/js/mathjax/MathJax.js', _query=[('config', 'default')])}"></script>
   </head>
   <body>
-    <xi:include href="_module.html" py:if="part.type == 'module'"/>
-    <xi:include href="_tutorial.html" py:if="part.type == 'tutorial'"/>
-    <xi:include href="_page.html" py:if="part.type == 'page'"/>
-    <xi:include href="_exercise.html" py:if="part.type == 'exercise'"/>
-    <xi:include href="_task.html" py:if="part.type == 'task'"/>
-    <xi:include href="_project.html" py:if="part.type == 'project'"/>
+    <xi:include href="display_modes/${h.frontend.template_for_part(part)}" py:if="h.frontend.template_for_part(part)"/>
   </body>
 </html>
