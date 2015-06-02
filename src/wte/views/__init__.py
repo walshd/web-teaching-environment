@@ -48,7 +48,7 @@ def root(request):
                         'url': request.route_url('modules')}]}
 
 
-@view_config(context=HTTPNotFound)
+#@view_config(context=HTTPNotFound)
 @render({'text/html': 'errors/404.html'})
 @current_user()
 def notfound_404(request):
@@ -57,7 +57,7 @@ def notfound_404(request):
     return {'crumbs': []}
 
 
-@view_config(context=Exception)
+#@view_config(context=Exception)
 @render({'text/html': 'errors/500.html'})
 @current_user()
 def servererror_500(request):
