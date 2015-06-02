@@ -29,7 +29,7 @@ from zope.sqlalchemy import ZopeTransactionExtension
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
 
-DB_VERSION = u'36a393fca848'
+DB_VERSION = u'4215b2582d87'
 """The currently required database version."""
 
 

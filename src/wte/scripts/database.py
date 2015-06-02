@@ -69,8 +69,6 @@ def initialise_database(args):
         group.permissions.append(admin_permission)
         create_module_perm = Permission(name=u'modules.create', title=u'Create a new module')
         group.permissions.append(create_module_perm)
-        create_project_perm = Permission(name=u'projects.create', title=u'Create a new project')
-        group.permissions.append(create_project_perm)
         group.permissions.append(Permission(name=u'admin.modules.view', title=u'View all modules'))
         group.permissions.append(Permission(name=u'admin.modules.edit', title=u'Edit all modules'))
         group.permissions.append(Permission(name=u'admin.modules.delete', title=u'Delete all modules'))
@@ -82,7 +80,6 @@ def initialise_database(args):
 
         group = PermissionGroup(title=u'Student')
         dbsession.add(group)
-        group.permissions.append(create_project_perm)
 
 
 def update_database(args):
