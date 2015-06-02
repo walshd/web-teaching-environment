@@ -3,7 +3,7 @@
     <div class="right">
       ${h.frontend.menubar([
         {'group': 'status', 'items': [
-          {'visible': part.allow('edit', r.current_user) and part.type != 'project',
+          {'visible': part.allow('edit', r.current_user),
            'icon': 'fi-lock' if part.status == 'available' else 'fi-unlock',
            'label': 'Make Unavailable' if part.status == 'available' else 'Make Available',
            'href': r.route_url('part.change_status', pid=part.id, _query=[('status', 'unavailable' if part.status == 'available' else 'available'), ('return_to', r.current_route_url())]),
@@ -34,7 +34,7 @@
            'href': r.route_url('part.new', new_type='exercise', _query=[('parent_id', part.id)]),
            'highlight': True}]},
         {'group': 'importexport', 'items': [
-          {'visible': part.allow('edit', r.current_user) and part.type != 'project',
+          {'visible': part.allow('edit', r.current_user),
            'label': 'Import',
            'href': r.route_url('part.import', _query=[('parent_id', part.id)])},
           {'visible': part.allow('edit', r.current_user),

@@ -29,7 +29,7 @@ from zope.sqlalchemy import ZopeTransactionExtension
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
 
-DB_VERSION = u'4b401085b9e3'
+DB_VERSION = u'4215b2582d87'
 """The currently required database version."""
 
 
@@ -46,12 +46,10 @@ class DBUpgradeException(Exception):
         return "DBUpgradeException('%s', '%s'" % (self.current, self.required)
 
     def __str__(self):
-        return """A database upgrade is required.
-
-You are currently running version '%s', but version '%s' is required. Please run
-alembic -c config.ini upgrade to upgrade the database and then start the application
-again.
-""" % (self.current, self.required)
+        return "A database upgrade is required.\n\n" + \
+            "You are currently running version '%s', but version '%s' is " % (self.current, self.required) + \
+            " required. Please run WTE update-database config.ini upgrade to upgrade the database " + \
+            "and then start the application again."
 
 
 def check_database_version():
@@ -352,6 +350,7 @@ class Part(Base):
       :class:`~wte.models.Part`
     * ``compiled_content`` -- The compiled HTML generated from the ReST ``content``
     * ``content`` -- The ReST content for the :class:`~wte.models.Part`
+    * ``display_mode`` -- The display template mode to use for the :class:`~wte.models.Part`
     * ``order`` -- The ordering position of this :class:`~wte.models.Part`
     * ``parent_id`` -- The unique database identifier of the parent :class:`~wte.models.Part`
     * ``parent`` -- The parent :class:`~wte.models.Part`
@@ -373,6 +372,7 @@ class Part(Base):
     title = Column(Unicode(255))
     status = Column(Unicode(255))
     type = Column(Unicode(255))
+    display_mode = Column(Unicode(255))
     content = Column(UnicodeText)
     compiled_content = Column(UnicodeText)
 

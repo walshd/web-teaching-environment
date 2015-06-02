@@ -10,11 +10,11 @@
         <h1>${title}</h1>
         <ul class="no-symbol">
           <li py:if="not modules" class="panel callout">${missing}</li>
-          <li py:for="part in modules" class="panel clearfix status-${part.status if part.type != 'project' else 'available'}">
+          <li py:for="part in modules" class="panel clearfix status-${part.status}}">
             <div py:if="part.allow('edit', r.current_user) or part.allow('delete', r.current_user)" class="right">
               ${h.frontend.menubar([
                 {'group': 'status', 'items': [
-                  {'visible': part.allow('edit', r.current_user) and part.type not in ['project', 'page', 'task'],
+                  {'visible': part.allow('edit', r.current_user) and part.type not in ['page', 'task'],
                    'icon': 'fi-lock' if part.status == 'available' else 'fi-unlock',
                    'label': 'Make Unavailable' if part.status == 'available' else 'Make Available',
                    'href': r.route_url('part.change_status', pid=part.id, _query=[('status', 'unavailable' if part.status == 'available' else 'available'), ('return_to', r.current_route_url())]),
@@ -42,7 +42,7 @@
                    'href': r.route_url('part.new', new_type='exercise', _query=[('parent_id', part.id)]),
                    'highlight': True}]},
                 {'group': 'importexport', 'items': [
-                  {'visible': part.allow('edit', r.current_user) and part.type != 'project',
+                  {'visible': part.allow('edit', r.current_user),
                    'label': 'Import',
                    'href': r.route_url('part.import', _query=[('parent_id', part.id)])},
                   {'visible': part.allow('edit', r.current_user),
@@ -64,7 +64,7 @@
             <h3>
               <a py:if="part.allow('view', r.current_user)" href="${r.route_url('part.view', pid=part.id)}">${part.title}</a>
               <span py:if="not part.allow('view', r.current_user)">${part.title}</span>
-              <small py:if="part.type != 'project' and part.status != 'available'" class="label radius">${h.text.title(part.status)}</small>
+              <small py:if="part.status != 'available'" class="label radius">${h.text.title(part.status)}</small>
             </h3>
             ${h.frontend.part_summary(part)}
           </li>
@@ -72,7 +72,6 @@
         <div>
           <a py:if="r.current_user.has_permission('modules.create')" href="${r.route_url('part.import')}" class="button small">Import Module</a>
           <a py:if="r.current_user.has_permission('modules.create')" href="${r.route_url('part.new', new_type='module')}" class="button small">New Module</a>
-          <a py:if="r.current_user.has_permission('projects.create')" href="${r.route_url('part.new', new_type='project')}" class="button small">New Project</a>
         </div>
       </article>
     </div>

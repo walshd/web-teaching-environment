@@ -14,16 +14,22 @@
         <div class="clearfix">
           ${h.form.field('title', 'Title', h.form.tags.text_field, size='small-12', e=e, default=part.title)}
         </div>
-        <py:if test="part.type != 'project'">
-          <py:if test="part.type in ['page', 'task']">${h.form.tags.hidden_field('status', 'available')}</py:if>
-          <div class="clearfix" py:if="part.type not in ['page', 'task']">
-            ${h.form.field('status', 'Status', h.form.tags.select, size='small-12', e=e, value=part.status, options=[('unavailable', 'Unavailable'), ('available', 'Available'), ('archived', 'Archived')] if part.type == 'module' else [('unavailable', 'Unavailable'), ('available', 'Available')])}
-          </div>
-          <div class="clearfix codemirror-border">
-            ${h.form.field('content', 'Content', h.form.tags.textarea, size='small-12', e=e, default=part.content, id='page-content', style='height:20em;')}
-          </div>
+        <py:if test="part.type in ['page', 'task']">
+          ${h.form.tags.hidden_field('status', 'available')}
+          ${h.form.tags.hidden_field('display_mode', 'inherit')}
         </py:if>
-        <py:if test="part.type == 'project'">${h.form.tags.hidden_field('status', 'unavailable')}${h.form.tags.hidden_field('content', ' ', id='page-content')}</py:if>
+        <div class="clearfix" py:if="part.type not in ['page', 'task']">
+          ${h.form.field('status', 'Status', h.form.tags.select, size='small-12', e=e, value=part.status, options=[('unavailable', 'Unavailable'), ('available', 'Available'), ('archived', 'Archived')] if part.type == 'module' else [('unavailable', 'Unavailable'), ('available', 'Available')])}
+        </div>
+        <py:if test="part.type == 'module'">
+          ${h.form.tags.hidden_field('display_mode', 'default')}
+        </py:if>
+        <py:if test="part.type in ['tutorial', 'exercise']">
+            ${h.form.field('display_mode', 'Type', h.form.tags.select, size='small-12', e=e, value=part.display_mode, options=[('text_only', 'Text Only'), ('three_pane_html', 'Text, Editor &amp; HTML Viewer')])}
+        </py:if>
+        <div class="clearfix codemirror-border">
+          ${h.form.field('content', 'Content', h.form.tags.textarea, size='small-12', e=e, default=part.content, id='page-content', style='height:20em;')}
+        </div>
         <div class="clearfix" py:if="part.children">
           <div class="small-12 column">
             <label>Child-part order</label>

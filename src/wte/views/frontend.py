@@ -36,8 +36,6 @@ def init(config):
     * ``modules`` -- ``/modules`` -- :func:`~wte.views.frontend.modules`
     * ``user.modules`` -- ``/users/{uid}/modules`` --
       :func:`~wte.views.frontend.user_modules`
-    * ``user.projects`` -- ``/users/{uid}/projects`` --
-      :func:`~wte.views.frontend.user_projects`
     * ``asset.view`` -- ``/parts/{pid}/files/name/assets/{filename}``
       -- :func:`~wte.views.frontend.view_asset`
     * ``file.view`` -- ``/parts/{pid}/files/name/{filename}``
@@ -51,7 +49,6 @@ def init(config):
     """
     config.add_route('modules', '/modules')
     config.add_route('user.modules', '/users/{uid}/modules')
-    config.add_route('user.projects', '/users/{uid}/projects')
     config.add_route('asset.view', '/parts/{pid}/files/name/assets/{filename}')
     config.add_route('file.view', '/parts/{pid}/files/name/{filename}')
     config.add_route('file.save', '/parts/{pid}/files/id/{fid}/save')
@@ -104,35 +101,6 @@ def user_modules(request):
                                {'title': 'Modules',
                                 'url': request.route_url('user.modules', uid=request.matchdict['uid']),
                                 'current': True}]}
-        else:
-            unauthorised_redirect(request)
-    else:
-        raise HTTPNotFound()
-
-
-@view_config(route_name='user.projects')
-@render({'text/html': 'part/list.html'})
-@current_user()
-@require_logged_in()
-def user_projects(request):
-    u"""Handles the ``/users/{uid}/projects`` URL, displaying all the
-    projects that the  :class:`~wte.models.User` as created.
-
-    Requires that the current user has "view" rights for the
-    :class:`~wte.models.User`.
-    """
-    dbsession = DBSession()
-    user = dbsession.query(User).filter(User.id == request.matchdict['uid']).first()
-    if user:
-        if user.allow('view', request.current_user):
-            modules = dbsession.query(Part).join(UserPartRole).\
-                filter(and_(Part.type == u'project',
-                            UserPartRole.user_id == request.matchdict[u'uid'])).all()
-            return {'modules': modules,
-                    'title': 'My Projects',
-                    'missing': 'You have not yet created any projects.',
-                    'crumbs': [{'title': user.display_name, 'url': request.route_url('user.view', uid=user.id)},
-                               {'title': 'Projects', 'url': request.route_url('modules'), 'current': True}]}
         else:
             unauthorised_redirect(request)
     else:
@@ -276,7 +244,7 @@ def view_asset(request):
 @require_logged_in()
 def download_part_progress(request):
     u"""Handles the ``/users/{uid}/progress/{pid}/download``
-    URL, sending back the complete project associated with the
+    URL, sending back the complete set of data associated with the
     :class:`~wte.models.UserPartProgress`.
 
     Requires that the user has "view" rights on the
