@@ -10,6 +10,7 @@ the additional formatting support required by the
 """
 import re
 
+from copy import copy
 from docutils import nodes, utils
 from docutils.parsers.rst import directives, roles, Directive
 from pygments import highlight
@@ -57,6 +58,17 @@ class HtmlTitleFormatter(HtmlFormatter):
         yield 0, '</pre></div>'
 
 
+def flag_bool_option(value):
+    u"""Options conversion function for ReST
+    :class:`~docutils.parser.rst.Directive` that returns ``True`` if the
+    value is set and has any value except "false".
+    """
+    if str(value).lower() != 'false':
+        return True
+    else:
+        return False
+
+
 class Pygments(Directive):
     """The Pygments reStructuredText directive
 
@@ -92,15 +104,16 @@ class Pygments(Directive):
     :license: BSD, see LICENSE for details.
     """
     required_arguments = 1
-    optional_arguments = 0
+    optional_arguments = 1
     final_argument_whitespace = True
-    option_spec = {'filename': directives.unchanged}
+    option_spec = {'filename': directives.unchanged,
+                   'startinline': flag_bool_option}
     has_content = True
 
     def run(self):
         self.assert_has_content()
         try:
-            lexer = get_lexer_by_name(self.arguments[0])
+            lexer = get_lexer_by_name(self.arguments[0], **self.options)
         except ValueError:
             # no lexer found - use the text one instead of an exception
             lexer = TextLexer()
