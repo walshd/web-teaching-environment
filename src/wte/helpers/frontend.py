@@ -352,11 +352,12 @@ DISPLAY_MODES = {'default': {'module': '_module.html',
                                      'project': '_project.html',
                                      'task': '_task.html'}}
 
+
 def template_for_part(part):
     u"""Returns the correct partial template path for a given
     :class:`~wte.models.Part`. If there is no partial template for the given
     :class:`~wte.models.Part`, then ``None`` is returned.
-    
+
     :param part: The :class:`~wte.models.Part` to generate the template path for
     :type part: :class:`~wte.models.Part`
     :return: The partial template path or ``None``
