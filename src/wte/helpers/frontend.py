@@ -349,7 +349,9 @@ DISPLAY_MODES = {'default': {'module': '_module.html',
                              'tutorial': '_tutorial.html',
                              'exercise': '_exercise.html'},
                  'three_pane_html': {'page': '_page.html',
-                                     'task': '_task.html'}}
+                                     'task': '_task.html'},
+                 'text_only': {'page': '_page.html',
+                               'task': '_task.html'}}
 
 
 def template_for_part(part):

@@ -24,7 +24,7 @@
             ${h.form.tags.hidden_field('display_mode', 'default')}
           </py:if>
           <py:if test="r.matchdict['new_type'] in ['tutorial', 'exercise']">
-            ${h.form.tags.hidden_field('display_mode', 'three_pane_html')}
+            ${h.form.field('display_mode', 'Type', h.form.tags.select, size='small-12', e=e, value=None, options=[('text_only', 'Text Only'), ('three_pane_html', 'Text, Editor &amp; HTML Viewer')])}
           </py:if>
           <div class="text-right">
             <a py:if="'parent_id' not in r.params" href="${r.route_url('modules')}" class="button small secondary">Don't Create</a>

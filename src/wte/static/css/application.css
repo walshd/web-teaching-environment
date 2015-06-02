@@ -154,6 +154,8 @@ img.medium {
 #textbook {
     overflow: auto;
     box-sizing: border-box;
+}
+.display-mode-three_pane_html {
     border-right: 1px solid #333;
 }
 

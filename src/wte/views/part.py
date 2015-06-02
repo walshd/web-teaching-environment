@@ -188,6 +188,7 @@ class NewPartSchema(formencode.Schema):
     display_mode = formencode.All(formencode.validators.UnicodeString(not_empty=True),
                                   formencode.validators.OneOf([u'default',
                                                                u'three_pane_html',
+                                                               u'text_only',
                                                                u'inherit']))
     u"""The part's display mode"""
 
@@ -332,6 +333,7 @@ class EditPartSchema(formencode.Schema):
     display_mode = formencode.All(formencode.validators.UnicodeString(not_empty=True),
                                   formencode.validators.OneOf([u'default',
                                                                u'three_pane_html',
+                                                               u'text_only',
                                                                u'inherit']))
     u"""The part's display mode"""
     content = formencode.validators.UnicodeString(not_empty=True)
