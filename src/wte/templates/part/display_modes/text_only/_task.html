@@ -1,5 +1,5 @@
 <article class="row left display-mode-text_only" xmlns:py="http://genshi.edgewall.org/">
-  <section id="textbook" class="small-12 column">
+  <section id="textbook" class="small-12 column rest">
     <div py:if="part.allow('edit', r.current_user) or part.allow('delete', r.current_user)" class="right">
       ${h.frontend.menubar([
         {'group': 'edit', 'items': [

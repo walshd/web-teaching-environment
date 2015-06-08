@@ -399,7 +399,7 @@ footer {
 .bespoke-slide h2 {
     font-size: 160%;
 }
-.bespoke-slide p, .bespoke-slide ul, .bespoke-slide ol, .bespoke-slide li {
+.bespoke-slide p, .bespoke-slide ul, .bespoke-slide ol, .bespoke-slide li, .bespoke-slide pre {
     font-size: 100%;
 }
 .bespoke-slide ul, .bespoke-slide ol {
