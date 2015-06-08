@@ -1,0 +1,109 @@
+<article class="row left" xmlns:py="http://genshi.edgewall.org/">
+  <div class="right">
+    ${h.frontend.menubar([
+      {'group': 'status', 'items': [
+        {'visible': part.allow('edit', r.current_user),
+         'icon': 'fi-lock' if part.status == 'available' else 'fi-unlock',
+         'label': 'Make Unavailable' if part.status == 'available' else 'Make Available',
+         'href': r.route_url('part.change_status', pid=part.id, _query=[('status', 'unavailable' if part.status == 'available' else 'available'), ('return_to', r.current_route_url())]),
+         'class': 'post-link',
+         'highlight': True}]},
+      {'group': 'edit', 'items': [
+        {'visible': part.allow('edit', r.current_user),
+         'icon': 'fi-pencil',
+         'label': 'Edit',
+         'href': r.route_url('part.edit', pid=part.id),
+         'highlight': True},
+        {'visible': part.allow('edit', r.current_user),
+         'label': 'Edit Timed Actions',
+         'href': r.route_url('part.timed_task', pid=part.id)}]},
+      {'group': 'add', 'items': [
+        {'visible': part.allow('edit', r.current_user),
+         'label': 'Add Page',
+         'icon': 'fi-plus',
+         'href': r.route_url('part.new', new_type='page', _query=[('parent_id', part.id)]),
+         'highlight': True},
+        {'visible': part.allow('edit', r.current_user),
+         'label': 'Add Asset',
+         'icon': 'fi-plus',
+         'href': r.route_url('asset.new', pid=part.id, new_type='asset'),
+         'highlight': True}]},
+      {'group': 'importexport', 'items': [
+        {'visible': part.allow('edit', r.current_user),
+         'label': 'Import',
+         'href': r.route_url('part.import', _query=[('parent_id', part.id)])},
+        {'visible': part.allow('edit', r.current_user),
+         'label': 'Export',
+         'href': r.route_url('part.export', pid=part.id),
+         'class': 'post-link'},
+        {'visible': True,
+         'label': 'Download',
+         'href': r.route_url('part.download', pid=part.id),
+         'class': 'post-link'}]},
+      {'group': 'delete', 'items': [
+        {'visible': part.allow('delete', r.current_user),
+         'label': 'Delete',
+         'href': r.route_url('part.delete', pid=part.id),
+         'class': 'alert post-link',
+         'confirm': h.frontend.confirm_delete(part.type, part.title, True)}]},
+    ])}
+  </div>
+  <section id="slideshow">
+    <section class="bespoke-fullscreen hidden">
+      <section class="bespoke-overlay"></section>
+      <section class="bespoke-slides">
+        <section class="bespoke-first-slide">
+         <h1>${part.title}</h1>
+        </section>
+        <section py:for="child in part.children">
+          ${h.frontend.Markup(child.compiled_content)}
+        </section>
+      </section>
+    </section>
+    <div class="column small-12">
+      <p class="text-center">
+        <a href="#" class="button start-slideshow">Start Slideshow</a>
+      </p>
+      <section class="bespoke-overview">
+        <section class="bespoke-slide bespoke-first-slide">
+          <h1>${part.title}</h1>
+        </section>
+        <section py:for="child in part.children" class="bespoke-slide">
+          <div class="bespoke-menu">
+            ${h.frontend.menubar([
+                {'group': 'edit', 'items': [
+                    {'visible': child.allow('edit', r.current_user),
+                     'icon': 'fi-pencil',
+                     'label': 'Edit',
+                     'href': r.route_url('part.edit', pid=child.id),
+                     'highlight': True}]},
+                  {'group': 'importexport', 'items': [
+                    {'visible': child.allow('edit', r.current_user),
+                     'label': 'Export',
+                     'href': r.route_url('part.export', pid=child.id),
+                     'class': 'post-link'}]},
+                  {'group': 'delete', 'items': [
+                    {'visible': child.allow('delete', r.current_user),
+                     'label': 'Delete',
+                     'href': r.route_url('part.delete', pid=child.id),
+                     'class': 'alert post-link',
+                     'confirm': h.frontend.confirm_delete(child.type, child.title, True)}]},
+            ])}
+          </div>
+          ${h.frontend.Markup(child.compiled_content)}
+        </section>
+      </section>
+    </div>
+  </section>
+  <script src="${r.static_url('wte:static/js/bespoke.min.js')}"></script>
+  <script>
+  $('#slideshow').slideshow();
+  /*var deck = bespoke.from('#slideshow', [bespoke.plugins.keys(),
+                                         bespoke.plugins.touch(),
+                                         bespoke.plugins.classes(),
+                                         bespoke.plugins.bullets(),
+                                         bespoke.plugins.scale(),
+                                         bespoke.plugins.progress()]);*/
+  $('.menu').dropdownMenu();
+  </script>
+</article>

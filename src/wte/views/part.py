@@ -251,6 +251,13 @@ def new(request):
         elif parent:
             request.session.flash('You cannot create a new module here', queue='error')
             raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
+    elif request.matchdict['new_type'] == 'lecture':
+        if not parent:
+            request.session.flash('You cannot create a new lecture without a parent', queue='error')
+            raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
+        elif parent.type != u'module':
+            request.session.flash('You can only add lectures to a module', queue='error')
+            raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
     elif request.matchdict['new_type'] == 'tutorial':
         if not parent:
             request.session.flash('You cannot create a new tutorial without a parent', queue='error')
@@ -262,7 +269,7 @@ def new(request):
         if not parent:
             request.session.flash('You cannot create a new tutorial without a parent', queue='error')
             raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
-        elif parent.type != u'tutorial':
+        elif parent.type not in[u'tutorial', u'lecture']:
             request.session.flash('You can only add pages to a tutorial', queue='error')
             raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
     elif request.matchdict['new_type'] == 'exercise':
@@ -387,7 +394,10 @@ def edit(request):
                                     template.order = idx
                     dbsession.add(part)
                     request.session.flash('The %s has been updated' % (part.type), queue='info')
-                    raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
+                    if part.parent and part.parent.type == 'lecture':
+                        raise HTTPSeeOther(request.route_url('part.view', pid=part.parent.id))
+                    else:
+                        raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
                 except formencode.Invalid as e:
                     print(e)
                     e.params = request.params

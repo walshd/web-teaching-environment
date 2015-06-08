@@ -346,6 +346,7 @@ def readable_timedelta(delta):
 
 
 DISPLAY_MODES = {'default': {'module': '_module.html',
+                             'lecture': '_lecture.html',
                              'tutorial': '_tutorial.html',
                              'exercise': '_exercise.html'},
                  'three_pane_html': {'page': '_page.html',

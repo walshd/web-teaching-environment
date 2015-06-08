@@ -25,6 +25,11 @@
         {'group': 'add', 'items': [
           {'visible': part.allow('edit', r.current_user),
            'icon': 'fi-plus',
+           'label': 'Add Lecture',
+           'href': r.route_url('part.new', new_type='lecture', _query=[('parent_id', part.id)]),
+           'highlight': True},
+          {'visible': part.allow('edit', r.current_user),
+           'icon': 'fi-plus',
            'label': 'Add Tutorial',
            'href': r.route_url('part.new', new_type='tutorial', _query=[('parent_id', part.id)]),
            'highlight': True},

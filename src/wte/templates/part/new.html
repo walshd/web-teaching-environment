@@ -20,7 +20,7 @@
           <div class="clearfix" py:if="r.matchdict['new_type'] not in ['page', 'task']">
             ${h.form.field('status', 'Status', h.form.tags.select, size='small-12', e=e, value=None, options=[('unavailable', 'Unavailable'), ('available', 'Available'), ('archived', 'Archived')] if r.matchdict['new_type'] == 'module' else [('unavailable', 'Unavailable'), ('available', 'Available')])}
           </div>
-          <py:if test="r.matchdict['new_type'] == 'module'">
+          <py:if test="r.matchdict['new_type'] in ['module', 'lecture']">
             ${h.form.tags.hidden_field('display_mode', 'default')}
           </py:if>
           <py:if test="r.matchdict['new_type'] in ['tutorial', 'exercise']">
