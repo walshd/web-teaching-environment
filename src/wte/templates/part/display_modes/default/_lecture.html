@@ -55,7 +55,7 @@
         <section class="bespoke-first-slide">
          <h1>${part.title}</h1>
         </section>
-        <section py:for="child in part.children" class="rest">
+        <section py:for="child in part.children">
           ${h.frontend.Markup(child.compiled_content)}
         </section>
       </section>
@@ -68,7 +68,7 @@
         <section class="bespoke-slide bespoke-first-slide">
           <h1>${part.title}</h1>
         </section>
-        <section py:for="child in part.children" class="bespoke-slide rest">
+        <section py:for="child in part.children" class="bespoke-slide">
           <div class="bespoke-menu">
             ${h.frontend.menubar([
                 {'group': 'edit', 'items': [
@@ -98,6 +98,12 @@
   <script src="${r.static_url('wte:static/js/bespoke.min.js')}"></script>
   <script>
   $('#slideshow').slideshow();
+  /*var deck = bespoke.from('#slideshow', [bespoke.plugins.keys(),
+                                         bespoke.plugins.touch(),
+                                         bespoke.plugins.classes(),
+                                         bespoke.plugins.bullets(),
+                                         bespoke.plugins.scale(),
+                                         bespoke.plugins.progress()]);*/
   $('.menu').dropdownMenu();
   </script>
 </article>

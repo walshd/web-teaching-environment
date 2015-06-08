@@ -291,31 +291,17 @@
         init : function(options) {
             return this.each(function() {
             	var component = $(this);
-            	var started = false;
             	component.find('.start-slideshow').on('click', function(ev) {
             		ev.preventDefault();
-            		if(!started) {
-            			$(this).html('Continue Slideshow');
-                		component.find('.bespoke-overview').hide();
-                		component.find('.bespoke-fullscreen').removeClass('hidden');
-                		bespoke.from(component.find('.bespoke-fullscreen .bespoke-slides')[0],
-                				[bespoke.plugins.keys(),
-                				 bespoke.plugins.touch(),
-                                 bespoke.plugins.classes(),
-                                 bespoke.plugins.bullets(),
-                                 bespoke.plugins.scale(),
-                                 bespoke.plugins.progress()]);
-                		$(document).on('keyup', function(ev) {
-                			if(ev.keyCode == 27) {
-                        		component.find('.bespoke-overview').show();
-                        		component.find('.bespoke-fullscreen').addClass('hidden');
-                			}
-                		});
-                		started = true;
-            		} else {
-                		component.find('.bespoke-overview').hide();
-                		component.find('.bespoke-fullscreen').removeClass('hidden');
-            		}
+            		component.find('.bespoke-overview').hide();
+            		component.find('.bespoke-fullscreen').removeClass('hidden');
+            		bespoke.from(component.find('.bespoke-fullscreen .bespoke-slides')[0],
+            				[bespoke.plugins.keys(),
+            				 bespoke.plugins.touch(),
+                             bespoke.plugins.classes(),
+                             bespoke.plugins.bullets(),
+                             bespoke.plugins.scale(),
+                             bespoke.plugins.progress()]);
             	});
             });
         }

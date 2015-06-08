@@ -402,10 +402,6 @@ footer {
 .bespoke-slide p, .bespoke-slide ul, .bespoke-slide ol, .bespoke-slide li, .bespoke-slide pre {
     font-size: 100%;
 }
- .bespoke-slide.rest .source pre {
-    font-size: 100%;
-    line-height: 1.2em;
- }
 .bespoke-slide ul, .bespoke-slide ol {
     margin-left: 1.1em;
 }
