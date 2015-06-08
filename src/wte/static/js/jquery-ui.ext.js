@@ -282,39 +282,3 @@
         }
     };
 }(jQuery));
-
-(function($) {
-    /**
-     * The slideshow jQuery plugin provides the necessary functionality.
-     */
-    var methods = {
-        init : function(options) {
-            return this.each(function() {
-            	var component = $(this);
-            	component.find('.start-slideshow').on('click', function(ev) {
-            		ev.preventDefault();
-            		component.find('.bespoke-overview').hide();
-            		component.find('.bespoke-fullscreen').removeClass('hidden');
-            		bespoke.from(component.find('.bespoke-fullscreen .bespoke-slides')[0],
-            				[bespoke.plugins.keys(),
-            				 bespoke.plugins.touch(),
-                             bespoke.plugins.classes(),
-                             bespoke.plugins.bullets(),
-                             bespoke.plugins.scale(),
-                             bespoke.plugins.progress()]);
-            	});
-            });
-        }
-    };
-
-    $.fn.slideshow = function(method) {
-        if (methods[method]) {
-            return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
-        } else if (typeof method === 'object' || !method) {
-            return methods.init.apply(this, arguments);
-        } else {
-            $.error('Method ' + method + ' does not exist on jQuery.slideshow');
-        }
-    };
-}(jQuery));
-

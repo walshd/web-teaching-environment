@@ -21,7 +21,7 @@
         <div class="clearfix" py:if="part.type not in ['page', 'task']">
           ${h.form.field('status', 'Status', h.form.tags.select, size='small-12', e=e, value=part.status, options=[('unavailable', 'Unavailable'), ('available', 'Available'), ('archived', 'Archived')] if part.type == 'module' else [('unavailable', 'Unavailable'), ('available', 'Available')])}
         </div>
-        <py:if test="part.type in ['module', 'lecture']">
+        <py:if test="part.type == 'module'">
           ${h.form.tags.hidden_field('display_mode', 'default')}
         </py:if>
         <py:if test="part.type in ['tutorial', 'exercise']">
