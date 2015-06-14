@@ -1,11 +1,14 @@
 /**
  * Foundation overrides
  */
-.row.left {margin: 0;}
+.row.row-left {margin: 0;}
+.row.row-full {max-width: 100%;}
 .panel .button {margin-bottom: 0;}
 table input[type=checkbox], table input[type=submit], table select {margin-bottom: 0;}
 table tfoot ul.pagination {margin:0;}
 h1 .label, h2 .label, h3 .label, h4 .label, h5 .label, h6 .label {vertical-align: top; margin-left: 1em;}
+.accordion.dense > .accordion-navigation > a {padding: 0.3rem 0.5rem;}
+.button.inline {margin-bottom: 0;}
 
 /**
  * CodeMirror overrides
@@ -28,6 +31,9 @@ ul.no-symbol, ol.no-symbol {
 }
 ul.no-symbol > li, ol.no-symbol > li {
     list-style-type: none;
+}
+ul.no-margin, ol.no-margin {
+    margin-left: 0;
 }
 .hidden {
     display: none;
