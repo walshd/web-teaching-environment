@@ -2,8 +2,8 @@
  * Pygments styles
  */
 .rest div.source.panel {margin-left:1rem; padding-top:0.3rem;}
-.rest div.source div.title {font-size:0.7rem; text-transform:uppercase; margin-left: -2.25rem;}
-.rest div.source div.title span.main {display:inline-block; color:#fff; background-color:#222; padding: 0.1rem 0.3rem; float:left; font-weight:bold;}
+.rest div.source div.title {font-size:0.7rem; margin-left: -2.25rem;}
+.rest div.source div.title span.main {display:inline-block; text-transform:uppercase; color:#fff; background-color:#222; padding: 0.1rem 0.3rem; float:left; font-weight:bold;}
 .rest div.source div.title:after {content: ' '; display:table; clear:both;}
 .rest div.source.HTML div.title span.main {background-color:#070;}
 .rest div.source.CSS div.title span.main {background-color:#700;}
