@@ -671,6 +671,7 @@ def export(request):
     def part_as_dict(part, assets, id_mapping):
         data = {'id': len(id_mapping),
                 'type': part.type,
+                'display_mode': part.display_mode,
                 'title': part.title,
                 'status': part.status,
                 'order': part.order,
@@ -857,6 +858,10 @@ def import_file(request):
                 part.order = 0
         if 'content' in data:
             part.content = data['content']
+        if 'display_mode' in data:
+            part.display_mode = data['display_mode']
+        else:
+            part.display_mode = 'three_pane_html'
         if 'assets' in data:
             for tmpl in data['assets']:
                 if 'filename' in tmpl and 'mimetype' in tmpl and 'id' in tmpl and 'type' in tmpl:
