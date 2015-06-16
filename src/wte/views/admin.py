@@ -20,6 +20,8 @@ def init(config):
 @require_logged_in()
 def admin(request):
     if request.current_user.has_permission('admin'):
-        return {}
+        return {'crumbs': [{'title': 'Administration',
+                            'url': request.current_route_url(),
+                            'current': True}]}
     else:
         raise unauthorised_redirect(request)

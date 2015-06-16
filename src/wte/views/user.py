@@ -58,6 +58,17 @@ def init(config):
     config.add_route('user.delete', '/users/{uid}/delete')
 
 
+def create_user_crumbs(request, crumbs):
+    if request.current_user.has_permission('admin.users.view'):
+        crumbs.insert(0, {'title': 'Users',
+                          'url': request.route_url('users')})
+    if request.current_user.has_permission('admin'):
+        crumbs.insert(0, {'title': 'Administration',
+                          'url': request.route_url('admin')})
+    crumbs[-1]['current'] = True
+    return crumbs
+
+
 @view_config(route_name='users')
 @render({'text/html': 'users/list.html'})
 @current_user()
@@ -98,7 +109,7 @@ def users(request):
                           'class': 'current' if idx == (start / 30) else None})
         return {'users': users,
                 'pages': pages,
-                'crumbs': [{'title': 'Users', 'url': request.route_url('users'), 'current': True}]}
+                'crumbs': create_user_crumbs(request, [])}
     else:
         unauthorised_redirect(request)
 
@@ -156,8 +167,8 @@ def action(request):
                 return {'params': params,
                         'users': dbsession.query(User).filter(User.id.in_(params['user_id'])),
                         'query_params': query_params,
-                        'crumbs': [{'title': 'Users', 'url': request.route_url('users')},
-                                   {'title': 'Confirm', 'url': request.current_route_url(), 'current': True}]}
+                        'crumbs': create_user_crumbs(request, [{'title': 'Confirm',
+                                                                'url': request.current_route_url()}])}
         except formencode.Invalid:
             request.session.flash('Please select the action you wish to apply and the users to apply it to',
                                   queue='error')
@@ -519,14 +530,9 @@ def view(request):
     user = dbsession.query(User).filter(User.id == request.matchdict['uid']).first()
     if user:
         if user.allow('view', request.current_user):
-            crumbs = [{'title': user.display_name,
-                       'url': request.route_url('user.view', uid=user.id),
-                       'current': True}]
-            if request.current_user.has_permission('admin.users.view'):
-                crumbs.insert(0, {'title': 'Users',
-                                  'url': request.route_url('users')})
             return {'user': user,
-                    'crumbs': crumbs}
+                    'crumbs': create_user_crumbs(request, [{'title': user.display_name,
+                                                            'url': request.route_url('user.view', uid=user.id)}])}
         else:
             unauthorised_redirect(request)
     else:
@@ -558,14 +564,10 @@ def edit(request):
     user = dbsession.query(User).filter(User.id == request.matchdict['uid']).first()
     if user:
         if user.allow('edit', request.current_user):
-            crumbs = [{'title': user.display_name,
-                       'url': request.route_url('user.view', uid=user.id)},
-                      {'title': 'Edit',
-                       'url': request.route_url('user.edit', uid=user.id),
-                       'current': True}]
-            if request.current_user.has_permission('admin.users.view'):
-                crumbs.insert(0, {'title': 'Users',
-                                  'url': request.route_url('users')})
+            crumbs = create_user_crumbs(request, [{'title': user.display_name,
+                                                   'url': request.route_url('user.view', uid=user.id)},
+                                                  {'title': 'Edit',
+                                                   'url': request.route_url('user.edit', uid=user.id)}])
             if request.method == 'POST':
                 try:
                     params = EditSchema().to_python(request.params,
@@ -623,17 +625,13 @@ def permissions(request):
                         user.permissions = []
                 dbsession.add(user)
                 request.session.flash('Permissions updated', queue='info')
-            crumbs = [{'title': user.display_name,
-                       'url': request.route_url('user.view', uid=user.id)},
-                      {'title': 'Permissions',
-                       'url': request.route_url('user.permissions', uid=user.id), 'current': True}]
-            if request.current_user.has_permission('admin.users.view'):
-                crumbs.insert(0, {'title': 'Users',
-                                  'url': request.route_url('users')})
             return {'user': user,
                     'permission_groups': permission_groups,
                     'permissions': permissions,
-                    'crumbs': crumbs}
+                    'crumbs': create_user_crumbs(request, [{'title': user.display_name,
+                                                            'url': request.route_url('user.view', uid=user.id)},
+                                                           {'title': 'Permissions',
+                                                            'url': request.route_url('user.permissions', uid=user.id)}])}
         else:
             raise HTTPNotFound()
     else:
@@ -662,10 +660,10 @@ def delete(request):
                 else:
                     raise HTTPSeeOther(request.route_url('root'))
             return {'user': user,
-                    'crumbs': [{'title': user.display_name,
-                                'url': request.route_url('user.view', uid=user.id)},
-                               {'title': 'Delete',
-                                'url': request.route_url('user.delete', uid=user.id), 'current': True}]}
+                    'crumbs': create_user_crumbs(request, [{'title': user.display_name,
+                                                            'url': request.route_url('user.view', uid=user.id)},
+                                                           {'title': 'Delete',
+                                                            'url': request.route_url('user.delete', uid=user.id)}])}
         else:
             unauthorised_redirect(request)
     else:

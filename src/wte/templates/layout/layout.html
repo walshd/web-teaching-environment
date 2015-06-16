@@ -6,9 +6,6 @@
     <title>${select('title/text()')}</title>
     <link rel="stylesheet" href="${r.static_url('wte:static/css/application.min.css')}" />
     <link rel="stylesheet" href="${r.static_url('wte:static/js/codemirror/addon/lint/lint.css')}" />
-    <!-- 
-    <link rel="stylesheet" href="${r.static_url('wte:static/css/docutils.css')}" />
-    <link rel="stylesheet" href="${r.static_url('wte:static/css/foundation-datepicker.css')}"/> -->
     <script src="${r.static_url('wte:static/js/foundation/vendor/modernizr.js')}"></script>
     <script src="${r.static_url('wte:static/js/foundation/vendor/jquery.js')}"></script>
     <script src="${r.static_url('wte:static/js/jquery-ui-1.10.4.custom.min.js')}"></script>
@@ -17,6 +14,7 @@
   </head>
   <body py:match="body">
     <xi:include href="navigation.html"/>
+    <xi:include href="breadcrumbs.html"/>
     <xi:include href="flash.html" py:if="r.session.peek_flash('info') or r.session.peek_flash('error') or r.session.peek_flash('auth')"/>
     ${select('*')}
     <xi:include py:if="include_footer" href="footer.html"/>
