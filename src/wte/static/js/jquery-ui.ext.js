@@ -257,24 +257,12 @@ function codemirror_for_textarea(textarea) {
      */
     var methods = {
         init : function(options) {
-            return this
-                    .each(function() {
-                        var component = $(this);
-                        component.css('position', 'absolute').css('z-index', '1000').css('width', '30em');
-                        component.find('.column, .columns').css('padding-right', '5px');
-                        component.position({
-                            my : 'right top+5px',
-                            at : 'right bottom',
-                            of : $('nav.top-bar')
-                        });
-                        $(window).on('resize', function() {
-                            component.position({
-                                my : 'right top+5px',
-                                at : 'right bottom',
-                                of : $('nav.top-bar')
-                            });
-                        });
-                    });
+            return this.each(function() {
+                var component = $(this);
+                setTimeout(function() {
+                    component.find('.column, .columns').addClass('minimise');
+                }, 5000);
+            });
         }
     };
 

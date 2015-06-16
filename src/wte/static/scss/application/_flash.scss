@@ -1,0 +1,41 @@
+.js {
+    #flash {
+        position: absolute;
+        right: 0;
+        top: 60px;
+        z-index: 1000;
+        
+        .column, .columns {
+            width: 30rem;
+            transition: width 1s;
+            
+            &.minimise {
+                width: 6rem;
+                
+                &:hover {
+                    width: 35rem;
+
+                    .alert-box {
+                        padding: $alert-padding-top $alert-padding-opposite-direction $alert-padding-bottom $alert-padding-default-float;
+                    }
+                    .close {
+                        display: inline;
+                    }
+                }
+                
+                .alert-box {
+                    padding: $alert-padding-top;
+                }
+                .close {
+                    display: none;
+                }
+            }
+            
+            .alert-box {
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+            }
+        }
+    }
+}
