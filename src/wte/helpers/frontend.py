@@ -138,23 +138,28 @@ def page_pagination(request, part):
         elif state == 1:
             next_page = child
             break
-    items = []
     if prev_page:
-        items.append(tag.li(tag.a(Markup('&laquo; Previous page'),
-                                  href=request.route_url('part.view',
-                                                         pid=prev_page.id))))
+        prev_page = tag.a(tag.span(class_='fi-previous icon'),
+                          title='Previous page (%s)' % (prev_page.title),
+                          href=request.route_url('part.view', pid=prev_page.id))
     else:
-        items.append(tag.li(Markup('&laquo; Previous page'),
-                            class_='disabled'))
+        prev_page = tag.span(class_='fi-previous icon unavailable')
+    prev_page = tag.div(prev_page,
+                        class_='small-6 large-2 column text-center')
     if next_page:
-        items.append(tag.li(tag.a(Markup('Next page &raquo;'),
-                                  href=request.route_url('part.view',
-                                                         pid=next_page.id))))
+        next_page = tag.a(tag.span(class_='fi-next icon'),
+                          title='Next page (%s)' % (next_page.title),
+                          href=request.route_url('part.view', pid=next_page.id))
     else:
-        items.append(tag.li(Markup('Previous page &raquo;'),
-                            class_='disabled'))
-    return tag.ul(items,
-                  class_='pagination')
+        next_page = tag.span(class_='fi-next icon unavailable')
+    next_page = tag.div(next_page,
+                        class_='small-6 large-2 column text-center')
+    page_jump = tag.form(tag.select([tag.option(p.title,
+                                               value=p.id,
+                                               selected='selected' if p.id == part.id else None) for p in part.parent.children]),
+                         action=request.route_url('part.view', pid='pid'),
+                         class_='show-for-large-up large-8 column')
+    return tag.nav(prev_page, page_jump, next_page, class_='row pagination')
 
 
 def primary_filename(progress):

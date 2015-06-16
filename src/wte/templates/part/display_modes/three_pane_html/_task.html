@@ -1,5 +1,8 @@
 <article class="display-mode-three_pane_html" xmlns:py="http://genshi.edgewall.org/">
   <section id="textbook" class="small-12 medium-4 large-3 column rest">
+    <div class="fixed-pagination">
+      ${h.frontend.page_pagination(r, part)}
+    </div>
     <div py:if="part.allow('edit', r.current_user) or part.allow('delete', r.current_user)" class="right">
       ${h.frontend.menubar([
         {'group': 'edit', 'items': [
@@ -82,6 +85,7 @@
         </li>
       </ul>
     </section>
+    ${h.frontend.page_pagination(r, part)}
   </section>
   <section id="editor" class="small-12 medium-8 large-9">
     <section id="files">
@@ -151,7 +155,7 @@
     <script>
     function resize_page() {
         var win_height = $(window).innerHeight();
-        $('nav').each(function() {
+        $('article').siblings('nav').each(function() {
             win_height = win_height - $(this).outerHeight(true);
         });
         $('#textbook').css('height', win_height + 'px');
@@ -170,6 +174,8 @@
             save_url: '${r.route_url('file.save', pid=part.id, fid='FID')}'
         });
         $('.menu').dropdownMenu();
+        $('.pagination').partPagination();
+        $('.fixed-pagination').fixedPagination();
     });
     </script>
 </article>
