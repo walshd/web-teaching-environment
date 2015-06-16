@@ -46,7 +46,7 @@ Application settings
     WTE generate-custom-styling <configuration.ini> 
   
   Default: default
-**style.settings** 
+**style.settings** *(optional)*
   Here you can specify a settings SCSS file that can be used to change the
   default settings used to generate the WTE styling. The WTE uses Foundation 5
   and you can find a full list of available settings here:
@@ -57,7 +57,7 @@ Application settings
   
     WTE generate-custom-styling <configuration.ini> 
   
-**style.overrides** 
+**style.overrides** *(optional)*
   Using the overrides setting you can specify an SCSS file that will be
   included as the last SCSS file when generating the WTE styling. This allows
   you to override any of the default styles if they cannot be configured via
