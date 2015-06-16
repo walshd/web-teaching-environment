@@ -4,6 +4,9 @@ ul.no-symbol, ol.no-symbol {
 ul.no-symbol > li, ol.no-symbol > li {
     list-style-type: none;
 }
+ul.no-margin, ol.no-margin {
+    margin-left: 0;
+}
 .hidden {
     display: none;
 }
