@@ -94,7 +94,7 @@
     <script>
     function resize_page() {
         var win_height = $(window).innerHeight();
-        $('nav.top-bar').each(function() {
+        $('nav').each(function() {
             win_height = win_height - $(this).outerHeight(true);
         });
         $('#textbook').css('height', win_height + 'px');
