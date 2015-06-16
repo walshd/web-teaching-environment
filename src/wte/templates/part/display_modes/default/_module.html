@@ -113,8 +113,8 @@
       </ul>
     </section>
     <div>
-      <a py:if="not part.has_role(['student', 'owner'], r.current_user)" href="${r.route_url('part.register', pid=part.id)}" class="button small">Register</a>
-      <a py:if="part.has_role('student', r.current_user)" href="${r.route_url('part.deregister', pid=part.id)}" class="button small">De-register</a>
+      <a py:if="not part.has_role(['student', 'owner'], r.current_user)" href="${r.route_url('part.register', pid=part.id)}" class="button small post-link">Register</a>
+      <a py:if="part.has_role('student', r.current_user)" href="${r.route_url('part.deregister', pid=part.id)}" class="button small post-link">De-register</a>
     </div>
   </section>
   <script>
