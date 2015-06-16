@@ -5,24 +5,34 @@ u"""
 #################################################################
 
 The :mod:`~wte.scripts.configuration` module provides the functionality for
-generating a configuration file from the default template.
+generating a configuration file from the default template and generating new
+styles.
 
 .. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
+import sass
 import uuid
+
 from genshi.template import TemplateLoader, loader, NewTextTemplate
+from pkg_resources import resource_filename
+from pygments import formatters, styles
 
 from wte.scripts.main import get_user_parameter
 
 
 def init(subparsers):
     u"""Initialises the :class:`~argparse.ArgumentParser`, adding the
-    "generate-config" command.
+    "generate-config" and "generate-custom-styling" commands.
     """
     parser = subparsers.add_parser('generate-config', help='Generate the WTE configuration file')
     parser.add_argument('--filename', default='production.ini', help='Configuration file name')
     parser.add_argument('--sqla-connection-string', default=None, help='SQLAlchemy database connection string')
     parser.set_defaults(func=generate_config)
+    parser = subparsers.add_parser('generate-custom-styling', help='Generate custom CSS styling')
+    parser.add_argument('configuration', default='production.ini', help='Configuration file name')
+    parser.add_argument('--pygments-style', default='default', help='Pygments style to use')
+    parser.add_argument('--codemirror-theme', help='CodeMirror theme to use')
+    parser.set_defaults(func=generate_custom_styling)
 
 
 def generate_config(args):
@@ -40,3 +50,34 @@ def generate_config(args):
     with open(args.filename, 'w') as out_f:
         for data in tmpl.generate(**params).render('text'):
             out_f.write(data)
+
+
+def generate_custom_styling(args):
+    u"""Generates a custom CSS styling for the WTE application. Allows
+    customisation of general settings, Pygments style, and CodeMirror theme.
+    """
+    # Create the settings overide partial
+    with open(resource_filename('wte', 'static/scss/_overrides.scss'), 'w') as out_f:
+        out_f.write('/* Any changes made here will be automatically overwritten */\n')
+    # Create the Pygments partial
+    pygments_style = 'default'
+    if args.pygments_style in list(styles.get_all_styles()):
+        pygments_style = args.pygments_style
+    with open(resource_filename('wte', 'static/scss/application/_pygments.scss'), 'w') as out_f:
+        out_f.write('/* Any changes made here will be automatically overwritten */\n')
+        out_f.write(formatters.HtmlFormatter(style=pygments_style).get_style_defs())
+    # Create the CodeMirror theme partial
+    codemirror_theme = None;
+    if resource_filename('wte', 'static/css/codemirror/theme/%s.css' % (args.codemirror_theme)):
+        codemirror_theme = args.codemirror_theme
+    with open(resource_filename('wte', 'static/scss/codemirror/_theme.scss'), 'w') as out_f:
+        out_f.write('/* Any changes made here will be automatically overwritten */\n')
+        if codemirror_theme:
+            with open(resource_filename('wte', 'static/scss/codemirror/theme/%s.css' % (codemirror_theme))) as in_f:
+                out_f.write(in_f.read())
+    # Generate application.min.css
+    css = sass.compile(filename=resource_filename('wte', 'static/scss/wte.scss'),
+                       output_style='compressed',
+                       custom_functions={'file-exists': lambda fn: False})
+    with open(resource_filename('wte', 'static/css/application.min.css'), 'w') as out_f:
+        out_f.write(css)

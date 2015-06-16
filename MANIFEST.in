@@ -1,2 +1,2 @@
 include *.txt *.ini *.cfg *.rst COPYING
-recursive-include src *.ico *.png *.css *.gif *.jpg *.pt *.txt *.js *.html *.xml *.svg *.eot *.ttf *.woff
+recursive-include src *.ico *.png *.css *.scss *.gif *.jpg *.pt *.txt *.js *.html *.xml *.svg *.eot *.ttf *.woff

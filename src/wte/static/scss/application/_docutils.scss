@@ -1,0 +1,96 @@
+/**
+ * Sourcecode block and inline styling
+ */
+.rest {
+    tt.docutils.literal {
+        font-family: $font-family-monospace;
+        padding: 0px 0.2rem;
+        border: 1px solid #dfdfdf;
+        border-radius: 3px;
+    }
+    .source {
+        @import 'pygments.scss';
+    }
+    div.source {
+        &.panel {
+            margin-left: 1rem;
+            padding-top: 0.3rem;
+            padding-bottom: 0.3rem;
+        }
+        .title {
+            font-size: 0.7rem;
+            margin-left: -2.25rem;
+
+            .main {
+                display: inline-block;
+                text-transform: uppercase;
+                color: #fff;
+                background-color: #222;
+                padding: 0.1rem 0.3rem;
+                float: left;
+                font-weight: bold;
+            }
+            .filename {
+                display: block;
+                background-color: #ddd;
+                text-align: right;
+                padding: 0.1rem 0.3rem;
+                color: #666;
+            }
+            &:after {
+                content: ' ';
+                display: table;
+                clear: both;
+            }
+        }
+        pre {
+            line-height: 1.3rem;
+            font-size: 0.9rem;
+            padding:0.5rem 1rem 1rem 1rem;
+            font-family: $font-family-monospace;
+        }
+        &.HTML {
+            .title {
+                .main {
+                    background-color: #070;
+                }
+            }
+        }
+        &.CSS {
+            .title {
+                .main {
+                    background-color: #700;
+                }
+            }
+        }
+        &.JavaScript {
+            .title {
+                .main {
+                    background-color: #007;
+                }
+            }
+        }
+        &.PHP {
+            .title {
+                .main {
+                    background-color: #077;
+                }
+            }
+        }
+        &.Python {
+            .title {
+                .main {
+                    background-color: #770;
+                }
+            }
+        }
+    }
+    span.source {
+        display: inline-block;
+        background-color: #efefef;
+        font-family: $font-family-monospace;
+        padding: 0px 0.2rem;
+        border: 1px solid #dfdfdf;
+        border-radius: 3px;
+    }
+}

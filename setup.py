@@ -23,7 +23,8 @@ requires = [
     'pygments',
     'formencode',
     'alembic',
-    'inflect'
+    'inflect',
+    'libsass'
     ]
 
 setup(name='WebTeachingEnvironment',

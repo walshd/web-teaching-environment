@@ -1,0 +1,24 @@
+ul.no-symbol, ol.no-symbol {
+    margin-left: 0;
+}
+ul.no-symbol > li, ol.no-symbol > li {
+    list-style-type: none;
+}
+.hidden {
+    display: none;
+}
+.panel.status-unavailable {
+    border-style: dashed;
+    background: none repeat scroll 0% 0% #FDFDFD;
+}
+.full-height {
+    height: 100%;
+}
+.no-select {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
