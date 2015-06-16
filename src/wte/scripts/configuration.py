@@ -76,7 +76,7 @@ def generate_custom_styling(args):
     # Create the CodeMirror theme partial
     codemirror_theme = None;
     if 'codemirror.theme' in settings:
-        if resource_exists('wte', 'static/css/codemirror/theme/%s.css' % (settings['codemirror.theme'])):
+        if resource_exists('wte', 'static/scss/codemirror/theme/%s.css' % (settings['codemirror.theme'])):
             codemirror_theme = settings['codemirror.theme']
     with open(resource_filename('wte', 'static/scss/codemirror/_theme.scss'), 'w') as out_f:
         out_f.write('/* Any changes made here will be automatically overwritten */\n')
