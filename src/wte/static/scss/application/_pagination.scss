@@ -3,17 +3,20 @@
  */
 .fixed-pagination {
     position: relative;
-    width: 100%;
     background: #fff;
     padding-top: rem-calc(6);
 }
 
 .pagination {
-    padding: rem-calc(6);
+    padding: rem-calc(6) rem-calc(6) 0 rem-calc(6);
     background: scale-color($white, $lightness: -5%);
     @include radius();
     margin-bottom: rem-calc(6);
-    
+
+    .progress {
+        margin-bottom: 0;
+        height: 0.6rem;
+    }
     .icon {
         display: inline-block;
         @include radius();
