@@ -5,44 +5,46 @@
     <title>${user.display_name} - Permissions</title>
   </head>
   <body>
-    <article class="small-12 medium-6 large-4 column">
-      <h1>${user.display_name} - Permissions</h1>
-      <form action="${r.route_url('user.permissions', uid=user.id)}" method="post">
-        <h2>Permission Groups</h2>
-        <table>
-          <thead>
-            <tr>
-              <th></th>
-              <th>Permission Group</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr py:for="permission_group in permission_groups">
-              <td>${h.form.tags.checkbox('permission_group', permission_group.id, None, id='permission_group_%i' % (permission_group.id), checked=permission_group in user.permission_groups)}</td>
-              <td><label for="${'permission_group_%i' % (permission_group.id)}">${permission_group.title}</label></td>
-            </tr>
-          </tbody>
-        </table>
-        <h2>Individual Permissions</h2>
-        <table>
-          <thead>
-            <tr>
-              <th></th>
-              <th>Permission</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr py:for="permission in permissions">
-              <td>${h.form.tags.checkbox('permission', permission.id, None, id='permission_%i' % (permission.id), checked=permission in user.permissions)}</td>
-              <td><label for="${'permission_%i' % (permission.id)}">${permission.title}</label></td>
-            </tr>
-          </tbody>
-        </table>
-        <div class="text-right">
-          <a href="${r.route_url('user.view', uid=user.id)}" class="button small secondary">Don't Update</a>
-          ${h.form.tags.submit('Update', class_='button small')}
-        </div>
-      </form>
-    </article>
+    <div class="row row-left">
+      <article class="small-12 column">
+        <h1>${user.display_name} - Permissions</h1>
+        <form action="${r.route_url('user.permissions', uid=user.id)}" method="post">
+          <h2>Permission Groups</h2>
+          <table>
+            <thead>
+              <tr>
+                <th></th>
+                <th>Permission Group</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr py:for="permission_group in permission_groups">
+                <td>${h.form.tags.checkbox('permission_group', permission_group.id, None, id='permission_group_%i' % (permission_group.id), checked=permission_group in user.permission_groups)}</td>
+                <td><label for="${'permission_group_%i' % (permission_group.id)}">${permission_group.title}</label></td>
+              </tr>
+            </tbody>
+          </table>
+          <h2>Individual Permissions</h2>
+          <table>
+            <thead>
+              <tr>
+                <th></th>
+                <th>Permission</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr py:for="permission in permissions">
+                <td>${h.form.tags.checkbox('permission', permission.id, None, id='permission_%i' % (permission.id), checked=permission in user.permissions)}</td>
+                <td><label for="${'permission_%i' % (permission.id)}">${permission.title}</label></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="small-12 medium-8 large-6 text-right">
+            <a href="${r.route_url('user.view', uid=user.id)}" class="button small secondary">Don't Update</a>
+            ${h.form.tags.submit('Update', class_='button small')}
+          </div>
+        </form>
+      </article>
+    </div>
   </body>
 </html>

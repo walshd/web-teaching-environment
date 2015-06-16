@@ -11,12 +11,12 @@
         <option value="${'%02i' % (idx)}:30"></option>
       </py:for>
     </datalist>
-    <div class="row left">
+    <div class="row row-left">
       <div class="small-12 column end">
         <h1>Edit ${task.title} Action</h1>
       </div>
     </div>
-    <article class="row left">
+    <article class="row row-left">
       <form action="${r.current_route_url()}" method="post" class="small-12 column end">
         <div class="row">
           ${h.form.field('date', 'Date', h.form.tags.date_field, e=e, size='small-8 medium-5 large-3 column', default=task.timestamp.strftime('%Y-%m-%d') if task.timestamp else '', data_date_format='yyyy-mm-dd', placeholder='yyyy-mm-dd')}

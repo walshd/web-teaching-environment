@@ -5,11 +5,11 @@
     <title>${part.title} - Update Users</title>
   </head>
   <body>
-    <article class="row left">
-      <div class="row.left clearfix">
-        <h1 class="small-12 medium-10 large-8 column">${part.title} - Update Users</h1>
+    <article class="row row-left">
+      <div class="small-12 column">
+        <h1>${part.title} - Update Users</h1>
       </div>
-      <section class="small-12 medium-10 large-8 column">
+      <section class="small-12 column">
         <form action="${r.route_url('part.users.update', pid=part.id)}" method="post">
           ${h.form.tags.hidden_field('action', params['action'])}
           <py:if test="'q' in params and params['q']">${h.form.tags.hidden_field('q', params['q'])}</py:if>
