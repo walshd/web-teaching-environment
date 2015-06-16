@@ -28,7 +28,6 @@
                 background-color: #222;
                 padding: 0.1rem 0.3rem;
                 float: left;
-                font-weight: bold;
             }
             .filename {
                 display: block;
@@ -52,35 +51,48 @@
         &.HTML {
             .title {
                 .main {
-                    background-color: #070;
+                    color: $source-html-title-color;
+                    background-color: $source-html-title-background-color;
                 }
             }
         }
         &.CSS {
             .title {
                 .main {
-                    background-color: #700;
+                    color: $source-css-title-color;
+                    background-color: $source-css-title-background-color;
                 }
             }
         }
         &.JavaScript {
             .title {
                 .main {
-                    background-color: #007;
+                    color: $source-javascript-title-color;
+                    background-color: $source-javascript-title-background-color;
                 }
             }
         }
         &.PHP {
             .title {
                 .main {
-                    background-color: #077;
+                    color: $source-php-title-color;
+                    background-color: $source-php-title-background-color;
                 }
             }
         }
         &.Python {
             .title {
                 .main {
-                    background-color: #770;
+                    color: $source-python-title-color;
+                    background-color: $source-python-title-background-color;
+                }
+            }
+        }
+        &.BashSession {
+            .title {
+                .main {
+                    color: $source-bash-session-title-color;
+                    background-color: $source-bash-session-title-background-color;
                 }
             }
         }

@@ -1,6 +1,8 @@
+/* Load the initial settings */
 @import 'foundation/settings.scss';
 @import 'application/settings.scss';
-@import 'overrides.scss';
+@import 'settings.scss';
+/* Load the actual SCSS files */
 @import 'foundation/normalize.scss';
 @import 'foundation/foundation.scss';
 @import 'foundation/icons/foundation-icons.scss';
@@ -20,3 +22,5 @@
 @import 'application/html-viewer.scss';
 @import 'application/footer.scss';
 @import 'application/docutils.scss';
+/** Load the override SCSS file */
+@import 'overrides.scss';
