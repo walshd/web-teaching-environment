@@ -28,7 +28,7 @@
             ${h.form.field('display_mode', 'Type', h.form.tags.select, size='small-12', e=e, value=part.display_mode, options=[('text_only', 'Text Only'), ('three_pane_html', 'Text, Editor &amp; HTML Viewer')])}
         </py:if>
         <div class="clearfix codemirror-border">
-          ${h.form.field('content', 'Content', h.form.tags.textarea, size='small-12', e=e, default=part.content, id='page-content', style='height:20em;')}
+          ${h.form.field('content', 'Content', h.form.tags.textarea, size='small-12', e=e, default=part.content, id='page-content', style='height:20em;', data_wte_mimetype='text/x-rst', data_wte_cm_options=h.frontend.codemirror_options(r, 'text/x-rst'))}
         </div>
         <div class="clearfix" py:if="part.children">
           <div class="small-12 column">
@@ -76,10 +76,8 @@
     $('#children').sortable();
     $('#templates').sortable();
     var textarea = $('#page-content');
-    var cm = CodeMirror.fromTextArea(textarea[0], {
-        mode: 'text/x-rst',
-        theme: 'elegant'
-    });
+    //var cm = CodeMirror.fromTextArea(textarea[0], ${h.frontend.codemirror_options(r, 'text/x-rst', include_mode=True)});
+    var cm = codemirror_for_textarea(textarea);
     cm.on('change', function(cm, changes) {
         cm.save();
         clearTimeout(code_change_timer);

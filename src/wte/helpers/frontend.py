@@ -15,6 +15,7 @@ import re
 
 from genshi.builder import tag, Markup
 
+from wte.util import get_config_setting
 
 inflector = inflect.engine()
 
@@ -96,18 +97,24 @@ CODEMIRROR_OPTIONS = {'text/html': {'matchTags': True},
                                                  'lint': True}}
 
 
-def codemirror_options(mimetype):
+def codemirror_options(request, mimetype, include_mode=False):
     u"""Generates a JSON representation of CodeMirror options that are valid
     for the given ``mimetype``.
 
+    :param request: The current request
+    :type request: :class:`~pyramid.request.Request`
     :param mimetype: The mimetype to generate CodeMirror options for
     :type mimetype: `unicode`
+    :param include_mode: Whether to include the ``mode`` setting in the options
+    :type include_mode: `bool`
     :return: The JSON representation of options
     """
+    options = {'theme': get_config_setting(request, 'codemirror.theme', default='default')}
+    if include_mode:
+        options['mode'] = mimetype
     if mimetype in CODEMIRROR_OPTIONS:
-        return json.dumps(CODEMIRROR_OPTIONS[mimetype])
-    else:
-        return json.dumps({})
+        options.update(CODEMIRROR_OPTIONS[mimetype])
+    return json.dumps(options)
 
 
 def page_pagination(request, part):

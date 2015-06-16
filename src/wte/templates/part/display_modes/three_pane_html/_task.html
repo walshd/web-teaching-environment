@@ -120,7 +120,7 @@
       </dl>
       <form class="tabs-content">
         <div py:for="idx, file in enumerate(progress.files)" class="content ${'active' if idx == 0 else ''}" id="${h.frontend.html_id(file.filename)}">
-          ${h.form.tags.textarea('', file.data.decode('utf-8') if file.data else '', None, data_wte_mimetype=file.mimetype, data_wte_fileid=file.id)}
+          ${h.form.tags.textarea('', file.data.decode('utf-8') if file.data else '', None, data_wte_mimetype=file.mimetype, data_wte_fileid=file.id, data_wte_cm_options=h.frontend.codemirror_options(r, file.mimetype))}
         </div>
       </form>
     </section>
