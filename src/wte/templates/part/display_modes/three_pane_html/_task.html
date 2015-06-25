@@ -174,7 +174,7 @@
             save_url: '${r.route_url('file.save', pid=part.id, fid='FID')}'
         });
         $('.menu').dropdownMenu();
-        $('.pagination').partPagination();
+        $('.pagination').partPagination({scrolling: $('#textbook')});
         $('.fixed-pagination').fixedPagination();
     });
     </script>

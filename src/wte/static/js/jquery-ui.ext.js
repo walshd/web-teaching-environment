@@ -279,7 +279,9 @@ function codemirror_for_textarea(textarea) {
 
 (function($) {
     /**
-     * The partPagination jQuery plugin handles the pagination between Parts
+     * The partPagination jQuery plugin handles the pagination between Parts. It also
+     * handles the updating the progress bar based on the scrolling progress in the
+     * container specified via the "scrolling" option.
      */
     var methods = {
         init : function(options) {
@@ -291,6 +293,33 @@ function codemirror_for_textarea(textarea) {
                     form.attr('action', form.attr('action').replace('pid', select.val()));
                     form.submit();
                 });
+                if(options && options.scrolling) {
+                    var progress = component.data('progress');
+                    progress.diff = progress.max - progress.min;
+                    var height = 0;
+                    if(options.scrolling[0] == window) {
+                    	$('body').children().each(function() {
+                    		if($(this).is(':visible')) {
+                        		console.log($(this));
+                        		console.log($(this).outerHeight(true));
+                        		height = height + $(this).outerHeight(true);
+                    		}
+                    	});
+                    } else {
+                    	options.scrolling.children().each(function() {
+                    		height = height + $(this).outerHeight(true);
+                    	});
+                    }
+                    height = height - options.scrolling.innerHeight();
+                    options.scrolling.on('scroll', function() {
+                    	var perc = Math.min(progress.min + (progress.diff / height * options.scrolling.scrollTop()),
+                    			progress.max);
+                    	component.find('.meter').css('width', perc + '%');
+                    });
+                	var perc = Math.min(progress.min + (progress.diff / height * options.scrolling.scrollTop()),
+                			progress.max);
+                	component.find('.meter').css('width', perc + '%');
+                }
             });
         }
     };
@@ -325,6 +354,8 @@ function codemirror_for_textarea(textarea) {
                     var offset = Math.max(parent.scrollTop() - top, 0);
                     component.css('top', offset + 'px');
                 });
+                var offset = Math.max(parent.scrollTop() - top, 0);
+                component.css('top', offset + 'px');
             });
         }
     };

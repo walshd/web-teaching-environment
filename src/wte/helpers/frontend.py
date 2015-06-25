@@ -159,21 +159,18 @@ def page_pagination(request, part):
                                                selected='selected' if p.id == part.id else None) for p in part.parent.children]),
                          action=request.route_url('part.view', pid='pid'),
                          class_='show-for-large-up large-8 column')
-    if part.order == 0:
-        progress = 0
-    elif part.order + 1 == len(part.parent.children):
-        progress = 100
-    else:
-        progress = int(100.0 * (part.order + 0.5) / len(part.parent.children))
+    min_progress = max(0, int(100.0 * (part.order) / len(part.parent.children)))
+    max_progress = min(100, int(100.0 * (part.order + 1) / len(part.parent.children)))
     return tag.nav(tag.div(tag.div(tag.div(prev_page, page_jump, next_page,
-                                           class_='row'),
+                                           class_='row collapse'),
                                    tag.div(tag.span(class_='meter',
-                                                    style='width:%i%%;' % (progress)),
+                                                    style='width:%i%%;' % (min_progress)),
                                            class_='progress',
                                            title='Page %i of %i' % (part.order + 1, len(part.parent.children))),
-                                   class_='pagination'),
+                                   class_='pagination',
+                                   data_progress='%s' % (json.dumps({'min': min_progress, 'max': max_progress}))),
                            class_='small-12 column'),
-                   class_='row')
+                   class_='row collapse')
 
 
 def primary_filename(progress):

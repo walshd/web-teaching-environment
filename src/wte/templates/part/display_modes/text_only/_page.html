@@ -32,7 +32,7 @@
   <script>
   $(document).ready(function() {
       $('.menu').dropdownMenu();
-      $('.pagination').partPagination();
+      $('.pagination').partPagination({scrolling: $(window)});
       $('.fixed-pagination').fixedPagination({global: true});
   });
   </script>

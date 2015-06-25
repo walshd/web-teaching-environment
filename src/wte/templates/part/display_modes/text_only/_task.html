@@ -92,8 +92,8 @@
   <script>
   $(document).ready(function() {
       $('.menu').dropdownMenu();
-      $('.pagination').partPagination();
-      $('.fixed-pagination').fixedPagination();
+      $('.pagination').partPagination({scrolling: $(window)});
+      $('.fixed-pagination').fixedPagination({global: true});
   });
   </script>
 </article>
