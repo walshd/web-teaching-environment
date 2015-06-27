@@ -6,7 +6,7 @@
   </head>
   <body>
     <div class="row">
-      <article class="small-12 medium-8 medium-offset-2 large-6 large-offset-3 column end">
+      <article class="small-12 medium-8 large-6 column end">
         <h1>Register</h1>
         <form action="${r.route_url('user.register')}" method="post">
           <py:if test="'return_to' in r.params">${h.form.hidden_field('return_to', r.params['return_to'])}</py:if>

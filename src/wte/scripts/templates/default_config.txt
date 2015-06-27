@@ -4,6 +4,15 @@
 
 [app:main]
 
+# ********************
+# Application settings
+# ********************
+
+pygments.theme = default
+codemirror.theme = default
+style.settings = 
+style.overrides = 
+
 # *************************************
 # SQLAlchemy database connection string
 # *************************************

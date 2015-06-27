@@ -5,7 +5,7 @@
     <title>Administration</title>
   </head>
   <body>
-    <div class="row">
+    <div class="row row-left">
       <article class="small-12 column">
         <h1>Administration</h1>
         <p>The following administrative functions are available:</p>
@@ -13,6 +13,10 @@
           <li class="panel" py:if="r.current_user.has_permission('admin.users.view')">
             <h2><a href="${r.route_url('users')}">User Administration</a></h2>
             <p>Administer the registered users, register new users, delete users.</p>
+          </li>
+          <li class="panel" py:if="r.current_user.has_permission('admin')">
+            <h2><a href="${r.route_url('admin.content')}">Content Administration</a></h2>
+            <p>Administer the site's content.</p>
           </li>
         </ul>
       </article>

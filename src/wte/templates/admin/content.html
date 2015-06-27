@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:py="http://genshi.edgewall.org/" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xi:include href="../layout/layout.html"/>
+  <head>
+    <title>Content Administration</title>
+  </head>
+  <body>
+    <div class="row row-left">
+      <article class="small-12 column">
+        <h1>Content Administration</h1>
+        <p>The following administrative functions are available:</p>
+        <ul class="no-symbol">
+          <li class="panel" py:if="r.current_user.has_permission('admin.users.view')">
+            <h2><a href="${r.route_url('users')}">Rebuild content</a></h2>
+            <p>Regenerate the content for all parts of the site. This can be necessary when
+              importing old data or after upgrading the WTE to take advantage of the latest
+              features.</p>
+            <p>This process can take some time, depending on the amount of content</p>
+            <form action="${r.route_url('admin.content.regenerate')}" method="post" class="text-right">
+              <input type="submit" class="button alert" value="Regenerate"/>
+            </form>
+          </li>
+        </ul>
+      </article>
+    </div>
+  </body>
+</html>

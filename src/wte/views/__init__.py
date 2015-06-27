@@ -44,8 +44,7 @@ def init(config, settings):
 def root(request):
     u"""Handles the ``/`` route.
     """
-    return {'crumbs': [{'title': 'Modules',
-                        'url': request.route_url('modules')}]}
+    return {'crumbs': []}
 
 
 @view_config(context=HTTPNotFound)
@@ -54,7 +53,7 @@ def root(request):
 def notfound_404(request):
     u"""Handles 404 errors
     """
-    return {'crumbs': []}
+    return {'crumbs': [{'title': 'Not Found'}]}
 
 
 @view_config(context=Exception)
@@ -63,4 +62,4 @@ def notfound_404(request):
 def servererror_500(request):
     u"""Handles 500 errors
     """
-    return {'crumbs': []}
+    return {'crumbs': [{'title': 'Internal Server Error'}]}

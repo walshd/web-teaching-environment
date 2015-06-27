@@ -11,12 +11,12 @@
         <option value="${'%02i' % (idx)}:30"></option>
       </py:for>
     </datalist>
-    <div class="row left">
+    <div class="row row-left">
       <div class="small-12 column end">
         <h1>Timed Actions for ${part.title}</h1>
       </div>
     </div>
-    <article class="row left">
+    <article class="row row-left">
       <ul class="no-indent no-symbol small-12 medium-6 large-8 column">
         <li py:if="not part.tasks">There are currently no timed actions for this ${part.type}.</li>
         <li py:for="task in part.tasks" class="panel">

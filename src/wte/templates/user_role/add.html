@@ -5,9 +5,11 @@
     <title>${part.title} - Add User</title>
   </head>
   <body>
-    <div class="row left">
-      <article class="small-12 medium-10 large-8 column">
+    <article class="row row-left">
+      <div class="small-12 column">
         <h1>${part.title} - Add User</h1>
+      </div>
+      <div class="small-12 column">
         <form action="${r.route_url('part.users.add', pid=part.id)}" class="row collapse">
           <div class="small-8 medium-9 large-10 column">
             ${h.form.tags.text_field('q', r.params['q'] if 'q' in r.params else '', None, placeholder='Search by name or e-mail address')}
@@ -16,6 +18,8 @@
             ${h.form.tags.submit('Search', class_='button postfix')}
           </div>
         </form>
+      </div>
+      <div class="small-12 column">
         <form action="${r.route_url('part.users.add', pid=part.id)}" method="post">
           <py:if test="users">
             ${h.form.tags.hidden_field('q', r.params['q'])}
@@ -58,8 +62,8 @@
             <p py:if="'q' in r.params">No users who are not already registered for the module were found for your search term.</p>
           </py:if>
         </form>
-      </article>
-    </div>
+      </div>
+    </article>
     <script>
     $('#change_all').on('click', function() {
         var checked = $(this).is(':checked');

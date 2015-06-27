@@ -1,5 +1,8 @@
 <article class="row left display-mode-text_only" xmlns:py="http://genshi.edgewall.org/">
   <section id="textbook" class="small-12 column rest">
+    <div class="fixed-pagination">
+      ${h.frontend.page_pagination(r, part)}
+    </div>
     <div py:if="part.allow('edit', r.current_user) or part.allow('delete', r.current_user)" class="right">
       ${h.frontend.menubar([
         {'group': 'edit', 'items': [
@@ -82,12 +85,15 @@
         </li>
       </ul>
     </section>
+    ${h.frontend.page_pagination(r, part)}
   </section>
   <script src="${r.static_url('wte:static/js/codemirror/codemirror.js')}"></script>
   ${h.frontend.codemirror_scripts(r, ['text/html'])}
   <script>
   $(document).ready(function() {
       $('.menu').dropdownMenu();
+      $('.pagination').partPagination({scrolling: $(window)});
+      $('.fixed-pagination').fixedPagination({global: true});
   });
   </script>
 </article>

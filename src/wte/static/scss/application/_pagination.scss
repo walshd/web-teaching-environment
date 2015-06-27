@@ -1,0 +1,39 @@
+/**
+ * Pagination styles
+ */
+.fixed-pagination {
+    position: relative;
+    background: #fff;
+    padding-top: rem-calc(6);
+    z-index: 1;
+}
+
+.pagination {
+    padding: rem-calc(6) rem-calc(6) 0 rem-calc(6);
+    background: scale-color($white, $lightness: -5%);
+    @include radius();
+    margin-bottom: rem-calc(6);
+
+    .progress {
+        margin-bottom: 0;
+        height: 0.6rem;
+    }
+    .icon {
+        display: inline-block;
+        @include radius();
+        font-size: 150%;
+        padding: 0 rem-calc(16);
+        
+        &:hover {
+            background: scale-color(#fff, $lightness: -10%);
+        }
+        &.unavailable {
+            color: $pagination-link-unavailable-font-color;
+            cursor: $cursor-disabled-value;
+            background: scale-color($white, $lightness: -5%);
+        }
+    }
+    form, select {
+        margin-bottom: 0;
+    }
+}

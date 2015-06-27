@@ -1,0 +1,50 @@
+/**
+ * Editor styles
+ */
+
+#editor {
+    overflow: hidden;
+}
+#files {
+    border-bottom: 1px solid #333;
+    overflow: hidden;
+    position: relative;
+}
+#files .tabs {
+    border-bottom: 1px solid #dfdfdf;
+    padding: 0.5em 2em 0 2em;
+}
+#files .tabs dd {
+    margin-right: 0.5em;
+    margin-bottom: -1px !important;
+}
+#files .tabs dd > a {
+    border-radius: 3px 3px 0 0;
+    border: 1px solid transparent;
+    border-bottom-color: #dfdfdf;
+    background-color: #fff;
+    padding: 0.5rem 32px 0.5rem 0.8rem;
+}
+#files .tabs dd > a:hover {
+    background-color: #eee;
+}
+#files .tabs dd.active {
+}
+#files .tabs dd.active > a {
+    border-top-color: #dfdfdf;
+    border-right-color: #dfdfdf;
+    border-bottom-color: transparent;
+    border-left-color: #dfdfdf;
+}
+#files .tabs dd.active > a:hover {
+    background-color: #fff;
+}
+#files .tabs-content .content {
+    padding: 0.2em 0.5em;
+}
+#files .tabs-content .content textarea {
+    height: 100%;
+}
+#files .tabs-content .content .CodeMirror {
+    height: 100%;
+}

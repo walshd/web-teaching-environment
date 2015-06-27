@@ -65,6 +65,39 @@
     };
 }(jQuery));
 
+/**
+ * Generates a new CodeMirror instance for the given textarea.
+ * 
+ * @param textarea A jQuery object with a single textarea.
+ * @returns The new CodeMirror instance
+ */
+function codemirror_for_textarea(textarea) {
+    var options = {
+            mode: textarea.data('wte-mimetype'),
+            lineNumbers: true,
+            indentUnit: 4,
+    };
+    var override_options = textarea.data('wte-cm-options');
+    if(override_options) {
+        options = $.extend(options, override_options);
+    }
+    var cm = CodeMirror.fromTextArea(textarea[0], options);
+    cm.setOption("extraKeys", {
+        'Tab': function(cm) {
+            if(cm.somethingSelected()) {
+                cm.indentSelection("add");
+                return;
+            } else {
+                cm.execCommand("insertSoftTab");
+            }
+        },
+        'Shift-Tab': function(cm) {
+            cm.indentSelection("subtract");
+        }
+    });
+    return cm;
+}
+
 (function($) {
     /**
      * The tabbedEditor jQuery plugin provides the tabbed editor functionality.
@@ -77,34 +110,7 @@
                 component.find('textarea').each(function() {
                     var textarea = $(this);
                     var tab = component.find('#' + textarea.parent().attr('id') + '-tab > a');
-                    var options = {
-                        mode : textarea.data('wte-mimetype'),
-                        lineNumbers: true,
-                        indentUnit: 4,
-                    };
-                    var override_options = textarea.data('wte-cm-options');
-                    if(override_options) {
-                    	options = $.extend(options, override_options);
-                    }
-                    /*                        lint: textarea.data('wte-mimetype') == 'application/javascript',
-                        gutters: ['CodeMirror-lint-markers'],
-                        matchBrackets: CodeMirror.prototype.matchBrackets ? true : false,
-                        matchTags: CodeMirror.commands.toMatchingTag ? true : false,
-*/
-                    var cm = CodeMirror.fromTextArea(this, options);
-                    cm.setOption("extraKeys", {
-                    	Tab: function(cm) {
-                    		if(cm.somethingSelected()) {
-                                cm.indentSelection("add");
-                                return;
-                            } else {
-                                cm.execCommand("insertSoftTab");
-                            }
-                    	},
-                    	'Shift-Tab': function(cm) {
-                            cm.indentSelection("subtract");
-                        }
-                    });
+                    var cm = codemirror_for_textarea(textarea);
                     cm.on('change', function(cm, changes) {
                         clearTimeout(textarea.data('wte-timeout'));
                         tab.css('color', '#aa0000');
@@ -251,24 +257,12 @@
      */
     var methods = {
         init : function(options) {
-            return this
-                    .each(function() {
-                        var component = $(this);
-                        component.css('position', 'absolute').css('z-index', '1000').css('width', '30em');
-                        component.find('.column, .columns').css('padding-right', '5px');
-                        component.position({
-                            my : 'right top+5px',
-                            at : 'right bottom',
-                            of : $('nav.top-bar')
-                        });
-                        $(window).on('resize', function() {
-                            component.position({
-                                my : 'right top+5px',
-                                at : 'right bottom',
-                                of : $('nav.top-bar')
-                            });
-                        });
-                    });
+            return this.each(function() {
+                var component = $(this);
+                setTimeout(function() {
+                    component.find('.column, .columns').addClass('minimise');
+                }, 5000);
+            });
         }
     };
 
@@ -279,6 +273,100 @@
             return methods.init.apply(this, arguments);
         } else {
             $.error('Method ' + method + ' does not exist on jQuery.fancyFlash');
+        }
+    };
+}(jQuery));
+
+(function($) {
+    /**
+     * The partPagination jQuery plugin handles the pagination between Parts. It also
+     * handles the updating the progress bar based on the scrolling progress in the
+     * container specified via the "scrolling" option.
+     */
+    var methods = {
+        init : function(options) {
+            return this.each(function() {
+                var component = $(this);
+                var form = component.find('form');
+                form.find('select').on('change', function() {
+                    var select = $(this);
+                    form.attr('action', form.attr('action').replace('pid', select.val()));
+                    form.submit();
+                });
+                if(options && options.scrolling) {
+                    var progress = component.data('progress');
+                    progress.diff = progress.max - progress.min;
+                    var height = 0;
+                    if(options.scrolling[0] == window) {
+                    	$('body').children().each(function() {
+                    		if($(this).is(':visible')) {
+                        		console.log($(this));
+                        		console.log($(this).outerHeight(true));
+                        		height = height + $(this).outerHeight(true);
+                    		}
+                    	});
+                    } else {
+                    	options.scrolling.children().each(function() {
+                    		height = height + $(this).outerHeight(true);
+                    	});
+                    }
+                    height = height - options.scrolling.innerHeight();
+                    options.scrolling.on('scroll', function() {
+                    	var perc = Math.min(progress.min + (progress.diff / height * options.scrolling.scrollTop()),
+                    			progress.max);
+                    	component.find('.meter').css('width', perc + '%');
+                    });
+                	var perc = Math.min(progress.min + (progress.diff / height * options.scrolling.scrollTop()),
+                			progress.max);
+                	component.find('.meter').css('width', perc + '%');
+                }
+            });
+        }
+    };
+
+    $.fn.partPagination = function(method) {
+        if (methods[method]) {
+            return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
+        } else if (typeof method === 'object' || !method) {
+            return methods.init.apply(this, arguments);
+        } else {
+            $.error('Method ' + method + ' does not exist on jQuery.partPagination');
+        }
+    };
+}(jQuery));
+
+(function($) {
+    /**
+     * The fixedPagination jQuery plugin handles keeping a pagination at the
+     * top of its parent when scrolling the parent
+     */
+    var methods = {
+        init : function(options) {
+            return this.each(function() {
+                var component = $(this);
+                var top = component.position().top;
+                var parent = component.parent();
+                if(options && options.global) {
+                    parent = $(window);
+                    top = component.offset().top;
+                }
+                parent.on('scroll', function() {
+                    var offset = Math.max(parent.scrollTop() - top, 0);
+                    component.css('top', offset + 'px');
+                });
+                var offset = Math.max(parent.scrollTop() - top, 0);
+                component.css('top', offset + 'px');
+            });
+        }
+    };
+
+    $.fn.fixedPagination = function(method) {
+        if (methods[method]) {
+            return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
+        } else if (typeof method === 'object' || !method) {
+            return methods.init.apply(this, arguments);
+        } else {
+            $.error('Method ' + method + ' does not exist on jQuery.fixedPagination');
         }
     };
 }(jQuery));
