@@ -629,9 +629,11 @@ def permissions(request):
                     'permission_groups': permission_groups,
                     'permissions': permissions,
                     'crumbs': create_user_crumbs(request, [{'title': user.display_name,
-                                                            'url': request.route_url('user.view', uid=user.id)},
+                                                            'url': request.route_url('user.view',
+                                                                                     uid=user.id)},
                                                            {'title': 'Permissions',
-                                                            'url': request.route_url('user.permissions', uid=user.id)}])}
+                                                            'url': request.route_url('user.permissions',
+                                                                                     uid=user.id)}])}
         else:
             raise HTTPNotFound()
     else:

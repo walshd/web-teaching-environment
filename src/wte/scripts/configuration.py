@@ -74,7 +74,7 @@ def generate_custom_styling(args):
         out_f.write(formatters.HtmlFormatter(style=pygments_style).get_style_defs())
 
     # Create the CodeMirror theme partial
-    codemirror_theme = None;
+    codemirror_theme = None
     if 'codemirror.theme' in settings:
         if resource_exists('wte', 'static/scss/codemirror/theme/%s.css' % (settings['codemirror.theme'])):
             codemirror_theme = settings['codemirror.theme']

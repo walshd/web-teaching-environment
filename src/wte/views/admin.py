@@ -48,6 +48,7 @@ def content_admin(request):
     else:
         raise unauthorised_redirect(request)
 
+
 @view_config(route_name='admin.content.regenerate')
 @current_user()
 @require_logged_in()

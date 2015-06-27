@@ -155,8 +155,9 @@ def page_pagination(request, part):
     next_page = tag.div(next_page,
                         class_='small-6 large-2 column text-center')
     page_jump = tag.form(tag.select([tag.option(p.title,
-                                               value=p.id,
-                                               selected='selected' if p.id == part.id else None) for p in part.parent.children]),
+                                                value=p.id,
+                                                selected='selected' if p.id == part.id else None)
+                                     for p in part.parent.children]),
                          action=request.route_url('part.view', pid='pid'),
                          class_='show-for-large-up large-8 column')
     min_progress = max(0, int(100.0 * (part.order) / len(part.parent.children)))
