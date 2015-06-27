@@ -24,6 +24,7 @@ def init(settings):
     """Initialise and load the docutils extensions.
     """
     directives.register_directive('sourcecode', Pygments)
+    directives.register_directive('youtube', YouTube)
     roles.register_local_role('asset', asset_ref_role)
     roles.register_local_role('crossref', crossref_role)
     for _, aliases, _, _ in get_all_lexers():
@@ -124,6 +125,24 @@ class Pygments(Directive):
                                        cssclass=u'source %s' % (lexer.name))
         parsed = highlight(u'\n'.join(self.content), lexer, formatter)
         return [nodes.raw('', parsed, format='html')]
+
+
+YOUTUBE_BASE_TEMPLATE = '<iframe width="560" height="315" ' + \
+    'src="%s" allowfullscreen="allowfullscreen"></iframe>'
+
+
+class YouTube(Directive):
+    """The :class:`~wte.text_formatter.docutils_ext.YouTube` directive enables
+    support for embeddeding YouTube videos in ReST. It takes a single parameter
+    that is the YouTube URL to embed::
+
+      .. youtube:: https://URL/TO/VIDEO
+
+    """
+    required_arguments = 1
+
+    def run(self):
+        return [nodes.raw('', YOUTUBE_BASE_TEMPLATE % (self.arguments[0]), format='html')]
 
 
 CROSSREF_PATTERN = re.compile(r'([0-9]+)|(?:(.*)<([0-9]+)>)')
