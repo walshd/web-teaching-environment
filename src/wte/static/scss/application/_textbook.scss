@@ -4,6 +4,10 @@
 #textbook {
     overflow: auto;
     box-sizing: border-box;
+    
+    iframe {
+        border-width: 0;
+    }
 }
 .display-mode-three_pane_html {
     border-right: 1px solid #333;
