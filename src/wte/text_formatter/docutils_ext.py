@@ -233,7 +233,7 @@ def asset_ref_role(name, rawtext, text, lineno, inliner, options={}, content=[])
                                               uri=request.route_url('asset.view',
                                                                     pid=part_id,
                                                                     filename=asset.filename),
-                                              alt=title))
+                                              alt=title if title else asset.filename))
                 else:
                     result.append(nodes.reference(rawtext,
                                                   title if title else asset.filename,
