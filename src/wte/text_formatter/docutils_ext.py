@@ -27,6 +27,7 @@ def init(settings):
     directives.register_directive('youtube', YouTube)
     roles.register_local_role('asset', asset_ref_role)
     roles.register_local_role('crossref', crossref_role)
+    roles.register_local_role('style', inline_css_role)
     for _, aliases, _, _ in get_all_lexers():
         for alias in aliases:
             roles.register_local_role('code-%s' % (alias), inline_pygments_role)
@@ -156,7 +157,6 @@ def crossref_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
     Usage in ReST is \:crossref\:\`part_id\` or \:crossref\:\`link text
     <part_id>\`.
     """
-    from wte.models import (DBSession, Part)
     request = inliner.document.settings.pyramid_request
     result = []
     messages = []
@@ -201,7 +201,7 @@ ASSET_PATTERN = re.compile(r'((?:(parent):)?([a-zA-Z0-9_\-.]+)$)|((.+)(?:<(?:(pa
 
 
 def asset_ref_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
-    """The :func:`~wte.text_formatter.docutils_ext.asset_ref_role` functio
+    """The :func:`~wte.text_formatter.docutils_ext.asset_ref_role` function
     provides a docutils role that handles linking in :class:`~wte.models.Asset`
     into the text. If the :class:`~wte.models.Asset` is an image, then the
     image is loaded inline, otherwise a download link for all other types
@@ -252,4 +252,22 @@ def asset_ref_role(name, rawtext, text, lineno, inliner, options={}, content=[])
         messages.append(inliner.reporter.error('Internal error: no part set',
                                                line=lineno))
 
+    return result, messages
+
+
+CSS_PATTERN = re.compile(r'(.+)<([a-zA-Z0-9_\-.:;#]+)>$')
+
+
+def inline_css_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
+    """The :func:`~wte.text_formatter.docutils_ext.inline_css_role` function
+    provides a docutils role that allows for the specification of arbitrary CSS
+    that is then assigned to a <span> element.
+    """
+    result = []
+    messages = []
+    match = re.match(CSS_PATTERN, text)
+    if match:
+        result.append(nodes.raw('', '<span style="%s">%s</span>' % (match.group(2), match.group(1)), format='html'))
+    else:
+        messages.append(inliner.reporter.error('No CSS definition found in "%s"' % (text)))
     return result, messages
