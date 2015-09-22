@@ -23,6 +23,11 @@
            'label': 'Add Task',
            'icon': 'fi-plus',
            'href': r.route_url('part.new', new_type='task', _query=[('parent_id', part.id)]),
+           'highlight': True},
+          {'visible': part.allow('edit', r.current_user),
+           'label': 'Add Asset',
+           'icon': 'fi-plus',
+           'href': r.route_url('asset.new', pid=part.id, new_type='asset'),
            'highlight': True}]},
         {'group': 'importexport', 'items': [
           {'visible': part.allow('edit', r.current_user),
@@ -76,6 +81,32 @@
         </li>
       </ul>
     </section>
+    <div py:if="not part.has_role('student', r.current_user)">
+      <section py:if="part.assets">
+        <h2>Assets</h2>
+        <ul class="no-symbol">
+          <li py:for="asset in part.assets" class="panel clearfix">
+            <div py:if="part.allow('edit', r.current_user)" class="right">
+              ${h.frontend.menubar([
+                {'group': 'edit', 'items': [
+                  {'visible': True,
+                   'icon': 'fi-pencil',
+                   'label': 'Edit',
+                   'href': r.route_url('asset.edit', pid=part.id, aid=asset.id),
+                   'highlight': True}]},
+                {'group': 'delete', 'items': [
+                  {'visible': True,
+                   'label': 'Delete',
+                   'href': r.route_url('asset.delete', pid=part.id, aid=asset.id),
+                   'class': 'alert post-link',
+                   'confirm': h.frontend.confirm_delete('asset', asset.filename, False)}]},
+              ])}
+            </div>
+            <h3><a href="${r.route_url('asset.view', mid=-1, pid=part.id, filename=asset.filename)}">${asset.filename} (${asset.mimetype})</a></h3>
+          </li>
+        </ul>
+      </section>
+    </div>
   </section>
   <script>
   $('.menu').dropdownMenu();

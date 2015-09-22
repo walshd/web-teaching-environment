@@ -81,7 +81,8 @@ def new(request):
                     progress = get_user_part_progress(dbsession, request.current_user, part)
                     with transaction.manager:
                         dbsession.add(part)
-                        dbsession.add(progress)
+                        if progress:
+                            dbsession.add(progress)
                         mimetype = guess_type(params['filename'])
                         if params['data'] is not None:
                             mimetype = guess_type(params['data'].filename)
@@ -90,7 +91,7 @@ def new(request):
                         elif request.matchdict['new_type'] == 'asset':
                             new_order = [a.order for a in part.assets]
                         elif request.matchdict['new_type'] == 'file':
-                            new_order = [a.order for a in progress.files]
+                            new_order = [a.order for a in progress.files] if progress else []
                         new_order.append(0)
                         new_order = max(new_order) + 1
                         new_asset = Asset(filename=params['filename'],
