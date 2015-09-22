@@ -29,7 +29,7 @@
             ${h.form.field('display_mode', 'Type', h.form.tags.select, size='small-12', e=e, value=part.display_mode, options=[('text_only', 'Text Only'), ('three_pane_html', 'Text, Editor &amp; HTML Viewer')])}
           </py:if>
           <div class="clearfix codemirror-border">
-            ${h.form.field('content', 'Content', h.form.tags.textarea, size='small-12', e=e, default=part.content, id='page-content', style='height:20em;', data_wte_mimetype='text/x-rst')}
+            ${h.form.field('content', 'Content', h.form.tags.textarea, size='small-12', e=e, default=part.content, id='page-content', data_wte_mimetype='text/x-rst')}
           </div>
           <div class="clearfix" py:if="part.children">
             <div class="small-12 column">
@@ -197,7 +197,6 @@
         clearTimeout(code_change_timer);
         code_change_timer = setTimeout(render_page, 1000);
     });
-    render_page();
     $('#children').sortable();
     $('#templates').sortable();
     var textarea = $('#page-content');
@@ -207,6 +206,7 @@
         clearTimeout(code_change_timer);
         code_change_timer = setTimeout(render_page, 1000);
     });
+    render_page();
     </script>
   </body>
 </html>
