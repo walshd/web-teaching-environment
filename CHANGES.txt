@@ -1,3 +1,8 @@
+1.0.1
+-----
+
+- *BUGFIX*: Migrations were not being included in the distribution archive.
+
 1.0.0
 -----
 
