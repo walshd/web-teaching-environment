@@ -59,7 +59,7 @@
           </py:if>
           <py:if test="not users">
             <p py:if="'q' not in r.params">Please enter a name or e-mail address in the search box above.</p>
-            <p py:if="'q' in r.params">No users who are not already registered for the module were found for your search term.</p>
+            <p py:if="'q' in r.params">No users were found for your search term or any matching users are already registered for this module.</p>
           </py:if>
         </form>
       </div>
