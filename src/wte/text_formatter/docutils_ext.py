@@ -193,6 +193,7 @@ def inline_pygments_role(name, rawtext, text, lineno, inliner, options={}, conte
     except ValueError:
         lexer = TextLexer()
     formatter = HtmlFormatter(nowrap=True)
+    text = text.replace('\x00', '')
     parsed = highlight(text, lexer, formatter)
     return [nodes.raw('', '<span class="source">%s</span>' % (parsed), format='html')], []
 
