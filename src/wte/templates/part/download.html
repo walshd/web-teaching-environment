@@ -2,10 +2,7 @@
 <html xmlns:py="http://genshi.edgewall.org/">
   <head>
     <title>${part.title}</title>
-    <link rel="stylesheet" href="${'../' * depth}_static/normalize.css"/>
-    <link rel="stylesheet" href="${'../' * depth}_static/foundation.min.css"/>
-    <link rel="stylesheet" href="${'../' * depth}_static/docutils.css"/>
-    <link rel="stylesheet" href="${'../' * depth}_static/application.css"/>
+    <link rel="stylesheet" href="${'../' * depth}_static/application.min.css"/>
     <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
   </head>
   <body>
@@ -21,7 +18,7 @@
       <div class="small-12">
         <h2>Tutorials &amp; Exercises</h2>
         <ul class="no-indent no-symbol">
-          <li class="panel" py:for="child in part.children">
+          <li class="panel" py:for="child in part.children" py:if="child.allow('view', r.current_user)">
             <h3><a href="${child.id}/index.html">${child.title}</a></h3>
             ${h.frontend.part_summary(child)}
           </li>
@@ -46,7 +43,7 @@
       <div class="small-12">
         <h2>Tasks</h2>
         <ul class="no-indent no-symbol">
-          <li class="panel" py:for="child in part.children">
+          <li class="panel" py:for="child in part.children" py:if="child.allow('view', r.current_user)">
             <h3><a href="${child.id}/index.html">${child.title}</a></h3>
             ${h.frontend.part_summary(child)}
           </li>
