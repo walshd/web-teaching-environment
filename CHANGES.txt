@@ -1,3 +1,12 @@
+1.0.2
+
+- *BUGFIX*: Fixed a problem with manually adding users to a module if they
+  were already taking another module.
+- *BUGFIX*: Fixed a bug in the module download functionality. 
+- *BUGFIX*: Fixed an information disclosure issue around non-accessible content
+  being included in the download.
+- *BUGFIX*: Fixed an issue with null-characters in inline ReST roles.
+   
 1.0.1
 -----
 

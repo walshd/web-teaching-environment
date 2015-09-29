@@ -19,7 +19,7 @@ from email.mime.text import MIMEText
 from email.utils import formatdate
 
 
-VERSION = '1.0.1'
+VERSION = '1.0.2'
 
 
 class State(object):
