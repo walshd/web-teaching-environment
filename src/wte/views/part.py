@@ -956,10 +956,12 @@ def download(request):
         template = template_loader.load('part/download.html')
         doctree = template.generate(part=part,
                                     depth=depth,
-                                    h=helpers)
+                                    h=helpers,
+                                    r=request)
         body_zip.writestr('%s/index.html' % (base_path), doctree.render('xhtml').encode('utf-8'))
         for child in part.children:
-            download_part('%s/%s' % (base_path, child.id), child, depth + 1, body_zip, template_loader)
+            if child.allow('view', request.current_user):
+                download_part('%s/%s' % (base_path, child.id), child, depth + 1, body_zip, template_loader)
         if part.type == 'tutorial' or part.type == 'task':
             for template in part.templates:
                 body_zip.writestr('%s/workspace/%s' % (base_path, template.filename),
@@ -974,14 +976,16 @@ def download(request):
             template_loader = TemplateLoader(loader.package('wte', 'templates'))
             body = StringIO()
             body_zip = ZipFile(body, 'w')
-            body_zip.writestr('%s/_static/normalize.css' % (part.title),
-                              resource_string('wte', 'static/css/normalize.css'))
-            body_zip.writestr('%s/_static/foundation.min.css' % (part.title),
-                              resource_string('wte', 'static/css/foundation.min.css'))
-            body_zip.writestr('%s/_static/docutils.css' % (part.title),
-                              resource_string('wte', 'static/css/docutils.css').replace('#textbook ', ''))
-            body_zip.writestr('%s/_static/application.css' % (part.title),
-                              resource_string('wte', 'static/css/application.css'))
+            body_zip.writestr('%s/_static/application.min.css' % (part.title),
+                              resource_string('wte', 'static/css/application.min.css'))
+            body_zip.writestr('%s/_static/icons/foundation-icons.eot' % (part.title),
+                              resource_string('wte', 'static/css/icons/foundation-icons.eot'))
+            body_zip.writestr('%s/_static/icons/foundation-icons.svg' % (part.title),
+                              resource_string('wte', 'static/css/icons/foundation-icons.svg'))
+            body_zip.writestr('%s/_static/icons/foundation-icons.ttf' % (part.title),
+                              resource_string('wte', 'static/css/icons/foundation-icons.ttf'))
+            body_zip.writestr('%s/_static/icons/foundation-icons.woff' % (part.title),
+                              resource_string('wte', 'static/css/icons/foundation-icons.woff'))
             download_part(part.title, part, 0, body_zip, template_loader)
             body_zip.close()
             return Response(body=str(body.getvalue()),
