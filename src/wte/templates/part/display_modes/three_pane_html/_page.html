@@ -48,6 +48,13 @@
         <dd py:for="idx, file in enumerate(progress.files)" id="${h.frontend.html_id(file.filename)}-tab" class="${'active' if idx == 0 else ''}">
           <div class="right">
             ${h.frontend.menubar([
+              {'group': 'save', 'items': [
+                {'visible': True,
+                 'label': 'Save',
+                 'icon': 'fi-save',
+                 'href': '#',
+                 'highlight': True,
+                 'class': 'save'}]},
               {'group': 'download', 'items': [
                 {'visible': True,
                  'label': 'Download',
@@ -60,7 +67,7 @@
                  'confirm': h.frontend.confirm_action('Discard Changes', 'Please confirm that you wish to discard the changes you made to the file "%s" and reset it to its initial content.' % (file.filename), "Don't Discard", {'label': 'Discard', 'class_': 'alert'})}]}
             ], class_='margin-top-right')}
           </div>
-          <a href="#${h.frontend.html_id(file.filename)}"><img src="${r.static_url('wte:static/img/spinner-small.gif')}" class="hidden"/> ${file.filename}</a>
+          <a href="#${h.frontend.html_id(file.filename)}" class="title"><img src="${r.static_url('wte:static/img/spinner-small.gif')}" class="hidden"/> ${file.filename}</a>
         </dd>
       </dl>
       <form class="tabs-content">

@@ -18,12 +18,27 @@
     margin-right: 0.5em;
     margin-bottom: -1px !important;
 }
+#files .tabs dd.active > a, #files .tabs dd.active .menubar > li > a, #files .tabs dd.active .menubar > li > .menu > a {
+    color: $jet;
+}
 #files .tabs dd > a {
     border-radius: 3px 3px 0 0;
     border: 1px solid transparent;
     border-bottom-color: #dfdfdf;
     background-color: #fff;
-    padding: 0.5rem 32px 0.5rem 0.8rem;
+    padding: 0.5rem 3.5em 0.5rem 0.8rem;
+}
+#files .tabs dd.active.modified > a, #files .tabs dd.modified > a {
+    color: #aa0000;
+}
+#files .tabs dd.active.saving img, #files .tabs dd.saving img {
+    display: inline;
+}
+#files .tabs dd.active.saved > a, #files .tabs dd.saved > a {
+    color: #00aa00;
+}
+#files .tabs dd > a, #files .tabs dd .menubar > li > a, #files .tabs dd .menubar > li > .menu > a {
+    color: scale-color($jet, $lightness: 30%);
 }
 #files .tabs dd > a:hover {
     background-color: #eee;

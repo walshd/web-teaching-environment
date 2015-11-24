@@ -109,16 +109,27 @@ function codemirror_for_textarea(textarea) {
                 component.data('wte-options', options);
                 component.find('textarea').each(function() {
                     var textarea = $(this);
-                    var tab = component.find('#' + textarea.parent().attr('id') + '-tab > a');
+                    var tab = component.find('#' + textarea.parent().attr('id') + '-tab');
                     var cm = codemirror_for_textarea(textarea);
                     cm.on('change', function(cm, changes) {
                         clearTimeout(textarea.data('wte-timeout'));
-                        tab.css('color', '#aa0000');
+                        tab.removeClass('saved');
+                        tab.removeClass('saving');
+                        tab.addClass('modified');
                         textarea.data('wte-timeout', setTimeout(function() {
                             component.tabbedEditor('save', tab, textarea);
-                            }, 1000));
+                            }, 10000));
                         });
                     textarea.data('wte-cm', cm);
+                });
+                component.find('.tabs a.save').on('click', function(event) {
+                	event.preventDefault();
+                	var link = $(this);
+                	var tab = link.parents('dd');
+                	var tab_id = tab.attr('id');
+                	tab_id = tab_id.substring(0, tab_id.length - 4);
+                	var textarea = component.find('#' + tab_id + ' > textarea');
+                	component.tabbedEditor('save', tab, textarea);
                 });
                 component.find('.tabs').on('toggled', function(event, tab) {
                     tab.children('textarea').data('wte-cm').refresh();
@@ -132,7 +143,10 @@ function codemirror_for_textarea(textarea) {
         save : function(tab, textarea) {
             return this.each(function() {
                 var component = $(this);
-                tab.find('img').show();
+                clearTimeout(textarea.data('wte-timeout'));
+                tab.removeClass('saved');
+                tab.addClass('saving');
+                tab.removeClass('modified');
                 url = component.data('wte-options').save_url;
                 url = url.replace('FID', textarea.data('wte-fileid'));
                 clearTimeout(component.data('wte-viewer-scroll-timeout'));
@@ -145,12 +159,12 @@ function codemirror_for_textarea(textarea) {
                 }).complete(function() {
                     var iframe = component.data('wte-options').viewer;
                     iframe.attr('src', iframe.attr('src'));
-                    tab.css('color', '#0a0');
+                    tab.addClass('saved');
                     textarea.data('wte-timeout', setTimeout(function() {
-                        tab.css('color', '');
+                        tab.removeClass('saved');
                     }, 3000));
                 }).always(function() {
-                    tab.find('img').hide();
+                    tab.removeClass('saving');
                 });
             });
         },
