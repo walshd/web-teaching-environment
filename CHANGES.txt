@@ -1,4 +1,11 @@
+1.0.3
+-----
+
+- *UPDATE*: Added an explicit save button on the tabbed editor
+- *UPDATE*: Increased the autosave time to 10 seconds in the tabbed editor
+
 1.0.2
+-----
 
 - *BUGFIX*: Fixed a problem with manually adding users to a module if they
   were already taking another module.
