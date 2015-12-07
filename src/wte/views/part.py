@@ -211,8 +211,12 @@ def create_part_crumbs(request, part, current=None):
                        'url': request.route_url('part.view', pid=recurse_part.id)})
         recurse_part = recurse_part.parent
     if part:
-        crumbs.append({'title': 'Modules',
-                       'url': request.route_url('modules')})
+        if request.current_user and request.current_user.logged_in:
+            crumbs.append({'title': 'My Modules',
+                           'url': request.route_url('user.modules', uid=request.current_user.id)})
+        else:
+            crumbs.append({'title': 'Modules',
+                           'url': request.route_url('modules')})
     crumbs.reverse()
     if current:
         if isinstance(current, list):

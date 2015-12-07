@@ -97,8 +97,7 @@ def user_modules(request):
             return {'modules': modules,
                     'title': 'My Modules',
                     'missing': 'You have not yet created any modules.',
-                    'crumbs': [{'title': user.display_name, 'url': request.route_url('user.view', uid=user.id)},
-                               {'title': 'Modules',
+                    'crumbs': [{'title': 'My Modules',
                                 'url': request.route_url('user.modules', uid=request.matchdict['uid']),
                                 'current': True}]}
         else:
