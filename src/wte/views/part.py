@@ -168,7 +168,10 @@ def view_part(request):
                     'progress': progress,
                     'include_footer': part.type not in [u'task', u'page']}
         else:
-            unauthorised_redirect(request)
+            if part.type == 'module':
+                unauthorised_redirect(request)
+            else:
+                raise HTTPSeeOther(request.route_url('part.view', pid=part.parent_id))
     else:
         raise HTTPNotFound()
 
