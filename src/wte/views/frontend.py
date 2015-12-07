@@ -96,7 +96,7 @@ def user_modules(request):
                                        UserPartRole.user_id == request.matchdict[u'uid'])).order_by(Part.title).all())
             return {'modules': modules,
                     'title': 'My Modules',
-                    'missing': 'You have not yet created any modules.',
+                    'missing': 'You have not registered for any modules.',
                     'crumbs': [{'title': 'My Modules',
                                 'url': request.route_url('user.modules', uid=request.matchdict['uid']),
                                 'current': True}]}
