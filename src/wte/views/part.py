@@ -130,7 +130,8 @@ def get_user_part_progress(dbsession, user, part):
                                       mimetype=template.mimetype,
                                       order=template.order,
                                       data=template.data,
-                                      type=u'file')
+                                      type=u'file',
+                                      etag=template.etag)
                     dbsession.add(user_file)
                     progress.files.append(user_file)
             for template in templates:

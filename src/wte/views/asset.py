@@ -11,8 +11,9 @@ Routes are defined in :func:`~wte.views.asset.init`.
 
 .. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
-import transaction
 import formencode
+import hashlib
+import transaction
 
 from mimetypes import guess_type
 from pyramid.httpexceptions import (HTTPSeeOther, HTTPNotFound)
@@ -98,7 +99,8 @@ def new(request):
                                           mimetype=mimetype[0] if mimetype[0] else 'application/binary',
                                           type=request.matchdict['new_type'],
                                           order=new_order,
-                                          data=params['data'].file.read() if params['data'] is not None else None)
+                                          data=params['data'].file.read() if params['data'] is not None else None,
+                                          etag=hashlib.sha512(params['data'].file.read()).hexdigest() if params['data'] is not None else None)
                         dbsession.add(new_asset)
                         part.all_assets.append(new_asset)
                     dbsession.add(part)
@@ -164,6 +166,7 @@ def edit(request):
                         asset.filename = params['filename']
                         if params['data'] is not None:
                             asset.data = params['data'].file.read()
+                            asset.etag = hashlib.sha512(asset.data).hexdigest()
                             mimetype = guess_type(params['data'].filename)
                             if mimetype[0]:
                                 mimetype = mimetype[0]
@@ -174,6 +177,7 @@ def edit(request):
                                     mimetype = params['mimetype_other']
                         elif params['content'] is not None:
                             asset.data = params['content'].encode('utf-8')
+                            asset.etag = hashlib.sha512(asset.data).hexdigest()
                             if params['mimetype'] != 'other':
                                 mimetype = params['mimetype']
                             else:

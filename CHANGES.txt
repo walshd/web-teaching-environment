@@ -4,6 +4,7 @@
 - *UPDATE*: Improved rendering of blockquote elements (#32)
 - *UPDATE*: For logged-in users the "My Modules" replaces "Modules" (#45)
 - *UPDATE*: Improved the part editor to adapt to the browser window size (#27)
+- *UPDATE*: Enable ETag handling for all assets (#47)
 - *BUGFIX*: Fixed the calculation of the time-remaining string (#37)
 - *BUGFIX*: Fixed deep-linking into modules the user is not registered for (#44) 
 

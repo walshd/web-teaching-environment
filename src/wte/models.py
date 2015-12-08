@@ -29,7 +29,7 @@ from zope.sqlalchemy import ZopeTransactionExtension
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
 
-DB_VERSION = u'4215b2582d87'
+DB_VERSION = u'10626db822ba'
 """The currently required database version."""
 
 
@@ -568,6 +568,7 @@ class Asset(Base):
     mimetype = Column(Unicode(255))
     order = Column(Integer)
     data = Column(LargeBinary)
+    etag = Column(Unicode(255))
 
 Index(u'assets_filename_ix', Asset.filename)
 Index(u'assets_type_ix', Asset.type)
