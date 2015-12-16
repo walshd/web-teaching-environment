@@ -76,7 +76,10 @@
                  'icon': 'fi-pencil',
                  'label': 'Edit',
                  'href': r.route_url('part.edit', pid=child.id),
-                 'highlight': True}]},
+                 'highlight': True},
+                {'visible': part.allow('edit', r.current_user),
+                 'label': 'Edit Timed Actions',
+                 'href': r.route_url('part.timed_task', pid=child.id)}]},
               {'group': 'add', 'items': [
                 {'visible': child.allow('edit', r.current_user) and child.type == 'tutorial',
                  'label': 'Add Page',
