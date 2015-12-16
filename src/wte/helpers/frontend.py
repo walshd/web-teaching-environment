@@ -15,6 +15,7 @@ import math
 import re
 
 from genshi.builder import tag, Markup
+from pywebtools import text
 
 from wte.util import get_config_setting
 
@@ -310,7 +311,11 @@ def menubar(menu, drop_down_menu_left=True, class_=None):
     for group in groups:
         if len(group) == 1:
             item = group[0]
-            items.append(tag.li(tag.a(tag.span(class_=item['icon']), title=group[0]['label'],
+            items.append(tag.li(tag.a(tag.span(class_=item['icon'],
+                                               aria_hidden='true'),
+                                      tag.span(group[0]['label'],
+                                               class_='show-for-sr'),
+                                      title=group[0]['label'],
                                       href=item['href'],
                                       class_=item['class'] if 'class' in item else None,
                                       data_wte_confirm=item['confirm'] if 'confirm' in item else None,
@@ -323,11 +328,20 @@ def menubar(menu, drop_down_menu_left=True, class_=None):
                                              class_=item['class'] if 'class' in item else None,
                                              data_wte_confirm=item['confirm'] if 'confirm' in item else None,
                                              target=item['target'] if 'target' in item else None)))
-            items.append(tag.li(tag.div(tag.a(tag.span(class_=group[0]['icon']), href='#'),
+            items.append(tag.li(tag.div(tag.a(tag.span(class_=group[0]['icon'],
+                                                       aria_hidden='true'),
+                                              tag.span(text.title(group[0]['group']),
+                                                       class_='show-for-sr'),
+                                              href='#'),
                                         tag.ul(sub_menu),
                                         class_='menu',
                                         data_wte_menu_position='left' if drop_down_menu_left else 'right')))
-    items.append(tag.li(tag.div(tag.a(tag.span(class_='fi-list'), href='#', title='All actions'),
+    items.append(tag.li(tag.div(tag.a(tag.span(class_='fi-list',
+                                               aria_hidden='true'),
+                                      tag.span('Actions',
+                                               class_='show-for-sr'),
+                                      href='#',
+                                      title='All actions'),
                                 tag.ul(full_menu),
                                 class_='menu',
                                 data_wte_menu_position='left' if drop_down_menu_left else 'right')))

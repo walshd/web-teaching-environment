@@ -6,6 +6,8 @@
 - *UPDATE*: Improved the part editor to adapt to the browser window size (#27)
 - *UPDATE*: Enable ETag handling for all assets (#47)
 - *UPDATE*: Enable timed archiving (#50)
+- *UPDATE*: Fixed a number of accessibility issues, particularly relating to
+  the font icons.
 - *BUGFIX*: Fixed the calculation of the time-remaining string (#37)
 - *BUGFIX*: Fixed deep-linking into modules the user is not registered for (#44) 
 
