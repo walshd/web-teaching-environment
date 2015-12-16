@@ -24,7 +24,8 @@ requires = [
     'formencode',
     'alembic',
     'inflect',
-    'libsass'
+    'libsass',
+    'asset'
     ]
 
 setup(name='WebTeachingEnvironment',
