@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-u"""
+"""
 ###############################################################
 :mod:`wte.helpers.frontend` -- Helpers for the frontend display
 ###############################################################
@@ -11,9 +11,11 @@ render the frontend page displays.
 """
 import inflect
 import json
+import math
 import re
 
 from genshi.builder import tag, Markup
+from pywebtools import text
 
 from wte.util import get_config_setting
 
@@ -21,7 +23,7 @@ inflector = inflect.engine()
 
 
 def html_id(text):
-    u"""Turns a given text into a valid HTML id attribute value. Removes
+    """Turns a given text into a valid HTML id attribute value. Removes
     spaces and full-stops.
 
     :param text: The text to convert
@@ -60,7 +62,7 @@ CODEMIRROR_MODES = {'text/html': ['javascript',
 
 
 def codemirror_scripts(request, mimetypes):
-    u"""Generates the ``<script>`` tags necessary to load the CodeMirror mode
+    """Generates the ``<script>`` tags necessary to load the CodeMirror mode
     JS files for the given list of ``mimetypes``.
 
     :param request: The request to use for generating URLs
@@ -98,7 +100,7 @@ CODEMIRROR_OPTIONS = {'text/html': {'matchTags': True},
 
 
 def codemirror_options(request, mimetype, include_mode=False):
-    u"""Generates a JSON representation of CodeMirror options that are valid
+    """Generates a JSON representation of CodeMirror options that are valid
     for the given ``mimetype``.
 
     :param request: The current request
@@ -118,7 +120,7 @@ def codemirror_options(request, mimetype, include_mode=False):
 
 
 def page_pagination(request, part):
-    u"""Generates the pagination UI for the individual page display of a
+    """Generates the pagination UI for the individual page display of a
     :class:`~wte.models.Part`.
 
     :param request: The current request
@@ -175,7 +177,7 @@ def page_pagination(request, part):
 
 
 def primary_filename(progress):
-    u"""Returns the filename of the first :class:`~wte.models.File` from the
+    """Returns the filename of the first :class:`~wte.models.File` from the
     :class:`~wte.models.UserPartProgress` that has the mimetype "text/html".
 
     :param progress: The :class:`~wte.models.UserPartProgress` to get the files
@@ -192,7 +194,7 @@ def primary_filename(progress):
 
 
 def confirm_action(title, message, cancel, ok):
-    u"""Generates a confirmation JSON object for use with the jQuery.postLink() plugin.
+    """Generates a confirmation JSON object for use with the jQuery.postLink() plugin.
 
     :param title: The title of the confirmation dialog box
     :type title: ``unicode``
@@ -212,7 +214,7 @@ def confirm_action(title, message, cancel, ok):
 
 
 def confirm_delete(obj_type, title, has_parts=False):
-    u"""Generates the confirmation JSON object for use with the jQuery.postLink() plugin.
+    """Generates the confirmation JSON object for use with the jQuery.postLink() plugin.
 
     :param obj_type: The type of object that is being deleted
     :type obj_type: ``unicode``
@@ -236,7 +238,7 @@ def confirm_delete(obj_type, title, has_parts=False):
 
 
 def part_summary(part):
-    u"""Generates summary text for a :class:`~wte.models.Part` by extracting the first HTML element
+    """Generates summary text for a :class:`~wte.models.Part` by extracting the first HTML element
     from the ``compiled_content``. Due to the use of ReST, this should in most cases be the first
     paragraph.
 
@@ -256,7 +258,7 @@ def part_summary(part):
 
 
 def menubar(menu, drop_down_menu_left=True, class_=None):
-    u"""Generates a menu bar for a nested set of menu groups and menu items. Each menu group is specified as
+    """Generates a menu bar for a nested set of menu groups and menu items. Each menu group is specified as
     a ``dict`` with the following keys:
 
     * *group*: the name of the group
@@ -309,7 +311,11 @@ def menubar(menu, drop_down_menu_left=True, class_=None):
     for group in groups:
         if len(group) == 1:
             item = group[0]
-            items.append(tag.li(tag.a(tag.span(class_=item['icon']), title=group[0]['label'],
+            items.append(tag.li(tag.a(tag.span(class_=item['icon'],
+                                               aria_hidden='true'),
+                                      tag.span(group[0]['label'],
+                                               class_='show-for-sr'),
+                                      title=group[0]['label'],
                                       href=item['href'],
                                       class_=item['class'] if 'class' in item else None,
                                       data_wte_confirm=item['confirm'] if 'confirm' in item else None,
@@ -322,11 +328,20 @@ def menubar(menu, drop_down_menu_left=True, class_=None):
                                              class_=item['class'] if 'class' in item else None,
                                              data_wte_confirm=item['confirm'] if 'confirm' in item else None,
                                              target=item['target'] if 'target' in item else None)))
-            items.append(tag.li(tag.div(tag.a(tag.span(class_=group[0]['icon']), href='#'),
+            items.append(tag.li(tag.div(tag.a(tag.span(class_=group[0]['icon'],
+                                                       aria_hidden='true'),
+                                              tag.span(text.title(group[0]['group']),
+                                                       class_='show-for-sr'),
+                                              href='#'),
                                         tag.ul(sub_menu),
                                         class_='menu',
                                         data_wte_menu_position='left' if drop_down_menu_left else 'right')))
-    items.append(tag.li(tag.div(tag.a(tag.span(class_='fi-list'), href='#', title='All actions'),
+    items.append(tag.li(tag.div(tag.a(tag.span(class_='fi-list',
+                                               aria_hidden='true'),
+                                      tag.span('Actions',
+                                               class_='show-for-sr'),
+                                      href='#',
+                                      title='All actions'),
                                 tag.ul(full_menu),
                                 class_='menu',
                                 data_wte_menu_position='left' if drop_down_menu_left else 'right')))
@@ -334,39 +349,101 @@ def menubar(menu, drop_down_menu_left=True, class_=None):
 
 
 def readable_timedelta(delta):
-    u"""Converts a :class:`datetime.timedelta` into a human-readable string.
+    """Converts a :class:`datetime.timedelta` into a human-readable string.
 
     :param delta: The time-delta to convert
     :type delta: :class:`datetime.timedelta`
     :return: The human-readable string representation of the ``delta``
     :rtype: :func:`unicode`
     """
+    def number_unit(number, unit, fraction=None):
+        """Formats a string "number unit", where the unit is appropriately
+        pluralised. Optionally the parameter ``fraction`` can be inserted
+        between the two.
+        
+        :param number: The number to return
+        :type number: :func:`int`
+        :param unit: The unit to return with the number (singular)
+        :type unit: :func:`unicode`
+        :param fraction: The fraction to insert between number and unit
+        :type fraction: :func:`unicode`
+        :return: The string "number unit" or "number fraction unit"
+        :rtype: :func:`unicode`
+        """
+        if fraction is not None:
+            return '%i %s %s' % (number, fraction, inflector.plural(unit, number))
+        else:
+            return '%i %s' % (number, inflector.plural(unit, number))
+
+    def time_string(days, hours, minutes, seconds):
+        """Converts the ``days``, ``hours``, ``minutes``, and ``seconds`` into
+        a human-readable format.
+        
+        :param days: The number of days to the timestamp
+        :type days: :func:`int`
+        :param hours: The number of hours to the timestamp
+        :type hours: :func:`int`
+        :param minutes: The number of minutes to the timestamp
+        :type minutes: :func:`int`
+        :param seconds: The number of seconds to the timestamp
+        :type seconds: :func:`int`
+        :return: The human-readable representation
+        :rtype: :func:`unicode`
+        """
+        if days > 60:
+            return 'about %s' % number_unit(math.ceil(days / 30.0), 'month')
+        elif days > 14:
+            return 'about %s' % number_unit(math.ceil(days / 7.0), 'week')
+        elif days > 5:
+            if hours > 16:
+                return 'a bit less than %s' % number_unit(days + 1, 'day')
+            elif hours > 8:
+                return 'about %s' % number_unit(days, 'day', fraction='and a half')
+            else:
+                return 'about %s' % number_unit(days, 'day')
+        elif days > 0:
+            if hours > 0:
+                return '%s and %s' % (number_unit(days, 'day'), number_unit(hours, 'hour'))
+            else:
+                return number_unit(days, 'day')
+        elif hours > 6:
+            if minutes > 50:
+                return 'a bit less than %s' % number_unit(hours + 1, 'hour')
+            elif minutes > 20:
+                return number_unit(hours, 'hour', fraction='and a half')
+            else:
+                return number_unit(hours, 'hour')
+        elif hours > 0:
+            if minutes > 0:
+                if seconds > 0:
+                    return '%s and %s' % (number_unit(hours, 'hour'), number_unit(minutes + 1, 'minute'))
+                else:
+                    return '%s and %s' % (number_unit(hours, 'hour'), number_unit(minutes, 'minute'))
+            else:
+                return number_unit(hours, 'hour')
+        elif minutes > 0:
+            if seconds > 0:
+                return number_unit(minutes + 1, 'minute')
+            else:
+                return number_unit(minutes, 'minute')
+        elif seconds > 30:
+            return 'less than a minute'
+        elif seconds > 15:
+            return 'less than 30 seconds'
+        else:
+            return number_unit(seconds, 'second')
+
     if delta.days < 0:
         delta = abs(delta)
-        if delta.days > 60:
-            return 'about %i %s ago' % (delta.days / 30, inflector.plural('month', delta.days / 30))
-        elif delta.days > 14:
-            return 'about %i %s ago' % (delta.days / 7, inflector.plural('week', delta.days / 7))
-        elif delta.days > 0:
-            return '%i %s ago' % (delta.days, inflector.plural('day', delta.days))
-        elif delta.seconds > 3600:
-            return '%i %s ago' % (delta.seconds / 3600, inflector.plural('hour', delta.seconds / 3600))
-        elif delta.seconds > 60:
-            return '%i %s ago' % (delta.seconds / 60, inflector.plural('minute', delta.seconds / 60))
-        else:
-            return '%i %s ago' % (delta.seconds, inflector.plural('second', delta.seconds))
-    elif delta.days > 60:
-        return 'in about %i %s' % (delta.days / 30, inflector.plural('month', delta.days / 30))
-    elif delta.days > 14:
-        return 'in about %i %s' % (delta.days / 7, inflector.plural('week', delta.days / 7))
-    elif delta.days > 0:
-        return 'in %i %s' % (delta.days, inflector.plural('day', delta.days))
-    elif delta.seconds > 3600:
-        return 'in %i %s' % (delta.seconds / 3600, inflector.plural('hour', delta.seconds / 3600))
-    elif delta.seconds > 60:
-        return 'in %i %s' % (delta.seconds / 60, inflector.plural('minute', delta.seconds / 60))
+        return '%s ago' % time_string(delta.days,
+                                     int(math.floor(delta.seconds / 3600)),
+                                     int(math.floor((delta.seconds % 3600) / 60)),
+                                     int(math.floor((delta.seconds % 3600) % 60)))
     else:
-        return 'in %i %s' % (delta.seconds, inflector.plural('second', delta.seconds))
+        return 'in %s' % time_string(delta.days,
+                                     int(math.floor(delta.seconds / 3600)),
+                                     int(math.floor((delta.seconds % 3600) / 60)),
+                                     int(math.floor((delta.seconds % 3600) % 60)))
 
 
 DISPLAY_MODES = {'default': {'module': '_module.html',
@@ -379,7 +456,7 @@ DISPLAY_MODES = {'default': {'module': '_module.html',
 
 
 def template_for_part(part):
-    u"""Returns the correct partial template path for a given
+    """Returns the correct partial template path for a given
     :class:`~wte.models.Part`. If there is no partial template for the given
     :class:`~wte.models.Part`, then ``None`` is returned.
 

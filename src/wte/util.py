@@ -19,9 +19,6 @@ from email.mime.text import MIMEText
 from email.utils import formatdate
 
 
-VERSION = '0.99'
-
-
 class State(object):
     u"""The :class:`~wte.util.State` provides a blank state object for use
     with Formencode validation. Any parameters passed to the constructor are

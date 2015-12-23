@@ -227,10 +227,11 @@ def login(request):
     """
     if request.current_user.logged_in:
         request.session.flash('You are already logged in', queue='info')
-        if 'return_to' in request.params and request.params['return_to'] != request.current_route_url():
-            raise HTTPSeeOther(request.params['return_to'])
-        else:
-            raise HTTPSeeOther(request.route_url('root'))
+        if 'return_to' in request.params:
+            if request.params['return_to'] != request.route_url('root') and \
+                    request.params['return_to'] != request.current_route_url():
+                raise HTTPSeeOther(request.params['return_to'])
+        raise HTTPSeeOther(request.route_url('user.modules', uid=request.current_user.id))
     if request.method == 'POST':
         try:
             dbsession = DBSession()
@@ -240,10 +241,11 @@ def login(request):
             request.current_user.logged_in = True
             request.session['uid'] = user.id
             request.session.flash('Welcome, %s' % (user.display_name), queue='info')
-            if 'return_to' in request.params and request.params['return_to'] != request.current_route_url():
-                raise HTTPSeeOther(request.params['return_to'])
-            else:
-                raise HTTPSeeOther(request.route_url('root'))
+            if 'return_to' in request.params:
+                if request.params['return_to'] != request.route_url('root') and \
+                        request.params['return_to'] != request.current_route_url():
+                    raise HTTPSeeOther(request.params['return_to'])
+            raise HTTPSeeOther(request.route_url('user.modules', uid=user.id))
         except formencode.api.Invalid as e:
             e.params = request.params
             return {'e': e}

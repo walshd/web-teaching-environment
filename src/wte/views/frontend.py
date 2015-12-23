@@ -12,9 +12,10 @@ Routes are defined in :func:`~wte.views.frontend.init`.
 
 .. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
+import hashlib
 import transaction
 
-from pyramid.httpexceptions import (HTTPNotFound, HTTPSeeOther)
+from pyramid.httpexceptions import (HTTPNotFound, HTTPSeeOther, HTTPNotModified)
 from pyramid.response import Response
 from pyramid.view import view_config
 from pywebtools.renderer import render
@@ -96,9 +97,8 @@ def user_modules(request):
                                        UserPartRole.user_id == request.matchdict[u'uid'])).order_by(Part.title).all())
             return {'modules': modules,
                     'title': 'My Modules',
-                    'missing': 'You have not yet created any modules.',
-                    'crumbs': [{'title': user.display_name, 'url': request.route_url('user.view', uid=user.id)},
-                               {'title': 'Modules',
+                    'missing': 'You have not registered for any modules.',
+                    'crumbs': [{'title': 'My Modules',
                                 'url': request.route_url('user.modules', uid=request.matchdict['uid']),
                                 'current': True}]}
         else:
@@ -125,7 +125,11 @@ def view_file(request):
             progress = get_user_part_progress(dbsession, request.current_user, part)
             for user_file in progress.files:
                 if user_file.filename == request.matchdict['filename']:
+                    if 'If-None-Match' in request.headers and request.headers['If-None-Match'] == user_file.etag:
+                        raise HTTPNotModified()
                     headers = [('Content-Type', str(user_file.mimetype))]
+                    if user_file.etag is not None:
+                        headers.append(('ETag', str(user_file.etag)))
                     if 'download' in request.params:
                         headers.append(('Content-Disposition',
                                         str('attachment; filename="%s"' % (user_file.filename))))
@@ -161,6 +165,7 @@ def save_file(request):
                         with transaction.manager:
                             dbsession.add(user_file)
                             user_file.data = request.params['content'].encode('utf-8')
+                            user_file.etag = hashlib.sha512(user_file.data).hexdigest()
                         return {'status': 'saved'}
                     else:
                         return {'status': 'no-changes'}
@@ -227,7 +232,11 @@ def view_asset(request):
                     Part.id == part.id)).first()
     if part and asset:
         if part.allow('view', request.current_user):
+            if 'If-None-Match' in request.headers and request.headers['If-None-Match'] == asset.etag:
+                raise HTTPNotModified()
             headerlist = [('Content-Type', str(asset.mimetype))]
+            if asset.etag is not None:
+                headerlist.append(('ETag', str(asset.etag)))
             if 'download' in request.params:
                 if request.params['download'].lower() == 'true':
                     headerlist.append(('Content-Disposition', str('attachment; filename="%s"' % (asset.filename))))

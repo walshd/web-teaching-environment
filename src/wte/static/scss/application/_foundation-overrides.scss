@@ -38,3 +38,23 @@ nav {
         margin-bottom: 0;
     }
 }
+blockquote {
+    border-left: 0;
+    padding: rem-calc(9 40 0 40);
+
+    p.attribution {
+        display: block;
+        text-align: right;
+        font-size: $blockquote-cite-font-size;
+        color: $blockquote-cite-font-color;
+
+        a,
+        a:visited {
+          color: $blockquote-cite-link-color;
+        }
+    }
+    
+    cite {
+        text-align: right;
+    }
+}

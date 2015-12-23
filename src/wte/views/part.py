@@ -130,7 +130,8 @@ def get_user_part_progress(dbsession, user, part):
                                       mimetype=template.mimetype,
                                       order=template.order,
                                       data=template.data,
-                                      type=u'file')
+                                      type=u'file',
+                                      etag=template.etag)
                     dbsession.add(user_file)
                     progress.files.append(user_file)
             for template in templates:
@@ -168,7 +169,10 @@ def view_part(request):
                     'progress': progress,
                     'include_footer': part.type not in [u'task', u'page']}
         else:
-            unauthorised_redirect(request)
+            if part.type == 'module':
+                unauthorised_redirect(request)
+            else:
+                raise HTTPSeeOther(request.route_url('part.view', pid=part.parent_id))
     else:
         raise HTTPNotFound()
 
@@ -211,8 +215,12 @@ def create_part_crumbs(request, part, current=None):
                        'url': request.route_url('part.view', pid=recurse_part.id)})
         recurse_part = recurse_part.parent
     if part:
-        crumbs.append({'title': 'Modules',
-                       'url': request.route_url('modules')})
+        if request.current_user and request.current_user.logged_in:
+            crumbs.append({'title': 'My Modules',
+                           'url': request.route_url('user.modules', uid=request.current_user.id)})
+        else:
+            crumbs.append({'title': 'Modules',
+                           'url': request.route_url('modules')})
     crumbs.reverse()
     if current:
         if isinstance(current, list):

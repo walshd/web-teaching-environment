@@ -1,3 +1,37 @@
+1.1.0
+-----
+
+- *UPDATE*: Improved rendering of blockquote elements (#32)
+- *UPDATE*: For logged-in users the "My Modules" replaces "Modules" (#45)
+- *UPDATE*: Improved the part editor to adapt to the browser window size (#27)
+- *UPDATE*: Enable ETag handling for all assets (#47)
+- *UPDATE*: Enable timed archiving (#50)
+- *UPDATE*: Fixed a number of accessibility issues, particularly relating to
+  the font icons.
+- *BUGFIX*: Fixed the calculation of the time-remaining string (#37)
+- *BUGFIX*: Fixed deep-linking into modules the user is not registered for (#44) 
+
+1.0.3
+-----
+
+- *UPDATE*: Added an explicit save button on the tabbed editor (#48)
+- *UPDATE*: Increased the autosave time to 10 seconds in the tabbed editor
+
+1.0.2
+-----
+
+- *BUGFIX*: Fixed a problem with manually adding users to a module if they
+  were already taking another module (#34)
+- *BUGFIX*: Fixed a bug in the module download functionality (#36)
+- *BUGFIX*: Fixed an information disclosure issue around non-accessible content
+  being included in the download
+- *BUGFIX*: Fixed an issue with null-characters in inline ReST roles (#35)
+   
+1.0.1
+-----
+
+- *BUGFIX*: Migrations were not being included in the distribution archive.
+
 1.0.0
 -----
 
