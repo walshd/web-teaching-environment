@@ -360,7 +360,7 @@ def readable_timedelta(delta):
         """Formats a string "number unit", where the unit is appropriately
         pluralised. Optionally the parameter ``fraction`` can be inserted
         between the two.
-        
+
         :param number: The number to return
         :type number: :func:`int`
         :param unit: The unit to return with the number (singular)
@@ -378,7 +378,7 @@ def readable_timedelta(delta):
     def time_string(days, hours, minutes, seconds):
         """Converts the ``days``, ``hours``, ``minutes``, and ``seconds`` into
         a human-readable format.
-        
+
         :param days: The number of days to the timestamp
         :type days: :func:`int`
         :param hours: The number of hours to the timestamp
@@ -436,9 +436,9 @@ def readable_timedelta(delta):
     if delta.days < 0:
         delta = abs(delta)
         return '%s ago' % time_string(delta.days,
-                                     int(math.floor(delta.seconds / 3600)),
-                                     int(math.floor((delta.seconds % 3600) / 60)),
-                                     int(math.floor((delta.seconds % 3600) % 60)))
+                                      int(math.floor(delta.seconds / 3600)),
+                                      int(math.floor((delta.seconds % 3600) / 60)),
+                                      int(math.floor((delta.seconds % 3600) % 60)))
     else:
         return 'in %s' % time_string(delta.days,
                                      int(math.floor(delta.seconds / 3600)),

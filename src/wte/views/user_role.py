@@ -324,14 +324,10 @@ def add(request):
                                           'url': request.current_route_url()}])
             users = None
             if 'q' in request.params:
-                #users = dbsession.query(User).outerjoin(UserPartRole).\
-                #    filter(or_(User.display_name.contains(request.params['q']),
-                #               User.email.contains(request.params['q']))).\
-                #    filter(UserPartRole.id == None)
                 users = dbsession.query(User).outerjoin(UserPartRole).\
                     filter(or_(User.display_name.contains(request.params['q']),
                                User.email.contains(request.params['q']))).\
-                    filter(User.id.notin_(dbsession.query(User.id).join(UserPartRole).\
+                    filter(User.id.notin_(dbsession.query(User.id).join(UserPartRole).
                                           join(Part).filter(Part.id == part.id)))
             start = 0
             if 'start' in request.params:

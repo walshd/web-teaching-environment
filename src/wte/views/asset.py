@@ -100,7 +100,8 @@ def new(request):
                                           type=request.matchdict['new_type'],
                                           order=new_order,
                                           data=params['data'].file.read() if params['data'] is not None else None,
-                                          etag=hashlib.sha512(params['data'].file.read()).hexdigest() if params['data'] is not None else None)
+                                          etag=hashlib.sha512(params['data'].file.read()).hexdigest()
+                                          if params['data'] is not None else None)
                         dbsession.add(new_asset)
                         part.all_assets.append(new_asset)
                     dbsession.add(part)
