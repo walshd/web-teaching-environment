@@ -1,3 +1,10 @@
+DEV
+---
+
+- *NEW*: New "registration.domains" configuration setting that enables
+  limiting registration to e-mail addresses that are within one or more
+  domains
+
 1.1.0
 -----
 

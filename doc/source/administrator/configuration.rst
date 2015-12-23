@@ -67,7 +67,12 @@ Application settings
   styles::
   
     WTE generate-custom-styling <configuration.ini> 
-  
+
+**registration.domains** *(optional)*
+  Here you can specify an optional comma-separated list of domains that are used
+  to limit registration. If one or more domain names are specified then only
+  e-mail addresses with those domains can be used to register an account. If
+  nothing is specified, then registration from any e-mail address is possible.
 
 SQLAlchemy database connection string
 -------------------------------------
