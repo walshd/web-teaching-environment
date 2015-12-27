@@ -29,7 +29,7 @@ from zope.sqlalchemy import ZopeTransactionExtension
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
 
-DB_VERSION = u'10626db822ba'
+DB_VERSION = u'510cc5b21636'
 """The currently required database version."""
 
 
@@ -345,6 +345,8 @@ class Part(Base):
     Instances of :class:`~wte.models.Part` have the following attributes:
 
     * ``id`` -- The unique database identifier
+    * ``access_rights`` -- JSON structure representing the access rights to
+      this :class:`~wte.models.Part`
     * ``assets`` -- List of :class:`~wte.models.Asset` that act as asset files
     * ``children`` -- List of :class:`~wte.models.Part` contained in this
       :class:`~wte.models.Part`
@@ -375,6 +377,7 @@ class Part(Base):
     display_mode = Column(Unicode(255))
     content = Column(UnicodeText)
     compiled_content = Column(UnicodeText)
+    access_rights = Column(UnicodeText)
 
     children = relationship(u'Part',
                             backref=backref(u'parent', remote_side=[id]),
@@ -416,7 +419,7 @@ class Part(Base):
 
     def allow(self, action, user):
         """Checks whether the given ``user`` is allowed to perform the given
-        ``action``. Supports the following action: view.
+        ``action``. Supports the following actions: view, edit, delete, and users.
 
         :param action: The action to check for
         :type action: `unicode`
@@ -486,6 +489,27 @@ class Part(Base):
         if self.parent:
             return self.parent.has_role(role, user)
         return False
+
+    def register_state(self, user):
+        if self.has_role(['student', 'owner'], user):
+            return 'already_registered'
+        if self.access_rights:
+            rights = json.loads(self.access_rights)
+            if rights:
+                if 'password' in rights and 'email_domains' in rights:
+                    if user.email[user.email.find('@') + 1:] in rights['email_domains']:
+                        return 'password_register'
+                    else:
+                        return 'invalid_email_domain'
+                elif 'password' in rights:
+                    return 'password_register'
+                elif 'email_domains' in rights:
+                    if user.email[user.email.find('@') + 1:] in rights['email_domains']:
+                        return 'plain_register'
+                    else:
+                        return 'invalid_email_domain'
+        return 'plain_register'
+
 
 Index('parts_parent_id_ix', Part.parent_id)
 

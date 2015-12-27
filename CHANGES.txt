@@ -3,7 +3,9 @@ DEV
 
 - *NEW*: New "registration.domains" configuration setting that enables
   limiting registration to e-mail addresses that are within one or more
-  domains
+  domains (#24)
+- *NEW*: Access to modules can now be restricted by password or e-mail
+  domains (#23)
 
 1.1.0
 -----

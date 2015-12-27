@@ -23,7 +23,10 @@
                   {'visible': part.allow('edit', r.current_user) and part.type == 'module' and part.status != 'archived',
                    'label': 'Archive',
                    'href': r.route_url('part.change_status', pid=part.id, _query=[('status', 'archived'), ('return_to', r.current_route_url())]),
-                   'class': 'post-link'}]},
+                   'class': 'post-link'},
+                  {'visible': part.allow('edit', r.current_user) and part.type == 'module' and part.status != 'archived',
+                   'label': 'Access Settings',
+                   'href': r.route_url('part.register.settings', pid=part.id)}]},
                 {'group': 'edit', 'items': [
                   {'visible': part.allow('edit', r.current_user),
                    'icon': 'fi-pencil',
