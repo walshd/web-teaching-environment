@@ -1,0 +1,35 @@
+.drag-n-drop-overlay {
+    display: none;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: gray;
+    opacity: 0.5;
+    z-index: 1;
+}
+.drag-n-drop {
+    position: relative;
+
+    .drag-n-drop-overlay {
+        display: block;
+        
+        .fi-upload {
+            font-size: 5rem;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .progress {
+            display: none;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            margin-bottom: 0;
+        }
+    }
+}

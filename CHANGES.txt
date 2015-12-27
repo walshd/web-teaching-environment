@@ -6,6 +6,7 @@ DEV
   domains (#24)
 - *NEW*: Access to modules can now be restricted by password or e-mail
   domains (#23)
+- *NEW*: Asset upload now supports drag and drop
 - *UPDATE*: Improved rendering of blockquote elements (#32)
 - *UPDATE*: For logged-in users the "My Modules" replaces "Modules" (#45)
 - *UPDATE*: Improved the part editor to adapt to the browser window size (#27)
