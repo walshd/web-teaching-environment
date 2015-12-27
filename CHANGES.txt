@@ -13,6 +13,7 @@ DEV
 - *UPDATE*: Enable timed archiving (#50)
 - *UPDATE*: Fixed a number of accessibility issues, particularly relating to
   the font icons.
+- *UPDATE*: Allow assets in modules (#51)
 - *BUGFIX*: Fixed the calculation of the time-remaining string (#37)
 - *BUGFIX*: Fixed deep-linking into modules the user is not registered for (#44) 
 

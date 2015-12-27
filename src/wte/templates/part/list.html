@@ -46,7 +46,10 @@
                    'icon': 'fi-plus',
                    'label': 'Add Exercise',
                    'href': r.route_url('part.new', new_type='exercise', _query=[('parent_id', part.id)]),
-                   'highlight': True}]},
+                   'highlight': True},
+                  {'visible': part.allow('edit', r.current_user),
+                   'label': 'Add Asset',
+                   'href': r.route_url('asset.new', pid=part.id, new_type='asset')}]},
                 {'group': 'importexport', 'items': [
                   {'visible': part.allow('edit', r.current_user),
                    'label': 'Import',
