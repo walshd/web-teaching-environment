@@ -7,34 +7,34 @@
     $(document).ready(function() {
     	if(window.FileReader) {
             var article = $('article');
-            article.on('dragenter', function(ev) {
+            $(document).on('dragenter', function(ev) {
             	ev.stopPropagation();
             	ev.preventDefault();
             	article.addClass('drag-n-drop');
             });
-            article.on('dragover', function(ev) {
+            $(document).on('dragover', function(ev) {
                 ev.stopPropagation();
                 ev.preventDefault();
                 article.addClass('drag-n-drop');
             });
-            article.on('dragleave', function(ev) {
+            $(document).on('dragleave', function(ev) {
                 ev.stopPropagation();
                 ev.preventDefault();
                 article.removeClass('drag-n-drop');
             });
-            article.on('drop', function(ev) {
+            $(document).on('drop', function (ev) {
                 ev.stopPropagation();
                 ev.preventDefault();
                 var dt = ev.originalEvent.dataTransfer;
                 if(dt.files) {
-                	if(dt.files.length != 0) {
-                	    var data = new FormData();
-                	    data.append('data', dt.files[0]);
-                	    article.find('.progress').show();
-                	    var promise = $.ajax($('form').attr('action'), {
-                	    	xhr: function() {
-                	    		var xhr = $.ajaxSettings.xhr();
-                	    		if(xhr.upload) {
+                    if(dt.files.length != 0) {
+                        var data = new FormData();
+                        data.append('data', dt.files[0]);
+                        article.find('.progress').show();
+                        var promise = $.ajax($('form').attr('action'), {
+                            xhr: function() {
+                                var xhr = $.ajaxSettings.xhr();
+                                if(xhr.upload) {
                                     xhr.upload.addEventListener('progress', function(ev) {
                                         var progress = ev.loaded || ev.position;
                                         var total = ev.total;
@@ -44,18 +44,18 @@
                                             article.find('.meter').css('width', 0);
                                         }
                                     }, false);
-                	    		}
-                	    		return xhr;
-                	    	},
-                	    	type: 'POST',
-                	    	contentType: false,
-                	    	processData: false,
-                	    	cache: false,
-                	    	data: data
-                	    });
-                	    promise.then(function() {
-                	    	window.location = '${r.route_url('part.view', pid=part.id)}';
-                	    });
+                                }
+                                return xhr;
+                            },
+                            type: 'POST',
+                            contentType: false,
+                            processData: false,
+                            cache: false,
+                            data: data
+                        });
+                        promise.then(function() {
+                            window.location = '${r.route_url('part.view', pid=part.id)}';
+                        });
                     }
                 }
             });
