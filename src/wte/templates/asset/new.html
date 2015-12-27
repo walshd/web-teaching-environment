@@ -10,10 +10,10 @@
         <h1>${part.title} - Add ${h.text.title(r.matchdict['new_type'])}</h1>
         <form action="${r.route_url('asset.new', pid=part.id, new_type=r.matchdict['new_type'])}" method="post" enctype="multipart/form-data">
           <div class="clearfix">
-            ${h.form.field('filename', 'Filename', h.form.tags.text_field, size='small-12', e=e, default=u'')}
+            ${h.form.field('data', 'File', h.form.tags.file_input_field, size='small-12', e=e)}
           </div>
           <div class="clearfix">
-            ${h.form.field('data', 'File', h.form.tags.file_input_field, size='small-12', e=e)}
+            ${h.form.field('filename', 'Alternate Filename (optional)', h.form.tags.text_field, size='small-12', e=e, default=u'')}
           </div>
           <div class="text-right">
             <a href="${r.route_url('part.view', pid=part.id)}" class="button small secondary">Don't Create</a>

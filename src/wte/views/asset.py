@@ -48,7 +48,7 @@ class NewAssetSchema(formencode.Schema):
     u"""The :class:`~wte.views.backend.NewAssetSchema` handles the
     validation of a new :class:`~wte.models.Asset`.
     """
-    filename = formencode.validators.UnicodeString(not_empty=True)
+    filename = formencode.validators.UnicodeString(if_empty=None, if_missing=None)
     u"""The asset's filename"""
     data = formencode.validators.FieldStorageUploadConverter(not_empty=False, if_missing=None)
     u"""The asset's data"""
@@ -78,15 +78,25 @@ def new(request):
                     if request.matchdict['new_type'] == 'asset':
                         schema.fields['data'].not_empty = True
                     params = schema.to_python(request.params)
+                    if not params['filename'] and params['data'] is None:
+                        raise formencode.Invalid('You must specify either a file or filename',
+                                                 None,
+                                                 None,
+                                                 error_dict={'filename': 'You must specify either a file or filename',
+                                                             'data': 'You must specify either a file or filename'}) 
                     dbsession = DBSession()
                     progress = get_user_part_progress(dbsession, request.current_user, part)
                     with transaction.manager:
                         dbsession.add(part)
                         if progress:
                             dbsession.add(progress)
-                        mimetype = guess_type(params['filename'])
+                        mimetype = 'application/binary'
+                        if params['filename'] is not None:
+                            mimetype = guess_type(params['filename'])
                         if params['data'] is not None:
                             mimetype = guess_type(params['data'].filename)
+                            if params['filename'] is None:
+                                params['filename'] = params['data'].filename
                         if request.matchdict['new_type'] == 'template':
                             new_order = [a.order for a in part.templates]
                         elif request.matchdict['new_type'] == 'asset':
