@@ -56,7 +56,7 @@ def notfound_404(request):
     return {'crumbs': [{'title': 'Not Found'}]}
 
 
-@view_config(context=Exception)
+#@view_config(context=Exception)
 @render({'text/html': 'errors/500.html'})
 @current_user()
 def servererror_500(request):

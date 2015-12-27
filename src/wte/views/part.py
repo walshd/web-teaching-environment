@@ -57,6 +57,8 @@ def init(config):
       :func:`~wte.views.part.preview`
     * ``part.register`` -- ``/parts/{pid}/register``
       -- :func:`~wte.views.part.register`
+    * ``part.register.settings`` -- ``/parts/{pid}/register/settings``
+      -- :func:`~wte.views.part.edit_register_settings`
     * ``part.deregister`` -- ``/parts/{pid}/deregister``
       -- :func:`~wte.views.part.deregister`
     * ``part.change_status`` -- ``/parts/{pid}/change_status``
@@ -73,6 +75,7 @@ def init(config):
     config.add_route('part.delete', '/parts/{pid}/delete')
     config.add_route('part.preview', '/parts/{pid}/rst_preview')
     config.add_route('part.register', '/parts/{pid}/register')
+    config.add_route('part.register.settings', '/parts/{pid}/register/settings')
     config.add_route('part.deregister', '/parts/{pid}/deregister')
     config.add_route('part.change_status', '/parts/{pid}/change_status')
     config.add_route('part.export', '/parts/{pid}/export')
@@ -397,13 +400,77 @@ def edit(request):
                     request.session.flash('The %s has been updated' % (part.type), queue='info')
                     raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
                 except formencode.Invalid as e:
-                    print(e)
                     e.params = request.params
                     return {'e': e,
                             'part': part,
                             'crumbs': crumbs}
             return {'part': part,
                     'crumbs': crumbs}
+        else:
+            unauthorised_redirect(request)
+    else:
+        raise HTTPNotFound()
+
+
+class RegisterSettingsSchema(formencode.Schema):
+    u"""The :class:`~wte.views.part.RegisterSettingsSchema` handles the validation
+    for modifying the ``access_rights`` of a :class:`~wte.models.Part`.
+    """
+    require = formencode.ForEach(formencode.validators.OneOf(['password', 'email_domains']))
+    """Which access rights are required"""
+    password = formencode.validators.UnicodeString(if_missing=None)
+    """The password to use for access rights"""
+    email_domains = formencode.validators.UnicodeString(if_missing=None)
+    """The email domains that the user must belong to"""
+
+
+@view_config(route_name='part.register.settings')
+@render({'text/html': 'part/register_settings.html'})
+@current_user()
+@require_logged_in()
+def edit_register_settings(request):
+    u"""Handles the ``/parts/{pid}/register/settings`` URL,
+    providing the UI and backend for editing the settings for registering for
+    a "module" type :class:`~wte.models.Part`.
+
+    Requires that the user has "edit" rights on the :class:`~wte.models.Part`.
+    """
+    dbsession = DBSession()
+    part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
+    if part:
+        if part.allow('edit', request.current_user):
+            if part.type != 'module':
+                request.session.flash('Access rights can only be set on modules', queue='info')
+                raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
+            rights = json.loads(part.access_rights)
+            crumbs = create_part_crumbs(request,
+                                        part,
+                                        {'title': 'Access Settings',
+                                         'url': request.current_route_url()})
+            if request.method == u'POST':
+                try:
+                    params = RegisterSettingsSchema().to_python(request.params)
+                    with transaction.manager:
+                        rights = {}
+                        if params['require']:
+                            if 'password' in params['require'] and params['password']:
+                                rights['password'] = params['password']
+                            if 'email_domains' in params['require'] and params['email_domains']:
+                                rights['email_domains'] = [ed.strip() for ed in params['email_domains'].split(',')]
+                        part.access_rights = json.dumps(rights)
+                        dbsession.add(part)
+                    dbsession.add(part)
+                    request.session.flash('The access settings have been updated', queue='info')
+                    raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
+                except formencode.Invalid as e:
+                    e.params = request.params
+                    return {'e': e,
+                            'part': part,
+                            'crumbs': crumbs,
+                            'rights': rights}
+            return {'part': part,
+                    'crumbs': crumbs,
+                    'rights': rights}
         else:
             unauthorised_redirect(request)
     else:
@@ -504,6 +571,31 @@ def register(request):
                                      'url': request.route_url('part.register',
                                                               pid=part.id)})
         if request.method == 'POST':
+            if part.access_rights:
+                rights = json.loads(part.access_rights)
+                if rights:
+                    if 'password' in rights and 'email_domains' in rights:
+                        if request.current_user.email[request.current_user.email.find('@') + 1:] in rights['email_domains']:
+                            if 'password' not in request.params or request.params['password'] != rights['password']:
+                                e = formencode.Invalid('Please provide the correct password', None, None, error_dict={'password': 'Please provide the correct password'})
+                                e.params = request.params
+                                return {'part': part,
+                                        'crumbs': crumbs,
+                                        'e': e}
+                        else:
+                            request.session.flash('''Unfortunately you cannot take this module as your e-mail address is not
+in the list of authorised e-mail domains.''', queue='auth')
+                            raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
+                    elif 'password' in rights:
+                        if 'password' not in request.params or request.params['password'] != rights['password']:
+                            return {'part': part,
+                                    'crumbs': crumbs,
+                                    'invalid_password': True}
+                    elif 'email_domains' in rights:
+                        if request.current_user.email[request.current_user.email.find('@') + 1:] not in rights['email_domains']:
+                            request.session.flash('''Unfortunately you cannot take this module as your e-mail address is not
+in the list of authorised e-mail domains.''', queue='auth')
+                            raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
             with transaction.manager:
                 dbsession.add(UserPartRole(user=request.current_user,
                                            part=part,

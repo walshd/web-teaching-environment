@@ -12,7 +12,10 @@
           {'visible': part.allow('edit', r.current_user) and part.type == 'module' and part.status != 'archived',
            'label': 'Archive',
            'href': r.route_url('part.change_status', pid=part.id, _query=[('status', 'archived'), ('return_to', r.current_route_url())]),
-           'class': 'post-link'}]},
+           'class': 'post-link'},
+          {'visible': part.allow('edit', r.current_user),
+           'label': 'Access Settings',
+           'href': r.route_url('part.register.settings', pid=part.id)}]},
         {'group': 'edit', 'items': [
           {'visible': part.allow('edit', r.current_user),
            'icon': 'fi-pencil',
@@ -116,7 +119,20 @@
       </ul>
     </section>
     <div>
-      <a py:if="not part.has_role(['student', 'owner'], r.current_user)" href="${r.route_url('part.register', pid=part.id)}" class="button small post-link">Register</a>
+      <py:if test="part.register_state(r.current_user) != 'already_registered'">
+        <form py:if="part.register_state(r.current_user) == 'plain_register'" action="${r.route_url('part.register', pid=part.id)}" method="post">
+          <input type="submit" value="Take this Module" class="button small"/>
+        </form>
+        <form py:if="part.register_state(r.current_user) == 'password_register'" action="${r.route_url('part.register', pid=part.id)}" method="post">
+          <p>This module's content is password protected. Please provide the correct password to access its content.</p>
+          <div class="row collapse">
+            ${h.form.field('password', '', h.form.tags.password_field, size='small-12 medium-6 large-4', e=e)}
+            <div class="small-12 medium-3 large-2 column end"><input type="submit" value="Take this Module" class="button postfix"/></div>
+          </div>
+        </form>
+        <p py:if="part.register_state(r.current_user) == 'invalid_email_domain'" class="alert-box warning">Unfortunately you cannot take this module as your e-mail address is not
+          in the list of authorised e-mail domains.</p>
+      </py:if>
       <a py:if="part.has_role('student', r.current_user)" href="${r.route_url('part.deregister', pid=part.id)}" class="button small post-link">De-register</a>
     </div>
   </section>

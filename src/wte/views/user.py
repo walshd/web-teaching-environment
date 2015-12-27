@@ -282,14 +282,43 @@ class UniqueEmailValidator(formencode.FancyValidator):
             raise formencode.Invalid(self.message('existing', state), value, state)
 
 
+class EmailDomainValidator(formencode.FancyValidator):
+    """The :class:`~wte.views.user.EmailDomainValidator` checks that the given
+    e-mail address is in the list of allowed e-mail address domains.
+
+    Requires that the list of allowed domains is available via the ``state.email_domains``
+    attribute. If nothing is provided in the ``state``, then all e-mail addresses
+    are seen as valid.
+    """
+    messages = {'wrongdomain': 'Only e-mail address in the following domains can be used: %(domains)s'}
+
+    def _validate_python(self, value, state=None):
+        if hasattr(state, 'email_domains') and state.email_domains:
+            value = value[value.find('@') + 1:]
+            if isinstance(state.email_domains, list):
+                if value not in state.email_domains:
+                    raise formencode.Invalid(self.message('wrongdomain',
+                                                          state,
+                                                          domains=', '.join(state.email_domains)),
+                                             value,
+                                             state)
+            elif value != state.email_domains:
+                raise formencode.Invalid(self.message('wrongdomain',
+                                                      state,
+                                                      domains=state.email_domains),
+                                         value,
+                                         state)
+
+
 class RegisterSchema(formencode.Schema):
     u"""The :class:`~wte.user.views.RegisterSchema` handles the validation of
     registration requests.
     s"""
     return_to = formencode.validators.UnicodeString(if_missing=None)
     u"""URL to redirect to after a successful registration (optional)"""
-    email = formencode.All(formencode.validators.Email(not_empty=True),
-                           UniqueEmailValidator())
+    email = formencode.All(UniqueEmailValidator(),
+                           EmailDomainValidator(),
+                           formencode.validators.Email(not_empty=True))
     u"""E-mail address to register with"""
     email_confirm = formencode.validators.Email(not_empty=True)
     u"""Confirmation of the registration e-mail address"""
@@ -311,7 +340,12 @@ def register(request):
     if request.method == 'POST':
         try:
             dbsession = DBSession()
-            params = RegisterSchema().to_python(request.params, State(dbsession=dbsession))
+            params = RegisterSchema().to_python(request.params,
+                                                State(dbsession=dbsession,
+                                                      email_domains=get_config_setting(request,
+                                                                                       key='registration.domains',
+                                                                                       target_type='list',
+                                                                                       default=None)))
             with transaction.manager:
                 user = User(params['email'].lower(), params['name'])
                 user.validation_token = uuid.uuid4().get_hex()
@@ -545,8 +579,9 @@ class EditSchema(formencode.Schema):
     u"""The class:`~wte.views.user.EditSchema` handles the validation of
     changes to the :class:`~wte.models.User`.
     """
-    email = formencode.All(formencode.validators.Email(not_empty=True),
-                           UniqueEmailValidator())
+    email = formencode.All(UniqueEmailValidator(),
+                           EmailDomainValidator(),
+                           formencode.validators.Email(not_empty=True))
     u"""Updated e-mail address"""
     name = formencode.validators.UnicodeString(not_empty=True)
     u"""Updated name"""
@@ -573,7 +608,12 @@ def edit(request):
             if request.method == 'POST':
                 try:
                     params = EditSchema().to_python(request.params,
-                                                    State(dbsession=dbsession, userid=user.id))
+                                                    State(dbsession=dbsession,
+                                                          userid=user.id,
+                                                          email_domains=get_config_setting(request,
+                                                                                           key='registration.domains',
+                                                                                           target_type='list',
+                                                                                           default=None)))
                     with transaction.manager:
                         dbsession.add(user)
                         user.email = params['email']
