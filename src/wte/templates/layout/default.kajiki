@@ -44,7 +44,7 @@
         </py:else>
       </section>
     </nav>
-    <nav xmlns:py="http://genshi.edgewall.org/">
+    <nav>
       <ul class="breadcrumbs">
         <li><a href="${request.route_url('root')}">Home</a></li>
         <li py:for="crumb in crumbs" class="${'current' if 'current' in crumb else ''} ${'unavailable' if 'url' not in crumb else ''}">
@@ -73,7 +73,7 @@
     <article class="row">
       <py:block name="content"></py:block>
     </article>
-    <footer xmlns:py="http://genshi.edgewall.org/">
+    <footer>
       <div class="small-6 column">Powered by the <a href="http://web-teaching-environment.readthedocs.org/en/latest/">Web Teaching Environment</a></div>
       <div class="small-6 column text-right">Version ${util.version()}</div>
     </footer>
@@ -83,6 +83,7 @@
     <script src="${request.static_url('wte:static/js/foundation/vendor/fastclick.js')}"></script>
     <script src="${request.static_url('wte:static/js/foundation/foundation.min.js')}"></script>
     <script src="${request.static_url('wte:static/js/foundation/foundation-datepicker.js')}"></script>
+    <py:block name="body_preinit_script"></py:block>
     <script>
     $(document).foundation();
     $('.post-link').postLink();
@@ -92,5 +93,6 @@
         $('input[type=date]').fdatepicker();
     }
     </script>
+    <py:block name="body_script"></py:block>
   </body>
 </html>
