@@ -232,3 +232,20 @@ def get_config_setting(request, key, target_type=None, default=None):
         else:
             CACHED_SETTINGS[key] = default
         return get_config_setting(request, key, target_type=target_type, default=default)
+
+
+def timing_tween_factory(handler, registry):
+    """Pyramid tween factory that logs the time taken for a request.
+    Will not time static requests.
+    """
+    import time
+    logger = logging.getLogger(__name__)
+    def timing_tween(request):
+        """Handle the actual timing of the request."""
+        start = time.time()
+        response = handler(request)
+        end = time.time()
+        if not request.path.startswith('/static'):
+            logger.info('%s - %.4f seconds' % (request.path, (end - start)))
+        return response
+    return timing_tween
