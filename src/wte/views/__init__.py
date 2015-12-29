@@ -38,8 +38,7 @@ def init(config, settings):
     timed_tasks.init(config)
 
 
-@view_config(route_name='root')
-@render({'text/html': 'root.html'})
+@view_config(route_name='root', renderer='wte:templates/root.kajiki')
 @current_user()
 def root(request):
     u"""Handles the ``/`` route.

@@ -9,6 +9,7 @@ functions.
 
 .. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
+import asset
 import logging
 import formencode
 import smtplib
@@ -234,6 +235,11 @@ def get_config_setting(request, key, target_type=None, default=None):
         return get_config_setting(request, key, target_type=target_type, default=default)
 
 
+def version():
+    """Return the current application version."""
+    return asset.version('WebTeachingEnvironment')
+
+
 def timing_tween_factory(handler, registry):
     """Pyramid tween factory that logs the time taken for a request.
     Will not time static requests.
@@ -243,9 +249,11 @@ def timing_tween_factory(handler, registry):
     def timing_tween(request):
         """Handle the actual timing of the request."""
         start = time.time()
-        response = handler(request)
-        end = time.time()
-        if not request.path.startswith('/static'):
-            logger.info('%s - %.4f seconds' % (request.path, (end - start)))
+        try:
+            response = handler(request)
+        finally:
+            end = time.time()
+            if not request.path.startswith('/static'):
+                logger.info('%s - %.4f seconds' % (request.path, (end - start)))
         return response
     return timing_tween

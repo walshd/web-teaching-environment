@@ -10,7 +10,6 @@ the ``WSGIApplication``.
 .. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
 from pyramid.config import Configurator
-from pyramid_beaker import session_factory_from_settings
 from pywebtools import renderer
 from sqlalchemy import engine_from_config
 
@@ -32,9 +31,9 @@ def main(global_config, **settings):
     renderer.init(settings, template_defaults={'text/html': {'h': helpers,
                                                              'crumbs': [],
                                                              'include_footer': True}})
-    # Init session
-    session_factory = session_factory_from_settings(settings)
-    config = Configurator(settings=settings, session_factory=session_factory)
+    # Init configuration
+    config = Configurator(settings=settings)
+    config.include('kajiki.integration.pyramid')
     # Init routes
     config.add_static_view('static', 'static', cache_max_age=3600)
     views.init(config, settings)

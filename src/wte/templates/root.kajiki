@@ -1,0 +1,28 @@
+<py:extends href="wte:templates/layout/default.kajiki">
+  <py:block name="title">Web Teaching Environment</py:block>
+  <py:block name="content">
+    <div class="small-12 column">
+      <h1>Web Teaching Environment</h1>
+      <div data-equalizer="">
+      <section class="small-12 medium-4 column">
+        <div class="panel" data-equalizer-watch="">
+          <h3>1. <a href="${request.route_url('user.register')}">Register</a> or <a href="${request.route_url('user.login')}">Log-in</a></h3>
+          <p>Register with your University e-mail address.</p>
+        </div>
+      </section>
+      <section class="small-12 medium-4 column">
+        <div class="panel" data-equalizer-watch="">
+          <h3>2. <a href="${request.route_url('modules')}">Choose a Module</a></h3>
+          <p>Choose to follow any of the available modules.</p>
+        </div>
+      </section>
+      <section class="small-12 medium-4 column">
+        <div class="panel" data-equalizer-watch="">
+          <h3>3. Learn!</h3>
+          <p>Follow the tutorials and do the exercises to become proficient.</p>
+        </div>
+      </section>
+      </div>
+    </div>
+  </py:block>
+</py:extends>

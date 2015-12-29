@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+  <?py from wte import util ?>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><py:block name="title"></py:block></title>
+    <link rel="stylesheet" href="${request.static_url('wte:static/css/application.min.css')}" />
+    <link rel="stylesheet" href="${request.static_url('wte:static/js/codemirror/addon/lint/lint.css')}" />
+    <py:block name="title_link"></py:block>
+    <script src="${request.static_url('wte:static/js/foundation/vendor/modernizr.js')}"></script>
+    <py:block name="title_script"></py:block>
+  </head>
+  <body>
+    <nav class="top-bar" data-topbar="">
+      <ul class="title-area">
+        <li class="name"><h1><a href="${request.route_url('root')}">WTE</a></h1></li>
+        <li class="toggle-topbar menu-icon"><a href="#" aria-hidden="true"><span></span><span class="show-for-sr">Main Menu</span></a></li>
+      </ul>
+      <section class="top-bar-section">
+        <py:if test="request.current_user.logged_in">
+          <ul class="left">
+            <li py:if="request.current_user.has_permission('admin')" class="${'active' if request.matched_route and (request.matched_route.name.startswith('admin') or request.matched_route.name.startswith('user')) else ''}"><a href="${request.route_url('admin')}">Administration</a></li>
+            <li class="${'active' if request.matched_route and (request.matched_route.name.startswith('module') or request.matched_route.name.startswith('part') or request.matched_route.name == 'user.modules') else ''}"><a href="${request.route_url('modules')}">Modules</a></li>
+          </ul>
+          <ul class="right">
+            <li class="has-dropdown"><a href="${request.route_url('user.view', uid=request.current_user.id)}">${request.current_user.display_name}</a>
+              <ul class="dropdown">
+                <li><a href="${request.route_url('user.edit', uid=request.current_user.id)}">Edit your Profile</a></li>
+                <li><a href="${request.route_url('user.modules', uid=request.current_user.id)}">Modules</a></li>
+                <li class="divider"></li>
+                <li><a href="${request.route_url('user.logout')}" class="post-link">Log out</a></li>
+              </ul>
+            </li>
+          </ul>
+        </py:if><py:else>
+          <ul class="left">
+            <li class="${'active' if request.matched_route and (request.matched_route.name.startswith('module') or request.matched_route.name.startswith('part') or request.matched_route.name == 'user.modules') else ''}"><a href="${request.route_url('modules')}">Modules</a></li>
+          </ul>
+          <ul class="right">
+            <li><a href="${request.route_url('user.register')}">Register</a></li>
+            <li><a href="${request.route_url('user.login', _query={'return_to': request.current_route_url() if request.matched_route else ''})}">Log in</a></li>
+          </ul>
+        </py:else>
+      </section>
+    </nav>
+    <nav xmlns:py="http://genshi.edgewall.org/">
+      <ul class="breadcrumbs">
+        <li><a href="${request.route_url('root')}">Home</a></li>
+        <li py:for="crumb in crumbs" class="${'current' if 'current' in crumb else ''} ${'unavailable' if 'url' not in crumb else ''}">
+          <a py:if="'url' in crumb" href="${crumb['url']}">${crumb['title']}</a>
+          <span py:if="'url' not in crumb">${crumb['title']}</span>
+        </li>
+      </ul>
+    </nav>
+    <div py:if="request.session.peek_flash('info') or request.session.peek_flash('error') or request.session.peek_flash('auth')" id="flash" class="clearfix">
+      <div class="row row-left" py:for="msg in r.session.pop_flash('info')">
+        <div class="small-12 column">
+          <div data-alert="" class="alert-box info">${msg}<a href="#" class="close" title="Close"><span class="fi-x" aria-hidden="true"></span><span class="show-for-sr">Close</span></a></div>
+        </div>
+      </div>
+      <div class="row row-left" py:for="msg in r.session.pop_flash('auth')">
+        <div class="small-12 column">
+          <div data-alert="" class="alert-box warning">${msg}<a href="#" class="close" title="Close"><span class="fi-x" aria-hidden="true"></span><span class="show-for-sr">Close</span></a></div>
+        </div>
+      </div>
+      <div class="row row-left" py:for="msg in r.session.pop_flash('error')">
+        <div class="small-12 column">
+          <div data-alert="" class="alert-box alert">${msg}<a href="#" class="close" title="Close"><span class="fi-x" aria-hidden="true"></span><span class="show-for-sr">Close</span></a></div>
+        </div>
+      </div>
+    </div>
+    <article class="row">
+      <py:block name="content"></py:block>
+    </article>
+    <footer xmlns:py="http://genshi.edgewall.org/">
+      <div class="small-6 column">Powered by the <a href="http://web-teaching-environment.readthedocs.org/en/latest/">Web Teaching Environment</a></div>
+      <div class="small-6 column text-right">Version ${util.version()}</div>
+    </footer>
+    <script src="${request.static_url('wte:static/js/foundation/vendor/jquery.js')}"></script>
+    <script src="${request.static_url('wte:static/js/jquery-ui-1.10.4.custom.min.js')}"></script>
+    <script src="${request.static_url('wte:static/js/jquery-ui.ext.js')}"></script>
+    <script src="${request.static_url('wte:static/js/foundation/vendor/fastclick.js')}"></script>
+    <script src="${request.static_url('wte:static/js/foundation/foundation.min.js')}"></script>
+    <script src="${request.static_url('wte:static/js/foundation/foundation-datepicker.js')}"></script>
+    <script>
+    $(document).foundation();
+    $('.post-link').postLink();
+    $('#flash').fancyFlash();
+    $('.unavailable a').click(function(ev) {ev.preventDefault();});
+    if(!Modernizrequest.inputtypes.date) {
+        $('input[type=date]').fdatepicker();
+    }
+    </script>
+  </body>
+</html>
