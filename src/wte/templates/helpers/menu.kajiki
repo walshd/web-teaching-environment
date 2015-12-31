@@ -1,15 +1,15 @@
 <div>
   <py:def function="menubar(groups, drop_down_position='left', class_=None)">
-    <nav>
+    <nav py:if="len([item for group in groups for item in group['items'] if item['visible']]) != 0">
       <ul class="menubar ${class_ if class_ else ''}" data_wte_menu_position="${drop_down_position}">
         <li py:for="group in groups" py:if="'icon' in group">
-          <py:if test="len([item for item in group['items'] if 'highlight' in item]) == 1">
-            <a py:for="item in group['items']" py:if="'highlight' in item" py:attrs="item['attrs'] if 'attrs' in item else {}"><span class="${item['icon']}"> </span><span class="show-for-sr">${item['label']}</span></a> 
+          <py:if test="len([item for item in group['items'] if item['visible'] and 'highlight' in item]) == 1">
+            <a py:for="item in group['items']" py:if="item['visible'] and 'highlight' in item" py:attrs="item['attrs'] if 'attrs' in item else {}"><span class="${item['icon']}"> </span><span class="show-for-sr">${item['label']}</span></a> 
           </py:if><py:else>
             <div class="menu">
               <a href="#" py:attrs="group['attrs'] if 'attrs' in group else {}"><span class="${group['icon']}"></span><span class="show-for-sr">${group['label']}</span></a>
               <ul>
-                <li py:for="item in group['items']" py:if="'highlight' in item"><a py:attrs="item['attrs'] if 'attrs' in item else {}"><span class="${item['icon']} menu-icon"> </span><span class="menu-label">${item['label']}</span></a></li> 
+                <li py:for="item in group['items']" py:if="item['visible'] and 'highlight' in item"><a py:attrs="item['attrs'] if 'attrs' in item else {}"><span class="${item['icon']} menu-icon"> </span><span class="menu-label">${item['label']}</span></a></li> 
               </ul>
             </div>
           </py:else>
