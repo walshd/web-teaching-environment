@@ -194,11 +194,15 @@ class User(Base):
         :return: ``True`` if the user has the permission, ``False`` otherwise
         :rtype: `bool`
         """
-        dbsession = DBSession()
-        direct_perm = dbsession.query(Permission.name).join(User, Permission.users).filter(User.id == self.id)
-        group_perm = dbsession.query(Permission.name).join(PermissionGroup, Permission.permission_groups).\
-            join(User, PermissionGroup.users).filter(User.id == self.id)
-        return permission in map(lambda p: p[0], direct_perm.union(group_perm))
+        if hasattr(self, '_permissions'):
+            return permission in self._permissions
+        else:
+            dbsession = DBSession()
+            direct_perm = dbsession.query(Permission.name).join(User, Permission.users).filter(User.id == self.id)
+            group_perm = dbsession.query(Permission.name).join(PermissionGroup, Permission.permission_groups).\
+                join(User, PermissionGroup.users).filter(User.id == self.id)
+            self._permissions = [p[0] for p in direct_perm.union(group_perm)]
+            return self.has_permission(permission)
 
     def allow(self, action, user):
         """Checks whether the given ``user`` is allowed to perform the given
