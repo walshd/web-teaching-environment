@@ -1,0 +1,130 @@
+<py:extends href="wte:templates/layout/centred.kajiki">
+  <py:block name="title">Users</py:block>
+  <py:block name="content">
+    <py:import href="wte:templates/helpers/form.kajiki" alias="form"/>
+    <py:import href="wte:templates/helpers/menu.kajiki" alias="menu"/>
+    <?py from wte.helpers.frontend import confirm_delete ?>
+    <h1>Users</h1>
+    <form action="${request.route_url('users')}" class="row collapse">
+      <div class="small-12 medium-6 column">
+        <div class="row collapse">
+          <div class="small-9 medium-8 column">
+            ${form.input('text', 'q', value=request.params['q'] if 'q' in request.params else '', extra_attrs={'placeholder': 'Search by name or e-mail'})}
+          </div>
+          <div class="small-3 medium-4 column">
+            <input type="submit" value="Search" class="button postfix"/>
+          </div>
+        </div>
+      </div>
+      <div class="small-12 medium-5 medium-offset-1 column">
+        <div class="row collapse">
+          <div class="small-9 medium-8 column">
+            ${form.input('select', 'status', value=request.params['status'] if 'status' in request.params else '', values=[('', 'All Users'), ('confirmed', 'Confirmed Users'), ('new', 'New Users')])}
+          </div>
+          <div class="small-3 medium-4 column">
+            <input type="submit" value="Filter" class="button postfix"/>
+          </div>
+        </div>
+      </div>
+    </form>
+    <form action="${request.route_url('users.action')}" method="post">
+      <table class="small-12">
+        <thead>
+          <tr>
+            <th><input id="change_all" type="checkbox"/></th>
+            <th>Name</th>
+            <th>E-Mail</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <py:if test="users.count() == 0">
+            <tr>
+              <td colspan="5">No users were found for the filter you selected.</td>
+            </tr>
+          </py:if><py:else>
+            <tr py:for="user in users">
+              <td><input id="user_id_${user.id}" name="user_id" type="checkbox" value="${user.id}"/></td>
+              <td><a href="${request.route_url('user.view', uid=user.id)}" py:if="user.allow('view', request.current_user)">${user.display_name}</a><span py:if="not user.allow('view', request.current_user)">${user.display_name}</span></td>
+              <td>${user.email}</td>
+              <td>${'Confirmed' if not user.validation_token else 'New'}</td>
+              <td class="text-right">${menu.menubar([
+                {'label': 'Edit',
+                 'icon': 'fi-pencil',
+                 'attrs': {'title': 'Edit actions'},
+                 'items': [{'visible': user.validation_token is None and user.allow('edit', request.current_user),
+                            'icon': 'fi-pencil',
+                            'label': 'Edit',
+                            'highlight': True,
+                            'attrs': {'href': request.route_url('user.edit', uid=user.id),
+                                      'title': 'Edit this user'}}]},
+                {'label': 'Access',
+                 'icon': 'fi-key',
+                 'attrs': {'title': 'Manage user\'s access'},
+                 'items': [{'visible': user.validation_token is None and user.allow('edit', request.current_user),
+                            'icon': 'fi-key',
+                            'label': 'Edit Permissions',
+                            'highlight': True,
+                            'attrs': {'href': request.route_url('user.permissions', uid=user.id),
+                                      'title': 'Edit the permissions of this user'}},
+                           {'visible': user.validation_token is not None and user.allow('edit', request.current_user),
+                            'icon': 'fi-check',
+                            'label': 'Validate',
+                            'highlight': True,
+                            'attrs': {'href': request.route_url('user.confirm', uid=user.id, token=user.validation_token),
+                                      'title': 'Validate this user\'s registration'}},
+                           {'visible': user.validation_token is None and user.allow('edit', request.current_user),
+                            'label': 'Generate Password',
+                            'attrs': {'href': request.route_url('user.forgotten_password', _query=[('email', user.email)]),
+                                      'class': 'post-link',
+                                      'title': 'Generate and e-mail a new password for this user'}}]},
+                {'label': 'Delete',
+                 'items': [{'visible': user.allow('delete', request.current_user),
+                            'icon': 'fi-trash',
+                            'label': 'Delete',
+                            'highlight': user.validation_token is not None,
+                            'attrs': {'href': request.route_url('user.delete', uid=user.id),
+                                      'class': 'alert post-link',
+                                      'data-wte-confirm': confirm_delete('user', '%s (%s)' % (user.display_name, user.email), False),
+                                      'title': 'Delete this user'}}]}
+                ])}
+              </td>
+            </tr>
+          </py:else>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="5">
+              <ul class="pagination">
+                <li py:for="page in pages" class="${page['class'] if 'class' in page and page['class'] else ''}"><a href="${page['url']}">${page['title']}</a></li>
+              </ul>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+      <div class="row collapse">
+        <py:if test="'q' in request.params">${form.input('hidden', 'q', value=request.params['q'])}</py:if>
+        <py:if test="'status' in request.params">${form.input('hidden', 'status', value=request.params['status'])}</py:if>
+        <py:if test="'start' in request.params">${form.input('hidden', 'start', value=request.params['start'])}</py:if>
+        <div class="small-8 medium-6 large-4 column">
+          ${form.input('select', 'action', value='', values=[('', '--- Choose Action ---'), ('validate', 'Validate selected users'), ('password', 'Generate new passwords'), ('delete', 'Delete selected users')])}
+        </div>
+        <div class="small-4 medium-2 column end">
+          <input type="submit" value="Apply" class="button postfix"/>
+        </div>
+      </div>
+    </form>
+  </py:block>
+  <py:block name="body_script">
+    <script>
+    $('#change_all').on('click', function() {
+        var checked = $(this).is(':checked');
+        $('input[name=user_id]').each(function() {
+            $(this).prop('checked', checked);
+        });
+    });
+    $('.menu').dropdownMenu();
+    </script>
+  </py:block>
+</py:extends>

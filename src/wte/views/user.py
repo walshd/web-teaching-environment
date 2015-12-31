@@ -69,8 +69,7 @@ def create_user_crumbs(request, crumbs):
     return crumbs
 
 
-@view_config(route_name='users')
-@render({'text/html': 'users/list.html'})
+@view_config(route_name='users', renderer='wte:templates/users/list.kajiki')
 @current_user()
 def users(request):
     u"""Handles the ``/users`` URL, displaying all users if the current
