@@ -9,7 +9,7 @@
       <div class="small-12 medium-6 column">
         <div class="row collapse">
           <div class="small-9 medium-8 column">
-            ${form.input('text', 'q', value=request.params['q'] if 'q' in request.params else '', extra_attrs={'placeholder': 'Search by name or e-mail'})}
+            <label>${form.input('text', 'q', value=request.params['q'] if 'q' in request.params else '', extra_attrs={'placeholder': 'Search by name or e-mail'})}<span class="show-for-sr">Search by name or e-mail</span></label>
           </div>
           <div class="small-3 medium-4 column">
             <input type="submit" value="Search" class="button postfix"/>
@@ -19,7 +19,7 @@
       <div class="small-12 medium-5 medium-offset-1 column">
         <div class="row collapse">
           <div class="small-9 medium-8 column">
-            ${form.input('select', 'status', value=request.params['status'] if 'status' in request.params else '', values=[('', 'All Users'), ('confirmed', 'Confirmed Users'), ('new', 'New Users')])}
+            <label>${form.input('select', 'status', value=request.params['status'] if 'status' in request.params else '', values=[('', 'All Users'), ('confirmed', 'Confirmed Users'), ('new', 'New Users')])}<span class="show-for-sr">Filter displayed users</span></label>
           </div>
           <div class="small-3 medium-4 column">
             <input type="submit" value="Filter" class="button postfix"/>
@@ -31,11 +31,11 @@
       <table class="small-12">
         <thead>
           <tr>
-            <th><input id="change_all" type="checkbox"/></th>
+            <th><label><input id="change_all" type="checkbox"/><span class="show-for-sr">Select all</span></label></th>
             <th>Name</th>
             <th>E-Mail</th>
             <th>Status</th>
-            <th></th>
+            <th><span class="show-for-sr">Actions</span></th>
           </tr>
         </thead>
         <tbody>
@@ -45,7 +45,7 @@
             </tr>
           </py:if><py:else>
             <tr py:for="user in users">
-              <td><input id="user_id_${user.id}" name="user_id" type="checkbox" value="${user.id}"/></td>
+              <td><label><input id="user_id_${user.id}" name="user_id" type="checkbox" value="${user.id}"/><span class="show-for-sr">Select ${user.display_name}</span></label></td>
               <td><a href="${request.route_url('user.view', uid=user.id)}" py:if="user.allow('view', request.current_user)">${user.display_name}</a><span py:if="not user.allow('view', request.current_user)">${user.display_name}</span></td>
               <td>${user.email}</td>
               <td>${'Confirmed' if not user.validation_token else 'New'}</td>
@@ -108,7 +108,7 @@
         <py:if test="'status' in request.params">${form.input('hidden', 'status', value=request.params['status'])}</py:if>
         <py:if test="'start' in request.params">${form.input('hidden', 'start', value=request.params['start'])}</py:if>
         <div class="small-8 medium-6 large-4 column">
-          ${form.input('select', 'action', value='', values=[('', '--- Choose Action ---'), ('validate', 'Validate selected users'), ('password', 'Generate new passwords'), ('delete', 'Delete selected users')])}
+          <label>${form.input('select', 'action', value='', values=[('', '--- Choose Action ---'), ('validate', 'Validate selected users'), ('password', 'Generate new passwords'), ('delete', 'Delete selected users')])}<span class="show-for-sr">Apply this action to all selected users</span></label>
         </div>
         <div class="small-4 medium-2 column end">
           <input type="submit" value="Apply" class="button postfix"/>
