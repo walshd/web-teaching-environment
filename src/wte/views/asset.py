@@ -198,14 +198,12 @@ def edit(request):
                                 mimetype = params['mimetype']
                             else:
                                 mimetype = params['mimetype_other']
-                        print params
                         asset.mimetype = mimetype
                     dbsession.add(part)
                     dbsession.add(asset)
                     request.session.flash('Your %s has been updated' % (asset.type), queue='info')
                     raise HTTPSeeOther(request.route_url('part.view', pid=part.id))
                 except formencode.Invalid as e:
-                    print e
                     e.params = request.params
                     return {'e': e,
                             'part': part,
