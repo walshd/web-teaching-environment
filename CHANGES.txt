@@ -18,7 +18,8 @@ DEV
 - *UPDATE*: Make the filename for new assets optional to simplify creating
   assets (#40)
 - *BUGFIX*: Fixed the calculation of the time-remaining string (#37)
-- *BUGFIX*: Fixed deep-linking into modules the user is not registered for (#44) 
+- *BUGFIX*: Fixed deep-linking into modules the user is not registered for (#44)
+- *BUGFIX*: Fixed a bug with non-text files in the three-pane display mode. 
 
 1.0.3
 -----
