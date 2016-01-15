@@ -1,6 +1,9 @@
 DEV
 ---
 
+- *NEW*: Added functionality to add pages / tasks before or after the
+  current page / task
+
 1.1.0
 -----
 

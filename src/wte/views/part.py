@@ -188,6 +188,8 @@ class NewPartSchema(formencode.Schema):
     u"""The part's title"""
     parent_id = formencode.validators.Int(if_missing=None)
     u"""The parent :class:`~wte.models.Part`"""
+    order = formencode.validators.Int(if_missing=None)
+    """The optional order index to create the new :class:`~wte.models.Part` at"""
     status = formencode.All(formencode.validators.UnicodeString(not_empty=True),
                             formencode.validators.OneOf([u'unavailable',
                                                          u'available']))
@@ -302,13 +304,22 @@ def new(request):
             params = NewPartSchema().to_python(request.params)
             dbsession = DBSession()
             with transaction.manager:
-                if parent:
-                    dbsession.add(parent)
-                    max_order = [p.order + 1 for p in parent.children]
+                if params['order'] is not None:
+                    max_order= params['order']
+                    if parent:
+                        dbsession.add(parent)
+                        for child in parent.children:
+                            if child.order >= max_order:
+                                dbsession.add(child)
+                                child.order = child.order + 1
                 else:
-                    max_order = []
-                max_order.append(0)
-                max_order = max(max_order)
+                    if parent:
+                        dbsession.add(parent)
+                        max_order = [p.order + 1 for p in parent.children]
+                    else:
+                        max_order = []
+                    max_order.append(0)
+                    max_order = max(max_order)
 
                 new_part = Part(title=params['title'],
                                 status=params['status'],

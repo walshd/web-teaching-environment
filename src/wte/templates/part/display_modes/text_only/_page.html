@@ -16,6 +16,13 @@
            'label': 'Export',
            'href': r.route_url('part.export', pid=part.id),
            'class': 'post-link'}]},
+        {'group': 'add', 'items': [
+          {'visible': part.parent.allow('edit', r.current_user),
+           'label': 'Insert page before',
+           'href': r.route_url('part.new', new_type='page', _query=[('parent_id', part.parent.id), ('order', part.order)])},
+          {'visible': part.parent.allow('edit', r.current_user),
+           'label': 'Add page after',
+           'href': r.route_url('part.new', new_type='page', _query=[('parent_id', part.parent.id), ('order', part.order + 1)])}]},
         {'group': 'delete', 'items': [
           {'visible': part.allow('delete', r.current_user),
            'label': 'Delete',
