@@ -36,7 +36,7 @@
       ], drop_down_menu_left=False)}
     </div>
     <h1>${part.title}<small py:if="part.status == 'unavailable'" class="label radius">Unavailable</small></h1>
-    ${Markup(part.compiled_content)}
+    ${Markup(part.compiled_content.replace('\n\n', '\n&nbsp;\n'))}
     <section py:if="not part.has_role('student', r.current_user) and part.templates">
       <h2>Templates</h2>
       <ul class="no-symbol">

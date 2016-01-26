@@ -25,7 +25,7 @@
       ], drop_down_menu_left=False)}
     </div>
     <h1 data-magellan-destination="arrival">${part.title}<small py:if="part.status == 'unavailable'" class="label radius">Unavailable</small></h1>
-    ${Markup(part.compiled_content)}
+    ${Markup(part.compiled_content.replace('\n\n', '\n&nbsp;\n'))}
     ${h.frontend.page_pagination(r, part)}
   </section>
   <section id="editor" class="small-12 medium-6 large-8">

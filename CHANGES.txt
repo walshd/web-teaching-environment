@@ -1,6 +1,11 @@
 DEV
 ---
 
+1.1.1
+-----
+
+- *BUGFIX*: Double newlines are now preserved in code blocks (#55)
+
 1.1.0
 -----
 
