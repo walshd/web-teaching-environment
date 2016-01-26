@@ -4,6 +4,11 @@ DEV
 - *NEW*: Added functionality to add pages / tasks before or after the
   current page / task
 
+1.1.1
+-----
+
+- *BUGFIX*: Double newlines are now preserved in code blocks (#55)
+
 1.1.0
 -----
 
