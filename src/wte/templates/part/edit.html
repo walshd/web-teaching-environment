@@ -184,8 +184,8 @@
     <script>
     function resize_page() {
         var height = $(window).innerHeight();
-        $('#editor .CodeMirror').css('height', (height - 40) + 'px');
-        $('#textbook').css('height', (height - 40) + 'px');
+        $('#editor .CodeMirror').css('height', (height - 80) + 'px');
+        $('#textbook').css('height', (height - 80) + 'px').css('margin-top', ($('#editor .CodeMirror').offset().top - $('#editor').offset().top) + 'px');
     }
     function render_page() {
         $.ajax('${r.route_url('part.preview', pid=part.id)}', {

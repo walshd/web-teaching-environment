@@ -5,6 +5,7 @@ DEV
 -----
 
 - *BUGFIX*: Double newlines are now preserved in code blocks (#55)
+- *BUGFIX*: Correctly align the editor preview with the top of the editor (#53)
 
 1.1.0
 -----
