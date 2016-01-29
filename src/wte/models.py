@@ -438,7 +438,7 @@ class Part(Base):
             elif root.has_role(['owner', 'tutor'], user):
                 return True
             elif root.has_role('student', user):
-                if self.status in [u'available', u'archived']:
+                if self.parent.allow(action, user) and self.status in [u'available', u'archived']:
                     return True
             elif self.type == u'module' and self.status == u'available':
                 return True

@@ -4,6 +4,8 @@ DEV
 1.1.1
 -----
 
+- *SECURITY*: Fixed an error that was allowing logged-in users to see
+  any page in any tutorial
 - *BUGFIX*: Double newlines are now preserved in code blocks (#55)
 - *BUGFIX*: Correctly align the editor preview with the top of the editor (#53)
 
