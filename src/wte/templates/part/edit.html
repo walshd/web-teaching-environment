@@ -182,18 +182,28 @@
     </div>
     ${h.frontend.codemirror_scripts(r, ['text/x-rst'])}
     <script>
+    var textarea = $('#page-content');
+    var cm = codemirror_for_textarea(textarea);
+    var height = 0;
     function resize_page() {
-        var height = $(window).innerHeight();
+        height = $(window).innerHeight();
         $('#editor .CodeMirror').css('height', (height - 80) + 'px');
-        $('#textbook').css('height', (height - 80) + 'px').css('margin-top', ($('#editor .CodeMirror').offset().top - $('#editor').offset().top) + 'px');
+        $('#textbook').css('height', (height - 80) + 'px').
+            css('margin-top', ($('#editor .CodeMirror').offset().top - $('#editor').offset().top) + 'px');
     }
     function render_page() {
+    	if(cm.getLine(cm.getCursor().line) == '') {
+            var text = cm.getRange({line: 0, ch: 0}, cm.getCursor()) + '§§§§§§§\n' + cm.getRange(cm.getCursor(), {line: cm.lineCount() + 1, ch: 0});
+    	} else {
+            var text = cm.getRange({line: 0, ch: 0}, cm.getCursor()) + '§§§§§§§' + cm.getRange(cm.getCursor(), {line: cm.lineCount() + 1, ch: 0});
+    	}
         $.ajax('${r.route_url('part.preview', pid=part.id)}', {
-            data: {'content': $('#page-content').val()},
+            data: {'content': text},
             type: 'POST'
         }).success(function(data) {
-            $('#textbook').html(data.content);
-            MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
+            $('#textbook').html(data.content + '<div style="margin-bottom: ' + height + 'px"></div>');
+            $('#textbook').scrollTop($('#textbook').scrollTop() + $('#focus').position().top - (height - 80) / 2);
+            MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
         });
     }
     
@@ -204,12 +214,14 @@
     });
     $('#children').sortable();
     $('#templates').sortable();
-    var textarea = $('#page-content');
-    var cm = codemirror_for_textarea(textarea);
     cm.on('change', function(cm, changes) {
         cm.save();
         clearTimeout(code_change_timer);
         code_change_timer = setTimeout(render_page, 1000);
+    });
+    cm.on('mousedown', function(cm, changes) {
+        clearTimeout(code_change_timer);
+        code_change_timer = setTimeout(render_page, 50);
     });
     $(window).on('resize', resize_page);
     resize_page();

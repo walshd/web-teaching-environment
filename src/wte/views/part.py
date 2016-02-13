@@ -537,6 +537,10 @@ def delete(request):
 def preview(request):
     u"""Handles the ``/parts/{pid}/rst_preview`` URL, generating an HTML preview of
     the submitted ReST. The ReST text to render has to be set as the ``content`` parameter.
+    
+    In addition to rendering the ReST the in the same way that it is rendered when
+    saving a :class:`~wte.models.Part`, this will also insert a <span id="focus"></span>
+    at the current cursor position indicated by the string "§§§§§§§".
 
     Requires that the user has "edit" rights on the current :class:`~wte.models.Part`.
     """
@@ -545,9 +549,9 @@ def preview(request):
     if part:
         if part.allow('edit', request.current_user):
             if 'content' in request.params:
-                return {'content': compile_rst(request.params['content'],
-                                               request,
-                                               part=part)}
+                content = compile_rst(request.params['content'], request, part=part)
+                content = content.replace(u'§§§§§§§', '<span id="focus"></span>');
+                return {'content': content}
             else:
                 raise HTTPNotFound()
         else:

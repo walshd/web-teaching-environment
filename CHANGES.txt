@@ -3,6 +3,8 @@ DEV
 
 - *NEW*: Added functionality to add pages / tasks before or after the
   current page / task
+- *NEW*: Automatically center the part preview on the current cursor
+  location
 
 1.1.1
 -----
