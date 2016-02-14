@@ -21,7 +21,13 @@
            'label': 'Add Asset',
            'icon': 'fi-plus',
            'href': r.route_url('asset.new', pid=part.id, new_type='asset'),
-           'highlight': True}]},
+           'highlight': True},
+          {'visible': part.parent.allow('edit', r.current_user),
+           'label': 'Insert task before',
+           'href': r.route_url('part.new', new_type='task', _query=[('parent_id', part.parent.id), ('order', part.order)])},
+          {'visible': part.parent.allow('edit', r.current_user),
+           'label': 'Add task after',
+           'href': r.route_url('part.new', new_type='task', _query=[('parent_id', part.parent.id), ('order', part.order + 1)])}]},
         {'group': 'importexport', 'items': [
           {'visible': part.allow('edit', r.current_user),
            'label': 'Export',
@@ -36,7 +42,7 @@
       ], drop_down_menu_left=False)}
     </div>
     <h1>${part.title}<small py:if="part.status == 'unavailable'" class="label radius">Unavailable</small></h1>
-    ${Markup(part.compiled_content)}
+    ${Markup(part.compiled_content.replace('\n\n', '\n&nbsp;\n'))}
     <section py:if="not part.has_role('student', r.current_user) and part.templates">
       <h2>Templates</h2>
       <ul class="no-symbol">
@@ -104,7 +110,7 @@
         ], class_='margin-top-right')}
       </div>
       <dl class="tabs" data-tab="">
-        <dd py:for="idx, file in enumerate(progress.files)" id="${h.frontend.html_id(file.filename)}-tab" class="${'active' if idx == 0 else ''}">
+        <dd py:for="idx, file in enumerate(progress.files)" py:if="file.mimetype.startswith('text/')" id="${h.frontend.html_id(file.filename)}-tab" class="${'active' if idx == 0 else ''}">
           <div class="right">
             ${h.frontend.menubar([
               {'group': 'download', 'items': [
@@ -123,7 +129,7 @@
         </dd>
       </dl>
       <form class="tabs-content">
-        <div py:for="idx, file in enumerate(progress.files)" class="content ${'active' if idx == 0 else ''}" id="${h.frontend.html_id(file.filename)}">
+        <div py:for="idx, file in enumerate(progress.files)" py:if="file.mimetype.startswith('text/')" class="content ${'active' if idx == 0 else ''}" id="${h.frontend.html_id(file.filename)}">
           ${h.form.tags.textarea('', file.data.decode('utf-8') if file.data else '', None, data_wte_mimetype=file.mimetype, data_wte_fileid=file.id, data_wte_cm_options=h.frontend.codemirror_options(r, file.mimetype))}
         </div>
       </form>

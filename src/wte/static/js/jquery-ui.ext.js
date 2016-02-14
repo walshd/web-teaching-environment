@@ -119,7 +119,7 @@ function codemirror_for_textarea(textarea) {
                         textarea.data('wte-timeout', setTimeout(function() {
                             component.tabbedEditor('save', tab, textarea);
                             }, 10000));
-                        });
+                    });
                     textarea.data('wte-cm', cm);
                 });
                 component.find('.tabs a.save').on('click', function(event) {
@@ -132,7 +132,8 @@ function codemirror_for_textarea(textarea) {
                 	component.tabbedEditor('save', tab, textarea);
                 });
                 component.find('.tabs').on('toggled', function(event, tab) {
-                    tab.children('textarea').data('wte-cm').refresh();
+                	var tab_id = tab.children('a').attr('href').substr(1);
+                    $('#' + tab_id).children('textarea').data('wte-cm').refresh();
                 });
                 options.viewer.on('load', function() {
                     options.viewer.contents().scrollTop(component.data('wte-viewer-scroll-top'));

@@ -13,6 +13,9 @@
           <div class="clearfix">
             ${h.form.field('title', 'Title', h.form.tags.text_field, size='small-12', e=e, default=u'')}
           </div>
+          <py:if test="'order' in r.params">
+            ${h.form.tags.hidden_field('order', r.params['order'])}
+          </py:if>
           <py:if test="r.matchdict['new_type'] in ['page', 'task']">
             ${h.form.tags.hidden_field('status', 'available')}
             ${h.form.tags.hidden_field('display_mode', 'inherit')}
