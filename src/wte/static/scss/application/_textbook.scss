@@ -8,6 +8,42 @@
     iframe {
         border-width: 0;
     }
+    
+    ol.upperalpha {
+        list-style-type: upper-alpha;
+    }
+    
+    ol.loweralpha {
+        list-style-type: lower-alpha;
+    }
+    
+    ol.arabic {
+        list-style-type: numeric;
+    }
+    
+    ol.lowerroman {
+        list-style-type: lower-roman;
+    }
+    
+    ol.upperroman {
+        list-style-type: upper-roman;
+    }
+    
+    ol.outline {
+        counter-reset: section;
+        list-style-type: none;
+        margin-left: 0.3rem;
+        
+        ol {
+            counter-reset: section;
+            list-style-type: none;
+        }
+        
+        li:before {
+            counter-increment: section;
+            content: counters(section, ".") ". ";
+        }
+    }
 }
 .display-mode-three_pane_html {
     border-right: 1px solid #333;

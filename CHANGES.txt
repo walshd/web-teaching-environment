@@ -5,6 +5,7 @@ DEV
   current page / task
 - *NEW*: Automatically center the part preview on the current cursor
   location
+- *NEW*: Implement outline list numbering (#28)
 
 1.1.1
 -----
