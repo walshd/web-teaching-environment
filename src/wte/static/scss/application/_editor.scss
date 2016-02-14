@@ -19,7 +19,7 @@
     margin-bottom: -1px !important;
 }
 #files .tabs dd.active > a, #files .tabs dd.active .menubar > li > a, #files .tabs dd.active .menubar > li > .menu > a {
-    color: $jet;
+    color: $dark-gray;
 }
 #files .tabs dd > a {
     border-radius: 3px 3px 0 0;
@@ -38,7 +38,7 @@
     color: #00aa00;
 }
 #files .tabs dd > a, #files .tabs dd .menubar > li > a, #files .tabs dd .menubar > li > .menu > a {
-    color: scale-color($jet, $lightness: 30%);
+    color: $dark-gray;
 }
 #files .tabs dd > a:hover {
     background-color: #eee;

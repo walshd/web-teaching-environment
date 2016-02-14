@@ -6,10 +6,13 @@
     <?py from wte.helpers.frontend import confirm_delete ?>
     <h1>Users</h1>
     <form action="${request.route_url('users')}" class="row collapse">
+      <div class="small-12 column">
+        <input type="text" name="q"/>
+      </div>
       <div class="small-12 medium-6 column">
         <div class="row collapse">
           <div class="small-9 medium-8 column">
-            <label>${form.input('text', 'q', value=request.params['q'] if 'q' in request.params else '', extra_attrs={'placeholder': 'Search by name or e-mail'})}<span class="show-for-sr">Search by name or e-mail</span></label>
+            <label><span class="show-for-sr">Search by name or e-mail</span>${form.input('text', 'q', value=request.params['q'] if 'q' in request.params else '', extra_attrs={'placeholder': 'Search by name or e-mail'})}</label>
           </div>
           <div class="small-3 medium-4 column">
             <input type="submit" value="Search" class="button postfix"/>
@@ -19,7 +22,7 @@
       <div class="small-12 medium-5 medium-offset-1 column">
         <div class="row collapse">
           <div class="small-9 medium-8 column">
-            <label>${form.input('select', 'status', value=request.params['status'] if 'status' in request.params else '', values=[('', 'All Users'), ('confirmed', 'Confirmed Users'), ('new', 'New Users')])}<span class="show-for-sr">Filter displayed users</span></label>
+            <label><span class="show-for-sr">Filter displayed users</span>${form.input('select', 'status', value=request.params['status'] if 'status' in request.params else '', values=[('', 'All Users'), ('confirmed', 'Confirmed Users'), ('new', 'New Users')])}</label>
           </div>
           <div class="small-3 medium-4 column">
             <input type="submit" value="Filter" class="button postfix"/>
@@ -31,7 +34,7 @@
       <table class="small-12">
         <thead>
           <tr>
-            <th><label><input id="change_all" type="checkbox"/><span class="show-for-sr">Select all</span></label></th>
+            <th><label><span class="show-for-sr">Select all</span><input id="change_all" type="checkbox"/></label></th>
             <th>Name</th>
             <th>E-Mail</th>
             <th>Status</th>

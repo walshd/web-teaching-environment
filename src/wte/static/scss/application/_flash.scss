@@ -16,7 +16,6 @@
                     width: 35rem;
 
                     .alert-box {
-                        padding: $alert-padding-top $alert-padding-opposite-direction $alert-padding-bottom $alert-padding-default-float;
                     }
                     .close {
                         display: inline;
@@ -24,7 +23,6 @@
                 }
                 
                 .alert-box {
-                    padding: $alert-padding-top;
                 }
                 .close {
                     display: none;

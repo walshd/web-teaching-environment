@@ -24,7 +24,7 @@ requires = [
     'formencode',
     'alembic',
     'inflect',
-    'libsass',
+    'libsass>0.9,<0.10',
     'asset',
     'kajiki'
     ]

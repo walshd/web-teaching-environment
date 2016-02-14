@@ -8,51 +8,49 @@
     <link rel="stylesheet" href="${request.static_url('wte:static/css/application.min.css')}" />
     <link rel="stylesheet" href="${request.static_url('wte:static/js/codemirror/addon/lint/lint.css')}" />
     <py:block name="title_link"></py:block>
-    <script src="${request.static_url('wte:static/js/foundation/vendor/modernizr.js')}"></script>
     <py:block name="title_script"></py:block>
   </head>
   <body>
-    <nav class="top-bar" data-topbar="">
-      <ul class="title-area">
-        <li class="name"><h1><a href="${request.route_url('root')}">WTE</a></h1></li>
-        <li class="toggle-topbar menu-icon"><a href="#" aria-hidden="true"><span></span><span class="show-for-sr">Main Menu</span></a></li>
-      </ul>
-      <section class="top-bar-section">
-        <py:if test="request.current_user.logged_in">
-          <ul class="left">
-            <li py:if="request.current_user.has_permission('admin')" class="${'active' if request.matched_route and (request.matched_route.name.startswith('admin') or request.matched_route.name.startswith('user')) else ''}"><a href="${request.route_url('admin')}">Administration</a></li>
-            <li class="${'active' if request.matched_route and (request.matched_route.name.startswith('module') or request.matched_route.name.startswith('part') or request.matched_route.name == 'user.modules') else ''}"><a href="${request.route_url('modules')}">Modules</a></li>
-          </ul>
-          <ul class="right">
-            <li class="has-dropdown"><a href="${request.route_url('user.view', uid=request.current_user.id)}">${request.current_user.display_name}</a>
-              <ul class="dropdown">
+    <nav class="top-bar">
+      <div class="top-bar-title"><a href="${request.route_url('root')}">Web Teaching Environment</a></div>
+      <div class="top-bar-left">
+        <ul class="menu">
+          <li py:if="request.current_user.has_permission('admin')" class="${'active' if request.matched_route and (request.matched_route.name.startswith('admin') or request.matched_route.name.startswith('user')) else ''}"><a href="${request.route_url('admin')}">Administration</a></li>
+          <li class="${'active' if request.matched_route and (request.matched_route.name.startswith('module') or request.matched_route.name.startswith('part') or request.matched_route.name == 'user.modules') else ''}"><a href="${request.route_url('modules')}">Modules</a></li>
+        </ul>
+      </div>
+      <div class="top-bar-right">
+        <ul class="dropdown menu" data-dropdown-menu="">
+          <py:if test="request.current_user.logged_in">
+            <li><a href="${request.route_url('user.view', uid=request.current_user.id)}">${request.current_user.display_name}</a>
+              <ul class="menu">
                 <li><a href="${request.route_url('user.edit', uid=request.current_user.id)}">Edit your Profile</a></li>
                 <li><a href="${request.route_url('user.modules', uid=request.current_user.id)}">Modules</a></li>
                 <li class="divider"></li>
                 <li><a href="${request.route_url('user.logout')}" class="post-link">Log out</a></li>
               </ul>
             </li>
-          </ul>
-        </py:if><py:else>
-          <ul class="left">
-            <li class="${'active' if request.matched_route and (request.matched_route.name.startswith('module') or request.matched_route.name.startswith('part') or request.matched_route.name == 'user.modules') else ''}"><a href="${request.route_url('modules')}">Modules</a></li>
-          </ul>
-          <ul class="right">
+          </py:if><py:else>
             <li><a href="${request.route_url('user.register')}">Register</a></li>
             <li><a href="${request.route_url('user.login', _query={'return_to': request.current_route_url() if request.matched_route else ''})}">Log in</a></li>
-          </ul>
-        </py:else>
-      </section>
+          </py:else>
+        </ul>
+      </div>
     </nav>
     <nav>
       <ul class="breadcrumbs">
         <li><a href="${request.route_url('root')}">Home</a></li>
-        <li py:for="crumb in crumbs" class="${'current' if 'current' in crumb else ''} ${'unavailable' if 'url' not in crumb else ''}">
-          <a py:if="'url' in crumb" href="${crumb['url']}">${crumb['title']}</a>
-          <span py:if="'url' not in crumb">${crumb['title']}</span>
+        <li py:for="crumb in crumbs[:-1]" class="${'current' if 'current' in crumb else ''} ${'unavailable' if 'url' not in crumb else ''}">
+          <py:if test="'url' in crumb">
+            <a href="${crumb['url']}">${crumb['title']}</a>
+          </py:if><py:else>
+            ${crumb['title']}
+          </py:else>
         </li>
+        <li>${crumbs[-1]['title']}</li>
       </ul>
     </nav>
+    <!-- 
     <div py:if="request.session.peek_flash('info') or request.session.peek_flash('error') or request.session.peek_flash('auth')" id="flash" class="clearfix">
       <div class="row row-left" py:for="msg in request.session.pop_flash('info')">
         <div class="small-12 column">
@@ -70,6 +68,7 @@
         </div>
       </div>
     </div>
+     -->
     <article class="row">
       <div class="small-12 column">
         <py:block name="content"></py:block>
@@ -79,10 +78,10 @@
       <div class="small-6 column">Powered by the <a href="http://web-teaching-environment.readthedocs.org/en/latest/">Web Teaching Environment</a></div>
       <div class="small-6 column text-right">Version ${util.version()}</div>
     </footer>
-    <script src="${request.static_url('wte:static/js/foundation/vendor/jquery.js')}"></script>
+    <script src="${request.static_url('wte:static/js/jquery.min.js')}"></script>
+    <script src="${request.static_url('wte:static/js/foundation/what-input.min.js')}"></script>
     <script src="${request.static_url('wte:static/js/jquery-ui-1.10.4.custom.min.js')}"></script>
     <script src="${request.static_url('wte:static/js/jquery-ui.ext.js')}"></script>
-    <script src="${request.static_url('wte:static/js/foundation/vendor/fastclick.js')}"></script>
     <script src="${request.static_url('wte:static/js/foundation/foundation.min.js')}"></script>
     <script src="${request.static_url('wte:static/js/foundation/foundation-datepicker.js')}"></script>
     <py:block name="body_preinit_script"></py:block>

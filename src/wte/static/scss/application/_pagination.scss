@@ -7,11 +7,10 @@
     padding-top: rem-calc(6);
     z-index: 1;
 }
-
+/*
 .pagination {
     padding: rem-calc(6) rem-calc(6) 0 rem-calc(6);
     background: scale-color($white, $lightness: -5%);
-    @include radius();
     margin-bottom: rem-calc(6);
 
     .progress {
@@ -20,7 +19,6 @@
     }
     .icon {
         display: inline-block;
-        @include radius();
         font-size: 150%;
         padding: 0 rem-calc(16);
         
@@ -37,3 +35,4 @@
         margin-bottom: 0;
     }
 }
+*/

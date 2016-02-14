@@ -1,3 +1,50 @@
+/* Overrides to make the top-bar look nice */
+.top-bar-title a {
+    padding: 1rem;
+    line-height: 1;
+    display: block;
+    font-size: 0.875rem;
+}
+.top-bar {
+    a {
+        color: $white;
+    }
+
+    .menu {
+        a {
+            padding: 1rem 1rem;
+            color: $white;
+            
+            &:hover {
+                color: $white;
+                background-color: $black;
+            }
+        }
+        li {
+            &.is-dropdown-submenu-parent > a:after {
+                top: 1.05rem;
+            }
+            
+            &.active {
+                a {
+                    background-color: $primary-color;
+                }
+            }
+        }
+        .is-dropdown-submenu, .divider {
+            border-color: $black;
+        }
+    }
+}
+/* Additional breadcrumb bar styling */
+
+.breadcrumbs {
+    padding: 0.3rem 1rem 0.3rem 1rem;
+    background: $light-gray;
+    border-bottom: 1px solid $medium-gray;
+}
+
+
 .row {
     &-left {
         margin: 0;
@@ -45,13 +92,7 @@ blockquote {
     p.attribution {
         display: block;
         text-align: right;
-        font-size: $blockquote-cite-font-size;
-        color: $blockquote-cite-font-color;
-
-        a,
-        a:visited {
-          color: $blockquote-cite-link-color;
-        }
+        font-size: inherit;
     }
     
     cite {

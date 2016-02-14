@@ -96,4 +96,4 @@ def generate_custom_styling(args):
                        output_style='compressed',
                        custom_functions={'file-exists': lambda fn: False})
     with open(resource_filename('wte', 'static/css/application.min.css'), 'w') as out_f:
-        out_f.write(css)
+        out_f.write(css.encode('utf-8'))
