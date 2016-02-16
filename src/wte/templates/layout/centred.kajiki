@@ -52,25 +52,11 @@
         </py:if>
       </ul>
     </nav>
-    <!-- 
-    <div py:if="request.session.peek_flash('info') or request.session.peek_flash('error') or request.session.peek_flash('auth')" id="flash" class="clearfix">
-      <div class="row row-left" py:for="msg in request.session.pop_flash('info')">
-        <div class="small-12 column">
-          <div data-alert="" class="alert-box info">${msg}<a href="#" class="close" title="Close"><span class="fi-x" aria-hidden="true"></span><span class="show-for-sr">Close</span></a></div>
-        </div>
-      </div>
-      <div class="row row-left" py:for="msg in request.session.pop_flash('auth')">
-        <div class="small-12 column">
-          <div data-alert="" class="alert-box warning">${msg}<a href="#" class="close" title="Close"><span class="fi-x" aria-hidden="true"></span><span class="show-for-sr">Close</span></a></div>
-        </div>
-      </div>
-      <div class="row row-left" py:for="msg in request.session.pop_flash('error')">
-        <div class="small-12 column">
-          <div data-alert="" class="alert-box alert">${msg}<a href="#" class="close" title="Close"><span class="fi-x" aria-hidden="true"></span><span class="show-for-sr">Close</span></a></div>
-        </div>
-      </div>
+    <div py:if="request.session.peek_flash('info') or request.session.peek_flash('error') or request.session.peek_flash('auth')" id="flash" class="row">
+      <div py:for="msg in request.session.pop_flash('info')" class="callout primary small" data-closable=""><button class="close-button" aria-label="Dismiss alert" type="button" data-close=""><span class="fi-x" aria-hidden="true"></span></button>${msg}</div>
+      <div py:for="msg in request.session.pop_flash('auth')" class="callout warning small" data-closable=""><button class="close-button" aria-label="Dismiss alert" type="button" data-close=""><span class="fi-x" aria-hidden="true"></span></button>${msg}</div>
+      <div py:for="msg in request.session.pop_flash('error')" class="callout alert small" data-closable=""><button class="close-button" aria-label="Dismiss alert" type="button" data-close=""><span class="fi-x" aria-hidden="true"></span></button>${msg}</div>
     </div>
-     -->
     <article class="row">
       <div class="small-12 column">
         <py:block name="content"></py:block>
@@ -90,8 +76,6 @@
     <script>
     $(document).foundation();
     $('.post-link').postLink();
-    $('#flash').fancyFlash();
-    $('.unavailable a').click(function(ev) {ev.preventDefault();});
     if(!Modernizr.inputtypes.date) {
         $('input[type=date]').fdatepicker();
     }
