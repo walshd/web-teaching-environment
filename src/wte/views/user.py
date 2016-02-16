@@ -98,14 +98,28 @@ def users(request):
                 pass
         users = users.order_by(User.display_name)
         users = users.offset(start).limit(30)
-        pages = [{'title': 'Show page:',
-                  'url': '#',
-                  'class': 'unavailable'}]
-        for idx in range(0, int(math.ceil(users.count() / 30.0))):
-            pages.append({'title': unicode(idx + 1),
+        pages = []
+        if start > 0:
+            pages.append({'type': 'prev',
                           'url': request.route_url('users',
-                                                   _query=query_params + [('start', idx * 30)]),
-                          'class': 'current' if idx == (start / 30) else None})
+                                                   _query=query_params + [('start', max(start - 30, 0))])})
+        else:
+            pages.append({'type': 'prev'})
+        for idx in range(0, int(math.ceil(users.count() / 30.0))):
+            if idx == (start / 30):
+                pages.append({'type': 'current',
+                              'label': unicode(idx + 1)})
+            else:
+                pages.append({'type': 'item',
+                              'label': unicode(idx + 1),
+                              'url': request.route_url('users',
+                                                       _query=query_params + [('start', idx * 30)])})
+        if start + 30 < users.count():
+            pages.append({'type': 'next',
+                          'url': request.route_url('users',
+                                                   _query=query_params + [('start', max(start + 30, users.count()))])})
+        else:
+            pages.append({'type': 'next'})
         return {'users': users,
                 'pages': pages,
                 'crumbs': create_user_crumbs(request, [])}

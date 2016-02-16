@@ -45,57 +45,10 @@
 }
 
 
-.row {
-    &-left {
-        margin: 0;
-    }
-    &-full {
-        max-width: 100%;
-    }
-}
-.panel {
-    .button {
-        margin-bottom: 0;
-    }
-}
-table {
-    input[type=checkbox], table input[type=submit], table select {
-        margin-bottom: 0;
-    }
-}
-table {
-    tfoot {
-        ul.pagination {
-            margin:0;
-        }
-    }
-}
-h1 .label, h2 .label, h3 .label, h4 .label, h5 .label, h6 .label {
-    vertical-align: top;
-    margin-left: 1em;
-}
-.accordion.dense > .accordion-navigation > a {
-    padding: 0.3rem 0.5rem;
-}
-.button.inline {
-    margin-bottom: 0;
-}
-nav {
-    ul.breadcrumbs {
-        margin-bottom: 0;
-    }
-}
-blockquote {
-    border-left: 0;
-    padding: rem-calc(9 40 0 40);
-
-    p.attribution {
-        display: block;
-        text-align: right;
-        font-size: inherit;
-    }
-    
-    cite {
-        text-align: right;
-    }
+/* Postfix button addon */
+.button.postfix {
+    display: block;
+    width: 100%;
+    height: ($input-font-size + ($form-spacing * 1.5) - rem-calc(1));
+    padding: $form-spacing / 2;
 }
