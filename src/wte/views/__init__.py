@@ -43,7 +43,7 @@ def init(config, settings):
 def root(request):
     u"""Handles the ``/`` route.
     """
-    return {'crumbs': []}
+    return {}
 
 
 @view_config(context=HTTPNotFound)
