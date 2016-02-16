@@ -21,7 +21,8 @@ from pywebtools.renderer import render
 from sqlalchemy import and_, or_
 
 from wte.decorators import (current_user, require_logged_in)
-from wte.util import (unauthorised_redirect, State, send_email, get_config_setting)
+from wte.util import (unauthorised_redirect, State, send_email, get_config_setting,
+                      paginate)
 from wte.models import (DBSession, User, Permission, PermissionGroup)
 
 
@@ -59,6 +60,9 @@ def init(config):
 
 
 def create_user_crumbs(request, crumbs):
+    """Creates the base-list of breadcrumbs, depending on the current
+    users authorisation level.
+    """
     if request.current_user.has_permission('admin.users.view'):
         crumbs.insert(0, {'title': 'Users',
                           'url': request.route_url('users')})
@@ -98,28 +102,7 @@ def users(request):
                 pass
         users = users.order_by(User.display_name)
         users = users.offset(start).limit(30)
-        pages = []
-        if start > 0:
-            pages.append({'type': 'prev',
-                          'url': request.route_url('users',
-                                                   _query=query_params + [('start', max(start - 30, 0))])})
-        else:
-            pages.append({'type': 'prev'})
-        for idx in range(0, int(math.ceil(users.count() / 30.0))):
-            if idx == (start / 30):
-                pages.append({'type': 'current',
-                              'label': unicode(idx + 1)})
-            else:
-                pages.append({'type': 'item',
-                              'label': unicode(idx + 1),
-                              'url': request.route_url('users',
-                                                       _query=query_params + [('start', idx * 30)])})
-        if start + 30 < users.count():
-            pages.append({'type': 'next',
-                          'url': request.route_url('users',
-                                                   _query=query_params + [('start', max(start + 30, users.count()))])})
-        else:
-            pages.append({'type': 'next'})
+        pages = paginate(request, users, start, 30, query_params=query_params)
         return {'users': users,
                 'pages': pages,
                 'crumbs': create_user_crumbs(request, [])}
