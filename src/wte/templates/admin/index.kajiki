@@ -1,0 +1,17 @@
+<py:extends href="wte:templates/layout/centred.kajiki">
+  <py:block name="title">Users</py:block>
+  <py:block name="content">
+    <h1>Administration</h1>
+    <p>The following administrative functions are available to you:</p>
+    <ul class="no-symbol row">
+      <li py:if="request.current_user.has_permission('admin.users.view')" class="column small-12 medium-6">
+        <h2><a href="${request.route_url('users')}">User Administration</a></h2>
+        <p>Administer the registered users, register new users, delete users.</p>
+      </li>
+      <li py:if="request.current_user.has_permission('admin')" class="column small-12 medium-6">
+        <h2><a href="${request.route_url('admin.content')}">Content Administration</a></h2>
+        <p>Administer the site's content.</p>
+      </li>
+    </ul>
+  </py:block>
+</py:extends>
