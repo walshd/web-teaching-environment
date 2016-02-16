@@ -1,5 +1,5 @@
 <py:extends href="wte:templates/layout/centred.kajiki">
-  <py:block name="title">Users</py:block>
+  <py:block name="title">Content Administration</py:block>
   <py:block name="content">
     <h1>Content Administration</h1>
     <p>The following administrative functions are available:</p>
