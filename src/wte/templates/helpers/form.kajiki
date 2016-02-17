@@ -30,11 +30,20 @@
   <!-- Generate a form field with wrapping label and error display -->
   <py:def function="field(field_type, field_name, field_label, **kwargs)">
     <py:if test="defined('errors') and errors and field_name in errors">
-      <label class="error"><py:if test="field_type not in ['checkbox', 'radio']">${field_label}</py:if>
+      <?py
+if 'extra_attrs' in kwargs:
+    if 'class' in kwargs['extra_attrs']:
+        kwargs['extra_attrs']['class'] = '%s is-invalid-input' % kwargs['extra_attrs']['class']
+    else:
+        kwargs['extra_attrs']['class'] = 'is-invalid-input'
+else:
+    kwargs['extra_attrs'] = {'class': 'is-invalid-input'}
+      ?>
+      <label class="is-invalid-label"><py:if test="field_type not in ['checkbox', 'radio']">${field_label}</py:if>
         ${input(field_type, field_name, **kwargs)}
         <py:if test="field_type in ['checkbox', 'radio']">${field_label}</py:if>
       </label>
-      <small class="error">${errors[field_name]}</small>
+      <span class="form-error is-visible">${errors[field_name]}</span>
     </py:if><py:else>
       <label><py:if test="field_type not in ['checkbox', 'radio']">${field_label}</py:if>
         ${input(field_type, field_name, **kwargs)}

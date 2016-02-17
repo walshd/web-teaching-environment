@@ -181,6 +181,7 @@ def convert_type(value, target_type, default=None):
     * `int` -- Convert to an integer value
     * `boolean` -- Convert to a boolean value (``True`` if the value is the
       ``unicode`` string "true" in any capitalisation
+    * `list` -- Convert to a list, splitting on line-breaks and commas
 
     :param value: The value to convert
     :type value: `unicode`
@@ -199,6 +200,8 @@ def convert_type(value, target_type, default=None):
             return True
         else:
             return False
+    elif target_type == 'list':
+        return [v.strip() for line in value.split('\n') for v in line.split(',')]
     if value:
         return value
     else:
