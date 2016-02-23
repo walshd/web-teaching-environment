@@ -202,32 +202,6 @@ function codemirror_for_textarea(textarea) {
 
 (function($) {
     /**
-     * The fancyFlash jQuery plugin provides a more fancy display of the flash messages.
-     */
-    var methods = {
-        init : function(options) {
-            return this.each(function() {
-                var component = $(this);
-                setTimeout(function() {
-                    component.find('.column, .columns').addClass('minimise');
-                }, 5000);
-            });
-        }
-    };
-
-    $.fn.fancyFlash = function(method) {
-        if (methods[method]) {
-            return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
-        } else if (typeof method === 'object' || !method) {
-            return methods.init.apply(this, arguments);
-        } else {
-            $.error('Method ' + method + ' does not exist on jQuery.fancyFlash');
-        }
-    };
-}(jQuery));
-
-(function($) {
-    /**
      * The partPagination jQuery plugin handles the pagination between Parts. It also
      * handles the updating the progress bar based on the scrolling progress in the
      * container specified via the "scrolling" option.
