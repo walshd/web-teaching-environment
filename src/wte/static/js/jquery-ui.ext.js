@@ -143,7 +143,7 @@ function codemirror_for_textarea(textarea) {
                     ev.preventDefault();
                     var confirm = component.data('wte-confirm');
                     if (confirm) {
-                        var html = '<div class="reveal-modal" data-reveal="">'
+                        var html = '<div id="confirm-modal" class="reveal" data-reveal="">'
                                 + '<h2>' + (confirm.title || 'Please confirm')
                                 + '</h2>' + '<p>' + confirm.msg + '</p>'
                                 + '<div class="text-right">';
@@ -161,9 +161,10 @@ function codemirror_for_textarea(textarea) {
                         html = html + '</div>' + '</div>';
                         var dlg = $(html);
                         $('body').append(dlg);
+                        var reveal = new Foundation.Reveal(dlg);
                         dlg.find('a.cancel').on('click', function(ev) {
                             ev.preventDefault();
-                            dlg.foundation().foundation('reveal', 'close');
+                            reveal.close();
                         });
                         dlg.find('a.ok').on('click', function(ev) {
                             ev.preventDefault();
@@ -173,10 +174,10 @@ function codemirror_for_textarea(textarea) {
                             $('body').append(frm);
                             frm.submit();
                         });
-                        dlg.foundation().foundation('reveal', 'open');
-                        $(document).on('closed.fndtn.reveal', '[data-reveal]', function() {
-                            dlg.remove();
+                        $(document).on('closed.zf.reveal', function() {
+                        	dlg.remove();
                         });
+                        reveal.open();
                     } else {
                         var frm = $('<form action="' + component.attr('href')
                                 + '" method="post"></form>');
