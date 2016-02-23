@@ -2,84 +2,42 @@
  * Menu-bar styles
  */
 .menubar {
-    padding: 0;
-    margin: 0;
-}
-.menubar.margin-top-right {
-    margin-top: 0.3rem;
-    margin-right: 0.8rem;
-}
-.menubar > li {
-    display: inline-block;
-    list-style-type: none;
-    padding-left: 0.4rem;
-}
-.menubar > li > a, .menubar > li > div.menu > a {
-    color: #222;
-    font-size: 1.2rem;
-}
-.menubar > li > a:hover, .menubar > li > div.menu > a:hover {
-    color: #0078a0;
-}
-
-/**
- * Drop-down menu styles
- */
-.menu {
-    z-index: 98;
     text-align: left;
-}
-.menu > ul {
-    margin: 0;
-    padding: 0;
-    background: white;
-    border: solid 1px #cccccc;
-    min-width: 200px;
-    z-index: 98;
-}
-.menu li {
-    padding: 0;
-    margin: 0;
-    list-style-type: none;
-    font-size: 0.875rem;
-    cursor: pointer;
-    line-height: 1.125rem;
-    
-    a {
-        padding: 0.5rem;
-        display: block;
-        color: #555555;
-    
-        &:hover {
-            background: #eeeeee;
-            color: #222;
-        }
-        &.alert {
-            background: #f04124;
-            color: #fff;
-        
-            &:hover {
-                background: cf2a0e;
-            }
-        }
-        .menu-icon {
-            display: inline-block;
-            width: 2em;
+
+    li {
+        > a {
+            padding: 0.2rem 0.2rem;
             
-            &:before {
-                float: left;
-                position: relative;
-                top: 0.1em;
+            &:link, &:visited {
+                color: $black;
+            }
+            &:hover {
+                color: $primary-color;
+            }
+            &.alert {
+                color: $white;
+                background: $alert-color;
             }
         }
-        .menu-label {
-            display: inline-block;
+        &.divider {
+            border-bottom: $dropdownmenu-border;
+
+            &:last-child {
+                border-bottom: 0;
+            }
         }
     }
-    &.divider {
-        border-bottom: 1px solid #ccc;
-    }
+    .is-dropdown-submenu {
+        a {
+            padding: 0.5rem 0.8rem;
+            
+            > span:first-child {
+                display: inline-block;
+                width: 1.5rem;
+            }
+            > span:last-child {
+                white-space: nowrap;
+            }
+        }
 }
-.menu li.divider + li.divider, .menu li.divider:last-child {
-    display: none;
 }

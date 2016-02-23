@@ -123,7 +123,6 @@
             $(this).prop('checked', checked);
         });
     });
-    $('.menu').dropdownMenu();
     </script>
   </py:block>
 </py:extends>
