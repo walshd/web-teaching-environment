@@ -59,7 +59,7 @@
 }
 
 /* No dropdown indicator in the menubar */
-.menubar .is-dropdown-submenu-parent.is-down-arrow > a {
+.menubar .dropdown.menu > li.is-dropdown-submenu-parent > a {
     padding-right: 0.2rem;
     
     &::after {
