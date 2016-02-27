@@ -36,14 +36,13 @@
         }
     }
 }
-/* Additional breadcrumb bar styling */
 
+/* Additional breadcrumb bar styling */
 .breadcrumbs {
     padding: 0.3rem 1rem 0.3rem 1rem;
     background: $light-gray;
     border-bottom: 1px solid $medium-gray;
 }
-
 
 /* Postfix button addon */
 .button.postfix {
@@ -57,4 +56,13 @@
 .callout .close-button {
     font-size: inherit;
     line-height: inherit;
+}
+
+/* No dropdown indicator in the menubar */
+.menubar .is-dropdown-submenu-parent.is-down-arrow > a {
+    padding-right: 0.2rem;
+    
+    &::after {
+        display: none;
+    }
 }

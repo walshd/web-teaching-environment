@@ -11,7 +11,7 @@
       </section>
       <section class="small-12 medium-4 column">
         <div class="callout primary" data-equalizer-watch="">
-          <h3>2. <a href="${request.route_url('modules')}">Choose a Module</a></h3>
+          <h3>2. <a href="${request.route_url('part.list')}">Choose a Module</a></h3>
           <p>Choose to follow any of the available modules.</p>
         </div>
       </section>

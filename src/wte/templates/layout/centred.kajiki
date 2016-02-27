@@ -17,7 +17,7 @@
       <div class="top-bar-left">
         <ul class="menu">
           <li py:if="request.current_user.has_permission('admin')" class="${'active' if request.matched_route and (request.matched_route.name.startswith('admin') or request.matched_route.name.startswith('user')) else ''}"><a href="${request.route_url('admin')}">Administration</a></li>
-          <li class="${'active' if request.matched_route and (request.matched_route.name.startswith('module') or request.matched_route.name.startswith('part') or request.matched_route.name == 'user.modules') else ''}"><a href="${request.route_url('modules')}">Modules</a></li>
+          <li class="${'active' if request.matched_route and (request.matched_route.name.startswith('part') or request.matched_route.name == 'user.modules') else ''}"><a href="${request.route_url('part.list')}">Modules</a></li>
         </ul>
       </div>
       <div class="top-bar-right">

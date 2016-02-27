@@ -30,7 +30,7 @@
             ${h.form.field('display_mode', 'Type', h.form.tags.select, size='small-12', e=e, value=None, options=[('text_only', 'Text Only'), ('three_pane_html', 'Text, Editor &amp; HTML Viewer')])}
           </py:if>
           <div class="text-right">
-            <a py:if="'parent_id' not in r.params" href="${r.route_url('modules')}" class="button small secondary">Don't Create</a>
+            <a py:if="'parent_id' not in r.params" href="${r.route_url('part.list')}" class="button small secondary">Don't Create</a>
             <a py:if="'parent_id' in r.params" href="${r.route_url('part.view', pid=r.params['parent_id'])}" class="button small secondary">Don't Create</a>
             ${h.form.tags.submit('Create', class_='button small')}
           </div>

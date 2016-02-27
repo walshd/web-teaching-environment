@@ -34,7 +34,6 @@ def init(config):
     u"""Adds the frontend-specific routes (route name, URL pattern
     handler):
 
-    * ``modules`` -- ``/modules`` -- :func:`~wte.views.frontend.modules`
     * ``user.modules`` -- ``/users/{uid}/modules`` --
       :func:`~wte.views.frontend.user_modules`
     * ``asset.view`` -- ``/parts/{pid}/files/name/assets/{filename}``
@@ -48,28 +47,12 @@ def init(config):
     * ``userpartprogress.download`` -- ``/users/{uid}/progress/{pid}/download``
       -- :func:`~wte.views.frontend.download_part_progress`
     """
-    config.add_route('modules', '/modules')
     config.add_route('user.modules', '/users/{uid}/modules')
     config.add_route('asset.view', '/parts/{pid}/files/name/assets/{filename}')
     config.add_route('file.view', '/parts/{pid}/files/name/{filename}')
     config.add_route('file.save', '/parts/{pid}/files/id/{fid}/save')
     config.add_route('part.reset-files', '/parts/{pid}/reset_files')
     config.add_route('userpartprogress.download', '/users/{uid}/progress/{pid}/download')
-
-
-@view_config(route_name='modules')
-@render({'text/html': 'part/list.html'})
-@current_user()
-def modules(request):
-    u"""Handles the ``/modules`` URL, displaying all available modules.
-    """
-    dbsession = DBSession()
-    modules = dbsession.query(Part).filter(and_(Part.type == u'module',
-                                                Part.status == u'available')).order_by(Part.title).all()
-    return {'modules': modules,
-            'title': 'Currently Available Modules',
-            'missing': 'There are currently no modules available.',
-            'crumbs': [{'title': 'Modules', 'url': request.route_url('modules'), 'current': True}]}
 
 
 @view_config(route_name='user.modules')

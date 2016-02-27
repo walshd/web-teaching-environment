@@ -1,0 +1,33 @@
+<py:extends href="wte:templates/layout/centred.kajiki">
+  <py:block name="title">${title}</py:block>
+  <py:block name="content">
+    <py:import href="wte:templates/helpers/menu.kajiki" alias="menu"/>
+    <div py:if="request.current_user.has_permission('modules.create')" class="float-right">${menu.menubar([
+                {'items': [{'visible': True,
+                            'icon': 'fi-plus',
+                            'label': 'New Module',
+                            'attrs': {'href': request.route_url('part.new', new_type='module'),
+                                      'title': 'Create a new module'}},
+                           {'visible': True,
+                            'icon': 'fi-upload',
+                            'label': 'Import Module',
+                            'attrs': {'href': request.route_url('part.import'),
+                                      'title': 'Import a previously exported module'}}]},
+                ])}</div>
+    <h1>${title}</h1>
+    <ul class="no-symbol">
+      <li py:for="part in parts">
+        <div class="float-right">${menu.menubar(part.menu(request))}</div>
+        <h2>
+          <py:if test="part.allow('view', request.current_user)">
+            <a href="${request.route_url('part.view', pid=part.id)}">${part.title}</a>
+          </py:if><py:else>
+            <span>${part.title}</span>
+          </py:else>
+          <small py:if="part.status != 'available'" class="label">${part.status.title()}</small>
+        </h2>
+        <p py:if="part.compiled_content">${literal(part.summary)}</p>
+      </li>
+    </ul>
+  </py:block>
+</py:extends>

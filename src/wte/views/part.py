@@ -41,6 +41,7 @@ def init(config):
     u"""Adds the part-specific backend routes (route name, URL pattern
     handler):
 
+    * ``part.list`` -- ``/parts`` -- :func:`~wte.views.part.list_parts`
     * ``part.new`` -- ``/parts/new`` --
       :func:`~wte.views.part.new`
     * ``part.import`` -- ``/parts/import`` --
@@ -68,6 +69,7 @@ def init(config):
     * ``part.download`` -- ``/parts/{pid}/download``
       -- :func:`~wte.views.part.download`
     """
+    config.add_route('part.list', '/parts')
     config.add_route('part.new', '/parts/new/{new_type}')
     config.add_route('part.import', '/parts/import')
     config.add_route('part.view', '/parts/{pid}')
@@ -148,6 +150,20 @@ def get_user_part_progress(dbsession, user, part):
     return progress
 
 
+@view_config(route_name='part.list', renderer='wte:templates/part/list.kajiki')
+@current_user()
+def list_parts(request):
+    u"""Handles the ``/modules`` URL, displaying all available modules.
+    """
+    dbsession = DBSession()
+    parts = dbsession.query(Part).filter(and_(Part.type == u'module',
+                                                Part.status == u'available')).order_by(Part.title).all()
+    return {'parts': parts,
+            'title': 'Available Modules',
+            'missing': 'There are currently no modules available.',
+            'crumbs': [{'title': 'Modules', 'url': request.route_url('part.list'), 'current': True}]}
+
+
 @view_config(route_name='part.view')
 @render({'text/html': 'part/view.html'})
 @current_user()
@@ -225,7 +241,7 @@ def create_part_crumbs(request, part, current=None):
                            'url': request.route_url('user.modules', uid=request.current_user.id)})
         else:
             crumbs.append({'title': 'Modules',
-                           'url': request.route_url('modules')})
+                           'url': request.route_url('part.list')})
     crumbs.reverse()
     if current:
         if isinstance(current, list):
@@ -294,7 +310,7 @@ def new(request):
             raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
     else:
         request.session.flash('You cannot create a new part of that type', queue='error')
-        raise HTTPSeeOther(request.route_url('modules'))
+        raise HTTPSeeOther(request.route_url('part.list'))
     crumbs = create_part_crumbs(request,
                                 parent,
                                 {'title': 'Add %s' % (text.title(request.matchdict['new_type'])),
@@ -579,7 +595,7 @@ def register(request):
             raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
         if part.status != 'available':
             request.session.flash('You cannot register for this module as it is %s' % (part.status), queue='auth')
-            raise HTTPSeeOther(request.route_url('modules'))
+            raise HTTPSeeOther(request.route_url('part.list'))
         crumbs = create_part_crumbs(request,
                                     part,
                                     {'title': 'Register',

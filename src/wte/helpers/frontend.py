@@ -348,6 +348,77 @@ def menubar(menu, drop_down_menu_left=True, class_=None):
     return tag.ul(items, class_='menubar %s' % (class_) if class_ else 'menubar')
 
 
+class MenuBuilder(object):
+    """The :class:`~wte.helpers.frontend.MenuBuilder` helps with creating the ``list``
+    structure used for creating the icon-menubar. Call :func:`~wte.helpers.frontend.MenuBuilder.group`
+    to start a new group of menu items. Call :func:`~wte.helpers.frontend.MenuBuilder.item`
+    to add a menu item to the current group. :func:`~wte.helpers.frontend.MenuBuilder.generate`
+    then generates the final structure for use in the menubar.
+    """
+
+    def __init__(self):
+        self._groups = []
+        self._group = None
+
+    def group(self, label, icon=None):
+        """Add a new group to the lost of groups in this :class:`~wte.helpers.frontend.MenuBuilder`.
+
+        :param label: The menu group's label
+        :type label: `unicode`
+        :param icon: The optional icon for this group. An icon must be provided in order to
+                     enable highlighting of menu items
+        :type icon: `unicode`
+        """  
+        if self._group and self._group['items']:
+            self._groups.append(self._group)
+        self._group = {'label': label,
+                       'items': []}
+        if icon:
+            self._group['icon'] = icon
+
+    def menu(self, label, href, icon=None, highlight=False, attrs=None):
+        """Add a new menu item to the current group. Will create a new group with an empty
+        label if :func:`~wte.helpers.frontend.MenuBuilder.group` has not been called
+
+        :param label: The menu item's label
+        :type label: `unicode`
+        :param href: The URL that the menu item loads
+        :type href: `unicode`
+        :param icon: The optional icon for this menu item
+        :type icon: `unicode`
+        :param highlight: Whether to highlight the menu item by displaying it at the top level
+        :type highlight: `boolean`
+        :param attrs: Additional attributes to set for the menu item link
+        :type attrs: :py:`dict`
+        """
+        if not self._group:
+            self._group = {'label': '',
+                           'items': []}
+        if attrs:
+            attrs['href'] = href
+        else:
+            attrs = {'href': href}
+        item = {'visible': True,
+                'label': label,
+                'attrs': attrs}
+        if icon:
+            item['icon'] = icon
+        if highlight:
+            item['highlight'] = True
+        self._group['items'].append(item)
+
+    def generate(self):
+        """Generate the final menu structure.
+
+        :return: The list of menu groups with their menu items
+        :r_type: ``list`` of menu groups
+        """
+        if self._group and self._group['items']:
+            self._groups.append(self._group)
+            self._group = None
+        return self._groups
+
+
 def readable_timedelta(delta):
     """Converts a :class:`datetime.timedelta` into a human-readable string.
 
