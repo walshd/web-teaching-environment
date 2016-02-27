@@ -47,47 +47,11 @@ def init(config):
     * ``userpartprogress.download`` -- ``/users/{uid}/progress/{pid}/download``
       -- :func:`~wte.views.frontend.download_part_progress`
     """
-    config.add_route('user.modules', '/users/{uid}/modules')
     config.add_route('asset.view', '/parts/{pid}/files/name/assets/{filename}')
     config.add_route('file.view', '/parts/{pid}/files/name/{filename}')
     config.add_route('file.save', '/parts/{pid}/files/id/{fid}/save')
     config.add_route('part.reset-files', '/parts/{pid}/reset_files')
     config.add_route('userpartprogress.download', '/users/{uid}/progress/{pid}/download')
-
-
-@view_config(route_name='user.modules')
-@render({'text/html': 'part/list.html'})
-@current_user()
-@require_logged_in()
-def user_modules(request):
-    u"""Handles the ``/users/{uid}/modules`` URL, displaying all the
-    modules that the  :class:`~wte.models.User` as created or registered for.
-
-    Requires that the current user has "view" rights for the
-    :class:`~wte.models.User`.
-    """
-    dbsession = DBSession()
-    user = dbsession.query(User).filter(User.id == request.matchdict['uid']).first()
-    if user:
-        if user.allow('view', request.current_user):
-            modules = dbsession.query(Part).join(UserPartRole).\
-                filter(and_(Part.type == u'module',
-                            Part.status.in_([u'available', u'unavailable']),
-                            UserPartRole.user_id == request.matchdict[u'uid'])).order_by(Part.title).all()
-            modules.extend(dbsession.query(Part).join(UserPartRole).
-                           filter(and_(Part.type == u'module',
-                                       Part.status == u'archived',
-                                       UserPartRole.user_id == request.matchdict[u'uid'])).order_by(Part.title).all())
-            return {'modules': modules,
-                    'title': 'My Modules',
-                    'missing': 'You have not registered for any modules.',
-                    'crumbs': [{'title': 'My Modules',
-                                'url': request.route_url('user.modules', uid=request.matchdict['uid']),
-                                'current': True}]}
-        else:
-            unauthorised_redirect(request)
-    else:
-        raise HTTPNotFound()
 
 
 @view_config(route_name='file.view')

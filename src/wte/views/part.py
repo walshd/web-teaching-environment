@@ -31,7 +31,7 @@ except:
 from zipfile import ZipFile, ZIP_DEFLATED, ZIP_STORED, BadZipfile
 
 from wte.decorators import (current_user, require_logged_in, require_method)
-from wte.models import (DBSession, Part, UserPartRole, Asset, UserPartProgress)
+from wte.models import (DBSession, Part, UserPartRole, Asset, UserPartProgress, User)
 from wte.text_formatter import compile_rst
 from wte.util import (unauthorised_redirect, State)
 from wte import helpers
@@ -153,15 +153,44 @@ def get_user_part_progress(dbsession, user, part):
 @view_config(route_name='part.list', renderer='wte:templates/part/list.kajiki')
 @current_user()
 def list_parts(request):
-    u"""Handles the ``/modules`` URL, displaying all available modules.
+    u"""Handles the ``/parts`` URL, displaying modules. If no parameters are specified,
+    lists all available modules. If 
     """
     dbsession = DBSession()
-    parts = dbsession.query(Part).filter(and_(Part.type == u'module',
-                                                Part.status == u'available')).order_by(Part.title).all()
+    if 'user_id' in request.params:
+        user = dbsession.query(User).filter(User.id == request.params['user_id']).first()
+        if user and user.allow('view', request.current_user):
+            if user.id == request.current_user.id:
+                title = 'My Modules'
+                missing = 'You have not registered for any modules.'
+            else:
+                title = '%s\'s Modules' % user.display_name
+                missing = '%s has not registered for any modules.' % user.display_name
+            parts = dbsession.query(Part).join(UserPartRole)
+            if 'status' in request.params:
+                parts = parts.filter(and_(Part.type == u'module',
+                    Part.status.in_([u'archived']),
+                    UserPartRole.user_id == request.params['user_id'])).order_by(Part.title)
+            else:
+                parts = parts.filter(and_(Part.type == u'module',
+                    Part.status.in_([u'available', u'unavailable']),
+                    UserPartRole.user_id == request.params['user_id'])).order_by(Part.title)
+            crumbs = [{'title': 'My Modules',
+                       'url': request.route_url('part.list',
+                                                _query={'user_id': request.params['user_id']}),
+                       'current': True}]
+        else:
+            raise HTTPNotFound()
+    else:
+        title = 'Available Modules'
+        parts = dbsession.query(Part).filter(and_(Part.type == u'module',
+                                                  Part.status == u'available')).order_by(Part.title).all()
+        missing = 'There are currently no modules available.'
+        crumbs = [{'title': 'Modules', 'url': request.route_url('part.list'), 'current': True}]
     return {'parts': parts,
-            'title': 'Available Modules',
-            'missing': 'There are currently no modules available.',
-            'crumbs': [{'title': 'Modules', 'url': request.route_url('part.list'), 'current': True}]}
+            'title': title,
+            'missing': missing,
+            'crumbs': crumbs}
 
 
 @view_config(route_name='part.view')
@@ -238,7 +267,7 @@ def create_part_crumbs(request, part, current=None):
     if part:
         if request.current_user and request.current_user.logged_in:
             crumbs.append({'title': 'My Modules',
-                           'url': request.route_url('user.modules', uid=request.current_user.id)})
+                           'url': request.route_url('part.list', _query={'user_id': request.current_user.id})})
         else:
             crumbs.append({'title': 'Modules',
                            'url': request.route_url('part.list')})
@@ -537,7 +566,8 @@ def delete(request):
                     raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
                 else:
                     dbsession.add(request.current_user)
-                    raise HTTPSeeOther(request.route_url('user.modules', uid=request.current_user.id))
+                    raise HTTPSeeOther(request.route_url('part.list',
+                                                         _query={'user_id': request.current_user.id}))
             return {'part': part,
                     'crumbs': crumbs}
         else:
@@ -734,7 +764,6 @@ def change_status(request):
                         dbsession.add(part)
                         part.status = params['status']
                     dbsession.add(part)
-                    request.session.flash('The %s is now %s' % (part.type, part.status), queue='info')
                     if params['return_to']:
                         raise HTTPSeeOther(params['return_to'])
                     else:

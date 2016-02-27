@@ -553,7 +553,7 @@ class Part(Base):
                                                    pid=self.id,
                                                    _query=[('status', 'unavailable'),
                                                            ('return_to', request.current_route_url())]),
-                                 icon='fi-unlock',
+                                 icon='fi-lock',
                                  highlight=True,
                                  attrs={'class': 'post-link'})
                 else:

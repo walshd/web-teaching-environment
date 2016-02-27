@@ -222,7 +222,8 @@ def login(request):
             if request.params['return_to'] != request.route_url('root') and \
                     request.params['return_to'] != request.current_route_url():
                 raise HTTPSeeOther(request.params['return_to'])
-        raise HTTPSeeOther(request.route_url('user.modules', uid=request.current_user.id))
+        raise HTTPSeeOther(request.route_url('part.list',
+                                             _query={'user_id': request.current_user.id}))
     if request.method == 'POST':
         try:
             dbsession = DBSession()
@@ -236,7 +237,8 @@ def login(request):
                 if request.params['return_to'] != request.route_url('root') and \
                         request.params['return_to'] != request.current_route_url():
                     raise HTTPSeeOther(request.params['return_to'])
-            raise HTTPSeeOther(request.route_url('user.modules', uid=user.id))
+            raise HTTPSeeOther(request.route_url('part.list',
+                                                 _query={'user_id': user.id}))
         except formencode.api.Invalid as e:
             return {'errors': e.error_dict if e.error_dict else {'email': e.msg,
                                                                  'password': e.msg},

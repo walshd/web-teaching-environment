@@ -15,6 +15,10 @@
                                       'title': 'Import a previously exported module'}}]},
                 ])}</div>
     <h1>${title}</h1>
+    <div py:if="'user_id' in request.params" class="button-group small">
+      <a href="${request.route_url('part.list', _query=[('user_id', request.params['user_id'])])}" class="button ${'secondary' if 'status' in request.params else ''}">All Modules</a>
+      <a href="${request.route_url('part.list', _query=[('user_id', request.params['user_id']), ('status', 'archived')])}" class="button ${'' if 'status' in request.params else 'secondary'}">Archived Modules</a>
+    </div>
     <ul class="no-symbol">
       <li py:for="part in parts">
         <div class="float-right">${menu.menubar(part.menu(request))}</div>
