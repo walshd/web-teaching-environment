@@ -566,7 +566,7 @@ class Part(Base):
                                  highlight=True,
                                  attrs={'class': 'post-link'})
             # Archive Menu Item
-            if self.type == 'module':
+            if self.type == 'module' and self.status != 'archived':
                 builder.menu('Archive',
                              request.route_url('part.change_status',
                                                pid=self.id,

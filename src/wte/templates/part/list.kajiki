@@ -2,6 +2,7 @@
   <py:block name="title">${title}</py:block>
   <py:block name="content">
     <py:import href="wte:templates/helpers/menu.kajiki" alias="menu"/>
+    <py:import href="wte:templates/helpers/form.kajiki" alias="form"/>
     <div py:if="request.current_user.has_permission('modules.create')" class="float-right">${menu.menubar([
                 {'items': [{'visible': True,
                             'icon': 'fi-plus',
@@ -15,10 +16,15 @@
                                       'title': 'Import a previously exported module'}}]},
                 ])}</div>
     <h1>${title}</h1>
-    <div py:if="'user_id' in request.params" class="button-group small">
-      <a href="${request.route_url('part.list', _query=[('user_id', request.params['user_id'])])}" class="button ${'secondary' if 'status' in request.params else ''}">All Modules</a>
-      <a href="${request.route_url('part.list', _query=[('user_id', request.params['user_id']), ('status', 'archived')])}" class="button ${'' if 'status' in request.params else 'secondary'}">Archived Modules</a>
-    </div>
+    <form py:if="'user_id' in request.params" action="${request.route_url('part.list')}" class="row collapse">
+      <input type="hidden" name="user_id" value="${request.params['user_id']}"/>
+      <div class="column small-8 medium-4 medium-offset-6 large-3 large-offset-8">
+        ${form.field('select', 'status', '', values=[('active', 'Active Modules'), ('archived', 'Archived Modules'), ('all', 'All Modules')], value=request.params['status'] if 'status' in request.params else 'active')}
+      </div>
+      <div class="column small-4 medium-2 large-1">
+        <input type="submit" value="Filter" class="button postfix"/>
+      </div>
+    </form>
     <ul class="no-symbol">
       <li py:for="part in parts">
         <div class="float-right">${menu.menubar(part.menu(request))}</div>

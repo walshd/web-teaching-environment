@@ -167,14 +167,15 @@ def list_parts(request):
                 title = '%s\'s Modules' % user.display_name
                 missing = '%s has not registered for any modules.' % user.display_name
             parts = dbsession.query(Part).join(UserPartRole)
+            status = ['available', 'unavailable']
             if 'status' in request.params:
-                parts = parts.filter(and_(Part.type == u'module',
-                    Part.status.in_([u'archived']),
-                    UserPartRole.user_id == request.params['user_id'])).order_by(Part.title)
-            else:
-                parts = parts.filter(and_(Part.type == u'module',
-                    Part.status.in_([u'available', u'unavailable']),
-                    UserPartRole.user_id == request.params['user_id'])).order_by(Part.title)
+                if request.params['status'] == 'all':
+                    status.append('archived')
+                elif request.params['status'] == 'archived':
+                    status = ['archived']
+            parts = parts.filter(and_(Part.type == u'module',
+                                      Part.status.in_(status),
+                                      UserPartRole.user_id == request.params['user_id'])).order_by(Part.title)
             crumbs = [{'title': 'My Modules',
                        'url': request.route_url('part.list',
                                                 _query={'user_id': request.params['user_id']}),
