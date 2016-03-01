@@ -34,8 +34,9 @@ def upgrade():
     bind = op.get_bind()
     metadata.bind = bind
     for asset in bind.execute(a.select()):
-        hash = hashlib.sha512(asset[1])
-        bind.execute(a.update().values(etag=hash.hexdigest()).where(a.c.id == asset[0]))
+        if asset[1]:
+            hash = hashlib.sha512(asset[1])
+            bind.execute(a.update().values(etag=hash.hexdigest()).where(a.c.id == asset[0]))
 
 
 def downgrade():
