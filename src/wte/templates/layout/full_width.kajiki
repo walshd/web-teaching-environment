@@ -14,9 +14,9 @@
     <py:include href="wte:templates/layout/_header.kajiki"/>
     <py:include href="wte:templates/layout/_breadcrumbs.kajiki"/>
     <py:include href="wte:templates/layout/_flash.kajiki"/>
-    <article class="row">
-      <div class="small-12 column">
-        <py:block name="content"></py:block>
+    <article class="row expanded">
+      <div class="column small-12">
+        <py:block name="content"/>
       </div>
     </article>
     <py:include href="wte:templates/layout/_footer.kajiki"/>

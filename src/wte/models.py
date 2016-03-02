@@ -620,9 +620,10 @@ class Part(Base):
         
         builder.group('Import / Export')
         if self.allow('edit', request.current_user):
-            # Import Menu Item
-            builder.menu('Import',
-                         request.route_url('part.import', _query=[('parent_id', self.id)]))
+            if self.type in ['module', 'tutorial', 'exercise']:
+                # Import Menu Item
+                builder.menu('Import',
+                             request.route_url('part.import', _query=[('parent_id', self.id)]))
             # Export Menu Item
             builder.menu('Export',
                          request.route_url('part.export', pid=self.id),
