@@ -19,6 +19,7 @@ import transaction
 from genshi.template import TemplateLoader, loader
 from pyramid.httpexceptions import (HTTPSeeOther, HTTPNotFound, HTTPForbidden)
 from pyramid.response import Response
+from pyramid.renderers import render_to_response
 from pyramid.view import view_config
 from pywebtools.renderer import render
 from pywebtools import text
@@ -195,7 +196,6 @@ def list_parts(request):
 
 
 @view_config(route_name='part.view')
-@render({'text/html': 'part/view.html'})
 @current_user()
 @require_logged_in()
 def view_part(request):
@@ -213,10 +213,13 @@ def view_part(request):
             crumbs = create_part_crumbs(request,
                                         part,
                                         None)
-            return {'part': part,
-                    'crumbs': crumbs,
-                    'progress': progress,
-                    'include_footer': part.type not in [u'task', u'page']}
+            return render_to_response('wte:templates/part/display_modes/%s/%s.kajiki' % (part.type,
+                                                                                         part.display_mode),
+                                      {'part': part,
+                                       'crumbs': crumbs,
+                                       'progress': progress,
+                                       'include_footer': part.type not in [u'task', u'page']},
+                                      request=request)
         else:
             if part.type == 'module':
                 unauthorised_redirect(request)

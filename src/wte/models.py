@@ -605,12 +605,21 @@ class Part(Base):
                 builder.menu('Add Exercise',
                              request.route_url('part.new', new_type='exercise', _query=[('parent_id', self.id)]),
                              highlight=True)
+            if self.type == 'tutorial':
+                builder.menu('Add Page',
+                             request.route_url('part.new', new_type='page', _query=[('parent_id', self.id)]),
+                             icon='fi-plus',
+                             highlight=True)
+                builder.menu('Add Template',
+                             request.route_url('asset.new', pid=self.id, new_type='template'),
+                             highlight=True)
             # Add Asset Menu Item
             if self.type in ['module', 'tutorial', 'exercise']:
                 builder.menu('Add Asset',
                              request.route_url('asset.new', pid=self.id, new_type='asset'))
-            builder.group('Import / Export')
-            
+        
+        builder.group('Import / Export')
+        if self.allow('edit', request.current_user):
             # Import Menu Item
             builder.menu('Import',
                          request.route_url('part.import', _query=[('parent_id', self.id)]))
@@ -618,6 +627,12 @@ class Part(Base):
             builder.menu('Export',
                          request.route_url('part.export', pid=self.id),
                          attrs={'class': 'post-link'})
+        if self.allow('view', request.current_user):
+            # Download Menu Item
+            builder.menu('Download',
+                         request.route_url('part.download', pid=self.id),
+                         attrs={'class': 'post-link'})
+        if self.allow('delete', request.current_user):
             builder.group('Delete')
             # Delete Menu Item
             builder.menu('Delete',
@@ -710,6 +725,39 @@ class Asset(Base):
     order = Column(Integer)
     data = Column(LargeBinary)
     etag = Column(Unicode(255))
+
+    def menu(self, part, request):
+        builder = MenuBuilder()
+        if part.allow('edit', request.current_user):
+            builder.group('Edit',
+                          icon='fi-pencil')
+            builder.menu('Edit',
+                         request.route_url('asset.edit', pid=part.id, aid=self.id),
+                         icon='fi-pencil',
+                         highlight=True)
+            builder.group('Delete')
+            builder.menu('Delete',
+                         request.route_url('asset.edit', pid=part.id, aid=self.id),
+                         icon='fi-trash',
+                         attrs={'class': 'alert post-link',
+                                'data-wte-confirm': confirm_delete('asset', self.filename, False)})
+        return builder.generate()
+        """            $ {h.frontend.menubar([
+              {'group': 'edit', 'items': [
+                {'visible': True,
+                 'icon': 'fi-pencil',
+                 'label': 'Edit',
+                 'href': r.route_url('asset.edit', pid=part.id, aid=asset.id),
+                 'highlight': True}]},
+              {'group': 'delete', 'items': [
+                {'visible': True,
+                 'label': 'Delete',
+                 'href': r.route_url('asset.delete', pid=part.id, aid=asset.id),
+                 'class': 'alert post-link',
+                 'confirm': h.frontend.confirm_delete('asset', asset.filename, False)}]},
+            ])}
+"""
+
 
 Index(u'assets_filename_ix', Asset.filename)
 Index(u'assets_type_ix', Asset.type)
