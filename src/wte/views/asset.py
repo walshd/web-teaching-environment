@@ -83,7 +83,7 @@ def new(request):
                                                  None,
                                                  None,
                                                  error_dict={'filename': 'You must specify either a file or filename',
-                                                             'data': 'You must specify either a file or filename'}) 
+                                                             'data': 'You must specify either a file or filename'})
                     dbsession = DBSession()
                     progress = get_user_part_progress(dbsession, request.current_user, part)
                     with transaction.manager:

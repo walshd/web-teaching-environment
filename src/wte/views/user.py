@@ -150,8 +150,7 @@ def action(request):
                                 process_confirmation(request, user)
                         elif params['action'] == 'delete':
                             if user.allow('delete', request.current_user):
-                                #dbsession.delete(user)
-                                pass
+                                dbsession.delete(user)
                         elif params['action'] == 'password':
                             if user.validation_token is None and user.allow('edit', request.current_user):
                                 user.random_password()

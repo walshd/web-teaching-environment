@@ -279,6 +279,7 @@ def timing_tween_factory(handler, registry):
     """
     import time
     logger = logging.getLogger(__name__)
+
     def timing_tween(request):
         """Handle the actual timing of the request."""
         start = time.time()
@@ -294,7 +295,7 @@ def timing_tween_factory(handler, registry):
 
 def paginate(request, query, start, rows, query_params=None):
     """Generates the list of pages for a query.
-    
+
     :param request: The request used to generate URLs
     :type request: :class:`~pyramid.request.Request`
     :param query: The SQLAlchemy query to generate the pagination for

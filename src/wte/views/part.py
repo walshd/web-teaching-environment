@@ -155,7 +155,8 @@ def get_user_part_progress(dbsession, user, part):
 @current_user()
 def list_parts(request):
     u"""Handles the ``/parts`` URL, displaying modules. If no parameters are specified,
-    lists all available modules. If 
+    lists all available modules. If a "user_id" parameter is specified, lists all
+    modules for that user.
     """
     dbsession = DBSession()
     if 'user_id' in request.params:
@@ -354,7 +355,7 @@ def new(request):
             dbsession = DBSession()
             with transaction.manager:
                 if params['order'] is not None:
-                    max_order= params['order']
+                    max_order = params['order']
                     if parent:
                         dbsession.add(parent)
                         for child in parent.children:
@@ -587,7 +588,7 @@ def delete(request):
 def preview(request):
     u"""Handles the ``/parts/{pid}/rst_preview`` URL, generating an HTML preview of
     the submitted ReST. The ReST text to render has to be set as the ``content`` parameter.
-    
+
     In addition to rendering the ReST the in the same way that it is rendered when
     saving a :class:`~wte.models.Part`, this will also insert a <span id="focus"></span>
     at the current cursor position indicated by the string "§§§§§§§".
@@ -600,7 +601,7 @@ def preview(request):
         if part.allow('edit', request.current_user):
             if 'content' in request.params:
                 content = compile_rst(request.params['content'], request, part=part)
-                content = content.replace(u'§§§§§§§', '<span id="focus"></span>');
+                content = content.replace(u'§§§§§§§', '<span id="focus"></span>')
                 return {'content': content}
             else:
                 raise HTTPNotFound()
@@ -640,9 +641,13 @@ def register(request):
                 rights = json.loads(part.access_rights)
                 if rights:
                     if 'password' in rights and 'email_domains' in rights:
-                        if request.current_user.email[request.current_user.email.find('@') + 1:] in rights['email_domains']:
+                        if request.current_user.email[request.current_user.email.find('@') + 1:]\
+                                in rights['email_domains']:
                             if 'password' not in request.params or request.params['password'] != rights['password']:
-                                e = formencode.Invalid('Please provide the correct password', None, None, error_dict={'password': 'Please provide the correct password'})
+                                e = formencode.Invalid('Please provide the correct password',
+                                                       None,
+                                                       None,
+                                                       error_dict={'password': 'Please provide the correct password'})
                                 e.params = request.params
                                 return {'part': part,
                                         'crumbs': crumbs,
@@ -657,9 +662,10 @@ in the list of authorised e-mail domains.''', queue='auth')
                                     'crumbs': crumbs,
                                     'invalid_password': True}
                     elif 'email_domains' in rights:
-                        if request.current_user.email[request.current_user.email.find('@') + 1:] not in rights['email_domains']:
-                            request.session.flash('''Unfortunately you cannot take this module as your e-mail address is not
-in the list of authorised e-mail domains.''', queue='auth')
+                        if request.current_user.email[request.current_user.email.find('@') + 1:] \
+                                not in rights['email_domains']:
+                            request.session.flash('Unfortunately you cannot take this module as your e-mail address ' +
+                                                  'is not in the list of authorised e-mail domains.''', queue='auth')
                             raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
             with transaction.manager:
                 dbsession.add(UserPartRole(user=request.current_user,

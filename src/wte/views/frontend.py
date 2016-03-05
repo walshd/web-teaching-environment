@@ -24,8 +24,7 @@ from StringIO import StringIO
 from zipfile import ZipFile
 
 from wte.decorators import (current_user, require_logged_in)
-from wte.models import (DBSession, Part, User, UserPartProgress,
-                        Asset, UserPartRole)
+from wte.models import (DBSession, Part, UserPartProgress, Asset)
 from wte.util import (unauthorised_redirect)
 from wte.views.part import (create_part_crumbs, get_user_part_progress)
 

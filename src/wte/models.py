@@ -617,7 +617,7 @@ class Part(Base):
             if self.type in ['module', 'tutorial', 'exercise']:
                 builder.menu('Add Asset',
                              request.route_url('asset.new', pid=self.id, new_type='asset'))
-        
+
         builder.group('Import / Export')
         if self.allow('edit', request.current_user):
             if self.type in ['module', 'tutorial', 'exercise']:
