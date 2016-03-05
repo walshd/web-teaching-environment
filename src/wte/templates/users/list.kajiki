@@ -85,7 +85,7 @@
                             'icon': 'fi-trash',
                             'label': 'Delete',
                             'highlight': user.validation_token is not None,
-                            'attrs': {'href': request.route_url('user.delete', uid=user.id),
+                            'attrs': {'href': request.route_url('user.delete', uid=user.id, _query={'csrf_token': request.session.get_csrf_token()}),
                                       'class': 'alert post-link',
                                       'data-wte-confirm': confirm_delete('user', '%s (%s)' % (user.display_name, user.email), False),
                                       'title': 'Delete this user'}}]}
@@ -107,6 +107,7 @@
         <py:if test="'status' in request.params">${form.input('hidden', 'status', value=request.params['status'])}</py:if>
         <py:if test="'start' in request.params">${form.input('hidden', 'start', value=request.params['start'])}</py:if>
         <div class="small-8 medium-6 large-4 column">
+          ${form.csrf_field()}
           <label>${form.input('select', 'action', value='', values=[('', '--- Choose Action ---'), ('validate', 'Validate selected users'), ('password', 'Generate new passwords'), ('delete', 'Delete selected users')])}<span class="show-for-sr">Apply this action to all selected users</span></label>
         </div>
         <div class="small-4 medium-2 column end">

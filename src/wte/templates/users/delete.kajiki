@@ -1,8 +1,10 @@
 <py:extends href="wte:templates/layout/centred.kajiki">
   <py:block name="title">${user.display_name} - Delete</py:block>
   <py:block name="content">
+    <py:import href="wte:templates/helpers/form.kajiki" alias="form"/>
     <h1>${user.display_name} - Delete</h1>
     <form action="${request.route_url('user.delete', uid=user.id)}" method="post">
+      ${form.csrf_field()}
       <div class="row">
         <div class="column small-12">
           <p>Please confirm that you wish to

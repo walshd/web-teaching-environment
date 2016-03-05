@@ -15,7 +15,7 @@
               <li><a href="${request.route_url('user.edit', uid=request.current_user.id)}">Edit your Profile</a></li>
               <li><a href="${request.route_url('part.list', _query={'user_id': request.current_user.id})}">Modules</a></li>
               <li class="divider"></li>
-              <li><a href="${request.route_url('user.logout')}" class="post-link">Log out</a></li>
+              <li><a href="${request.route_url('user.logout', _query={'csrf_token': request.session.get_csrf_token()})}" class="post-link">Log out</a></li>
             </ul>
           </li>
         </py:if><py:else>

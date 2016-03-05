@@ -20,7 +20,7 @@ from sqlalchemy import and_, or_
 
 from wte.decorators import (current_user, require_logged_in)
 from wte.util import (unauthorised_redirect, State, send_email, get_config_setting,
-                      paginate)
+                      paginate, CSRFSchema)
 from wte.models import (DBSession, User, Permission, PermissionGroup)
 
 
@@ -108,7 +108,7 @@ def users(request):
         unauthorised_redirect(request)
 
 
-class ActionSchema(formencode.Schema):
+class ActionSchema(CSRFSchema):
     """The :class:`~wte.views.user.ActionSchema` handles the validation of
     user action requests.
     """
@@ -150,7 +150,8 @@ def action(request):
                                 process_confirmation(request, user)
                         elif params['action'] == 'delete':
                             if user.allow('delete', request.current_user):
-                                dbsession.delete(user)
+                                #dbsession.delete(user)
+                                pass
                         elif params['action'] == 'password':
                             if user.validation_token is None and user.allow('edit', request.current_user):
                                 user.random_password()
@@ -195,7 +196,7 @@ class PasswordValidator(formencode.FancyValidator):
             raise formencode.api.Invalid(self.message('nologin', state), value, state)
 
 
-class LoginSchema(formencode.Schema):
+class LoginSchema(CSRFSchema):
     """The :class:`~wte.views.user.LoginSchema` handles the validation of a
     login request.
     """
@@ -227,12 +228,13 @@ def login(request):
     if request.method == 'POST':
         try:
             dbsession = DBSession()
-            params = LoginSchema().to_python(request.params, State(dbsession=dbsession))
+            params = LoginSchema().to_python(request.params, State(dbsession=dbsession,
+                                                                   request=request))
             user = dbsession.query(User).filter(User.email == params['email'].lower()).first()
             request.current_user = user
             request.current_user.logged_in = True
             request.session['uid'] = user.id
-            request.session.flash('Welcome, %s' % (user.display_name), queue='info')
+            request.session.new_csrf_token()
             if 'return_to' in request.params:
                 if request.params['return_to'] != request.route_url('root') and \
                         request.params['return_to'] != request.current_route_url():
@@ -253,9 +255,14 @@ def logout(request):
     thus logging the user out
     """
     if request.method == 'POST':
-        request.current_user.logged_in = False
-        request.session.delete()
-        raise HTTPSeeOther(request.route_url('root'))
+        try:
+            CSRFSchema().to_python(request.params, State(request=request))
+            request.current_user.logged_in = False
+            request.session.delete()
+            raise HTTPSeeOther(request.route_url('root'))
+        except formencode.Invalid as e:
+            return {'errors': e.error_dict,
+                    'crumbs': [{'title': 'Logout', 'url': request.route_url('user.logout'), 'current': True}]}
     return {'crumbs': [{'title': 'Logout', 'url': request.route_url('user.logout'), 'current': True}]}
 
 
@@ -288,7 +295,6 @@ class EmailDomainValidator(formencode.FancyValidator):
     def _validate_python(self, value, state=None):
         if hasattr(state, 'email_domains') and state.email_domains:
             value = value[value.find('@') + 1:]
-            print(repr(state.email_domains))
             if isinstance(state.email_domains, list):
                 if value not in state.email_domains:
                     raise formencode.Invalid(self.message('wrongdomain',
@@ -304,7 +310,7 @@ class EmailDomainValidator(formencode.FancyValidator):
                                          state)
 
 
-class RegisterSchema(formencode.Schema):
+class RegisterSchema(CSRFSchema):
     """The :class:`~wte.user.views.RegisterSchema` handles the validation of
     registration requests.
     s"""
@@ -444,7 +450,7 @@ def confirm(request):
                                                      token=request.matchdict['token'])}]}
 
 
-class ForgottenPasswordSchema(formencode.Schema):
+class ForgottenPasswordSchema(CSRFSchema):
     """The :class:`~wte.views.user.ForgottenPasswordSchema` handles the
     validation of forgotten password requests.
     """
@@ -564,7 +570,7 @@ def view(request):
         raise HTTPNotFound()
 
 
-class EditSchema(formencode.Schema):
+class EditSchema(CSRFSchema):
     """The class:`~wte.views.user.EditSchema` handles the validation of
     changes to the :class:`~wte.models.User`.
     """
@@ -638,25 +644,39 @@ def permissions(request):
             permission_groups = dbsession.query(PermissionGroup).order_by(PermissionGroup.title)
             permissions = dbsession.query(Permission).order_by(Permission.title)
             if request.method == 'POST':
-                with transaction.manager:
+                try:
+                    CSRFSchema(allow_extra_fields=True).to_python(request.params, State(request=request))
+                    with transaction.manager:
+                        dbsession.add(user)
+                        ids = request.params.getall('permission_group')
+                        if ids:
+                            user.permission_groups = dbsession.query(PermissionGroup).\
+                                filter(PermissionGroup.id.in_(ids)).all()
+                        else:
+                            user.permission_groups = []
+                        ids = request.params.getall('permission')
+                        if ids:
+                            user.permissions = dbsession.query(Permission).filter(Permission.id.in_(ids)).all()
+                        else:
+                            user.permissions = []
                     dbsession.add(user)
-                    ids = request.params.getall('permission_group')
-                    if ids:
-                        user.permission_groups = dbsession.query(PermissionGroup).\
-                            filter(PermissionGroup.id.in_(ids)).all()
+                    dbsession.add(request.current_user)
+                    if request.current_user.has_permission('admin.users.view'):
+                        raise HTTPSeeOther(request.route_url('users'))
                     else:
-                        user.permission_groups = []
-                    ids = request.params.getall('permission')
-                    if ids:
-                        user.permissions = dbsession.query(Permission).filter(Permission.id.in_(ids)).all()
-                    else:
-                        user.permissions = []
-                dbsession.add(user)
-                dbsession.add(request.current_user)
-                if request.current_user.has_permission('admin.users.view'):
-                    raise HTTPSeeOther(request.route_url('users'))
-                else:
-                    raise HTTPSeeOther(request.route_url('users.view', uid=user.id))
+                        raise HTTPSeeOther(request.route_url('users.view', uid=user.id))
+                except formencode.Invalid as e:
+                    print(e)
+                    return {'errors': e.error_dict,
+                            'user': user,
+                            'permission_groups': permission_groups,
+                            'permissions': permissions,
+                            'crumbs': create_user_crumbs(request, [{'title': user.display_name,
+                                                                    'url': request.route_url('user.view',
+                                                                                             uid=user.id)},
+                                                                   {'title': 'Permissions',
+                                                                    'url': request.route_url('user.permissions',
+                                                                                             uid=user.id)}])}
             return {'user': user,
                     'permission_groups': permission_groups,
                     'permissions': permissions,
@@ -685,13 +705,23 @@ def delete(request):
     if user:
         if user.allow('delete', request.current_user):
             if request.method == 'POST':
-                with transaction.manager:
-                    dbsession.delete(user)
-                request.session.flash('The account has been deleted', queue='info')
-                if request.current_user.has_permission('admin.users.view'):
-                    raise HTTPSeeOther(request.route_url('users'))
-                else:
-                    raise HTTPSeeOther(request.route_url('root'))
+                try:
+                    CSRFSchema().to_python(request.params, State(request=request))
+                    with transaction.manager:
+                        dbsession.delete(user)
+                    request.session.flash('The account has been deleted', queue='info')
+                    if request.current_user.has_permission('admin.users.view'):
+                        raise HTTPSeeOther(request.route_url('users'))
+                    else:
+                        raise HTTPSeeOther(request.route_url('root'))
+                except formencode.Invalid as e:
+                    return {'errors': e.error_dict,
+                            'user': user,
+                            'crumbs': create_user_crumbs(request,
+                                                         [{'title': user.display_name,
+                                                           'url': request.route_url('user.view', uid=user.id)},
+                                                          {'title': 'Delete',
+                                                           'url': request.route_url('user.delete', uid=user.id)}])}
             return {'user': user,
                     'crumbs': create_user_crumbs(request, [{'title': user.display_name,
                                                             'url': request.route_url('user.view', uid=user.id)},

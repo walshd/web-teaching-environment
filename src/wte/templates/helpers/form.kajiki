@@ -51,4 +51,9 @@ else:
       </label>
     </py:else>
   </py:def>
+  
+  <!-- Generate a form field with the CSRF token in the session -->
+  <py:def function="csrf_field()">
+    ${field('hidden', 'csrf_token', '', value=request.session.get_csrf_token())}
+  </py:def>
 </div>

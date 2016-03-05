@@ -4,6 +4,7 @@
     <py:import href="wte:templates/helpers/form.kajiki" alias="form"/>
     <h1>Login</h1>
     <form action="${request.route_url('user.login')}" method="post">
+      ${form.csrf_field()}
       <input py:if="'return_to' in request.params" type="hidden" name="return_to" value="${request.params['return_to']}"/>
       <div class="row">
         <div class="column small-12 medium-6 large-4">${form.field('email', 'email', 'E-Mail Address')}</div>

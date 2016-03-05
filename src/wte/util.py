@@ -34,6 +34,35 @@ class State(object):
         self.__dict__.update(kwargs)
 
 
+class CSRFValidator(formencode.FancyValidator):
+    """Validator that checks a value against the Cross-Site Request Forgery
+    token stored in the user's session."""
+
+    messages = {'invalid_csrf_token': 'The CSRF token is invalid. This might indicate a malicious attack.',
+                'missing': 'No CSRF token was provided. This might indicate a malicious attack.',
+                'empty': 'An empty CSRF token was provided. This might indicate a malicious attack.'}
+
+    def _validate_python(self, value, state):
+        """If a :pyramid:class:`request.Request` is set in the ``state``, then
+        checks whether the ``value`` matches the CSRF token stored in the request.
+        """
+        if hasattr(state, 'request'):
+            if state.request.session.get_csrf_token() != value:
+                raise formencode.Invalid(self.message('invalid_csrf_token', state),
+                                         value,
+                                         state)
+
+
+class CSRFSchema(formencode.Schema):
+    """The class:`wte.util.CSRFSchema` is a base :formencode:class:`formencode.Schema`
+    that includes Cross-Site Request Forgery detection.
+
+    It should be used as the base class for all specific request schemas.
+    """
+
+    csrf_token = CSRFValidator(strip=True, not_empty=True)
+
+
 class DynamicSchema(formencode.Schema):
     u"""The :class:`~wte.util.DynamicSchema` provides a dynamic
     :class:`~formencode.schema.Schema` for which the validation fields are
