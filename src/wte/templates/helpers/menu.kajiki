@@ -17,7 +17,7 @@
           <ul class="menu">
             <py:for each="group in groups">
               <li py:for="item in group['items']" py:if="item['visible']"><a py:attrs="item['attrs'] if 'attrs' in item else {}"><span class="${item['icon'] if 'icon' in item else 'fi-noicon'}"> </span><span>${item['label']}</span></a></li>
-              <li class="divider"></li>
+              <li class="divider"> </li>
             </py:for>
           </ul>
         </li>

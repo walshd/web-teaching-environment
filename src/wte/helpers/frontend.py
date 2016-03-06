@@ -84,7 +84,7 @@ def codemirror_scripts(request, mimetypes):
         script = request.static_url('wte:static/js/codemirror/mode/%s/%s.js' % mode)
         if script not in scripts:
             scripts.append(script)
-    return tag([tag.script(src=s) for s in scripts])
+    return scripts
 
 
 CODEMIRROR_OPTIONS = {'text/html': {'matchTags': True},
@@ -174,23 +174,6 @@ def page_pagination(request, part):
                                    data_progress='%s' % (json.dumps({'min': min_progress, 'max': max_progress}))),
                            class_='small-12 column'),
                    class_='row collapse')
-
-
-def primary_filename(progress):
-    """Returns the filename of the first :class:`~wte.models.File` from the
-    :class:`~wte.models.UserPartProgress` that has the mimetype "text/html".
-
-    :param progress: The :class:`~wte.models.UserPartProgress` to get the files
-                     from
-    :type progress: :class:`~wte.models.UserPartProgress`
-    :return: The filename as a string or the empty string
-    :rtype: :func:`unicode`
-    """
-    files = [f for f in progress.files if f.mimetype == 'text/html']
-    if files:
-        return files[0].filename
-    else:
-        return ''
 
 
 def confirm_action(title, message, cancel, ok):

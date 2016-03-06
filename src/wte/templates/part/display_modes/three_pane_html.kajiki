@@ -1,0 +1,108 @@
+<py:extends href="wte:templates/layout/full_width.kajiki">
+  <py:block name="title">${part.title}</py:block>
+  <py:block name="content">
+    <py:import href="wte:templates/helpers/menu.kajiki" alias="menu"/>
+    <py:import href="wte:templates/helpers/navigation.kajiki" alias="nav"/>
+    <?py from wte.helpers.frontend import html_id, codemirror_options, confirm_action ?>
+    <div id="page" class="row expanded collapse">
+      <section id="textbook" class="small-12 medium-6 large-4 column rest textbook">
+        <div class="fixed-pagination">
+          ${nav.page_pagination(part)}
+        </div>
+        <div class="float-right">${menu.menubar(part.menu(request))}</div>
+        <h1>${part.title}<small py:if="part.status == 'unavailable'" class="label radius">Unavailable</small></h1>
+        ${literal(part.compiled_content.replace('\n\n', '\n&amp;nbsp;\n'))}
+        ${nav.page_pagination(part)}
+      </section>
+      <section class="small-12 medium-6 large-8 column">
+        <div id="files">
+          <div class="float-right">${menu.menubar([{'label': 'Download',
+                                                    'items': [{'visible': True,
+                                                               'label': 'Download',
+                                                               'attrs': {'href': request.route_url('userpartprogress.download', uid=request.current_user.id, pid=progress.id)}}]},
+                                                   {'label': 'Reset',
+                                                    'items': [{'visible': True,
+                                                               'label': 'Discard all Changes',
+                                                               'attrs': {'href': request.route_url('part.reset-files', pid=part.id, _query={'csrf_token': request.session.get_csrf_token()}),
+                                                                         'class': 'alert post-link',
+                                                                         'data-wte-confirm': confirm_action('Discard all Changes', 'Please confirm that you wish to discard all the changes you made to the files and reset them to their initial content.', "Don't Discard", {'class_': 'alert', 'label': 'Discard'})}}]}])}</div>
+          <ul id="files-tabs" class="tabs" data-tabs="">
+            <li py:for="idx, file in enumerate(progress.files)" py:if="file.mimetype.startswith('text/')" class="tabs-title ${'is-active' if idx == 0 else ''}"><a id="${html_id(file.filename)}-tab" href="#${html_id(file.filename)}" py:attrs="{'data-tab-filename': file.filename if file.mimetype == 'text/html' else None}">${file.filename}</a></li>
+          </ul>
+          <div class="tabs-content" data-tabs-content="files-tabs">
+            <div py:for="idx, file in enumerate(progress.files)" py:if="file.mimetype.startswith('text/')" id="${html_id(file.filename)}" class="tabs-panel ${'is-active' if idx == 0 else ''}">
+              ${menu.menubar(file.menu(request, part))}
+              <div class="editor-wrapper">
+                <textarea data-cm-mimetype="${file.mimetype}" data-tab-fileid="${file.id}" data-cm-options="${codemirror_options(request, file.mimetype)}">${file.data.decode('utf-8') if file.data else ' '}</textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="viewer">
+           <iframe src="${request.route_url('file.view', pid=part.id, filename=[f.filename for f in progress.files if f.mimetype == 'text/html'][0] if [f.filename for f in progress.files if f.mimetype == 'text/html'] else '')}"> </iframe>
+        </div>
+      </section>
+    </div>
+  </py:block>
+  <py:block name="body_script">
+    <?py from wte.helpers.frontend import codemirror_scripts ?>
+    <script py:for="url in codemirror_scripts(request, [f.mimetype for f in progress.files])" src="${url}"></script>
+    <script>
+    function resize_page() {
+        var win_height = $(window).innerHeight() - $('#page').offset().top - $('footer').outerHeight(true);
+        $('#textbook').css('height', win_height + 'px');
+        $('#files').css('height', (win_height / 2) + 'px');
+        var tab_height = $('#files-tabs').outerHeight(true);
+        var menu_height = $('#files .tabs-content .menubar').outerHeight(true);
+        $('#files .tabs-panel').each(function() {
+            var panel = $(this);
+            panel.css('height', ((win_height / 2) - tab_height) + 'px');
+            panel.find('.editor-wrapper').css('height', ((win_height / 2) - tab_height - menu_height) + 'px')
+        });
+        $('#viewer').css('height', (win_height / 2) + 'px');
+    }
+    $('footer').css('margin-top', '0');
+    resize_page();
+    $(window).on('resize', resize_page);
+    $('#files').tabbedEditor({
+        save_timeout: 5000,
+        viewer: $('#viewer iframe'),
+        viewer_url: '${request.route_url('file.view', pid=part.id, filename='FILENAME')}',
+        save_url: '${request.route_url('file.save', pid=part.id, fid='FID')}'
+    });
+    $('.fixed-pagination').fixedPagination();
+    $('.part-pagination').partPagination({scrolling: $('#textbook')});
+    
+    function load_page(url) {
+        $.ajax(url).then(function(data) {
+            $('#textbook').replaceWith($(data).find('#textbook'));
+            resize_page();
+            $('.fixed-pagination').fixedPagination();
+            $('.part-pagination').partPagination({scrolling: $('#textbook')});
+            $('#textbook .post-link').postLink();
+            $('#textbook').foundation();
+            $('.part-pagination form').on('submit', function(ev) {
+                ev.preventDefault();
+                load_page($(this).attr('action'));
+                
+            });
+            $('.part-pagination a').on('click', function(ev) {
+                ev.preventDefault();
+                load_page($(this).attr('href'));
+            });
+        }, function() {
+            window.location.href = url;
+        });
+    }
+    $('.part-pagination form').on('submit', function(ev) {
+        ev.preventDefault();
+        load_page($(this).attr('action'));
+        
+    });
+    $('.part-pagination a').on('click', function(ev) {
+        ev.preventDefault();
+        load_page($(this).attr('href'));
+    });
+    </script>
+  </py:block>
+</py:extends>

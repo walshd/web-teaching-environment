@@ -213,8 +213,11 @@ def view_part(request):
             crumbs = create_part_crumbs(request,
                                         part,
                                         None)
-            return render_to_response('wte:templates/part/display_modes/%s/%s.kajiki' % (part.type,
-                                                                                         part.display_mode),
+            if part.type in ['module', 'tutorial', 'exercise']:
+                template_path = 'wte:templates/part/display_modes/%s.kajiki' % part.type
+            else:
+                template_path = 'wte:templates/part/display_modes/%s.kajiki' % part.parent.display_mode
+            return render_to_response(template_path,
                                       {'part': part,
                                        'crumbs': crumbs,
                                        'progress': progress,

@@ -27,7 +27,7 @@ from sqlalchemy.orm import (scoped_session, sessionmaker, relationship,
                             reconstructor, backref)
 from zope.sqlalchemy import ZopeTransactionExtension
 
-from wte.helpers.frontend import confirm_delete, MenuBuilder
+from wte.helpers.frontend import confirm_delete, MenuBuilder, confirm_action
 
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
@@ -539,6 +539,34 @@ class Part(Base):
                 return self.compiled_content[start:end]
         return None
 
+    @property
+    def prev(self):
+        """Returns the previous :class:`~wte.models.Part` in the list of siblings.
+
+        :return: The previous :class:`~wte.models.Part` sibling
+        :r_type: :class:`~wte.models.Part`
+        """
+        prev = None
+        for child in self.parent.children:
+            if child.id == self.id:
+                return prev
+            prev = child
+
+    @property
+    def next(self):
+        """Returns the next :class:`~wte.models.Part` in the list of siblings.
+
+        :return: The next :class:`~wte.models.Part` sibling
+        :r_type: :class:`~wte.models.Part`
+        """
+        found = False
+        for child in self.parent.children:
+            if found:
+                return child
+            if child.id == self.id:
+                found = True
+        return None
+
     def menu(self, request):
         """Generates the menu for the :class:`~wte.models.Part`.
         """
@@ -644,6 +672,7 @@ class Part(Base):
         return builder.generate()
 
 
+
 Index('parts_parent_id_ix', Part.parent_id)
 
 
@@ -727,37 +756,50 @@ class Asset(Base):
     data = Column(LargeBinary)
     etag = Column(Unicode(255))
 
-    def menu(self, part, request):
+    def menu(self, request, part=None):
+        """Generate the menu for this :class:`~wte.models.Asset`. Will distinguish between
+        assets, templates, and files.
+        """
         builder = MenuBuilder()
-        if part.allow('edit', request.current_user):
-            builder.group('Edit',
-                          icon='fi-pencil')
-            builder.menu('Edit',
-                         request.route_url('asset.edit', pid=part.id, aid=self.id),
-                         icon='fi-pencil',
-                         highlight=True)
+        if self.type in ['asset', 'template'] and part is not None:
+            if part.allow('edit', request.current_user):
+                builder.group('Edit',
+                              icon='fi-pencil')
+                builder.menu('Edit',
+                             request.route_url('asset.edit', pid=part.id, aid=self.id),
+                             icon='fi-pencil',
+                             highlight=True)
+                builder.group('Delete')
+                builder.menu('Delete',
+                             request.route_url('asset.edit', pid=part.id, aid=self.id),
+                             icon='fi-trash',
+                             attrs={'class': 'alert post-link',
+                                    'data-wte-confirm': confirm_delete('asset', self.filename, False)})
+        elif self.type == 'file':
+            builder.group('Save',
+                          icon='fi-save')
+            builder.menu('Save',
+                         '#',
+                         icon='fi-save',
+                         highlight=True,
+                         attrs={'class': 'save'})
+            builder.menu('Download',
+                         request.route_url('file.view', pid=part.id, filename=self.filename, _query=[('download', 'true')]))
             builder.group('Delete')
-            builder.menu('Delete',
-                         request.route_url('asset.edit', pid=part.id, aid=self.id),
-                         icon='fi-trash',
+            builder.menu('Discard Changes',
+                         request.route_url('part.reset-files',
+                                           pid=part.id,
+                                           _query={'filename': self.filename,
+                                                   'csrf_token': request.session.get_csrf_token()}),
                          attrs={'class': 'alert post-link',
-                                'data-wte-confirm': confirm_delete('asset', self.filename, False)})
+                                'data-wte-confirm': confirm_action('Discard Changes',
+                                                                   'Please confirm that you wish to discard the ' +
+                                                                   'changes you made to the file ' +
+                                                                   '"%s" and reset it ' % (self.filename) +
+                                                                   'to its initial content.' ,
+                                                                    "Don't Discard", {'label': 'Discard',
+                                                                                      'class_': 'alert'})})
         return builder.generate()
-        """            $ {h.frontend.menubar([
-              {'group': 'edit', 'items': [
-                {'visible': True,
-                 'icon': 'fi-pencil',
-                 'label': 'Edit',
-                 'href': r.route_url('asset.edit', pid=part.id, aid=asset.id),
-                 'highlight': True}]},
-              {'group': 'delete', 'items': [
-                {'visible': True,
-                 'label': 'Delete',
-                 'href': r.route_url('asset.delete', pid=part.id, aid=asset.id),
-                 'class': 'alert post-link',
-                 'confirm': h.frontend.confirm_delete('asset', asset.filename, False)}]},
-            ])}
-"""
 
 
 Index(u'assets_filename_ix', Asset.filename)

@@ -1,12 +1,22 @@
 /**
  * Pagination styles
  */
-.fixed-pagination {
-    position: relative;
-    background: #fff;
-    padding-top: rem-calc(6);
-    z-index: 1;
-}
 tfoot .pagination li {
     font-weight: normal;
+}
+
+.fixed-pagination {
+    position: relative;
+    background: $white;
+    z-index: 10;
+}
+
+.part-pagination {
+    select {
+        margin-bottom: rem-calc(1);
+    }
+    
+    .progress {
+        height: rem-calc(3);
+    }
 }

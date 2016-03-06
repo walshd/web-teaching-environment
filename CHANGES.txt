@@ -6,6 +6,8 @@ DEV
 - *NEW*: Automatically center the part preview on the current cursor
   location
 - *NEW*: Implement outline list numbering (#28)
+- *NEW*: In the three-pane HTML editor layout, use AJAX to load tutorial
+  pages
 
 1.1.1
 -----

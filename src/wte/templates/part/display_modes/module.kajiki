@@ -4,28 +4,10 @@
     <py:import href="wte:templates/helpers/menu.kajiki" alias="menu"/>
     <div class="float-right">${menu.menubar(part.menu(request))}</div>
     <h1>${part.title} <small py:if="part.status != 'available'" class="label">${part.status.title()}</small></h1>
-    <py:if test="part.has_role('student', request.current_user)">
-      <div class="row">
-        <div class="column small-12 medium-6">
-          ${literal(part.compiled_content)}
-          <a py:if="not progress.current and progress.part.children" href="${request.route_url('part.view', pid=progress.part.children[0].id)}" class="button small">Follow the Tutorial</a>
-          <a py:if="progress.current" href="${request.route_url('part.view', pid=progress.current.id)}" class="button small">Continue the Tutorial</a>
-        </div>
-        <div class="column small-12 medium-6">
-          <table>
-            <tbody>
-              <tr>
-                <th class="text-left"># Pages</th>
-                <td>${len(part.children)}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </py:if><py:else>
-      ${literal(part.compiled_content)}
+    ${literal(part.compiled_content)}
+    <py:if test="part.register_state(request.current_user) == 'already_registered'">
       <section>
-        <h2>Pages</h2>
+        <h2>Tutorials &amp; Exercises</h2>
         <ul class="no-symbol">
           <li py:for="child in part.children" py:if="child.allow('view', request.current_user)">
             <div class="float-right">${menu.menubar(child.menu(request))}</div>
@@ -35,6 +17,7 @@
         </ul>
         <a py:if="part.has_role('student', request.current_user)" href="${request.route_url('part.deregister', pid=part.id)}" class="button post-link">De-register</a>
       </section>
+    </py:if><py:else>
       <section>
         <form py:if="part.register_state(request.current_user) == 'plain_register'" action="${request.route_url('part.register', pid=part.id)}" method="post">
           <input type="submit" value="Take this Module" class="button"/>
@@ -51,19 +34,10 @@
       </section>
     </py:else>
     <section py:if="part.assets and part.has_role('owner', request.current_user)">
-      <h2>Templates</h2>
-      <ul class="no-symbol">
-        <li py:for="asset in part.templates">
-          <div class="float-right">${menu.menubar(asset.menu(part, request))}</div>
-          <h3><a href="${request.route_url('asset.view', mid=-1, pid=part.id, filename=asset.filename)}">${asset.filename} (${asset.mimetype})</a></h3>
-        </li>
-      </ul>
-    </section>
-    <section py:if="part.assets and part.has_role('owner', request.current_user)">
       <h2>Assets</h2>
       <ul class="no-symbol">
         <li py:for="asset in part.assets">
-          <div class="float-right">${menu.menubar(asset.menu(part, request))}</div>
+          <div class="float-right">${menu.menubar(asset.menu(request, part))}</div>
           <h3><a href="${request.route_url('asset.view', mid=-1, pid=part.id, filename=asset.filename)}">${asset.filename} (${asset.mimetype})</a></h3>
         </li>
       </ul>

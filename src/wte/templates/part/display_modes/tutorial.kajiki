@@ -54,7 +54,7 @@
       <h2>Templates</h2>
       <ul class="no-symbol">
         <li py:for="asset in part.templates">
-          <div class="float-right">${menu.menubar(asset.menu(part, request))}</div>
+          <div class="float-right">${menu.menubar(asset.menu(request, part))}</div>
           <h3><a href="${request.route_url('asset.view', mid=-1, pid=part.id, filename=asset.filename)}">${asset.filename} (${asset.mimetype})</a></h3>
         </li>
       </ul>
@@ -63,7 +63,7 @@
       <h2>Assets</h2>
       <ul class="no-symbol">
         <li py:for="asset in part.assets">
-          <div class="float-right">${menu.menubar(asset.menu(part, request))}</div>
+          <div class="float-right">${menu.menubar(asset.menu(request, part))}</div>
           <h3><a href="${request.route_url('asset.view', mid=-1, pid=part.id, filename=asset.filename)}">${asset.filename} (${asset.mimetype})</a></h3>
         </li>
       </ul>
