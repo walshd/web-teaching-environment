@@ -351,7 +351,7 @@ class MenuBuilder(object):
         :param icon: The optional icon for this group. An icon must be provided in order to
                      enable highlighting of menu items
         :type icon: `unicode`
-        """  
+        """
         if self._group and self._group['items']:
             self._groups.append(self._group)
         self._group = {'label': label,
