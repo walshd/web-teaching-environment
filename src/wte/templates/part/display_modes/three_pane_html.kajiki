@@ -9,7 +9,7 @@
         <div class="fixed-pagination">
           ${nav.page_pagination(part)}
         </div>
-        <div class="float-right">${menu.menubar(part.menu(request))}</div>
+        <div class="float-right">${menu.menubar(part.menu(request), alignment='right')}</div>
         <h1>${part.title}<small py:if="part.status == 'unavailable'" class="label radius">Unavailable</small></h1>
         ${literal(part.compiled_content.replace('\n\n', '\n&amp;nbsp;\n'))}
         ${nav.page_pagination(part)}
