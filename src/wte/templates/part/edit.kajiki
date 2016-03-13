@@ -106,7 +106,7 @@
   <py:block name="body_script">
     <?py from wte.helpers.frontend import codemirror_scripts ?>
     <script py:for="url in codemirror_scripts(request, ['text/x-rst'])" src="${url}"></script>
-    <script src="${request.static_url('wte:static/js/mathjax/MathJax.js')}"></script>
+    <script src="${request.static_url('wte:static/js/mathjax/MathJax.js', _query=[('config', 'default')])}"></script>
     <script>
     <![CDATA[
     var textarea = $('textarea[name=content]');
