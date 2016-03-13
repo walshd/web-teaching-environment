@@ -21,10 +21,6 @@
             }
         }
         li {
-            &.is-dropdown-submenu-parent > a:after {
-                top: 1.05rem;
-            }
-            
             &.active {
                 a {
                     background-color: $primary-color;
@@ -33,6 +29,7 @@
         }
         .is-dropdown-submenu, .divider {
             border-color: $black;
+            background-color: $topbar-background;
         }
     }
 }
