@@ -26,14 +26,14 @@
         </div>
       </div>
     </py:if><py:else>
-      ${literal(part.compiled_content)}
+      <div class="rest">${literal(part.compiled_content)}</div>
       <section>
         <h2>Tasks</h2>
         <ul class="no-symbol">
           <li py:for="child in part.children" py:if="child.allow('view', request.current_user)">
             <div class="float-right">${menu.menubar(child.menu(request))}</div>
             <h3><a href="${request.route_url('part.view', pid=child.id)}">${child.title}</a> <small py:if="child.status != 'available'" class="label">${child.status.title()}</small></h3>
-            ${literal(child.summary)}
+            <div class="rest">${literal(child.summary)}</div>
           </li>
         </ul>
         <a py:if="part.has_role('student', request.current_user)" href="${request.route_url('part.deregister', pid=part.id)}" class="button post-link">De-register</a>

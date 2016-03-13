@@ -36,7 +36,7 @@
           </py:else>
           <small py:if="part.status != 'available'" class="label">${part.status.title()}</small>
         </h2>
-        <p py:if="part.compiled_content">${literal(part.summary)}</p>
+        <div py:if="part.compiled_content" class="rest">${literal(part.summary)}</div>
       </li>
     </ul>
   </py:block>
