@@ -34,7 +34,7 @@ from zipfile import ZipFile, ZIP_DEFLATED, ZIP_STORED, BadZipfile
 from wte.decorators import (current_user, require_logged_in, require_method)
 from wte.models import (DBSession, Part, UserPartRole, Asset, UserPartProgress, User)
 from wte.text_formatter import compile_rst
-from wte.util import (unauthorised_redirect, State)
+from wte.util import (unauthorised_redirect, State, CSRFSchema)
 from wte import helpers
 
 
@@ -233,7 +233,7 @@ def view_part(request):
         raise HTTPNotFound()
 
 
-class NewPartSchema(formencode.Schema):
+class NewPartSchema(CSRFSchema):
     u"""The :class:`~wte.views.backend.NewPartSchema` handles the validation
     of a new :class:`~wte.models.Part`.
     """
@@ -289,8 +289,7 @@ def create_part_crumbs(request, part, current=None):
     return crumbs
 
 
-@view_config(route_name='part.new')
-@render({'text/html': 'part/new.html'})
+@view_config(route_name='part.new', renderer='wte:templates/part/new.kajiki')
 @current_user()
 @require_logged_in()
 def new(request):
@@ -385,11 +384,10 @@ def new(request):
                                                        role=u'owner'))
                 dbsession.add(new_part)
             dbsession.add(new_part)
-            request.session.flash('Your new %s has been created' % (request.matchdict['new_type']), queue='info')
             raise HTTPSeeOther(request.route_url('part.edit', pid=new_part.id))
         except formencode.Invalid as e:
-            e.params = request.params
-            return {'e': e,
+            return {'errors': e.error_dict,
+                    'values': request.params,
                     'crumbs': crumbs}
     return {'crumbs': crumbs}
 
