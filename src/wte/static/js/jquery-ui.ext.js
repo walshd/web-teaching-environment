@@ -246,8 +246,6 @@ function codemirror_for_textarea(textarea) {
                     if(options.scrolling[0] == window) {
                     	$('body').children().each(function() {
                     	    if($(this).is(':visible')) {
-                    	        console.log($(this));
-                        	console.log($(this).outerHeight(true));
                         	height = height + $(this).outerHeight(true);
                     	    }
                     	});

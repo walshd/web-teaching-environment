@@ -7,7 +7,7 @@
     <py:if test="part.has_role('student', request.current_user)">
       <div class="row">
         <div class="column small-12 medium-6">
-          ${literal(part.compiled_content)}
+          <div class="rest">${literal(part.compiled_content)}</div>
           <a py:if="not progress.current and progress.part.children" href="${request.route_url('part.view', pid=progress.part.children[0].id)}" class="button small">Follow the Tutorial</a>
           <a py:if="progress.current" href="${request.route_url('part.view', pid=progress.current.id)}" class="button small">Continue the Tutorial</a>
         </div>
@@ -25,7 +25,7 @@
     </py:if><py:else>
       ${literal(part.compiled_content)}
       <section>
-        <h2>Pages</h2>
+        <h2>Tasks</h2>
         <ul class="no-symbol">
           <li py:for="child in part.children" py:if="child.allow('view', request.current_user)">
             <div class="float-right">${menu.menubar(child.menu(request))}</div>
@@ -50,7 +50,7 @@
           in the list of authorised e-mail domains.</p>
       </section>
     </py:else>
-    <section py:if="part.assets and part.has_role('owner', request.current_user)">
+    <section py:if="part.templates and part.has_role('owner', request.current_user)">
       <h2>Templates</h2>
       <ul class="no-symbol">
         <li py:for="asset in part.templates">

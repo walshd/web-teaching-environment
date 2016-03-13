@@ -641,8 +641,29 @@ class Part(Base):
                 builder.menu('Add Template',
                              request.route_url('asset.new', pid=self.id, new_type='template'),
                              highlight=True)
+            if self.type == 'exercise':
+                builder.menu('Add Task',
+                             request.route_url('part.new', new_type='task', _query=[('parent_id', self.id)]),
+                             icon='fi-plus',
+                             highlight=True)
+                builder.menu('Add Template',
+                             request.route_url('asset.new', pid=self.id, new_type='template'),
+                             highlight=True)
+            if self.type in ['page', 'task']:
+                builder.menu('Add Page before',
+                             request.route_url('part.new',
+                                               new_type='page',
+                                               _query=[('parent_id', self.parent.id),
+                                                       ('order', self.order)]),
+                             highlight=True)
+                builder.menu('Add Page after',
+                             request.route_url('part.new',
+                                               new_type='page',
+                                               _query=[('parent_id', self.parent.id),
+                                                       ('order', self.order + 1)]),
+                             highlight=True)
             # Add Asset Menu Item
-            if self.type in ['module', 'tutorial', 'exercise']:
+            if self.type in ['module', 'tutorial', 'exercise', 'task']:
                 builder.menu('Add Asset',
                              request.route_url('asset.new', pid=self.id, new_type='asset'))
 

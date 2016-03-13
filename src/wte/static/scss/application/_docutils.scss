@@ -13,7 +13,7 @@
     }
     div.source {
         &.panel {
-            margin: 0 1rem;
+            margin: $global-margin;
             padding-top: 0.3rem;
             background: scale-color($light-gray, $lightness: 40%);
             border: 1px solid $light-gray;

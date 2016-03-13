@@ -4,7 +4,7 @@
     <py:import href="wte:templates/helpers/menu.kajiki" alias="menu"/>
     <div class="float-right">${menu.menubar(part.menu(request))}</div>
     <h1>${part.title} <small py:if="part.status != 'available'" class="label">${part.status.title()}</small></h1>
-    ${literal(part.compiled_content)}
+    <div class="rest">${literal(part.compiled_content)}</div>
     <py:if test="part.register_state(request.current_user) == 'already_registered'">
       <section>
         <h2>Tutorials &amp; Exercises</h2>
