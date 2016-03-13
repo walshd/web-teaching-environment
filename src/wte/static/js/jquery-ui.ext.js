@@ -78,6 +78,15 @@ function codemirror_for_textarea(textarea) {
                     options.viewer.contents().scrollTop(component.data('editor-viewer-scroll-top'));
                     component.tabbedEditor('save_scroll');
                 });
+                component.on('keydown', function(ev) {
+                    console.log(ev);
+                    if(ev.key && ev.key.toLowerCase() == 's' && ev.ctrlKey) {
+                        ev.preventDefault();
+                        var tab = component.find('.tabs-title.is-active > a');
+                        var textarea = component.find('.tabs-panel.is-active > .editor-wrapper > textarea');
+                        component.tabbedEditor('save', tab, textarea);
+                    }
+                });
             });
         },
         save : function(tab, textarea) {
