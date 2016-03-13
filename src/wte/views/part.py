@@ -392,7 +392,7 @@ def new(request):
     return {'crumbs': crumbs}
 
 
-class EditPartSchema(formencode.Schema):
+class EditPartSchema(CSRFSchema):
     u"""The :class:`~wte.views.part.EditPartSchema` handles the validation
     for editing :class:`~wte.models.Part`.
     """
@@ -417,8 +417,7 @@ class EditPartSchema(formencode.Schema):
     u"""The :class:`~wte.models.Template` ids for re-ordering"""
 
 
-@view_config(route_name='part.edit')
-@render({'text/html': 'part/edit.html'})
+@view_config(route_name='part.edit', renderer='wte:templates/part/edit.kajiki')
 @current_user()
 @require_logged_in()
 def edit(request):
@@ -459,11 +458,10 @@ def edit(request):
                                 if template:
                                     template.order = idx
                     dbsession.add(part)
-                    request.session.flash('The %s has been updated' % (part.type), queue='info')
                     raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
                 except formencode.Invalid as e:
-                    e.params = request.params
-                    return {'e': e,
+                    return {'errors': e.error_dict,
+                            'values': request.params,
                             'part': part,
                             'crumbs': crumbs}
             return {'part': part,

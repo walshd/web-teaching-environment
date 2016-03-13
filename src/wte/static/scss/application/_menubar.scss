@@ -5,6 +5,9 @@
     text-align: left;
 
     li {
+        &.separator {
+            width: 1rem;
+        }
         > a {
             padding: 0.2rem 0.2rem;
             
