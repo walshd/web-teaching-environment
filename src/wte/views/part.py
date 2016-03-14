@@ -472,7 +472,7 @@ def edit(request):
         raise HTTPNotFound()
 
 
-class RegisterSettingsSchema(formencode.Schema):
+class RegisterSettingsSchema(CSRFSchema):
     u"""The :class:`~wte.views.part.RegisterSettingsSchema` handles the validation
     for modifying the ``access_rights`` of a :class:`~wte.models.Part`.
     """
@@ -484,8 +484,7 @@ class RegisterSettingsSchema(formencode.Schema):
     """The email domains that the user must belong to"""
 
 
-@view_config(route_name='part.register.settings')
-@render({'text/html': 'part/register_settings.html'})
+@view_config(route_name='part.register.settings', renderer='wte:templates/part/register_settings.kajiki')
 @current_user()
 @require_logged_in()
 def edit_register_settings(request):
@@ -502,7 +501,10 @@ def edit_register_settings(request):
             if part.type != 'module':
                 request.session.flash('Access rights can only be set on modules', queue='info')
                 raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
-            rights = json.loads(part.access_rights)
+            if part.access_rights:
+                rights = json.loads(part.access_rights)
+            else:
+                rights = {}
             crumbs = create_part_crumbs(request,
                                         part,
                                         {'title': 'Access Settings',
@@ -520,11 +522,11 @@ def edit_register_settings(request):
                         part.access_rights = json.dumps(rights)
                         dbsession.add(part)
                     dbsession.add(part)
-                    request.session.flash('The access settings have been updated', queue='info')
                     raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
                 except formencode.Invalid as e:
-                    e.params = request.params
-                    return {'e': e,
+                    print(e)
+                    return {'errors': e.error_dict,
+                            'valuse': request.params,
                             'part': part,
                             'crumbs': crumbs,
                             'rights': rights}
@@ -537,8 +539,7 @@ def edit_register_settings(request):
         raise HTTPNotFound()
 
 
-@view_config(route_name='part.delete')
-@render({'text/html': 'part/delete.html'})
+@view_config(route_name='part.delete', renderer='wte:templates/part/delete.kajiki')
 @current_user()
 @require_logged_in()
 def delete(request):
@@ -557,21 +558,25 @@ def delete(request):
                                          'url': request.route_url('part.delete',
                                                                   pid=part.id)})
             if request.method == u'POST':
-                part_type = part.type
-                parent = part.parent
-                with transaction.manager:
-                    dbsession.add(part)
-                    for progress in dbsession.query(UserPartProgress).filter(UserPartProgress.current_id == part.id):
-                        progress.current_id = None
-                    dbsession.delete(part)
-                request.session.flash('The %s has been deleted' % (part_type), queue='info')
-                if parent:
-                    dbsession.add(parent)
-                    raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
-                else:
-                    dbsession.add(request.current_user)
-                    raise HTTPSeeOther(request.route_url('part.list',
-                                                         _query={'user_id': request.current_user.id}))
+                try:
+                    CSRFSchema().to_python(request.params, State(request=request))
+                    parent = part.parent
+                    with transaction.manager:
+                        dbsession.add(part)
+                        for progress in dbsession.query(UserPartProgress).filter(UserPartProgress.current_id == part.id):
+                            progress.current_id = None
+                        dbsession.delete(part)
+                    if parent:
+                        dbsession.add(parent)
+                        raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
+                    else:
+                        dbsession.add(request.current_user)
+                        raise HTTPSeeOther(request.route_url('part.list',
+                                                             _query={'user_id': request.current_user.id}))
+                except formencode.Invalid as e:
+                    return {'errors': e.error_dict,
+                            'part': part,
+                            'crumbs': crumbs}
             return {'part': part,
                     'crumbs': crumbs}
         else:
@@ -610,8 +615,8 @@ def preview(request):
         raise HTTPNotFound()
 
 
-@view_config(route_name='part.register')
-@render({'text/html': 'part/register.html'})
+# Todo: CSRF Protection
+@view_config(route_name='part.register', renderer='wte:templates/part/register.kajiki')
 @current_user()
 @require_logged_in()
 def register(request):
@@ -670,7 +675,6 @@ in the list of authorised e-mail domains.''', queue='auth')
                 dbsession.add(UserPartRole(user=request.current_user,
                                            part=part,
                                            role=u'student'))
-            request.session.flash('You have registered for the module', queue='info')
             raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
         return {'part': part,
                 'crumbs': crumbs}
@@ -691,9 +695,8 @@ def get_all_parts(part):
         parts.extend(get_all_parts(child))
     return parts
 
-
-@view_config(route_name='part.deregister')
-@render({'text/html': 'part/deregister.html'})
+# Todo: CSRF Protection
+@view_config(route_name='part.deregister', renderer='wte:templates/part/deregister.kajiki')
 @current_user()
 @require_logged_in()
 def deregister(request):
@@ -727,7 +730,6 @@ def deregister(request):
                                     UserPartProgress.user_id == request.current_user.id)).first()
                     if progress:
                         dbsession.delete(progress)
-            request.session.flash('You have de-registered from the module', queue='info')
             raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
         return {'part': part,
                 'crumbs': crumbs}
@@ -735,7 +737,7 @@ def deregister(request):
         raise HTTPNotFound()
 
 
-class ChangeStatusSchema(formencode.Schema):
+class ChangeStatusSchema(CSRFSchema):
     u"""The :class:`~wte.views.part.ChangeStatusSchema` handles the validation
     for editing :class:`~wte.models.Part`.
     """
@@ -748,8 +750,7 @@ class ChangeStatusSchema(formencode.Schema):
     u"""Return to this URL"""
 
 
-@view_config(route_name='part.change_status')
-@render({'text/html': 'part/change_status.html'})
+@view_config(route_name='part.change_status', renderer='wte:templates/part/change_status.kajiki')
 @current_user()
 @require_logged_in()
 def change_status(request):
@@ -778,8 +779,8 @@ def change_status(request):
                     else:
                         raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
                 except formencode.Invalid as e:
-                    e.params = request.params
-                    return {'e': e,
+                    return {'errors': e.error_dict,
+                            'valuse': request.params,
                             'part': part,
                             'crumbs': crumbs}
             return {'part': part,
@@ -823,7 +824,6 @@ def crossref_replace(match, id_mapping):
 
 
 @view_config(route_name='part.export')
-@require_method('POST')
 @current_user()
 @require_logged_in()
 def export(request):
@@ -897,11 +897,10 @@ def export(request):
                                 headers=[('Content-Type', 'application/zip'),
                                          ('Content-Disposition', str('attachment; filename="%s.zip"' % (part.title)))])
 
-            @render({'text/html': 'part/export.html'})
-            def render_form(request):
-                return {'part': part,
-                        'crumbs': crumbs}
-            return render_form(request)
+            return render_to_response('wte:templates/part/export.kajiki',
+                                      {'part': part,
+                                       'crumbs': crumbs},
+                                      request=request)
         else:
             unauthorised_redirect(request)
     else:
@@ -985,7 +984,7 @@ class ImportPartConverter(formencode.FancyValidator):
                                              state)
 
 
-class ImportPartSchema(formencode.Schema):
+class ImportPartSchema(CSRFSchema):
     u"""The :class:`~wte.views.part.ImportPartSchema` validates the request to import
     a :class:`~wte.models.Part` (and any children and :class:`~wte.models.Asset`).
 
@@ -998,8 +997,7 @@ class ImportPartSchema(formencode.Schema):
                                     ImportPartConverter())
 
 
-@view_config(route_name='part.import')
-@render({'text/html': 'part/import.html'})
+@view_config(route_name='part.import', renderer='wte:templates/part/import.kajiki')
 @current_user()
 @require_logged_in()
 def import_file(request):
@@ -1099,7 +1097,6 @@ def import_file(request):
                     id_mapping[key] = value.id
                 fix_references(part, dbsession, id_mapping)
             dbsession.add(part)
-            request.session.flash('Your %s has been imported' % (part.type), queue='info')
             raise HTTPSeeOther(request.route_url('part.view', pid=part.id))
         except formencode.Invalid as e:
             e.params = request.params

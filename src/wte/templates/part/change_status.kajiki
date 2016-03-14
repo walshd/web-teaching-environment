@@ -1,0 +1,21 @@
+<py:extends href="wte:templates/layout/centred.kajiki">
+  <py:block name="title">${part.title} - Change Status</py:block>
+  <py:block name="content">
+    <py:import href="wte:templates/helpers/form.kajiki" alias="form"/>
+    <h1>${part.title} - Change Status</h1>
+    <form action="${request.route_url('part.change_status', pid=part.id)}" method="post">
+      ${form.csrf_field()}
+      <div class="row">
+        <div class="column small-12 medium-8 large-6 end">
+          ${form.field('select', 'status', 'Status', values=[('unavailable', 'Unavailable'), ('available', 'Available'), ('archived', 'Archived')] if part.type == 'module' else [('unavailable', 'Unavailable'), ('available', 'Available')], value=part.status)}
+        </div>
+      </div>
+      <div class="row">
+        <div class="column small-12 medium-8 large-6 end text-right">
+          <a href="${request.route_url('part.view', pid=part.id)}" class="button secondary">Don't Change</a>
+          <input type="submit" value="Change" class="button"/>
+        </div>
+      </div>
+    </form>
+  </py:block>
+</py:extends>

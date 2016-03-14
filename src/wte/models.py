@@ -580,7 +580,8 @@ class Part(Base):
                                  request.route_url('part.change_status',
                                                    pid=self.id,
                                                    _query=[('status', 'unavailable'),
-                                                           ('return_to', request.current_route_url())]),
+                                                           ('return_to', request.current_route_url()),
+                                                           ('csrf_token', request.session.get_csrf_token())]),
                                  icon='fi-lock',
                                  highlight=True,
                                  attrs={'class': 'post-link'})
@@ -589,7 +590,8 @@ class Part(Base):
                                  request.route_url('part.change_status',
                                                    pid=self.id,
                                                    _query=[('status', 'available'),
-                                                           ('return_to', request.current_route_url())]),
+                                                           ('return_to', request.current_route_url()),
+                                                           ('csrf_token', request.session.get_csrf_token())]),
                                  icon='fi-unlock',
                                  highlight=True,
                                  attrs={'class': 'post-link'})
@@ -599,7 +601,8 @@ class Part(Base):
                              request.route_url('part.change_status',
                                                pid=self.id,
                                                _query=[('status', 'archived'),
-                                                       ('return_to', request.current_route_url())]),
+                                                       ('return_to', request.current_route_url()),
+                                                       ('csrf_token', request.session.get_csrf_token())]),
                              attrs={'class': 'post-link'})
             builder.group('Edit', 'fi-pencil')
             # Edit Menu Item
@@ -675,7 +678,9 @@ class Part(Base):
                              request.route_url('part.import', _query=[('parent_id', self.id)]))
             # Export Menu Item
             builder.menu('Export',
-                         request.route_url('part.export', pid=self.id),
+                         request.route_url('part.export',
+                                           pid=self.id,
+                                           _query=[('csrf_token', request.session.get_csrf_token())]),
                          attrs={'class': 'post-link'})
         if self.allow('view', request.current_user):
             # Download Menu Item
@@ -686,7 +691,9 @@ class Part(Base):
             builder.group('Delete')
             # Delete Menu Item
             builder.menu('Delete',
-                         request.route_url('part.delete', pid=self.id),
+                         request.route_url('part.delete',
+                                           pid=self.id,
+                                           _query=[('csrf_token', request.session.get_csrf_token())]),
                          icon='fi-trash',
                          attrs={'class': 'alert post-link',
                                 'data-wte-confirm': confirm_delete(self.type, self.title, True)})
