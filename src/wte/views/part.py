@@ -16,7 +16,6 @@ import json
 import re
 import transaction
 
-from genshi.template import TemplateLoader, loader
 from pyramid.httpexceptions import (HTTPSeeOther, HTTPNotFound, HTTPForbidden)
 from pyramid.response import Response
 from pyramid.renderers import render_to_response
@@ -35,7 +34,6 @@ from wte.decorators import (current_user, require_logged_in, require_method)
 from wte.models import (DBSession, Part, UserPartRole, Asset, UserPartProgress, User)
 from wte.text_formatter import compile_rst
 from wte.util import (unauthorised_redirect, State, CSRFSchema)
-from wte import helpers
 
 
 def init(config):
@@ -563,7 +561,8 @@ def delete(request):
                     parent = part.parent
                     with transaction.manager:
                         dbsession.add(part)
-                        for progress in dbsession.query(UserPartProgress).filter(UserPartProgress.current_id == part.id):
+                        for progress in dbsession.query(UserPartProgress).\
+                                filter(UserPartProgress.current_id == part.id):
                             progress.current_id = None
                         dbsession.delete(part)
                     if parent:
@@ -694,6 +693,7 @@ def get_all_parts(part):
     for child in part.children:
         parts.extend(get_all_parts(child))
     return parts
+
 
 # Todo: CSRF Protection
 @view_config(route_name='part.deregister', renderer='wte:templates/part/deregister.kajiki')
@@ -1105,6 +1105,7 @@ def import_file(request):
     return {'crumbs': crumbs}
 
 
+# Todo: Add a download launch page for non-JS users
 @view_config(route_name='part.download')
 @require_method('POST')
 @current_user()
@@ -1118,28 +1119,25 @@ def download(request):
     another WTE instance, while downloading creates an HTML version for
     offline viewing.
     """
-    def download_part(base_path, part, depth, body_zip, template_loader):
-        template = template_loader.load('part/download.html')
-        doctree = template.generate(part=part,
-                                    depth=depth,
-                                    h=helpers,
-                                    r=request)
-        body_zip.writestr('%s/index.html' % (base_path), doctree.render('xhtml').encode('utf-8'))
+    def download_part(base_path, part, body_zip, parents=None):
+        response = render_to_response('wte:templates/part/download.kajiki',
+                                      {'part': part,
+                                       'parents': parents},
+                                      request=request)
+        body_zip.writestr('%s/%s.html' % (base_path, part.id), response.body)
         for child in part.children:
             if child.allow('view', request.current_user):
-                download_part('%s/%s' % (base_path, child.id), child, depth + 1, body_zip, template_loader)
-        if part.type == 'tutorial' or part.type == 'task':
-            for template in part.templates:
-                body_zip.writestr('%s/workspace/%s' % (base_path, template.filename),
-                                  template.data if template.data else '')
-            for asset in part.assets:
-                body_zip.writestr('%s/workspace/assets/%s' % (base_path, asset.filename),
-                                  asset.data if asset.data else '')
+                download_part(base_path, child, body_zip, parents + [part] if parents else [part])
+        for asset in part.assets:
+            body_zip.writestr('%s/%s/assets/%s' % (base_path, part.id, asset.filename),
+                              asset.data if asset.data else '')
+        for template in part.templates:
+            body_zip.writestr('%s/%s/%s' % (base_path, part.id, template.filename),
+                              template.data if template.data else '')
     dbsession = DBSession()
     part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
     if part:
         if part.allow('view', request.current_user):
-            template_loader = TemplateLoader(loader.package('wte', 'templates'))
             body = StringIO()
             body_zip = ZipFile(body, 'w')
             body_zip.writestr('%s/_static/application.min.css' % (part.title),
@@ -1152,7 +1150,23 @@ def download(request):
                               resource_string('wte', 'static/css/icons/foundation-icons.ttf'))
             body_zip.writestr('%s/_static/icons/foundation-icons.woff' % (part.title),
                               resource_string('wte', 'static/css/icons/foundation-icons.woff'))
-            download_part(part.title, part, 0, body_zip, template_loader)
+            body_zip.writestr('%s/_static/jquery.min.js' % (part.title),
+                              resource_string('wte', 'static/js/jquery.min.js'))
+            body_zip.writestr('%s/index.html' % (part.title),
+                              '''<!DOCTYPE html>
+<html>
+  <head>
+    <title>%(title)s</title>
+    <script>
+      window.location.href = '%(url)s';
+    </script>
+    <meta http-equiv="refresh" content="1; url=%(url)s">
+  </head>
+  <body>
+    <p>The main content can be found <a href="%(url)s">here</a></p>
+  </body>
+</html>''' % {'title': part.title, 'url': '%s.html' % part.id})
+            download_part(part.title, part, body_zip)
             body_zip.close()
             return Response(body=str(body.getvalue()),
                             headers=[('Content-Type', 'application/zip'),

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>${part.title}</title>
+    <link rel="stylesheet" href="_static/application.min.css"/>
+  </head>
+  <body>
+    <nav class="top-bar">
+      <div class="top-bar-title"><a href="${request.route_url('root')}">Web Teaching Environment</a></div>
+      <div class="top-bar-right">
+        <ul class="menu">
+          <li><a href="${request.route_url('part.view', pid=part.id)}">View Online</a></li>
+        </ul>
+      </div>
+    </nav>
+    <nav>
+      <ul class="breadcrumbs">
+        <py:if test="parents">
+          <li py:for="parent in parents">
+            <a href="${parent.id}.html">${parent.title}</a>
+          </li>
+        </py:if>
+        <li>${part.title}</li>
+      </ul>
+    </nav>
+    <article class="row">
+      <div class="column small-12">
+        <nav py:if="part.type in ['page', 'task']" class="part-pagination">
+          <form role="navigation" aria-label="Pagination" class="row collapse" action="#">
+            <div class="column small-2 medium-2 text-center">
+              <py:if test="part.prev">
+                <a href="${part.prev.id}.html" class="large-font"><span class="fi-previous"> </span><span class="show-for-sr">Previous Page</span></a>
+              </py:if><py:else>
+                <span class="large-font gray"><span class="fi-previous"> </span><span class="show-for-sr">No Previous Page</span></span>
+              </py:else>
+            </div>
+            <div class="column small-8 medium-8">
+              <select><option py:for="page in part.parent.children" value="${page.id}.html" py:attrs="{'selected': 'selected' if page.id == part.id else None}">${page.title}</option></select>
+            </div>
+            <div class="column small-2 medium-2 text-center">
+              <py:if test="part.next">
+                <a href="${part.next.id}.html" class="large-font"><span class="fi-next"> </span><span class="show-for-sr">Next Page</span></a>
+              </py:if><py:else>
+               <span class="large-font gray"><span class="fi-next"> </span><span class="show-for-sr">No Next Page</span></span>
+              </py:else>
+            </div>
+          </form>
+        </nav>
+        <h1>${part.title}</h1>
+        <div py:if="part.compiled_content" class="rest textbook">
+          ${literal(part.compiled_content.replace('%s/files/name' % request.route_url('part.view', pid=part.id), '%s' % part.id))}
+        </div>
+        <div py:if="part.templates">
+          <h2>Templates</h2>
+          You can find the templates for this ${part.type} <a href="${part.id}">here</a>.
+        </div>
+        <py:if test="[child for child in part.children if child.allow('view', request.current_user)]">
+          <h2 py:if="part.type == 'module'">Tutorials &amp; Exercises</h2>
+          <h2 py:if="part.type in ['tutorial', 'exercise']">Pages</h2>
+          <ul class="no-symbol">
+            <li py:for="child in part.children" py:if="child.allow('view', request.current_user)">
+              <h3><a href="${child.id}.html">${child.title}</a></h3>
+              <div py:if="child.summary" class="rest">${literal(child.summary.replace('%s/files/name' % request.route_url('part.view', pid=part.id), '%s' % part.id))}</div>
+            </li>
+          </ul>
+        </py:if>
+        <nav py:if="part.type in ['page', 'task']" class="part-pagination">
+          <form role="navigation" aria-label="Pagination" class="row collapse" action="#">
+            <div class="column small-2 medium-2 text-center">
+              <py:if test="part.prev">
+                <a href="${part.prev.id}.html" class="large-font"><span class="fi-previous"> </span><span class="show-for-sr">Previous Page</span></a>
+              </py:if><py:else>
+                <span class="large-font gray"><span class="fi-previous"> </span><span class="show-for-sr">No Previous Page</span></span>
+              </py:else>
+            </div>
+            <div class="column small-8 medium-8">
+              <select><option py:for="page in part.parent.children" value="${page.id}.html" py:attrs="{'selected': 'selected' if page.id == part.id else None}">${page.title}</option></select>
+            </div>
+            <div class="column small-2 medium-2 text-center">
+              <py:if test="part.next">
+                <a href="${part.next.id}.html" class="large-font"><span class="fi-next"> </span><span class="show-for-sr">Next Page</span></a>
+              </py:if><py:else>
+               <span class="large-font gray"><span class="fi-next"> </span><span class="show-for-sr">No Next Page</span></span>
+              </py:else>
+            </div>
+          </form>
+        </nav>
+      </div>
+    </article>
+    <script src="_static/jquery.min.js"></script>
+    <script>
+      $('.part-pagination form select').on('change', function() {
+          var select = $(this);
+          var form = select.parents('form');
+          form.attr('action', select.val());
+          form.submit();
+      });
+    </script>
+  </body>
+</html>

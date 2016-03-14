@@ -700,7 +700,6 @@ class Part(Base):
         return builder.generate()
 
 
-
 Index('parts_parent_id_ix', Part.parent_id)
 
 
@@ -812,7 +811,10 @@ class Asset(Base):
                          highlight=True,
                          attrs={'class': 'save'})
             builder.menu('Download',
-                         request.route_url('file.view', pid=part.id, filename=self.filename, _query=[('download', 'true')]))
+                         request.route_url('file.view',
+                                           pid=part.id,
+                                           filename=self.filename,
+                                           _query=[('download', 'true')]))
             builder.group('Delete')
             builder.menu('Discard Changes',
                          request.route_url('part.reset-files',
@@ -824,9 +826,10 @@ class Asset(Base):
                                                                    'Please confirm that you wish to discard the ' +
                                                                    'changes you made to the file ' +
                                                                    '"%s" and reset it ' % (self.filename) +
-                                                                   'to its initial content.' ,
-                                                                    "Don't Discard", {'label': 'Discard',
-                                                                                      'class_': 'alert'})})
+                                                                   'to its initial content.',
+                                                                   "Don't Discard",
+                                                                   {'label': 'Discard',
+                                                                    'class_': 'alert'})})
         return builder.generate()
 
 
