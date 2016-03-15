@@ -1,0 +1,52 @@
+<py:extends href="wte:templates/layout/centred.kajiki">
+  <py:block name="title">${asset.filename} - Edit</py:block>
+  <py:block name="content">
+    <py:import href="wte:templates/helpers/form.kajiki" alias="form"/>
+    <h1>${asset.filename} - Edit</h1>
+    <form action="${request.route_url('asset.edit', pid=part.id, aid=asset.id)}" method="post" enctype="multipart/form-data">
+      ${form.csrf_field()}
+      <div class="row">
+        <div class="column small-12 medium-8 large-6 end">
+          ${form.field('text', 'filename', 'Filename', value=asset.filename)}
+        </div>
+      </div>
+      <div class="row">
+        <div class="column small-12 medium-8 large-6 end">
+          ${form.field('select', 'mimetype', 'Type', value=asset.mimetype, values=[('other', '--- Other ---'), ('text/html', 'HTML'), ('text/javascript', 'JavaScript'), ('text/css', 'CSS')])}
+          ${form.field('text', 'mimetype_other', '', value=asset.mimetype)}
+        </div>
+      </div>
+      <div class="row">
+        <div class="column small-12 medium-8 large-6 end">
+          <py:if test="asset.mimetype.startswith('text/')">
+            ${form.field('textarea', 'content', 'Content', value=asset.data.decode('utf8') if asset.data else '', extra_attrs={'style': 'height: 200px'})}
+          </py:if><py:else>
+            ${form.field('file', 'data', 'File (leave empty to keep the %s unchanged)' % asset.type)}
+          </py:else>
+        </div>
+      </div>
+      <div class="row">
+        <div class="column small-12 medium-8 large-6 end text-right">
+          <a href="${request.route_url('part.view', pid=part.id)}" class="button secondary">Don't Update</a>
+          <input type="submit" value="Update" class="button"/>
+        </div>
+      </div>
+    </form>
+  </py:block>
+  <py:block name="body_script">
+    <script>
+    var mimetype = ($('select[name=mimetype]'));
+    if(mimetype.val() != 'other') {
+        $('input[name=mimetype_other]').hide();
+    }
+    mimetype.on('change', function() {
+        if(mimetype.val() == 'other') {
+            $('input[name=mimetype_other]').show();
+        } else {
+            $('input[name=mimetype_other]').hide();
+        }
+    });
+    </script>
+  </py:block>
+  
+</py:extends>

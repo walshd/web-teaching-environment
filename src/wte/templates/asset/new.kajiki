@@ -1,0 +1,88 @@
+<py:extends href="wte:templates/layout/centred.kajiki">
+  <py:block name="title">${part.title} - Add ${request.matchdict['new_type'].title()}</py:block>
+  <py:block name="content">
+    <py:import href="wte:templates/helpers/form.kajiki" alias="form"/>
+    <div class="drag-n-drop-overlay"><span class="fi-upload"> </span><div class="progress" role="progressbar" tabindex="0" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"><span class="progress-meter" style="width: 0;"></span></div></div>
+    <h1>${part.title} - Add ${request.matchdict['new_type'].title()}</h1>
+    <form action="${request.route_url('asset.new', pid=part.id, new_type=request.matchdict['new_type'])}" method="post" enctype="multipart/form-data">
+      ${form.csrf_field()}
+      <div class="row">
+        <div class="column small-12 medium-8 large-6 end">
+          ${form.field('file', 'data', 'File')}
+        </div>
+      </div>
+      <div class="row">
+        <div class="column small-12 medium-8 large-6 end">
+          ${form.field('text', 'filename', 'Filename (leave blank to use uploaded file\'s filename)')}
+        </div>
+      </div>
+      <div class="row">
+        <div class="column small-12 medium-8 large-6 end text-right">
+          <a href="${request.route_url('part.view', pid=part.id)}" class="button secondary">Don't Add</a>
+          <input type="submit" value="Add" class="button"/>
+        </div>
+      </div>
+    </form>
+  </py:block>
+  <py:block name="body_script">
+    <script>
+    if(window.FileReader) {
+        var article = $('article');
+        $(document).on('dragenter', function(ev) {
+            ev.stopPropagation();
+            ev.preventDefault();
+            article.addClass('drag-n-drop');
+        });
+        $(document).on('dragover', function(ev) {
+            ev.stopPropagation();
+            ev.preventDefault();
+            article.addClass('drag-n-drop');
+        });
+        $(document).on('dragleave', function(ev) {
+            ev.stopPropagation();
+            ev.preventDefault();
+            article.removeClass('drag-n-drop');
+        });
+        $(document).on('drop', function (ev) {
+            ev.stopPropagation();
+            ev.preventDefault();
+            var dt = ev.originalEvent.dataTransfer;
+            if(dt.files) {
+                if(dt.files.length != 0) {
+                    var data = new FormData();
+                    data.append('data', dt.files[0]);
+                    data.append('csrf_token', '${request.session.get_csrf_token()}');
+                    article.find('.progress').show();
+                    var promise = $.ajax($('form').attr('action'), {
+                        xhr: function() {
+                            var xhr = $.ajaxSettings.xhr();
+                            if(xhr.upload) {
+                                xhr.upload.addEventListener('progress', function(ev) {
+                                    var progress = ev.loaded || ev.position;
+                                    var total = ev.total;
+                                    if(total != 0) {
+                                    	article.find('.progress').attr('aria-valuenow', progress / total * 100);
+                                        article.find('.progress-meter').css('width', progress / total * 100 + '%');
+                                    } else {
+                                        article.find('.progress-meter').css('width', 0);
+                                    }
+                                }, false);
+                            }
+                            return xhr;
+                        },
+                        type: 'POST',
+                        contentType: false,
+                        processData: false,
+                        cache: false,
+                        data: data
+                    });
+                    promise.then(function() {
+                        window.location = '${request.route_url('part.view', pid=part.id)}';
+                    });
+                }
+            }
+        });
+    }
+    </script>
+  </py:block>
+</py:extends>

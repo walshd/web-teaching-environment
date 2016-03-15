@@ -798,7 +798,10 @@ class Asset(Base):
                              highlight=True)
                 builder.group('Delete')
                 builder.menu('Delete',
-                             request.route_url('asset.edit', pid=part.id, aid=self.id),
+                             request.route_url('asset.delete',
+                                               pid=part.id,
+                                               aid=self.id,
+                                               _query=[('csrf_token', request.session.get_csrf_token())]),
                              icon='fi-trash',
                              attrs={'class': 'alert post-link',
                                     'data-wte-confirm': confirm_delete('asset', self.filename, False)})

@@ -20,13 +20,12 @@ from pyramid.httpexceptions import (HTTPSeeOther, HTTPNotFound, HTTPNotModified)
 from pyramid.response import Response
 from pyramid.view import view_config
 from pywebtools import text
-from pywebtools.renderer import render
 from sqlalchemy import and_
 
 from wte.decorators import (current_user, require_logged_in)
 from wte.models import (DBSession, Part, Asset)
 from wte.views.part import (create_part_crumbs, get_user_part_progress)
-from wte.util import (unauthorised_redirect)
+from wte.util import (unauthorised_redirect, CSRFSchema, State)
 
 
 def init(config):
@@ -54,7 +53,7 @@ def init(config):
     config.add_route('file.save', '/parts/{pid}/files/id/{fid}/save')
 
 
-class NewAssetSchema(formencode.Schema):
+class NewAssetSchema(CSRFSchema):
     u"""The :class:`~wte.views.backend.NewAssetSchema` handles the
     validation of a new :class:`~wte.models.Asset`.
     """
@@ -64,8 +63,7 @@ class NewAssetSchema(formencode.Schema):
     u"""The asset's data"""
 
 
-@view_config(route_name='asset.new')
-@render({'text/html': 'asset/new.html'})
+@view_config(route_name='asset.new', renderer='wte:templates/asset/new.kajiki')
 @current_user()
 @require_logged_in()
 def new(request):
@@ -87,7 +85,7 @@ def new(request):
                     schema = NewAssetSchema()
                     if request.matchdict['new_type'] == 'asset':
                         schema.fields['data'].not_empty = True
-                    params = schema.to_python(request.params)
+                    params = schema.to_python(request.params, State(request=request))
                     if not params['filename'] and params['data'] is None:
                         raise formencode.Invalid('You must specify either a file or filename',
                                                  None,
@@ -125,12 +123,10 @@ def new(request):
                         dbsession.add(new_asset)
                         part.all_assets.append(new_asset)
                     dbsession.add(part)
-                    request.session.flash('Your new %s has been created' % (request.matchdict['new_type']),
-                                          queue='info')
                     raise HTTPSeeOther(request.route_url('part.view', pid=part.id))
                 except formencode.Invalid as e:
-                    e.params = request.params
-                    return {'e': e,
+                    return {'errors': e.error_dict,
+                            'values': request.params,
                             'part': part,
                             'crumbs': crumbs}
             return {'part': part,
@@ -141,7 +137,7 @@ def new(request):
         raise HTTPNotFound()
 
 
-class EditAssetSchema(formencode.Schema):
+class EditAssetSchema(CSRFSchema):
     u"""The :class:`~wte.views.backend.EditAssetSchema` handles the
     validation of updates to an :class:`~wte.models.Asset`.
     """
@@ -157,8 +153,7 @@ class EditAssetSchema(formencode.Schema):
     u"""The asset's content"""
 
 
-@view_config(route_name='asset.edit')
-@render({'text/html': 'asset/edit.html'})
+@view_config(route_name='asset.edit', renderer='wte:templates/asset/edit.kajiki')
 @current_user()
 @require_logged_in()
 def edit(request):
@@ -180,7 +175,7 @@ def edit(request):
                                          'url': request.current_route_url()})
             if request.method == u'POST':
                 try:
-                    params = EditAssetSchema().to_python(request.params)
+                    params = EditAssetSchema().to_python(request.params, State(request=request))
                     dbsession = DBSession()
                     with transaction.manager:
                         dbsession.add(asset)
@@ -211,11 +206,10 @@ def edit(request):
                         asset.mimetype = mimetype
                     dbsession.add(part)
                     dbsession.add(asset)
-                    request.session.flash('Your %s has been updated' % (asset.type), queue='info')
                     raise HTTPSeeOther(request.route_url('part.view', pid=part.id))
                 except formencode.Invalid as e:
-                    e.params = request.params
-                    return {'e': e,
+                    return {'errors': e.error_dict,
+                            'values': request.params,
                             'part': part,
                             'asset': asset,
                             'crumbs': crumbs}
@@ -228,8 +222,7 @@ def edit(request):
         raise HTTPNotFound()
 
 
-@view_config(route_name='asset.delete')
-@render({'text/html': 'asset/delete.html'})
+@view_config(route_name='asset.delete', renderer='wte:templates/asset/delete.kajiki')
 @current_user()
 @require_logged_in()
 def delete(request):
@@ -251,18 +244,16 @@ def delete(request):
                                          'url': request.current_route_url()})
             if request.method == u'POST':
                 try:
+                    CSRFSchema().to_python(request.params, State(request=request))
                     dbsession = DBSession()
-                    asset_type = asset.type
                     with transaction.manager:
                         dbsession.add(asset)
                         asset.parts = []
                         dbsession.delete(asset)
                     dbsession.add(part)
-                    request.session.flash('Your %s has been deleted' % (asset_type), queue='info')
                     raise HTTPSeeOther(request.route_url('part.view', pid=part.id))
                 except formencode.Invalid as e:
-                    e.params = request.params
-                    return {'e': e,
+                    return {'errors': e.error_dict,
                             'part': part,
                             'asset': asset,
                             'crumbs': crumbs}
@@ -310,8 +301,7 @@ def view_file(request):
         raise HTTPNotFound()
 
 
-@view_config(route_name='file.save')
-@render({'application/json': True})
+@view_config(route_name='file.save', renderer='json')
 @current_user()
 @require_logged_in()
 def save_file(request):
