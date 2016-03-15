@@ -926,3 +926,26 @@ class TimedTask(Base):
         return self.timestamp - datetime.now()
 
     delta = property(_get_delta)
+    
+    def menu(self, request, part):
+        """Generate the menu for this :class:`~wte.models.TimedTask`.
+        """
+        builder = MenuBuilder()
+        builder.group('Edit',
+                      icon='fi-pencil')
+        builder.menu('Edit',
+                     request.route_url('part.timed_task.edit', pid=part.id, tid=self.id),
+                     icon='fi-pencil',
+                     highlight=True)
+        builder.group('Delete')
+        builder.menu('Delete',
+                     request.route_url('part.timed_task.delete',
+                                       pid=part.id,
+                                       tid=self.id,
+                                       _query={'csrf_token': request.session.get_csrf_token()}),
+                     icon='fi-trash',
+                     attrs={'class': 'alert post-link',
+                            'data-wte-confirm': confirm_delete('timed action',
+                                                               self.title,
+                                                               False)})
+        return builder.generate()
