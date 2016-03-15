@@ -14,7 +14,6 @@ initialises the routes that are handled by that module.
 """
 from pyramid.httpexceptions import HTTPNotFound
 from pyramid.view import view_config
-from pywebtools.renderer import render
 
 from wte.decorators import current_user
 from . import (user, part, asset, user_role, timed_tasks, admin)

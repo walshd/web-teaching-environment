@@ -19,7 +19,6 @@ from mimetypes import guess_type
 from pyramid.httpexceptions import (HTTPSeeOther, HTTPNotFound, HTTPNotModified)
 from pyramid.response import Response
 from pyramid.view import view_config
-from pywebtools import text
 from sqlalchemy import and_
 
 from wte.decorators import (current_user, require_logged_in)
@@ -78,7 +77,7 @@ def new(request):
         if part.allow('edit', request.current_user):
             crumbs = create_part_crumbs(request,
                                         part,
-                                        {'title': 'Add %s' % (text.title(request.matchdict['new_type'])),
+                                        {'title': 'Add %s' % (request.matchdict['new_type'].title()),
                                          'url': request.current_route_url()})
             if request.method == u'POST':
                 try:
@@ -171,7 +170,7 @@ def edit(request):
         if part.allow('edit', request.current_user):
             crumbs = create_part_crumbs(request,
                                         part,
-                                        {'title': 'Edit %s' % (text.title(asset.type)),
+                                        {'title': 'Edit %s' % (asset.type.title()),
                                          'url': request.current_route_url()})
             if request.method == u'POST':
                 try:
