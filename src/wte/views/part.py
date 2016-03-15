@@ -20,8 +20,6 @@ from pyramid.httpexceptions import (HTTPSeeOther, HTTPNotFound, HTTPForbidden)
 from pyramid.response import Response
 from pyramid.renderers import render_to_response
 from pyramid.view import view_config
-from pywebtools.renderer import render
-from pywebtools import text
 from pkg_resources import resource_string
 from sqlalchemy import and_
 try:
@@ -353,7 +351,7 @@ def new(request):
         raise HTTPSeeOther(request.route_url('part.list'))
     crumbs = create_part_crumbs(request,
                                 parent,
-                                {'title': 'Add %s' % (text.title(request.matchdict['new_type'])),
+                                {'title': 'Add %s' % (request.matchdict['new_type'].title()),
                                  'url': request.current_route_url()})
     if request.method == u'POST':
         try:
@@ -590,8 +588,7 @@ def delete(request):
         raise HTTPNotFound()
 
 
-@view_config(route_name='part.preview')
-@render({'application/json': True})
+@view_config(route_name='part.preview', renderer='json')
 @current_user()
 @require_logged_in()
 def preview(request):
