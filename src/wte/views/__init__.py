@@ -53,7 +53,7 @@ def notfound_404(request):
     return {'crumbs': [{'title': 'Not Found'}]}
 
 
-#@view_config(context=Exception, renderer='wte:templates/errors/500.kajiki')
+@view_config(context=Exception, renderer='wte:templates/errors/500.kajiki')
 @current_user()
 def servererror_500(request):
     u"""Handles 500 errors
