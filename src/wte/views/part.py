@@ -69,7 +69,7 @@ def init(config):
       -- :func:`~wte.views.part.download`
     * ``part.reset-files`` -- ``/parts/{pid}/reset_files`` --
       :func:`~wte.views.part.reset_files`
-    * ``userpartprogress.download`` -- ``/users/{uid}/progress/{pid}/download``
+    * ``part.progress.download`` -- ``/users/{uid}/progress/{pid}/download``
       -- :func:`~wte.views.frontend.download_part_progress`
     """
     config.add_route('part.list', '/parts')

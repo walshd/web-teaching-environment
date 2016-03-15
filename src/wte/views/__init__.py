@@ -17,7 +17,7 @@ from pyramid.view import view_config
 from pywebtools.renderer import render
 
 from wte.decorators import current_user
-from . import (user, frontend, part, asset, user_role, timed_tasks, admin)
+from . import (user, part, asset, user_role, timed_tasks, admin)
 
 
 def init(config, settings):
@@ -33,7 +33,6 @@ def init(config, settings):
     user.init(config)
     part.init(config)
     asset.init(config)
-    frontend.init(config)
     user_role.init(config)
     timed_tasks.init(config)
 
