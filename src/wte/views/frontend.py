@@ -33,24 +33,16 @@ def init(config):
     u"""Adds the frontend-specific routes (route name, URL pattern
     handler):
 
-    * ``user.modules`` -- ``/users/{uid}/modules`` --
-      :func:`~wte.views.frontend.user_modules`
     * ``asset.view`` -- ``/parts/{pid}/files/name/assets/{filename}``
       -- :func:`~wte.views.frontend.view_asset`
     * ``file.view`` -- ``/parts/{pid}/files/name/{filename}``
       -- :func:`~wte.views.frontend.view_file`
     * ``file.save`` -- ``/parts/{pid}/files/id/{fid}/save``
       -- :func:`~wte.views.frontend.save_file`
-    * ``part.reset-files`` -- ``/parts/{pid}/reset_files`` --
-      :func:`~wte.views.part.reset_files`
-    * ``userpartprogress.download`` -- ``/users/{uid}/progress/{pid}/download``
-      -- :func:`~wte.views.frontend.download_part_progress`
     """
     config.add_route('asset.view', '/parts/{pid}/files/name/assets/{filename}')
     config.add_route('file.view', '/parts/{pid}/files/name/{filename}')
     config.add_route('file.save', '/parts/{pid}/files/id/{fid}/save')
-    config.add_route('part.reset-files', '/parts/{pid}/reset_files')
-    config.add_route('userpartprogress.download', '/users/{uid}/progress/{pid}/download')
 
 
 @view_config(route_name='file.view')
@@ -122,44 +114,6 @@ def save_file(request):
         raise HTTPNotFound()
 
 
-@view_config(route_name='part.reset-files')
-@render({'text/html': 'part/reset_files.html'})
-@current_user()
-@require_logged_in()
-def reset_files(request):
-    u"""Handles the ``/parts/{pid}/reset_files`` URL, providing
-    the UI and backend for resetting all :class:`~wte.models.Assets` of a
-    :class:`~wte.models.Part` to the default for the current user.
-
-    Requires that the user has "view" rights on the current
-    :class:`~wte.models.Part`.
-    """
-    dbsession = DBSession()
-    part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
-    if part:
-        if part.allow('view', request.current_user):
-            crumbs = create_part_crumbs(request,
-                                        part,
-                                        {'title': 'Discard all Changes',
-                                         'url': request.current_route_url()})
-            if request.method == u'POST':
-                with transaction.manager:
-                    progress = get_user_part_progress(dbsession, request.current_user, part)
-                    for user_file in list(progress.files):
-                        if 'filename' not in request.params\
-                                or request.params['filename'] == user_file.filename:
-                            progress.files.remove(user_file)
-                            dbsession.delete(user_file)
-                raise HTTPSeeOther(request.route_url('part.view',
-                                                     pid=request.matchdict['pid']))
-            return {'part': part,
-                    'crumbs': crumbs}
-        else:
-            unauthorised_redirect(request)
-    else:
-        raise HTTPNotFound()
-
-
 @view_config(route_name='asset.view')
 @current_user()
 @require_logged_in()
@@ -188,47 +142,6 @@ def view_asset(request):
                     headerlist.append(('Content-Disposition', str('attachment; filename="%s"' % (asset.filename))))
             return Response(body=asset.data,
                             headerlist=headerlist)
-        else:
-            unauthorised_redirect(request)
-    else:
-        raise HTTPNotFound()
-
-
-@view_config(route_name='userpartprogress.download')
-@current_user()
-@require_logged_in()
-def download_part_progress(request):
-    u"""Handles the ``/users/{uid}/progress/{pid}/download``
-    URL, sending back the complete set of data associated with the
-    :class:`~wte.models.UserPartProgress`.
-
-    Requires that the user has "view" rights on the
-    :class:`~wte.models.UserPartProgress`.
-    """
-    dbsession = DBSession()
-    progress = dbsession.query(UserPartProgress).\
-        filter(UserPartProgress.id == request.matchdict['pid']).first()
-    if progress:
-        if progress.allow('view', request.current_user):
-            basepath = progress.part.title
-            filename = progress.part.title
-            parent = progress.part.parent
-            while parent:
-                basepath = '%s/%s' % (parent.title, basepath)
-                filename = '%s - %s' % (parent.title, filename)
-                parent = parent.parent
-            basepath = '%s/' % (basepath)
-            filename = '%s.zip' % (filename)
-            body = StringIO()
-            zipfile = ZipFile(body, mode='w')
-            for user_file in progress.files:
-                zipfile.writestr('%s%s' % (basepath, user_file.filename), user_file.data)
-            for asset in progress.part.assets:
-                zipfile.writestr('%s/assets/%s' % (basepath, asset.filename), asset.data)
-            zipfile.close()
-            return Response(body=body.getvalue(),
-                            headerlist=[('Content-Type', 'application/zip'),
-                                        ('Content-Disposition', str('attachment; filename="%s"' % (filename)))])
         else:
             unauthorised_redirect(request)
     else:

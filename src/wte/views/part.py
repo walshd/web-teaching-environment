@@ -67,6 +67,10 @@ def init(config):
       -- :func:`~wte.views.part.export`
     * ``part.download`` -- ``/parts/{pid}/download``
       -- :func:`~wte.views.part.download`
+    * ``part.reset-files`` -- ``/parts/{pid}/reset_files`` --
+      :func:`~wte.views.part.reset_files`
+    * ``userpartprogress.download`` -- ``/users/{uid}/progress/{pid}/download``
+      -- :func:`~wte.views.frontend.download_part_progress`
     """
     config.add_route('part.list', '/parts')
     config.add_route('part.new', '/parts/new/{new_type}')
@@ -81,6 +85,8 @@ def init(config):
     config.add_route('part.change_status', '/parts/{pid}/change_status')
     config.add_route('part.export', '/parts/{pid}/export')
     config.add_route('part.download', '/parts/{pid}/download')
+    config.add_route('part.reset-files', '/parts/{pid}/reset_files')
+    config.add_route('part.progress.download', '/parts/{pid}/progress/download')
 
 
 def get_user_part_progress(dbsession, user, part):
@@ -993,8 +999,10 @@ class ImportPartSchema(CSRFSchema):
     """
 
     parent_id = formencode.validators.Int(if_missing=None)
+    """The id of the parent :class:`~wte.models.Part` to import into."""
     file = formencode.compound.Pipe(formencode.validators.FieldStorageUploadConverter(not_empty=True),
                                     ImportPartConverter())
+    """The file to import."""
 
 
 @view_config(route_name='part.import', renderer='wte:templates/part/import.kajiki')
@@ -1171,6 +1179,97 @@ def download(request):
             return Response(body=str(body.getvalue()),
                             headers=[('Content-Type', 'application/zip'),
                                      ('Content-Disposition', str('attachment; filename="%s.zip"' % (part.title)))])
+        else:
+            unauthorised_redirect(request)
+    else:
+        raise HTTPNotFound()
+
+
+class ResetFilesSchema(CSRFSchema):
+    """Validator for resetting all the files in the user's :class:`~wte.models.UserPartProgress`
+    to their initial values."""
+
+    filename = formencode.validators.UnicodeString(if_empty=None, if_missing=None)
+    """The optional filename to reset."""
+
+
+@view_config(route_name='part.reset-files', renderer='wte:templates/part/reset_files.kajiki')
+@current_user()
+@require_logged_in()
+def reset_files(request):
+    u"""Handles the ``/parts/{pid}/reset_files`` URL, providing
+    the UI and backend for resetting all :class:`~wte.models.Assets` of a
+    :class:`~wte.models.Part` to the default for the current user.
+
+    Requires that the user has "view" rights on the current
+    :class:`~wte.models.Part`.
+    """
+    dbsession = DBSession()
+    part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
+    if part:
+        if part.allow('view', request.current_user):
+            crumbs = create_part_crumbs(request,
+                                        part,
+                                        {'title': 'Discard all Changes',
+                                         'url': request.current_route_url()})
+            if request.method == u'POST':
+                try:
+                    params = ResetFilesSchema().to_python(request.params, State(request=request))
+                    with transaction.manager:
+                        progress = get_user_part_progress(dbsession, request.current_user, part)
+                        for user_file in list(progress.files):
+                            if not params['filename'] or params['filename'] == user_file.filename:
+                                progress.files.remove(user_file)
+                                dbsession.delete(user_file)
+                    raise HTTPSeeOther(request.route_url('part.view',
+                                                         pid=request.matchdict['pid']))
+                except formencode.Invalid as e:
+                    return {'errors': e.error_dict,
+                            'part': part,
+                            'crumbs': crumbs}
+            return {'part': part,
+                    'crumbs': crumbs}
+        else:
+            unauthorised_redirect(request)
+    else:
+        raise HTTPNotFound()
+
+
+@view_config(route_name='part.progress.download')
+@current_user()
+@require_logged_in()
+def download_part_progress(request):
+    u"""Handles the ``/users/{uid}/progress/{pid}/download``
+    URL, sending back the complete set of data associated with the
+    :class:`~wte.models.UserPartProgress`.
+
+    Requires that the user has "view" rights on the
+    :class:`~wte.models.UserPartProgress`.
+    """
+    dbsession = DBSession()
+    part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
+    if part:
+        if part.allow('view', request.current_user):
+            progress = get_user_part_progress(dbsession, request.current_user, part)
+            basepath = progress.part.title
+            filename = progress.part.title
+            parent = progress.part.parent
+            while parent:
+                basepath = '%s/%s' % (parent.title, basepath)
+                filename = '%s - %s' % (parent.title, filename)
+                parent = parent.parent
+            basepath = '%s/' % (basepath)
+            filename = '%s.zip' % (filename)
+            body = StringIO()
+            zipfile = ZipFile(body, mode='w')
+            for user_file in progress.files:
+                zipfile.writestr('%s%s' % (basepath, user_file.filename), user_file.data)
+            for asset in progress.part.assets:
+                zipfile.writestr('%s/assets/%s' % (basepath, asset.filename), asset.data)
+            zipfile.close()
+            return Response(body=body.getvalue(),
+                            headerlist=[('Content-Type', 'application/zip'),
+                                        ('Content-Disposition', str('attachment; filename="%s"' % (filename)))])
         else:
             unauthorised_redirect(request)
     else:

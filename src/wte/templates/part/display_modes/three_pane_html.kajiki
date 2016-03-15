@@ -22,7 +22,7 @@
           <div class="float-right">${menu.menubar([{'label': 'Download',
                                                     'items': [{'visible': True,
                                                                'label': 'Download',
-                                                               'attrs': {'href': request.route_url('userpartprogress.download', uid=request.current_user.id, pid=progress.id)}}]},
+                                                               'attrs': {'href': request.route_url('part.progress.download', pid=part.id)}}]},
                                                    {'label': 'Reset',
                                                     'items': [{'visible': True,
                                                                'label': 'Discard all Changes',
