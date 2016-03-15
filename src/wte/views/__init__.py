@@ -45,8 +45,7 @@ def root(request):
     return {}
 
 
-@view_config(context=HTTPNotFound)
-@render({'text/html': 'errors/404.html'})
+@view_config(context=HTTPNotFound, renderer='wte:templates/errors/404.kajiki')
 @current_user()
 def notfound_404(request):
     u"""Handles 404 errors
@@ -54,8 +53,7 @@ def notfound_404(request):
     return {'crumbs': [{'title': 'Not Found'}]}
 
 
-#@view_config(context=Exception)
-@render({'text/html': 'errors/500.html'})
+#@view_config(context=Exception, renderer='wte:templates/errors/500.kajiki')
 @current_user()
 def servererror_500(request):
     u"""Handles 500 errors
