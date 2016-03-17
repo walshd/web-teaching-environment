@@ -15,8 +15,6 @@ requires = [
     'pyramid_debugtoolbar',
     'zope.sqlalchemy',
     'waitress',
-    'PyWebTools',
-    'Genshi',
     'mimeparse',
     'decorator',
     'docutils',

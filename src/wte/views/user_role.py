@@ -18,7 +18,6 @@ import transaction
 
 from pyramid.httpexceptions import (HTTPSeeOther, HTTPNotFound)
 from pyramid.view import view_config
-from pywebtools.renderer import render
 from sqlalchemy import and_, or_
 
 from wte.decorators import (current_user, require_logged_in)

@@ -14,9 +14,8 @@ consulte the following documentation: :mod:`pywebtools.text`,
 import asset
 
 from genshi.builder import Markup  # NOQA
-from pywebtools import text  # NOQA
 
-from . import form, frontend  # NOQA
+from . import frontend  # NOQA
 
 
 def version():

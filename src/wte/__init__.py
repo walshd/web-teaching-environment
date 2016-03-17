@@ -10,7 +10,6 @@ the ``WSGIApplication``.
 .. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
 from pyramid.config import Configurator
-from pywebtools import renderer
 from sqlalchemy import engine_from_config
 
 from wte import helpers, views, text_formatter
@@ -26,11 +25,6 @@ def main(global_config, **settings):
     DBSession.configure(bind=engine)
     Base.metadata.bind = engine
     check_database_version()
-    # Init rendering
-    settings['genshi.template_path'] = 'wte:templates'
-    renderer.init(settings, template_defaults={'text/html': {'h': helpers,
-                                                             'crumbs': [],
-                                                             'include_footer': True}})
     # Init configuration
     config = Configurator(settings=settings)
     config.include('kajiki.integration.pyramid')
