@@ -4,7 +4,7 @@
       <ul class="dropdown menu ${class_ if class_ else ''}" data-dropdown-menu="" data-alignment="${alignment}">
         <li py:for="group in groups" py:if="'icon' in group">
           <py:if test="len([item for item in group['items'] if item['visible'] and 'highlight' in item]) == 1">
-            <a py:for="item in group['items']" py:if="'highlight' in item" py:attrs="item['attrs'] if 'attrs' in item else {}"><span class="${item['icon'] if 'icon' in item else 'fi-noicon'}"> </span><span class="show-for-sr">${item['label']}</span></a> 
+            <a py:for="item in group['items']" py:if="item['visible'] and 'highlight' in item" py:attrs="item['attrs'] if 'attrs' in item else {}"><span class="${item['icon'] if 'icon' in item else 'fi-noicon'}"> </span><span class="show-for-sr">${item['label']}</span></a> 
           </py:if><py:else>
             <a href="#"><span class="${group['icon']}"> </span><span class="show-for-sr">${item['label']}</span></a>
             <ul class="menu">
