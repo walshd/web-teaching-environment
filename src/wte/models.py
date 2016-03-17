@@ -619,7 +619,7 @@ class Part(Base):
             if self.type == 'module':
                 # User Menu Item
                 builder.menu('Users',
-                             request.route_url('part.register.settings', pid=self.id),
+                             request.route_url('part.users', pid=self.id),
                              icon='fi-torsos-all')
                 # Access Settings Menu Item
                 if self.status != 'archived':
