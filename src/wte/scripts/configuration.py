@@ -13,9 +13,9 @@ styles.
 import sass
 import uuid
 
-from genshi.template import TemplateLoader, loader, NewTextTemplate
+from kajiki import TextTemplate
 from os import path
-from pkg_resources import resource_filename, resource_exists
+from pkg_resources import resource_filename, resource_exists, resource_string
 from pygments import formatters, styles
 from pyramid.paster import get_appsettings
 
@@ -38,8 +38,7 @@ def init(subparsers):
 def generate_config(args):
     u"""Generates a configuration file based on the default_config.txt template.
     """
-    tmpl_loader = TemplateLoader([loader.package('wte', 'scripts/templates/')])
-    tmpl = tmpl_loader.load('default_config.txt', cls=NewTextTemplate)
+    tmpl = TextTemplate(resource_string('wte', 'scripts/templates/default_config.txt').decode('utf-8'))
     params = {'encrypt_key': uuid.uuid1(),
               'validate_key': uuid.uuid1()}
     if args.sqla_connection_string:
@@ -48,8 +47,7 @@ def generate_config(args):
         params['sqlalchemy_url'] = get_user_parameter('SQL Alchemy Connection String', 'sqlite:///%(here)s/wte_test.db')
 
     with open(args.filename, 'w') as out_f:
-        for data in tmpl.generate(**params).render('text'):
-            out_f.write(data)
+        out_f.write(tmpl(params).render())
 
 
 def generate_custom_styling(args):
