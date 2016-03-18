@@ -222,19 +222,16 @@ def update(request):
                 if param in request.params and request.params[param]:
                     query_params.append((param, request.params[param]))
             try:
+                crumbs = create_part_crumbs(request,
+                                            part,
+                                            [{'title': 'Users',
+                                              'url': request.route_url('part.users', pid=part.id)},
+                                             {'title': 'Update',
+                                              'url': request.current_route_url()}])
+                users = []
+                params = {}
                 params = ActionSchema().to_python(request.params)
-            except formencode.api.Invalid:
-                request.session.flash('Please select the action you wish to apply ' +
-                                      'and the users you wish to apply it to', queue='error')
-                raise HTTPSeeOther(request.route_url('part.users', pid=part.id, _query=query_params))
-            crumbs = create_part_crumbs(request,
-                                        part,
-                                        [{'title': 'Users',
-                                         'url': request.route_url('part.users', pid=part.id)},
-                                         {'title': 'Update',
-                                          'url': request.current_route_url()}])
-            users = dbsession.query(UserPartRole).filter(UserPartRole.id.in_(params['role_id'])).all()
-            try:
+                users = dbsession.query(UserPartRole).filter(UserPartRole.id.in_(params['role_id'])).all()
                 if params['action'] == 'change_role':
                     params = ChangeRoleSchema().to_python(request.params, State(request=request))
                     with transaction.manager:
@@ -272,7 +269,6 @@ def update(request):
                     raise HTTPSeeOther(request.route_url('part.users', pid=request.matchdict['pid'],
                                                          _query=query_params))
             except formencode.api.Invalid as e:
-                print(e)
                 return {'errors': e.error_dict,
                         'values': request.params,
                         'part': part,

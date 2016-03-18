@@ -14,7 +14,11 @@
       </py:case>
       <py:case value="'select'">
         <select name="${field_name}">
-          <option py:for="(value, label) in kwargs['values']" value="${value}" py:attrs="{'selected': 'selected' if 'value' in kwargs and kwargs['value'] == value else None}">${label}</option>
+          <py:if test="defined('values') and field_name in values">
+            <option py:for="(value, label) in kwargs['values']" value="${value}" py:attrs="{'selected': 'selected' if values[field_name] == value else None}">${label}</option>
+          </py:if><py:else>
+            <option py:for="(value, label) in kwargs['values']" value="${value}" py:attrs="{'selected': 'selected' if 'value' in kwargs and kwargs['value'] == value else None}">${label}</option>
+          </py:else>
         </select>
       </py:case>
       <py:else>
