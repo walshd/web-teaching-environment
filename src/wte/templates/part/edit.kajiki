@@ -33,7 +33,7 @@
           </li>
         </ul>
       </div>
-      <form action="${request.route_url('part.edit', pid=part.id)}" method="post" class="column small-12 medium-4 large-5 relative">
+      <form id="editor" action="${request.route_url('part.edit', pid=part.id)}" method="post" class="column small-12 medium-4 large-5 relative">
         ${form.csrf_field()}
         <py:if test="part.type in ['page', 'task']">
           <input type="hidden" name="status" value="available"/>
@@ -63,13 +63,12 @@
           <div class="column small-12 codemirror-border">
             <nav class="menubar float-right">
               <ul class="menu">
-                <li><a href="#"><span class="fi-bold"> </span><span class="show-for-sr">Bold</span></a></li>
-                <li><a href="#"><span class="fi-italic"> </span><span class="show-for-sr">Italic</span></a></li>
+                <li><a href="#" id="bold-button"><span class="fi-bold"> </span><span class="show-for-sr">Bold</span></a></li>
+                <li><a href="#" id="italic-button"><span class="fi-italic"> </span><span class="show-for-sr">Italic</span></a></li>
                 <li class="separator"> </li>
-                <li><a href="#"><span class="fi-arrows-compress"> </span><span class="show-for-sr">Automatic line-wrap</span></a></li>
-                <li><a href="#"><span class="fi-arrows-expand"> </span><span class="show-for-sr">Automatic line-wrap</span></a></li>
+                <li><a href="#" id="linewrap-button"><span class="fi-no-icon">&#x2936;</span><span class="show-for-sr">Automatic line-wrap</span></a></li>
                 <li class="separator"> </li>
-                <li><a href="#"><span class="fi-save"> </span><span class="show-for-sr">Save</span></a></li>
+                <li><a href="#" id="save-button"><span class="fi-save"> </span><span class="show-for-sr">Save</span></a></li>
               </ul>
             </nav>
             ${form.field('textarea', 'content', 'Content', value=part.content, extra_attrs={'data-cm-mimetype': 'text/x-rst'})}
@@ -126,6 +125,25 @@
     }
     $(window).on('resize', resize_page);
     resize_page();
+    
+    // Editor functions
+    function boldText() {
+    	var start = cm.getCursor('from');
+    	var end = cm.getCursor('to')
+    	var selection = cm.getSelection()
+    	cm.replaceRange('**' + selection + '**', start, end);
+    	if(start == end) {
+    		cm.setCursor({line: start.line, ch: start.ch + 2});
+    	} else {
+    		cm.setCursor({line: end.line, ch: end.ch + 4});
+    	}
+    	cm.focus();
+    }
+    $('#bold-button').on('click', function(event) {
+    	event.preventDefault();
+    	boldText();
+    });
+    $()
     
     // Content rendering
     function render_page() {
