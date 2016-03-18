@@ -9,6 +9,8 @@ DEV
 - *NEW*: In the three-pane HTML editor layout, use AJAX to load tutorial
   pages
 - *NEW*: Enable line-numbers in code blocks (#63)
+- *NEW*: Keyboard shortcuts in the part editor (#61)
+- *NEW*: Enable/disable line-wrapping in the part editor (#42)
 - *UPDATE*: Use Kajiki as the rendering engine (#49)
 - *UPDATE*: Improve caching of permission lookups (#49)
 
