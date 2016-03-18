@@ -16,15 +16,14 @@
                                       'title': 'Import a previously exported module'}}]},
                 ])}</div>
     <h1>${title}</h1>
-    <form py:if="'user_id' in request.params" action="${request.route_url('part.list')}" class="row collapse">
-      <input type="hidden" name="user_id" value="${request.params['user_id']}"/>
-      <div class="column small-8 medium-4 medium-offset-6 large-3 large-offset-8">
-        ${form.field('select', 'status', '', values=[('active', 'Active Modules'), ('archived', 'Archived Modules'), ('all', 'All Modules')], value=request.params['status'] if 'status' in request.params else 'active')}
-      </div>
-      <div class="column small-4 medium-2 large-1">
-        <input type="submit" value="Filter" class="button postfix"/>
-      </div>
-    </form>
+    <nav py:if="has_archived">
+      <ul class="menu align-right">
+        <li py:attrs="{'class': 'active' if 'status' in request.params and request.params['status'] == 'all' else None}"><a href="${request.route_url('part.list', _query=[('user_id', request.params['user_id']), ('status', 'all')])}">All</a></li>
+        <li py:attrs="{'class': 'active' if 'status' in request.params and request.params['status'] == 'archived' else None}"><a href="${request.route_url('part.list', _query=[('user_id', request.params['user_id']), ('status', 'archived')])}">Archived</a></li>
+        <li py:attrs="{'class': 'active' if 'status' not in request.params else None}"><a href="${request.route_url('part.list', _query=[('user_id', request.params['user_id'])])}">Current</a></li>
+        <li class="menu-text">Show:</li>
+      </ul>
+    </nav>
     <ul class="no-symbol">
       <li py:for="part in parts">
         <div class="float-right">${menu.menubar(part.menu(request))}</div>

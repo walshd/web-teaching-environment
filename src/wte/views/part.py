@@ -172,7 +172,11 @@ def list_parts(request):
                 missing = '%s has not registered for any modules.' % user.display_name
             parts = dbsession.query(Part).join(UserPartRole)
             status = ['available', 'unavailable']
-            if 'status' in request.params:
+            has_archived = dbsession.query(Part).\
+                join(UserPartRole).filter(and_(Part.type == u'module',
+                                               Part.status == 'archived',
+                                               UserPartRole.user_id == request.params['user_id'])).count() > 0
+            if has_archived and 'status' in request.params:
                 if request.params['status'] == 'all':
                     status.append('archived')
                 elif request.params['status'] == 'archived':
@@ -192,10 +196,12 @@ def list_parts(request):
                                                   Part.status == u'available')).order_by(Part.title).all()
         missing = 'There are currently no modules available.'
         crumbs = [{'title': 'Modules', 'url': request.route_url('part.list'), 'current': True}]
+        has_archived = False
     return {'parts': parts,
             'title': title,
             'missing': missing,
-            'crumbs': crumbs}
+            'crumbs': crumbs,
+            'has_archived': has_archived}
 
 
 @view_config(route_name='part.view')
