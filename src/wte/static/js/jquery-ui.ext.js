@@ -79,7 +79,6 @@ function codemirror_for_textarea(textarea) {
                     component.tabbedEditor('save_scroll');
                 });
                 component.on('keydown', function(ev) {
-                    console.log(ev);
                     if(ev.key && ev.key.toLowerCase() == 's' && ev.ctrlKey) {
                         ev.preventDefault();
                         var tab = component.find('.tabs-title.is-active > a');
