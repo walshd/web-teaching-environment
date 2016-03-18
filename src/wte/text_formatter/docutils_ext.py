@@ -108,7 +108,8 @@ class Pygments(Directive):
     optional_arguments = 1
     final_argument_whitespace = True
     option_spec = {'filename': directives.unchanged,
-                   'startinline': flag_bool_option}
+                   'startinline': flag_bool_option,
+                   'linenos': int}
     has_content = True
 
     def run(self):
@@ -123,7 +124,9 @@ class Pygments(Directive):
                                        filename=self.options['filename'] if 'filename' in self.options else None,
                                        noclasses=False,
                                        style='native',
-                                       cssclass=u'source %s' % (lexer.name))
+                                       cssclass=u'source %s' % (lexer.name),
+                                       linenos='inline' if 'linenos' in self.options else False,
+                                       linenostart=self.options['linenos'] if 'linenos' in self.options else 1)
         parsed = highlight(u'\n'.join(self.content), lexer, formatter)
         return [nodes.raw('', parsed, format='html')]
 
