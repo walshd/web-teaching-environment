@@ -33,6 +33,8 @@ def init(config):
 
     * ``asset.new`` -- ``/parts/{pid}/assets/new/{new_type}`` --
       :func:`~wte.views.asset.new`
+    * ``asset.search`` -- ``/parts/{pid}/assets/search`` --
+      :func:`~wte.views.asset.search`
     * ``asset.edit`` -- ``/parts/{pid}/assets/{aid}/edit`` --
       :func:`~wte.views.asset.edit`
     * ``asset.delete`` -- ``/parts/{pid}/assets/{aid}/delete`` --
@@ -45,6 +47,7 @@ def init(config):
       -- :func:`~wte.views.frontend.save_file`
     """
     config.add_route('asset.new', '/parts/{pid}/assets/new/{new_type}')
+    config.add_route('asset.search', '/parts/{pid}/assets/search')
     config.add_route('asset.edit', '/parts/{pid}/assets/{aid}/edit')
     config.add_route('asset.delete', '/parts/{pid}/assets/{aid}/delete')
     config.add_route('asset.view', '/parts/{pid}/files/name/assets/{filename}')
@@ -363,5 +366,32 @@ def view_asset(request):
                             headerlist=headerlist)
         else:
             unauthorised_redirect(request)
+    else:
+        raise HTTPNotFound()
+
+
+@view_config(route_name='asset.search', renderer='json')
+@current_user()
+@require_logged_in()
+def search(request):
+    """Handles the ``/parts/{pid}/assets/search`` URL, searching
+    for all :class:`~wte.models.Asset` that have a filename that
+    matches the 'q' request parameter and that belong to either the
+    current :class:`~wte.models.Part` or any of its ancestors.
+    The current user must have the "view" permission on the current
+    :class:`~wte.models.Part` to see any results.
+    """
+    dbsession = DBSession()
+    part = dbsession.query(Part).filter(Part.id == request.matchdict[u'pid']).first()
+    if part:
+        if part.allow('view', request.current_user):
+            assets = []
+            if 'q' in request.params:
+                while part is not None:
+                    assets.extend([asset for asset in part.assets if request.params['q'] in asset.filename])
+                    part = part.parent
+            return [{'id': asset.filename, 'value': asset.filename} for asset in assets]
+        else:
+            raise unauthorised_redirect(request)
     else:
         raise HTTPNotFound()

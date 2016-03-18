@@ -222,20 +222,23 @@ def asset_ref_role(name, rawtext, text, lineno, inliner, options={}, content=[])
             groups = match.groups()
             if groups[0]:
                 title = None
-                parent = groups[1] == 'parent'
                 filename = groups[2]
             else:
                 title = groups[4]
-                parent = groups[5] == 'parent'
                 filename = groups[6]
-            part_id = settings.wte_part.parent_id if parent else settings.wte_part.id
-            asset = dbsession.query(Asset).join(Asset.parts).filter(and_(Part.id == part_id,
-                                                                         Asset.filename == filename)).first()
-            if asset:
+            part_ids = []
+            part = settings.wte_part
+            while part is not None:
+                part_ids.append(part.id)
+                part = part.parent
+            data = dbsession.query(Asset, Part).join(Asset.parts).filter(and_(Part.id.in_(part_ids),
+                                                                                Asset.filename == filename)).first()
+            if data:
+                asset, part = data
                 if asset.mimetype.startswith('image/'):
                     result.append(nodes.image(rawtext,
                                               uri=request.route_url('asset.view',
-                                                                    pid=part_id,
+                                                                    pid=part.id,
                                                                     filename=asset.filename),
                                               alt=title if title else asset.filename))
                 else:
@@ -243,7 +246,7 @@ def asset_ref_role(name, rawtext, text, lineno, inliner, options={}, content=[])
                                                   title if title else asset.filename,
                                                   internal=False,
                                                   refuri=request.route_url('asset.view',
-                                                                           pid=part_id,
+                                                                           pid=part.id,
                                                                            filename=asset.filename,
                                                                            _query=[('download', 'true')])))
             else:

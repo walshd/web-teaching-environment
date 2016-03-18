@@ -41,6 +41,8 @@ def init(config):
     * ``part.list`` -- ``/parts`` -- :func:`~wte.views.part.list_parts`
     * ``part.new`` -- ``/parts/new`` --
       :func:`~wte.views.part.new`
+    * ``part.search`` -- ``/parts/search`` --
+      :func:`~wte.views.part.search`
     * ``part.import`` -- ``/parts/import`` --
       :func:`~wte.views.part.import_file`
     * ``part.view`` -- ``/parts/{pid}`` --
@@ -73,6 +75,7 @@ def init(config):
     config.add_route('part.list', '/parts')
     config.add_route('part.new', '/parts/new/{new_type}')
     config.add_route('part.import', '/parts/import')
+    config.add_route('part.search', '/parts/search')
     config.add_route('part.view', '/parts/{pid}')
     config.add_route('part.edit', '/parts/{pid}/edit')
     config.add_route('part.delete', '/parts/{pid}/delete')
@@ -1277,3 +1280,20 @@ def download_part_progress(request):
             unauthorised_redirect(request)
     else:
         raise HTTPNotFound()
+
+@view_config(route_name='part.search', renderer='json')
+@current_user()
+@require_logged_in()
+def search(request):
+    """Handles the ``/parts/search`` URL, searching all
+    :class:`~wte.models.Part` for matches to the request parameter 'q'.
+    Returns all :class:`~wte.models.Part` that the current user is
+    allowed to view.
+    """
+    dbsession = DBSession()
+    parts = []
+    if 'q' in request.params and request.params['q']:
+        for part in dbsession.query(Part).filter(Part.title.like('%%%s%%' % request.params['q'])):
+            if part.allow('view', request.current_user):
+                parts.append({'id': part.id, 'value': part.title})
+    return parts

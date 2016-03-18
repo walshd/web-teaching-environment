@@ -10,25 +10,31 @@
           <li class="accordion-item" data-accordion-item="">
             <a href="#" class="accordion-title">Assets</a>
             <div class="accordion-content" data-tab-content="">
-            List of assets available goes here.
+              <form action="${request.route_url('asset.search', pid=part.id)}" class="row collapse search-form">
+                <div class="column small-8">
+                  <input type="text" name="q" placeholder="Search by filename"/>
+                </div>
+                <div class="column small-4">
+                  <input type="submit" value="Search" class="button postfix"/>
+                </div>
+              </form>
+              <ul class="no-symbol" data-rest-directive="asset">
+              </ul>
             </div>
           </li>
           <li class="accordion-item" data-accordion-item="">
             <a href="#" class="accordion-title">Cross-references</a>
             <div class="accordion-content" data-tab-content="">
-            Search box for cross-references goes here.
-            </div>
-          </li>
-          <li class="accordion-item" data-accordion-item="">
-            <a href="#" class="accordion-title">Blocks</a>
-            <div class="accordion-content" data-tab-content="">
-            Helpers for creating blocks go here.
-            </div>
-          </li>
-          <li class="accordion-item" data-accordion-item="">
-            <a href="#" class="accordion-title">Tables</a>
-            <div class="accordion-content" data-tab-content="">
-            Helpers for creating tables go here.
+              <form action="${request.route_url('part.search')}" class="row collapse search-form">
+                <div class="column small-8">
+                  <input type="text" name="q" placeholder="Search by title"/>
+                </div>
+                <div class="column small-4">
+                  <input type="submit" value="Search" class="button postfix"/>
+                </div>
+              </form>
+              <ul class="no-symbol" data-rest-directive="crossref">
+              </ul>
             </div>
           </li>
         </ul>
@@ -226,6 +232,31 @@
     // Make list element sortable
     $('#children').sortable();
     $('#templates').sortable();
+    
+    // Search form handler
+    $('.search-form').on('submit', function(ev) {
+        ev.preventDefault();
+        var form = $(this);
+        $.ajax(form.attr('action'), {
+            data: form.serialize(),
+            dataType: 'json'
+        }).then(function(data) {
+            var list = form.next();
+            list.empty();
+            if(data.length == 0) {
+                list.append('Nothing found');
+            } else {
+                for(var idx = 0; idx < data.length; idx++) {
+                    list.append('<li><a href="#" data-cm-insert="' + data[idx].id + '">' + data[idx].value + '</a></li>');
+                }
+            }
+        });
+    });
+    $('.search-form + ul').on('click', 'a', function(ev) {
+        ev.preventDefault();
+        var pos = cm.getCursor();
+        cm.replaceRange(':' + $(this).parent().parent().data('rest-directive') + ':`' + $(this).data('cm-insert') + '`', pos, pos);
+    });
     ]]>
     </script>
   </py:block>
