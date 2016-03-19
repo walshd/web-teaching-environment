@@ -54,7 +54,7 @@ class CSRFValidator(formencode.FancyValidator):
 
 
 class CSRFSchema(formencode.Schema):
-    """The class:`wte.util.CSRFSchema` is a base :formencode:class:`formencode.Schema`
+    """The class:`wte.util.CSRFSchema` is a base :class:`formencode.Schema`
     that includes Cross-Site Request Forgery detection.
 
     It should be used as the base class for all specific request schemas.

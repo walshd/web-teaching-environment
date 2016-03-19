@@ -189,7 +189,7 @@ def inline_pygments_role(name, rawtext, text, lineno, inliner, options={}, conte
     """The :func:`~wte.text_formatter.docutils_ext.inline_pygments_role`
     function provides a docutils role that handles inline code highlighting
     using Pygments. The name of the language to use for highlighting is taken
-    from the name of the role (which must be formatted ``code-language_name`.
+    from the name of the role (which must be formatted ``code-language_name``).
     """
     try:
         lexer = get_lexer_by_name(name[5:])

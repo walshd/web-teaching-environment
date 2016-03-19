@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-u"""
-#######################################
-:mod:`wte.views.asset` -- Asset Backend
-#######################################
+"""
+################################
+:mod:`wte.views.asset` -- Assets
+################################
 
 The :mod:`~wte.views.asset` module provides the backend functionality for
 creating, editing, and deleting :class:`~wte.models.Asset`.
@@ -56,7 +56,7 @@ def init(config):
 
 
 class NewAssetSchema(CSRFSchema):
-    u"""The :class:`~wte.views.backend.NewAssetSchema` handles the
+    u"""The :class:`~wte.views.asset.NewAssetSchema` handles the
     validation of a new :class:`~wte.models.Asset`.
     """
     filename = formencode.validators.UnicodeString(if_empty=None, if_missing=None)
@@ -140,7 +140,7 @@ def new(request):
 
 
 class EditAssetSchema(CSRFSchema):
-    u"""The :class:`~wte.views.backend.EditAssetSchema` handles the
+    u"""The :class:`~wte.views.asset.EditAssetSchema` handles the
     validation of updates to an :class:`~wte.models.Asset`.
     """
     filename = formencode.validators.UnicodeString(not_empty=True)

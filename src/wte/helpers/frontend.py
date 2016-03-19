@@ -200,7 +200,7 @@ class MenuBuilder(object):
         :param highlight: Whether to highlight the menu item by displaying it at the top level
         :type highlight: `boolean`
         :param attrs: Additional attributes to set for the menu item link
-        :type attrs: :py:`dict`
+        :type attrs: :class:`dict`
         """
         if not self._group:
             self._group = {'label': '',

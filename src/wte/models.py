@@ -529,7 +529,7 @@ class Part(Base):
         and then returning that.
 
         :return: The content of the first tag in the ``compiled_content``
-        :r_type:`unicode`
+        :r_type: :class:`unicode`
         """
         if self.compiled_content:
             match = re.search(r'<([a-zA-Z+])>', self.compiled_content)
