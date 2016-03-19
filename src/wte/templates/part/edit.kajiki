@@ -75,6 +75,8 @@
                 <li><a href="#" id="linewrap-button"><span class="fi-no-icon">&#x2936;</span><span class="show-for-sr">Automatic line-wrap</span></a></li>
                 <li class="separator"> </li>
                 <li><a href="#" id="save-button"><span class="fi-save"> </span><span class="show-for-sr">Save</span></a></li>
+                <li class="separator"> </li>
+                <li><a href="#" id="help-button"><span>?</span><span class="show-for-sr">Save</span></a></li>
               </ul>
             </nav>
             ${form.field('textarea', 'content', 'Content', value=part.content, extra_attrs={'data-cm-mimetype': 'text/x-rst'})}
@@ -191,6 +193,12 @@
     	save();
     });
     
+    // Show help
+    $('#help-button').on('click', function(ev) {
+    	ev.preventDefault();
+    	$(document).helpViewer('toggle');
+    });
+    
     // Keyboard shortcuts
     $('#editor').on('keydown', function(ev) {
         if(ev.key && ev.ctrlKey) {
@@ -209,7 +217,6 @@
             }
         }
     });
-
     
     // Content rendering
     function render_page() {

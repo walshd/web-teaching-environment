@@ -474,9 +474,11 @@ def edit(request):
                     return {'errors': e.error_dict,
                             'values': request.params,
                             'part': part,
-                            'crumbs': crumbs}
+                            'crumbs': crumbs,
+                            'help': ['user', 'teacher', 'editor', 'index.html']}
             return {'part': part,
-                    'crumbs': crumbs}
+                    'crumbs': crumbs,
+                    'help': ['user', 'teacher', 'editor', 'index.html']}
         else:
             unauthorised_redirect(request)
     else:

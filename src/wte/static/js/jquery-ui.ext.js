@@ -326,23 +326,34 @@ function codemirror_for_textarea(textarea) {
             return this.each(function() {
             	$('#toggle-help').on('click', function(ev) {
             		ev.preventDefault();
-            		$('#help-viewer').toggleClass('show');
+            		$(document).helpViewer('toggle');
             	});
             	$('#help-viewer > a').on('click', function(ev) {
             		ev.preventDefault();
-            		$('#help-viewer').toggleClass('show');
+            		$(document).helpViewer('toggle');
             	});
             	$(window).on('keyup', function(ev) {
             		if(ev.keyCode == 27) {
-                		$('#help-viewer').removeClass('show');
+                		$(document).helpViewer('toggle');
             		}
             	});
             	$(window).on('resize', function() {
             		$(document).helpViewer('resize');
             	});
-            }).helpViewer('resize');
+            	$(window).on('scroll', function() {
+            		if($(document).data('help-visible')) {
+                    	$(document).helpViewer('resize');
+            		}
+            	});
+            })
+        },
+        toggle: function() {
+    		$('#help-viewer').toggleClass('show');
+    		$(document).helpViewer('resize');
+    		$(document).data('help-visible', true);
         },
         resize: function() {
+        	$('#help-viewer').css('top', Math.max(10, 80 - $(window).scrollTop()) + 'px');
         	$('#help-viewer').css('height', $(window).innerHeight() - $('#help-viewer').position().top - 10 + 'px');
         }
     };
