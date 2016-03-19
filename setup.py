@@ -23,8 +23,7 @@ requires = [
     'alembic',
     'inflect',
     'libsass>0.9,<0.10',
-    'asset',
-    'kajiki'
+    'asset'
     ]
 
 setup(name='WebTeachingEnvironment',
