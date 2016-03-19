@@ -1,0 +1,34 @@
+<py:extends href="wte:templates/layout/centred.kajiki">
+  <py:block name="title">${part.title} - Update Users</py:block>
+  <py:block name="content">
+    <py:import href="wte:templates/helpers/form.kajiki" alias="form"/>
+    <h1>${part.title} - Update Users</h1>
+    <form action="${request.route_url('part.users.update', pid=part.id)}" method="post">
+      ${form.csrf_field()}
+      ${form.field('hidden', 'action', '', value=params['action'])}
+      <input py:if="'q' in params and params['q']" type="hidden" name="q" value="${params['q']}"/>
+      <input py:if="'start' in params and params['start']" type="hidden" name="start" value="${params['start']}"/>
+      <input py:for="role_id in params['role_id']" type="hidden" name="role_id" value="${role_id}"/>
+      <div class="row">
+        <section py:if="params['action'] == 'remove'" class="column small-12 medium-8 large-6 end">
+          <p>The following users will be removed from the module: ${', '.join([r.user.display_name for r in users])}.</p>
+        </section>
+        <section py:if="params['action'] == 'change_role'" class="column small-12 medium-8 large-6 end">
+          <p>The following users will be assigned a new role: ${', '.join([r.user.display_name for r in users])}.</p>
+          <div class="clearfix">
+            ${form.field('select', 'role', 'Role',values=[('owner', 'Owner'), ('tutor', 'Tutor'), ('student', 'Student')])}
+          </div>
+        </section>
+        <section py:if="params['action'] == 'block'" class="column small-12 medium-8 large-6 end">
+          <p>The following users will be blocked from accessing the module: ${', '.join([r.user.display_name for r in users])}.</p>
+        </section>
+      </div>
+      <div class="row">
+        <section class="column small-12 medium-8 large-6 end text-right">
+          <a href="${request.route_url('users', _query=query_params)}" class="button secondary">Don't Apply</a>
+          <input type="submit" value="Apply Changes" class="button"/>
+        </section>
+      </div>
+    </form>
+  </py:block>
+</py:extends>

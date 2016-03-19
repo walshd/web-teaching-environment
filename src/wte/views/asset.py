@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-u"""
-#######################################
-:mod:`wte.views.asset` -- Asset Backend
-#######################################
+"""
+################################
+:mod:`wte.views.asset` -- Assets
+################################
 
 The :mod:`~wte.views.asset` module provides the backend functionality for
 creating, editing, and deleting :class:`~wte.models.Asset`.
@@ -16,36 +16,47 @@ import hashlib
 import transaction
 
 from mimetypes import guess_type
-from pyramid.httpexceptions import (HTTPSeeOther, HTTPNotFound)
+from pyramid.httpexceptions import (HTTPSeeOther, HTTPNotFound, HTTPNotModified)
+from pyramid.response import Response
 from pyramid.view import view_config
-from pywebtools import text
-from pywebtools.renderer import render
 from sqlalchemy import and_
 
 from wte.decorators import (current_user, require_logged_in)
 from wte.models import (DBSession, Part, Asset)
 from wte.views.part import (create_part_crumbs, get_user_part_progress)
-from wte.util import (unauthorised_redirect)
+from wte.util import (unauthorised_redirect, CSRFSchema, State)
 
 
 def init(config):
-    u"""Adds the asset-specific backend routes (route name, URL pattern
+    u"""Adds the asset-specific routes (route name, URL pattern
     handler):
 
     * ``asset.new`` -- ``/parts/{pid}/assets/new/{new_type}`` --
       :func:`~wte.views.asset.new`
+    * ``asset.search`` -- ``/parts/{pid}/assets/search`` --
+      :func:`~wte.views.asset.search`
     * ``asset.edit`` -- ``/parts/{pid}/assets/{aid}/edit`` --
       :func:`~wte.views.asset.edit`
     * ``asset.delete`` -- ``/parts/{pid}/assets/{aid}/delete`` --
       :func:`~wte.views.asset.delete`
+    * ``asset.view`` -- ``/parts/{pid}/files/name/assets/{filename}``
+      -- :func:`~wte.views.frontend.view_asset`
+    * ``file.view`` -- ``/parts/{pid}/files/name/{filename}``
+      -- :func:`~wte.views.frontend.view_file`
+    * ``file.save`` -- ``/parts/{pid}/files/id/{fid}/save``
+      -- :func:`~wte.views.frontend.save_file`
     """
     config.add_route('asset.new', '/parts/{pid}/assets/new/{new_type}')
+    config.add_route('asset.search', '/parts/{pid}/assets/search')
     config.add_route('asset.edit', '/parts/{pid}/assets/{aid}/edit')
     config.add_route('asset.delete', '/parts/{pid}/assets/{aid}/delete')
+    config.add_route('asset.view', '/parts/{pid}/files/name/assets/{filename}')
+    config.add_route('file.view', '/parts/{pid}/files/name/{filename}')
+    config.add_route('file.save', '/parts/{pid}/files/id/{fid}/save')
 
 
-class NewAssetSchema(formencode.Schema):
-    u"""The :class:`~wte.views.backend.NewAssetSchema` handles the
+class NewAssetSchema(CSRFSchema):
+    u"""The :class:`~wte.views.asset.NewAssetSchema` handles the
     validation of a new :class:`~wte.models.Asset`.
     """
     filename = formencode.validators.UnicodeString(if_empty=None, if_missing=None)
@@ -54,8 +65,7 @@ class NewAssetSchema(formencode.Schema):
     u"""The asset's data"""
 
 
-@view_config(route_name='asset.new')
-@render({'text/html': 'asset/new.html'})
+@view_config(route_name='asset.new', renderer='wte:templates/asset/new.kajiki')
 @current_user()
 @require_logged_in()
 def new(request):
@@ -70,20 +80,20 @@ def new(request):
         if part.allow('edit', request.current_user):
             crumbs = create_part_crumbs(request,
                                         part,
-                                        {'title': 'Add %s' % (text.title(request.matchdict['new_type'])),
+                                        {'title': 'Add %s' % (request.matchdict['new_type'].title()),
                                          'url': request.current_route_url()})
             if request.method == u'POST':
                 try:
                     schema = NewAssetSchema()
                     if request.matchdict['new_type'] == 'asset':
                         schema.fields['data'].not_empty = True
-                    params = schema.to_python(request.params)
+                    params = schema.to_python(request.params, State(request=request))
                     if not params['filename'] and params['data'] is None:
                         raise formencode.Invalid('You must specify either a file or filename',
                                                  None,
                                                  None,
                                                  error_dict={'filename': 'You must specify either a file or filename',
-                                                             'data': 'You must specify either a file or filename'}) 
+                                                             'data': 'You must specify either a file or filename'})
                     dbsession = DBSession()
                     progress = get_user_part_progress(dbsession, request.current_user, part)
                     with transaction.manager:
@@ -115,12 +125,10 @@ def new(request):
                         dbsession.add(new_asset)
                         part.all_assets.append(new_asset)
                     dbsession.add(part)
-                    request.session.flash('Your new %s has been created' % (request.matchdict['new_type']),
-                                          queue='info')
                     raise HTTPSeeOther(request.route_url('part.view', pid=part.id))
                 except formencode.Invalid as e:
-                    e.params = request.params
-                    return {'e': e,
+                    return {'errors': e.error_dict,
+                            'values': request.params,
                             'part': part,
                             'crumbs': crumbs}
             return {'part': part,
@@ -131,8 +139,8 @@ def new(request):
         raise HTTPNotFound()
 
 
-class EditAssetSchema(formencode.Schema):
-    u"""The :class:`~wte.views.backend.EditAssetSchema` handles the
+class EditAssetSchema(CSRFSchema):
+    u"""The :class:`~wte.views.asset.EditAssetSchema` handles the
     validation of updates to an :class:`~wte.models.Asset`.
     """
     filename = formencode.validators.UnicodeString(not_empty=True)
@@ -147,8 +155,7 @@ class EditAssetSchema(formencode.Schema):
     u"""The asset's content"""
 
 
-@view_config(route_name='asset.edit')
-@render({'text/html': 'asset/edit.html'})
+@view_config(route_name='asset.edit', renderer='wte:templates/asset/edit.kajiki')
 @current_user()
 @require_logged_in()
 def edit(request):
@@ -166,11 +173,11 @@ def edit(request):
         if part.allow('edit', request.current_user):
             crumbs = create_part_crumbs(request,
                                         part,
-                                        {'title': 'Edit %s' % (text.title(asset.type)),
+                                        {'title': 'Edit %s' % (asset.type.title()),
                                          'url': request.current_route_url()})
             if request.method == u'POST':
                 try:
-                    params = EditAssetSchema().to_python(request.params)
+                    params = EditAssetSchema().to_python(request.params, State(request=request))
                     dbsession = DBSession()
                     with transaction.manager:
                         dbsession.add(asset)
@@ -201,11 +208,10 @@ def edit(request):
                         asset.mimetype = mimetype
                     dbsession.add(part)
                     dbsession.add(asset)
-                    request.session.flash('Your %s has been updated' % (asset.type), queue='info')
                     raise HTTPSeeOther(request.route_url('part.view', pid=part.id))
                 except formencode.Invalid as e:
-                    e.params = request.params
-                    return {'e': e,
+                    return {'errors': e.error_dict,
+                            'values': request.params,
                             'part': part,
                             'asset': asset,
                             'crumbs': crumbs}
@@ -218,8 +224,7 @@ def edit(request):
         raise HTTPNotFound()
 
 
-@view_config(route_name='asset.delete')
-@render({'text/html': 'asset/delete.html'})
+@view_config(route_name='asset.delete', renderer='wte:templates/asset/delete.kajiki')
 @current_user()
 @require_logged_in()
 def delete(request):
@@ -241,18 +246,16 @@ def delete(request):
                                          'url': request.current_route_url()})
             if request.method == u'POST':
                 try:
+                    CSRFSchema().to_python(request.params, State(request=request))
                     dbsession = DBSession()
-                    asset_type = asset.type
                     with transaction.manager:
                         dbsession.add(asset)
                         asset.parts = []
                         dbsession.delete(asset)
                     dbsession.add(part)
-                    request.session.flash('Your %s has been deleted' % (asset_type), queue='info')
                     raise HTTPSeeOther(request.route_url('part.view', pid=part.id))
                 except formencode.Invalid as e:
-                    e.params = request.params
-                    return {'e': e,
+                    return {'errors': e.error_dict,
                             'part': part,
                             'asset': asset,
                             'crumbs': crumbs}
@@ -261,5 +264,134 @@ def delete(request):
                     'crumbs': crumbs}
         else:
             unauthorised_redirect(request)
+    else:
+        raise HTTPNotFound()
+
+
+@view_config(route_name='file.view')
+@current_user()
+@require_logged_in()
+def view_file(request):
+    u"""Handles the ``parts/{ptid}/pages/{pid}/users/{uid}/files/name/{filename}``
+    URL, sending back the correct :class:`~wte.models.Asset`.
+
+    Requires that the user has "view" rights on the :class:`~wte.models.Part`.
+    It will also only send an :class:`~wte.models.Asset` belonging to the current
+    :class:`~wte.models.User`.
+    """
+    dbsession = DBSession()
+    part = dbsession.query(Part).filter(Part.id == request.matchdict[u'pid']).first()
+    if part:
+        if part.allow('view', request.current_user):
+            progress = get_user_part_progress(dbsession, request.current_user, part)
+            for user_file in progress.files:
+                if user_file.filename == request.matchdict['filename']:
+                    if 'If-None-Match' in request.headers and request.headers['If-None-Match'] == user_file.etag:
+                        raise HTTPNotModified()
+                    headers = [('Content-Type', str(user_file.mimetype))]
+                    if user_file.etag is not None:
+                        headers.append(('ETag', str(user_file.etag)))
+                    if 'download' in request.params:
+                        headers.append(('Content-Disposition',
+                                        str('attachment; filename="%s"' % (user_file.filename))))
+                    return Response(body=user_file.data,
+                                    headerlist=headers)
+            raise HTTPNotFound()
+        else:
+            unauthorised_redirect(request)
+    else:
+        raise HTTPNotFound()
+
+
+@view_config(route_name='file.save', renderer='json')
+@current_user()
+@require_logged_in()
+def save_file(request):
+    u"""Handles the ``/parts/{pid}/files/id/{fid}/save``
+    URL, updating the :class:`~wte.models.Asset`'s content.
+
+    Requires that the user has "view" rights on the :class:`~wte.models.Part`.
+    It will also only update an :class:`~wte.models.Asset` belonging to the
+    current :class:`~wte.models.User`.
+    """
+    dbsession = DBSession()
+    part = dbsession.query(Part).filter(Part.id == request.matchdict[u'pid']).first()
+    if part:
+        if part.allow('view', request.current_user):
+            progress = get_user_part_progress(dbsession, request.current_user, part)
+            for user_file in progress.files:
+                if user_file.id == int(request.matchdict['fid']):
+                    if 'content' in request.params:
+                        with transaction.manager:
+                            dbsession.add(user_file)
+                            user_file.data = request.params['content'].encode('utf-8')
+                            user_file.etag = hashlib.sha512(user_file.data).hexdigest()
+                        return {'status': 'saved'}
+                    else:
+                        return {'status': 'no-changes'}
+            raise HTTPNotFound()
+        else:
+            unauthorised_redirect(request)
+    else:
+        raise HTTPNotFound()
+
+
+@view_config(route_name='asset.view')
+@current_user()
+@require_logged_in()
+def view_asset(request):
+    u"""Handles the ``/parts/{pid}/files/name/assets/{filename}``
+    URL, sending back the correct :class:`~wte.models.Asset`.
+
+    Requires that the user has "view" rights on the :class:`~wte.models.Part`.
+    """
+    dbsession = DBSession()
+    part = dbsession.query(Part).filter(Part.id == request.matchdict[u'pid']).first()
+    if part.type == u'page':
+        part = part.parent
+    asset = dbsession.query(Asset).join(Part.assets).\
+        filter(and_(Asset.filename == request.matchdict[u'filename'],
+                    Part.id == part.id)).first()
+    if part and asset:
+        if part.allow('view', request.current_user):
+            if 'If-None-Match' in request.headers and request.headers['If-None-Match'] == asset.etag:
+                raise HTTPNotModified()
+            headerlist = [('Content-Type', str(asset.mimetype))]
+            if asset.etag is not None:
+                headerlist.append(('ETag', str(asset.etag)))
+            if 'download' in request.params:
+                if request.params['download'].lower() == 'true':
+                    headerlist.append(('Content-Disposition', str('attachment; filename="%s"' % (asset.filename))))
+            return Response(body=asset.data,
+                            headerlist=headerlist)
+        else:
+            unauthorised_redirect(request)
+    else:
+        raise HTTPNotFound()
+
+
+@view_config(route_name='asset.search', renderer='json')
+@current_user()
+@require_logged_in()
+def search(request):
+    """Handles the ``/parts/{pid}/assets/search`` URL, searching
+    for all :class:`~wte.models.Asset` that have a filename that
+    matches the 'q' request parameter and that belong to either the
+    current :class:`~wte.models.Part` or any of its ancestors.
+    The current user must have the "view" permission on the current
+    :class:`~wte.models.Part` to see any results.
+    """
+    dbsession = DBSession()
+    part = dbsession.query(Part).filter(Part.id == request.matchdict[u'pid']).first()
+    if part:
+        if part.allow('view', request.current_user):
+            assets = []
+            if 'q' in request.params:
+                while part is not None:
+                    assets.extend([asset for asset in part.assets if request.params['q'] in asset.filename])
+                    part = part.parent
+            return [{'id': asset.filename, 'value': asset.filename} for asset in assets]
+        else:
+            raise unauthorised_redirect(request)
     else:
         raise HTTPNotFound()

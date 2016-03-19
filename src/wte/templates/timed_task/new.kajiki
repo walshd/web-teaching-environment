@@ -1,0 +1,22 @@
+<py:extends href="wte:templates/layout/centred.kajiki">
+  <py:block name="title">Add Action</py:block>
+  <py:block name="content">
+    <py:import href="wte:templates/helpers/menu.kajiki" alias="menu"/>
+    <py:import href="wte:templates/helpers/form.kajiki" alias="form"/>
+    <h1>Add Action</h1>
+    <form action="${request.route_url('part.timed_task.new', pid=part.id)}" method="post" class="small-12 column end">
+      ${form.csrf_field()}
+      <div class="row">
+        <div class="column small-12 medium-8 large-6 end">
+          ${form.field('select', 'name', 'Task', values=available_tasks)}
+        </div>
+      </div>
+      <div class="row">
+        <div class="column small-12 medium-8 large-6 end text-right">
+          <a href="${request.route_url('part.timed_task', pid=part.id)}" class="button secondary">Don't Create</a>
+          <input type="submit" value="Create" class="button"/>
+        </div>
+      </div>
+      </form>
+  </py:block>
+</py:extends>

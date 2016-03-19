@@ -1,0 +1,44 @@
+<py:extends href="wte:templates/layout/centred.kajiki">
+  <py:block name="title">Add ${request.matchdict['new_type'].title()}</py:block>
+  <py:block name="content">
+    <py:import href="wte:templates/helpers/menu.kajiki" alias="menu"/>
+    <py:import href="wte:templates/helpers/form.kajiki" alias="form"/>
+    <h1>Add ${request.matchdict['new_type'].title()}</h1>
+    <form action="${request.route_url('part.new', new_type=request.matchdict['new_type'])}" method="post">
+      ${form.csrf_field()}
+      <py:if test="'parent_id' in request.params"><input type="hidden" name="parent_id" value="${request.params['parent_id']}"/></py:if>
+      <py:if test="'order' in request.params"><input type="hidden" name="order" value="${request.params['order']}"/></py:if>
+      <py:if test="request.matchdict['new_type'] in ['page', 'task']">
+        <input type="hidden" name="status" value="available"/>
+        <input type="hidden" name="display_mode" value="inherit"/>
+      </py:if>
+      <py:if test="request.matchdict['new_type'] == 'module'"><input type="hidden" name="display_mode" value="default"/></py:if>
+      <div class="row">
+        <div class="column small-12 medium-8 large-6 end">
+          ${form.field('text', 'title', 'Title')}
+        </div>
+      </div>
+      <py:if test="request.matchdict['new_type'] not in ['page', 'task']">
+        <div class="row">
+          <div class="column small-12 medium-8 large-6 end">
+            ${form.field('select', 'status', 'Status', values=[('unavailable', 'Unavailable'), ('available', 'Available'), ('archived', 'Archived')] if request.matchdict['new_type'] == 'module' else [('unavailable', 'Unavailable'), ('available', 'Available')])}
+          </div>
+        </div>
+      </py:if>
+      <py:if test="request.matchdict['new_type'] in ['tutorial', 'exercise']">
+        <div class="row">
+          <div class="column small-12 medium-8 large-6 end">
+            ${form.field('select', 'display_mode', 'Type', values=[('text_only', 'Text Only'), ('three_pane_html', 'Text, Editor &amp; HTML Viewer')])}
+          </div>
+        </div>
+      </py:if>
+      <div class="row">
+        <div class="column small-12 medium-8 large-6 end text-right">
+          <a py:if="'parent_id' not in request.params" href="${request.route_url('part.list')}" class="button  secondary">Don't Create</a>
+          <a py:if="'parent_id' in request.params" href="${request.route_url('part.view', pid=request.params['parent_id'])}" class="button secondary">Don't Create</a>
+          <input type="submit" value="Create" class="button"/>
+        </div>
+      </div>
+    </form>
+  </py:block>
+</py:extends>

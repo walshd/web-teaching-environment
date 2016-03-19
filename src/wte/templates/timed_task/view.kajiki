@@ -1,0 +1,30 @@
+<py:extends href="wte:templates/layout/centred.kajiki">
+  <py:block name="title">Timed Actions for ${part.title}</py:block>
+  <py:block name="content">
+    <py:import href="wte:templates/helpers/menu.kajiki" alias="menu"/>
+    <py:import href="wte:templates/helpers/form.kajiki" alias="form"/>
+    <?py from wte.helpers.frontend import readable_timedelta ?>
+    <h1>Timed Actions for ${part.title}</h1>
+    <form action="${request.route_url('part.timed_task.new', pid=part.id)}" method="post">
+      ${form.csrf_field()}
+      <div class="row collapse">
+        <div class="small-8 medium-6 large-4 column">
+          ${form.field('select', 'name', '', values=available_tasks)}
+        </div>
+        <div class="small-4 medium-3 large-2 column end">
+          <input type="submit" value="Add Action" class="button postfix"/>
+        </div>
+      </div>
+    </form>
+    <ul class="no-symbol">
+      <li py:for="task in part.tasks">
+        <div class="float-right">${menu.menubar(task.menu(request, part))}</div>
+        <h2><a href="">${task.title}</a>
+          <small py:if="task.timestamp" title="${task.timestamp.strftime('on %Y-%m-%d at %H:%M')}">(${readable_timedelta(task.delta)})</small>
+          <span class="label ${'secondary' if task.status == 'ready' else 'success' if task.status == 'completed' else 'alert' if task.status == 'failed' else ''}">${task.status.title()}</span>
+        </h2>
+        <p py:if="task.name == 'change_status' and 'target_status' in task.options">Changing ${part.type} status to &quot;${task.options['target_status']}&quot; ${task.timestamp.strftime('on %Y-%m-%d at %H:%M')}.</p>
+      </li>
+    </ul>
+  </py:block>
+</py:extends>

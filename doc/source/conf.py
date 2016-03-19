@@ -267,6 +267,6 @@ texinfo_documents = [
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'http://docs.python.org/': None,
-                       'http://docs.pylonsproject.org/projects/pyramid/en/latest/': None,
-                       'http://www.formencode.org/en/latest/': None}
+intersphinx_mapping = {'python': ('http://docs.python.org/', None),
+                       'pyramid': ('http://docs.pylonsproject.org/projects/pyramid/en/latest/', None),
+                       'formencode': ('http://www.formencode.org/en/latest/', None)}

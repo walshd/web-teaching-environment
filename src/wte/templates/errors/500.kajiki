@@ -1,0 +1,12 @@
+<py:extends href="wte:templates/layout/centred.kajiki">
+  <py:block name="title">500 - Internal Server Error</py:block>
+  <py:block name="content">
+    <h1>Internal Server Error</h1>
+    <p>Unfortunately something went wrong while the Web Teaching Environment was processing your request.
+      The error has been logged automatically and you do not have to do anything about it.</p>
+    <p>If you do feel that you need to inform your local administrator, please let them know when the
+      error occurred and what you were trying to do at the time.</p>
+    <p>In the meantime, why not have a look at <a href="${request.route_url('part.list')}">what other content is
+      available</a>.</p> 
+  </py:block>
+</py:extends>

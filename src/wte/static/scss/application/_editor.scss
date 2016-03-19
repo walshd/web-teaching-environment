@@ -6,60 +6,60 @@
     overflow: hidden;
 }
 #files {
-    border-bottom: 1px solid #333;
     overflow: hidden;
     position: relative;
-}
-#files .tabs {
-    border-bottom: 1px solid #dfdfdf;
-    padding: 0.5em 2em 0 2em;
-}
-#files .tabs dd {
-    margin-right: 0.5em;
-    margin-bottom: -1px !important;
-}
-#files .tabs dd.active > a, #files .tabs dd.active .menubar > li > a, #files .tabs dd.active .menubar > li > .menu > a {
-    color: $jet;
-}
-#files .tabs dd > a {
-    border-radius: 3px 3px 0 0;
-    border: 1px solid transparent;
-    border-bottom-color: #dfdfdf;
-    background-color: #fff;
-    padding: 0.5rem 3.5em 0.5rem 0.8rem;
-}
-#files .tabs dd.active.modified > a, #files .tabs dd.modified > a {
-    color: #aa0000;
-}
-#files .tabs dd.active.saving img, #files .tabs dd.saving img {
-    display: inline;
-}
-#files .tabs dd.active.saved > a, #files .tabs dd.saved > a {
-    color: #00aa00;
-}
-#files .tabs dd > a, #files .tabs dd .menubar > li > a, #files .tabs dd .menubar > li > .menu > a {
-    color: scale-color($jet, $lightness: 30%);
-}
-#files .tabs dd > a:hover {
-    background-color: #eee;
-}
-#files .tabs dd.active {
-}
-#files .tabs dd.active > a {
-    border-top-color: #dfdfdf;
-    border-right-color: #dfdfdf;
-    border-bottom-color: transparent;
-    border-left-color: #dfdfdf;
-}
-#files .tabs dd.active > a:hover {
-    background-color: #fff;
-}
-#files .tabs-content .content {
-    padding: 0.2em 0.5em;
-}
-#files .tabs-content .content textarea {
-    height: 100%;
-}
-#files .tabs-content .content .CodeMirror {
-    height: 100%;
+    
+    .tabs {
+        border-top: 0;
+        border-left: 0;
+        border-right: 0;
+        margin-left: 1rem;
+        
+        a {
+            transition: color 0.1s, background 0.1s;
+            
+            &.modified {
+                color: $white;
+                background: #ff8888;
+            }
+            &.saving, &.saved {
+                color: $white;
+                background: #88cc88;
+            }
+        }
+        
+        li.is-active {
+            a {
+                border: 1px solid $medium-gray;
+                border-bottom-color: $light-gray;
+                position: relative;
+                top: 2px;
+            }
+        }
+    }
+    
+    .tabs-panel {
+        padding: 0;
+        
+        .editor-wrapper {
+            overflow: hidden;
+        }
+
+        .textarea, .CodeMirror {
+            height: 100%;
+        }
+        .menubar {
+            background: $light-gray;
+            padding-left: 0.5rem;
+            border-top: 1px solid $medium-gray;
+    
+            & > .menu > li > a {
+                font-size: 1.3rem;
+                margin-right: 0.3rem;
+            }
+        }
+    }
+    .menu {
+        z-index: 100;
+    }
 }

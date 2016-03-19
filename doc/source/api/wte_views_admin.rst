@@ -1,2 +1,2 @@
-.. automodule:: wte.views.asset
+.. automodule:: wte.views.admin
    :members:

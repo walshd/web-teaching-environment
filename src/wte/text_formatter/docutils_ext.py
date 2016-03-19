@@ -108,7 +108,8 @@ class Pygments(Directive):
     optional_arguments = 1
     final_argument_whitespace = True
     option_spec = {'filename': directives.unchanged,
-                   'startinline': flag_bool_option}
+                   'startinline': flag_bool_option,
+                   'linenos': int}
     has_content = True
 
     def run(self):
@@ -123,7 +124,9 @@ class Pygments(Directive):
                                        filename=self.options['filename'] if 'filename' in self.options else None,
                                        noclasses=False,
                                        style='native',
-                                       cssclass=u'source %s' % (lexer.name))
+                                       cssclass=u'source %s' % (lexer.name),
+                                       linenos='inline' if 'linenos' in self.options else False,
+                                       linenostart=self.options['linenos'] if 'linenos' in self.options else 1)
         parsed = highlight(u'\n'.join(self.content), lexer, formatter)
         return [nodes.raw('', parsed, format='html')]
 
@@ -186,7 +189,7 @@ def inline_pygments_role(name, rawtext, text, lineno, inliner, options={}, conte
     """The :func:`~wte.text_formatter.docutils_ext.inline_pygments_role`
     function provides a docutils role that handles inline code highlighting
     using Pygments. The name of the language to use for highlighting is taken
-    from the name of the role (which must be formatted ``code-language_name`.
+    from the name of the role (which must be formatted ``code-language_name``).
     """
     try:
         lexer = get_lexer_by_name(name[5:])
@@ -219,20 +222,23 @@ def asset_ref_role(name, rawtext, text, lineno, inliner, options={}, content=[])
             groups = match.groups()
             if groups[0]:
                 title = None
-                parent = groups[1] == 'parent'
                 filename = groups[2]
             else:
                 title = groups[4]
-                parent = groups[5] == 'parent'
                 filename = groups[6]
-            part_id = settings.wte_part.parent_id if parent else settings.wte_part.id
-            asset = dbsession.query(Asset).join(Asset.parts).filter(and_(Part.id == part_id,
-                                                                         Asset.filename == filename)).first()
-            if asset:
+            part_ids = []
+            part = settings.wte_part
+            while part is not None:
+                part_ids.append(part.id)
+                part = part.parent
+            data = dbsession.query(Asset, Part).join(Asset.parts).filter(and_(Part.id.in_(part_ids),
+                                                                              Asset.filename == filename)).first()
+            if data:
+                asset, part = data
                 if asset.mimetype.startswith('image/'):
                     result.append(nodes.image(rawtext,
                                               uri=request.route_url('asset.view',
-                                                                    pid=part_id,
+                                                                    pid=part.id,
                                                                     filename=asset.filename),
                                               alt=title if title else asset.filename))
                 else:
@@ -240,7 +246,7 @@ def asset_ref_role(name, rawtext, text, lineno, inliner, options={}, content=[])
                                                   title if title else asset.filename,
                                                   internal=False,
                                                   refuri=request.route_url('asset.view',
-                                                                           pid=part_id,
+                                                                           pid=part.id,
                                                                            filename=asset.filename,
                                                                            _query=[('download', 'true')])))
             else:

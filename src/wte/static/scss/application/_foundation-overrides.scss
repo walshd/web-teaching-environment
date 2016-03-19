@@ -1,60 +1,65 @@
-.row {
-    &-left {
-        margin: 0;
-    }
-    &-full {
-        max-width: 100%;
-    }
+/* Overrides to make the top-bar look nice */
+.top-bar-title a {
+    padding: 1rem;
+    line-height: 1;
+    display: block;
+    font-size: 0.875rem;
 }
-.panel {
-    .button {
-        margin-bottom: 0;
+.top-bar {
+    a {
+        color: $white;
     }
-}
-table {
-    input[type=checkbox], table input[type=submit], table select {
-        margin-bottom: 0;
-    }
-}
-table {
-    tfoot {
-        ul.pagination {
-            margin:0;
+
+    .menu {
+        a {
+            padding: 1rem 1rem;
+            color: $white;
+            
+            &:hover {
+                color: $white;
+                background-color: $black;
+            }
+        }
+        li {
+            &.active {
+                a {
+                    background-color: $primary-color;
+                }
+            }
+        }
+        .is-dropdown-submenu, .divider {
+            border-color: $black;
+            background-color: $topbar-background;
         }
     }
 }
-h1 .label, h2 .label, h3 .label, h4 .label, h5 .label, h6 .label {
-    vertical-align: top;
-    margin-left: 1em;
-}
-.accordion.dense > .accordion-navigation > a {
-    padding: 0.3rem 0.5rem;
-}
-.button.inline {
-    margin-bottom: 0;
-}
-nav {
-    ul.breadcrumbs {
-        margin-bottom: 0;
-    }
-}
-blockquote {
-    border-left: 0;
-    padding: rem-calc(9 40 0 40);
 
-    p.attribution {
-        display: block;
-        text-align: right;
-        font-size: $blockquote-cite-font-size;
-        color: $blockquote-cite-font-color;
+/* Additional breadcrumb bar styling */
+.breadcrumbs {
+    padding: 0.3rem 1rem 0.3rem 1rem;
+    background: $light-gray;
+    border-bottom: 1px solid $medium-gray;
+}
 
-        a,
-        a:visited {
-          color: $blockquote-cite-link-color;
-        }
-    }
+/* Postfix button addon */
+.button.postfix {
+    display: block;
+    width: 100%;
+    height: ($input-font-size + ($form-spacing * 1.5) - rem-calc(1));
+    padding: $form-spacing / 2;
+}
+
+/* Fix the icon font size for callout close buttons. */
+.callout .close-button {
+    font-size: inherit;
+    line-height: inherit;
+}
+
+/* No dropdown indicator in the menubar */
+.menubar .dropdown.menu > li.is-dropdown-submenu-parent > a {
+    padding-right: 0.2rem;
     
-    cite {
-        text-align: right;
+    &::after {
+        display: none;
     }
 }

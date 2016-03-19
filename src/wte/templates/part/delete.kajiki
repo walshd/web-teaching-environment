@@ -1,0 +1,23 @@
+<py:extends href="wte:templates/layout/centred.kajiki">
+  <py:block name="title">${part.title} - Delete</py:block>
+  <py:block name="content">
+    <py:import href="wte:templates/helpers/menu.kajiki" alias="menu"/>
+    <py:import href="wte:templates/helpers/form.kajiki" alias="form"/>
+    <h1>${part.title} - Delete</h1>
+    <form action="${request.route_url('part.delete', pid=part.id)}" method="post">
+      ${form.csrf_field()}
+      <div class="row">
+        <div class="column small-12 medium-8 large-6 end">
+          <p>Please confirm that you wish to delete the ${part.type} &quot;${part.title}&quot; and
+            all child parts.</p>
+        </div>
+      </div>
+      <div class="row">
+        <div class="column small-12 medium-8 large-6 end text-right">
+          <a href="${request.route_url('part.view', pid=part.id)}" class="button secondary">Don't Delete</a>
+          <input type="submit" value="Delete" class="button alert"/>
+        </div>
+      </div>
+    </form>
+  </py:block>
+</py:extends>

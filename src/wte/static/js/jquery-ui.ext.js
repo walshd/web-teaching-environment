@@ -1,70 +1,3 @@
-(function($) {
-    /**
-     * The dropdownMenu jQuery plugin provides a drop-down GUI menu.
-     */
-    var methods = {
-        init : function(options) {
-            return this.each(function() {
-                var component = $(this);
-                var menu = component.children('ul');
-                var button = component.children('a');
-                component.data('wte-menu', menu);
-                component.data('wte-menu-button', button);
-                menu.css('width', menu.outerWidth() + 'px').css('position', 'absolute');
-                menu.hide();
-                button.on('click', function(ev) {
-                    ev.preventDefault(true);
-                    component.dropdownMenu('show');
-                });
-            });
-        },
-        show : function() {
-            return this.each(function() {
-                var component = $(this);
-                var menu = component.data('wte-menu');
-                component.css('z-index', '100');
-                if (component.data('wte-menu-position') == 'right') {
-                    menu.show().position({
-                        my : 'right top',
-                        at : 'right bottom',
-                        of : component.data('wte-menu-button')
-                    });
-                } else {
-                    menu.show().position({
-                        my : 'left top',
-                        at : 'left bottom',
-                        of : component.data('wte-menu-button')
-                    });
-                }
-                setTimeout(function() {
-                    $(document).on('click.wte-menu', function(ev) {
-                        component.dropdownMenu('hide');
-                    });
-                }, 100);
-            });
-        },
-        hide : function() {
-            return this.each(function() {
-                var component = $(this);
-                var menu = component.data('wte-menu');
-                component.css('z-index', '');
-                menu.hide();
-                $(document).off('click.wte-menu');
-            });
-        }
-    };
-
-    $.fn.dropdownMenu = function(method) {
-        if (methods[method]) {
-            return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
-        } else if (typeof method === 'object' || !method) {
-            return methods.init.apply(this, arguments);
-        } else {
-            $.error('Method ' + method + ' does not exist on jQuery.dropdownMenu');
-        }
-    };
-}(jQuery));
-
 /**
  * Generates a new CodeMirror instance for the given textarea.
  * 
@@ -73,11 +6,11 @@
  */
 function codemirror_for_textarea(textarea) {
     var options = {
-            mode: textarea.data('wte-mimetype'),
+            mode: textarea.data('cm-mimetype'),
             lineNumbers: true,
             indentUnit: 4,
     };
-    var override_options = textarea.data('wte-cm-options');
+    var override_options = textarea.data('cm-options');
     if(override_options) {
         options = $.extend(options, override_options);
     }
@@ -106,65 +39,87 @@ function codemirror_for_textarea(textarea) {
         init : function(options) {
             return this.each(function() {
                 var component = $(this);
-                component.data('wte-options', options);
+                component.data('editor-options', options);
                 component.find('textarea').each(function() {
                     var textarea = $(this);
-                    var tab = component.find('#' + textarea.parent().attr('id') + '-tab');
+                    var tab = component.find('#' + textarea.parents('.tabs-panel').attr('id') + '-tab');
                     var cm = codemirror_for_textarea(textarea);
                     cm.on('change', function(cm, changes) {
-                        clearTimeout(textarea.data('wte-timeout'));
+                        clearTimeout(textarea.data('editor-timeout'));
                         tab.removeClass('saved');
                         tab.removeClass('saving');
                         tab.addClass('modified');
-                        textarea.data('wte-timeout', setTimeout(function() {
+                        textarea.data('editor-timeout', setTimeout(function() {
                             component.tabbedEditor('save', tab, textarea);
-                            }, 10000));
+                        }, options.save_timeout || 10000));
                     });
-                    textarea.data('wte-cm', cm);
+                    textarea.data('editor-cm', cm);
                 });
-                component.find('.tabs a.save').on('click', function(event) {
+                component.find('.tabs-panel a.save').on('click', function(event) {
                 	event.preventDefault();
                 	var link = $(this);
-                	var tab = link.parents('dd');
-                	var tab_id = tab.attr('id');
-                	tab_id = tab_id.substring(0, tab_id.length - 4);
-                	var textarea = component.find('#' + tab_id + ' > textarea');
+                	var tab_id = link.parents('.tabs-panel').attr('id');
+                        var tab = component.find('#' + tab_id + '-tab');
+                	var textarea = component.find('#' + tab_id + ' .editor-wrapper > textarea');
                 	component.tabbedEditor('save', tab, textarea);
                 });
-                component.find('.tabs').on('toggled', function(event, tab) {
-                	var tab_id = tab.children('a').attr('href').substr(1);
-                    $('#' + tab_id).children('textarea').data('wte-cm').refresh();
+                component.find('.tabs').on('change.zf.tabs', function(event, tab) {
+                    var link = tab.children('a')
+                    var tab_id = link.attr('href');
+                    $(tab_id).find('.editor-wrapper > textarea').data('editor-cm').refresh();
+                    if(link.data('tab-filename')) {
+                        var url = component.data('editor-options').viewer_url;
+                        url = url.replace('FILENAME', link.data('tab-filename'));
+                        var iframe = component.data('editor-options').viewer;
+                        iframe.attr('src', url);
+                    }
                 });
                 options.viewer.on('load', function() {
-                    options.viewer.contents().scrollTop(component.data('wte-viewer-scroll-top'));
+                    options.viewer.contents().scrollTop(component.data('editor-viewer-scroll-top'));
                     component.tabbedEditor('save_scroll');
+                });
+                component.on('keydown', function(ev) {
+                    if(ev.key && ev.key.toLowerCase() == 's' && ev.ctrlKey) {
+                        ev.preventDefault();
+                        var tab = component.find('.tabs-title.is-active > a');
+                        var textarea = component.find('.tabs-panel.is-active > .editor-wrapper > textarea');
+                        component.tabbedEditor('save', tab, textarea);
+                    }
                 });
             });
         },
         save : function(tab, textarea) {
             return this.each(function() {
                 var component = $(this);
-                clearTimeout(textarea.data('wte-timeout'));
+                clearTimeout(textarea.data('editor-timeout'));
+                textarea.parents('.tabs-panel').find('a.save span').removeClass('fi-save').addClass('fi-loop');
                 tab.removeClass('saved');
                 tab.addClass('saving');
                 tab.removeClass('modified');
-                url = component.data('wte-options').save_url;
-                url = url.replace('FID', textarea.data('wte-fileid'));
-                clearTimeout(component.data('wte-viewer-scroll-timeout'));
+                url = component.data('editor-options').save_url;
+                url = url.replace('FID', textarea.data('tab-fileid'));
+                clearTimeout(component.data('editor-viewer-scroll-timeout'));
                 $.ajax(url, {
                     type : 'POST',
                     data : {
-                        'content' : textarea.data('wte-cm').getValue()
+                        'content' : textarea.data('editor-cm').getValue()
                     },
                     dataType : 'json'
                 }).complete(function() {
-                    var iframe = component.data('wte-options').viewer;
-                    iframe.attr('src', iframe.attr('src'));
+                    var iframe = component.data('editor-options').viewer;
+                    if(tab.data('tab-filename')) {
+                        var url = component.data('editor-options').viewer_url;
+                        url = url.replace('FILENAME', tab.data('tab-filename'));
+                        iframe.attr('src', url);
+                    } else {
+                        iframe.attr('src', iframe.attr('src'));
+                    }
                     tab.addClass('saved');
-                    textarea.data('wte-timeout', setTimeout(function() {
+                    textarea.data('editor-timeout', setTimeout(function() {
                         tab.removeClass('saved');
                     }, 3000));
                 }).always(function() {
+                    textarea.parents('.tabs-panel').find('a.save span').removeClass('fi-loop').addClass('fi-save');
                     tab.removeClass('saving');
                 });
             });
@@ -172,8 +127,8 @@ function codemirror_for_textarea(textarea) {
         save_scroll : function() {
             return this.each(function() {
                 var component = $(this);
-                component.data('wte-viewer-scroll-top', component.data('wte-options').viewer.contents().scrollTop());
-                component.data('wte-viewer-scroll-timeout', setTimeout(function() {
+                component.data('editor-viewer-scroll-top', component.data('editor-options').viewer.contents().scrollTop());
+                component.data('editor-viewer-scroll-timeout', setTimeout(function() {
                     component.tabbedEditor('save_scroll');
                 }, 100));
             });
@@ -210,7 +165,7 @@ function codemirror_for_textarea(textarea) {
                     ev.preventDefault();
                     var confirm = component.data('wte-confirm');
                     if (confirm) {
-                        var html = '<div class="reveal-modal" data-reveal="">'
+                        var html = '<div id="confirm-modal" class="reveal" data-reveal="">'
                                 + '<h2>' + (confirm.title || 'Please confirm')
                                 + '</h2>' + '<p>' + confirm.msg + '</p>'
                                 + '<div class="text-right">';
@@ -228,9 +183,10 @@ function codemirror_for_textarea(textarea) {
                         html = html + '</div>' + '</div>';
                         var dlg = $(html);
                         $('body').append(dlg);
+                        var reveal = new Foundation.Reveal(dlg);
                         dlg.find('a.cancel').on('click', function(ev) {
                             ev.preventDefault();
-                            dlg.foundation().foundation('reveal', 'close');
+                            reveal.close();
                         });
                         dlg.find('a.ok').on('click', function(ev) {
                             ev.preventDefault();
@@ -240,10 +196,10 @@ function codemirror_for_textarea(textarea) {
                             $('body').append(frm);
                             frm.submit();
                         });
-                        dlg.foundation().foundation('reveal', 'open');
-                        $(document).on('closed.fndtn.reveal', '[data-reveal]', function() {
-                            dlg.remove();
+                        $(document).on('closed.zf.reveal', function() {
+                        	dlg.remove();
                         });
+                        reveal.open();
                     } else {
                         var frm = $('<form action="' + component.attr('href')
                                 + '" method="post"></form>');
@@ -268,32 +224,6 @@ function codemirror_for_textarea(textarea) {
 
 (function($) {
     /**
-     * The fancyFlash jQuery plugin provides a more fancy display of the flash messages.
-     */
-    var methods = {
-        init : function(options) {
-            return this.each(function() {
-                var component = $(this);
-                setTimeout(function() {
-                    component.find('.column, .columns').addClass('minimise');
-                }, 5000);
-            });
-        }
-    };
-
-    $.fn.fancyFlash = function(method) {
-        if (methods[method]) {
-            return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
-        } else if (typeof method === 'object' || !method) {
-            return methods.init.apply(this, arguments);
-        } else {
-            $.error('Method ' + method + ' does not exist on jQuery.fancyFlash');
-        }
-    };
-}(jQuery));
-
-(function($) {
-    /**
      * The partPagination jQuery plugin handles the pagination between Parts. It also
      * handles the updating the progress bar based on the scrolling progress in the
      * container specified via the "scrolling" option.
@@ -305,7 +235,7 @@ function codemirror_for_textarea(textarea) {
                 var form = component.find('form');
                 form.find('select').on('change', function() {
                     var select = $(this);
-                    form.attr('action', form.attr('action').replace('pid', select.val()));
+                    form.attr('action', form.attr('action').replace('PID', select.val()));
                     form.submit();
                 });
                 if(options && options.scrolling) {
@@ -314,26 +244,26 @@ function codemirror_for_textarea(textarea) {
                     var height = 0;
                     if(options.scrolling[0] == window) {
                     	$('body').children().each(function() {
-                    		if($(this).is(':visible')) {
-                        		console.log($(this));
-                        		console.log($(this).outerHeight(true));
-                        		height = height + $(this).outerHeight(true);
-                    		}
+                    	    if($(this).is(':visible')) {
+                        	height = height + $(this).outerHeight(true);
+                    	    }
                     	});
                     } else {
                     	options.scrolling.children().each(function() {
-                    		height = height + $(this).outerHeight(true);
+                    	    height = height + $(this).outerHeight(true);
                     	});
                     }
                     height = height - options.scrolling.innerHeight();
                     options.scrolling.on('scroll', function() {
-                    	var perc = Math.min(progress.min + (progress.diff / height * options.scrolling.scrollTop()),
-                    			progress.max);
-                    	component.find('.meter').css('width', perc + '%');
+                        var perc = Math.min(progress.min + (progress.diff / height * options.scrolling.scrollTop()),
+                                progress.max);
+                        component.find('.progress-meter').css('width', perc + '%');
+                        component.find('.progress').attr('aria-valuenow', perc);
                     });
-                	var perc = Math.min(progress.min + (progress.diff / height * options.scrolling.scrollTop()),
-                			progress.max);
-                	component.find('.meter').css('width', perc + '%');
+                    var perc = Math.min(progress.min + (progress.diff / height * options.scrolling.scrollTop()),
+                            progress.max);
+                    component.find('.progress-meter').css('width', perc + '%');
+                    component.find('.progress').attr('aria-valuenow', perc);
                 }
             });
         }

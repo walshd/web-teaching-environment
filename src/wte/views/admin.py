@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
-u"""
+"""
+#############################################
+:mod:`wte.views.admin` -- Admin view handlers
+#############################################
 
-.. moduleauthor:: Mark Hall <mark.hall@mail.room3b.eu>
+The :mod:`~wte.views.admin` handles the requests relating to general
+administrative functionality.
+
+Routes are defined in :func:`~wte.views.admin.init`.
+
+.. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
 import transaction
 
 from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.view import view_config
-from pywebtools.renderer import render
 
 from wte.decorators import (current_user, require_logged_in)
 from wte.models import (DBSession, Part)
@@ -16,16 +23,27 @@ from wte.util import unauthorised_redirect
 
 
 def init(config):
+    """Adds the admin-specific routes (route name, URL pattern
+    handler):
+
+    * ``admin`` -- ``/admin`` -- :func:`~wte.views.admin.admin`
+    * ``admin.content`` -- ``/admin/content`` --
+      :func:`~wte.views.admin.content_admin`
+    * ``admin.content.regenerate`` -- ``/admin/content/regenerate``
+      -- :func:`~wte.views.admin.content_regenerate`
+    """
     config.add_route('admin', '/admin')
     config.add_route('admin.content', '/admin/content')
     config.add_route('admin.content.regenerate', '/admin/content/regenerate')
 
 
-@view_config(route_name='admin')
-@render({'text/html': 'admin/index.html'})
+@view_config(route_name='admin', renderer='wte:templates/admin/index.kajiki')
 @current_user()
 @require_logged_in()
 def admin(request):
+    """Handles the ``/admin`` URL, displaying all available administrative
+    functions.
+    """
     if request.current_user.has_permission('admin'):
         return {'crumbs': [{'title': 'Administration',
                             'url': request.current_route_url(),
@@ -34,11 +52,13 @@ def admin(request):
         raise unauthorised_redirect(request)
 
 
-@view_config(route_name='admin.content')
-@render({'text/html': 'admin/content.html'})
+@view_config(route_name='admin.content', renderer="wte:templates/admin/content.kajiki")
 @current_user()
 @require_logged_in()
 def content_admin(request):
+    """Handles the ``/admin/content`` URL, displaying all available administrative
+    functions related to the content administrations.
+    """
     if request.current_user.has_permission('admin'):
         return {'crumbs': [{'title': 'Administration',
                             'url': request.route_url('admin')},
@@ -53,14 +73,17 @@ def content_admin(request):
 @current_user()
 @require_logged_in()
 def content_regenerate(request):
+    """Handles the ``/admin/content/regenerate`` URL, regenerating the
+    ``compiled_content`` attribute for all :class:`~wte.models.Part`\ s.
+    """
     if request.current_user.has_permission('admin'):
-        dbsession = DBSession()
-        with transaction.manager:
-            for part in dbsession.query(Part):
-                if part.content:
-                    part.compiled_content = compile_rst(part.content, request, part)
-        request.session.flash('The content of all parts has been regenerated',
-                              queue='info')
+        if request.method == 'POST':
+            dbsession = DBSession()
+            with transaction.manager:
+                for part in dbsession.query(Part):
+                    if part.content:
+                        part.compiled_content = compile_rst(part.content, request, part)
+            request.session.flash('All contents have been regenerated.', queue='info')
         raise HTTPSeeOther(request.route_url('admin.content'))
     else:
         raise unauthorised_redirect(request)

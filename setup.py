@@ -7,7 +7,7 @@ README = open(os.path.join(here, 'README.rst')).read()
 CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 
 requires = [
-    'pyramid',
+    'pyramid>1.6',
     'pyramid_beaker',
     'SQLAlchemy',
     'transaction',
@@ -15,8 +15,6 @@ requires = [
     'pyramid_debugtoolbar',
     'zope.sqlalchemy',
     'waitress',
-    'PyWebTools',
-    'Genshi',
     'mimeparse',
     'decorator',
     'docutils',
@@ -24,7 +22,7 @@ requires = [
     'formencode',
     'alembic',
     'inflect',
-    'libsass',
+    'libsass>0.9,<0.10',
     'asset'
     ]
 

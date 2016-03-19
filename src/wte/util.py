@@ -9,8 +9,10 @@ functions.
 
 .. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
-import logging
+import asset
 import formencode
+import logging
+import math
 import smtplib
 
 from datetime import datetime
@@ -30,6 +32,35 @@ class State(object):
         attributes of the :class:`~wte.util.State`.
         """
         self.__dict__.update(kwargs)
+
+
+class CSRFValidator(formencode.FancyValidator):
+    """Validator that checks a value against the Cross-Site Request Forgery
+    token stored in the user's session."""
+
+    messages = {'invalid_csrf_token': 'The CSRF token is invalid. This might indicate a malicious attack.',
+                'missing': 'No CSRF token was provided. This might indicate a malicious attack.',
+                'empty': 'An empty CSRF token was provided. This might indicate a malicious attack.'}
+
+    def _validate_python(self, value, state):
+        """If a :pyramid:class:`request.Request` is set in the ``state``, then
+        checks whether the ``value`` matches the CSRF token stored in the request.
+        """
+        if hasattr(state, 'request'):
+            if state.request.session.get_csrf_token() != value:
+                raise formencode.Invalid(self.message('invalid_csrf_token', state),
+                                         value,
+                                         state)
+
+
+class CSRFSchema(formencode.Schema):
+    """The class:`wte.util.CSRFSchema` is a base :class:`formencode.Schema`
+    that includes Cross-Site Request Forgery detection.
+
+    It should be used as the base class for all specific request schemas.
+    """
+
+    csrf_token = CSRFValidator(strip=True, not_empty=True)
 
 
 class DynamicSchema(formencode.Schema):
@@ -179,6 +210,7 @@ def convert_type(value, target_type, default=None):
     * `int` -- Convert to an integer value
     * `boolean` -- Convert to a boolean value (``True`` if the value is the
       ``unicode`` string "true" in any capitalisation
+    * `list` -- Convert to a list, splitting on line-breaks and commas
 
     :param value: The value to convert
     :type value: `unicode`
@@ -197,6 +229,8 @@ def convert_type(value, target_type, default=None):
             return True
         else:
             return False
+    elif target_type == 'list':
+        return [v.strip() for line in value.split('\n') for v in line.split(',')]
     if value:
         return value
     else:
@@ -232,3 +266,73 @@ def get_config_setting(request, key, target_type=None, default=None):
         else:
             CACHED_SETTINGS[key] = default
         return get_config_setting(request, key, target_type=target_type, default=default)
+
+
+def version():
+    """Return the current application version."""
+    return asset.version('WebTeachingEnvironment')
+
+
+def timing_tween_factory(handler, registry):
+    """Pyramid tween factory that logs the time taken for a request.
+    Will not time static requests.
+    """
+    import time
+    logger = logging.getLogger(__name__)
+
+    def timing_tween(request):
+        """Handle the actual timing of the request."""
+        start = time.time()
+        try:
+            response = handler(request)
+        finally:
+            end = time.time()
+            if not request.path.startswith('/static'):
+                logger.info('%s - %.4f seconds' % (request.path, (end - start)))
+        return response
+    return timing_tween
+
+
+def paginate(request, query, start, rows, query_params=None):
+    """Generates the list of pages for a query.
+
+    :param request: The request used to generate URLs
+    :type request: :class:`~pyramid.request.Request`
+    :param query: The SQLAlchemy query to generate the pagination for
+    :type query: :class:`~sqlalchemy.orm.query.Query`
+    :param start: The current starting index
+    :type start: :py:func:`int`
+    :param rows: The number of rows per page
+    :type rows: :py:func:`int`
+    :param query_params: An optional list of query parameters to include in all
+                         URLs that are generated
+    :type query_params: :py:func:`list` of :py:func:`tuple`
+    :return: The :py:func:`list` of pages to use with the "navigation.pagination"
+             helper
+    :rtype: :py:func:`list`
+    """
+    if query_params is None:
+        query_params = []
+    else:
+        query_params = [param for param in query_params if param[0] != 'start']
+    count = query.count()
+    pages = []
+    if start > 0:
+        pages.append({'type': 'prev',
+                      'url': request.route_url('users', _query=query_params + [('start', max(start - rows, 0))])})
+    else:
+        pages.append({'type': 'prev'})
+    for idx in range(0, int(math.ceil(count / float(rows)))):
+        if idx == (start / 30):
+            pages.append({'type': 'current',
+                          'label': unicode(idx + 1)})
+        else:
+            pages.append({'type': 'item',
+                          'label': unicode(idx + 1),
+                          'url': request.route_url('users', _query=query_params + [('start', idx * rows)])})
+    if start + rows < count:
+        pages.append({'type': 'next',
+                      'url': request.route_url('users', _query=query_params + [('start', max(start + rows, count))])})
+    else:
+        pages.append({'type': 'next'})
+    return pages

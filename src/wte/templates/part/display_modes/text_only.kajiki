@@ -1,0 +1,43 @@
+<py:extends href="wte:templates/layout/centred.kajiki">
+  <py:block name="title">${part.title}</py:block>
+  <py:block name="title_script">
+    <script src="${request.static_url('wte:static/js/mathjax/MathJax.js', _query=[('config', 'default')])}"></script>
+  </py:block>
+  <py:block name="content">
+    <py:import href="wte:templates/helpers/menu.kajiki" alias="menu"/>
+    <py:import href="wte:templates/helpers/navigation.kajiki" alias="nav"/>
+    <div id="textbook" class="rest textbook">
+      <div class="fixed-pagination">
+        ${nav.page_pagination(part)}
+      </div>
+      <div class="float-right">${menu.menubar(part.menu(request), alignment='right')}</div>
+      <h1>${part.title} <small py:if="part.status != 'available'" class="label">${part.status.title()}</small></h1>
+      ${literal(part.compiled_content.replace('\n\n', '\n&amp;nbsp;\n'))}
+      ${nav.page_pagination(part)}
+    </div>
+    <section py:if="part.templates and part.has_role('owner', request.current_user)">
+      <h2>Templates</h2>
+      <ul class="no-symbol">
+        <li py:for="asset in part.templates">
+          <div class="float-right">${menu.menubar(asset.menu(request, part))}</div>
+          <h3><a href="${request.route_url('asset.view', mid=-1, pid=part.id, filename=asset.filename)}">${asset.filename} (${asset.mimetype})</a></h3>
+        </li>
+      </ul>
+    </section>
+    <section py:if="part.assets and part.has_role('owner', request.current_user)">
+      <h2>Assets</h2>
+      <ul class="no-symbol">
+        <li py:for="asset in part.assets">
+          <div class="float-right">${menu.menubar(asset.menu(request, part))}</div>
+          <h3><a href="${request.route_url('asset.view', mid=-1, pid=part.id, filename=asset.filename)}">${asset.filename} (${asset.mimetype})</a></h3>
+        </li>
+      </ul>
+    </section>
+  </py:block>
+  <py:block name="body_script">
+  <script>
+  $('.fixed-pagination').fixedPagination({global: true});
+  $('.part-pagination').partPagination({scrolling: $(window)});
+  </script>
+  </py:block>
+</py:extends>

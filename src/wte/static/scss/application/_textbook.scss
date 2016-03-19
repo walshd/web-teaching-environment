@@ -2,6 +2,11 @@
  * Textbook styles
  */
 #textbook {
+    padding-right: $global-padding;
+}
+
+.textbook {
+    position: relative;
     overflow: auto;
     box-sizing: border-box;
     
@@ -44,7 +49,4 @@
             content: counters(section, ".") ". ";
         }
     }
-}
-.display-mode-three_pane_html {
-    border-right: 1px solid #333;
 }

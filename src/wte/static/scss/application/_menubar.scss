@@ -2,67 +2,45 @@
  * Menu-bar styles
  */
 .menubar {
-    padding: 0;
-    margin: 0;
-}
-.menubar.margin-top-right {
-    margin-top: 0.3rem;
-    margin-right: 0.8rem;
-}
-.menubar > li {
-    display: inline-block;
-    list-style-type: none;
-    padding-left: 0.4rem;
-}
-.menubar > li > a, .menubar > li > div.menu > a {
-    color: #222;
-    font-size: 1.2rem;
-}
-.menubar > li > a:hover, .menubar > li > div.menu > a:hover {
-    color: #0078a0;
-}
+    text-align: left;
 
-/**
- * Drop-down menu styles
- */
-.menu {
-    z-index: 98;
+    li {
+        &.separator {
+            width: 1rem;
+        }
+        > a {
+            padding: 0.2rem 0.2rem;
+            
+            &:link, &:visited {
+                color: $black;
+            }
+            &:hover {
+                color: $primary-color;
+            }
+            &.alert {
+                color: $white;
+                background: $alert-color;
+            }
+        }
+        &.divider {
+            border-bottom: $dropdownmenu-border;
+
+            &:last-child {
+                border-bottom: 0;
+            }
+        }
+    }
+    .is-dropdown-submenu {
+        a {
+            padding: 0.5rem 0.8rem;
+            
+            > span:first-child {
+                display: inline-block;
+                width: 1.5rem;
+            }
+            > span:last-child {
+                white-space: nowrap;
+            }
+        }
 }
-.menu > ul {
-    margin: 0;
-    padding: 0;
-    background: white;
-    border: solid 1px #cccccc;
-    min-width: 200px;
-    z-index: 98;
-}
-.menu li {
-    padding: 0;
-    margin: 0;
-    list-style-type: none;
-    font-size: 0.875rem;
-    cursor: pointer;
-    line-height: 1.125rem;
-}
-.menu li a {
-    padding: 0.5rem;
-    display: block;
-    color: #555555;
-}
-.menu li a:hover {
-    background: #eeeeee;
-    color: #222;
-}
-.menu li a.alert {
-    background: #f04124;
-    color: #fff;
-}
-.menu li a.alert:hover {
-    background: cf2a0e;
-}
-.menu li.divider {
-    border-bottom: 1px solid #ccc;
-}
-.menu li.divider + li.divider {
-    display: none;
 }

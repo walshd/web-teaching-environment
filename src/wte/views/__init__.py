@@ -14,10 +14,9 @@ initialises the routes that are handled by that module.
 """
 from pyramid.httpexceptions import HTTPNotFound
 from pyramid.view import view_config
-from pywebtools.renderer import render
 
 from wte.decorators import current_user
-from . import (user, frontend, part, asset, user_role, timed_tasks, admin)
+from . import (user, part, asset, user_role, timed_tasks, admin)
 
 
 def init(config, settings):
@@ -33,22 +32,19 @@ def init(config, settings):
     user.init(config)
     part.init(config)
     asset.init(config)
-    frontend.init(config)
     user_role.init(config)
     timed_tasks.init(config)
 
 
-@view_config(route_name='root')
-@render({'text/html': 'root.html'})
+@view_config(route_name='root', renderer='wte:templates/root.kajiki')
 @current_user()
 def root(request):
     u"""Handles the ``/`` route.
     """
-    return {'crumbs': []}
+    return {}
 
 
-@view_config(context=HTTPNotFound)
-@render({'text/html': 'errors/404.html'})
+@view_config(context=HTTPNotFound, renderer='wte:templates/errors/404.kajiki')
 @current_user()
 def notfound_404(request):
     u"""Handles 404 errors
@@ -56,8 +52,7 @@ def notfound_404(request):
     return {'crumbs': [{'title': 'Not Found'}]}
 
 
-#@view_config(context=Exception)
-@render({'text/html': 'errors/500.html'})
+@view_config(context=Exception, renderer='wte:templates/errors/500.kajiki')
 @current_user()
 def servererror_500(request):
     u"""Handles 500 errors

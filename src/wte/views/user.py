@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-u"""
+"""
 #########################################################
 :mod:`wte.views.user` -- User functionality view handlers
 #########################################################
@@ -10,18 +10,17 @@ Routes are defined in :func:`~wte.views.user.init`.
 
 .. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
-import math
 import formencode
 import transaction
 import uuid
 
 from pyramid.httpexceptions import (HTTPSeeOther, HTTPNotFound)
 from pyramid.view import view_config
-from pywebtools.renderer import render
 from sqlalchemy import and_, or_
 
 from wte.decorators import (current_user, require_logged_in)
-from wte.util import (unauthorised_redirect, State, send_email, get_config_setting)
+from wte.util import (unauthorised_redirect, State, send_email, get_config_setting,
+                      paginate, CSRFSchema)
 from wte.models import (DBSession, User, Permission, PermissionGroup)
 
 
@@ -59,6 +58,9 @@ def init(config):
 
 
 def create_user_crumbs(request, crumbs):
+    """Creates the base-list of breadcrumbs, depending on the current
+    users authorisation level.
+    """
     if request.current_user.has_permission('admin.users.view'):
         crumbs.insert(0, {'title': 'Users',
                           'url': request.route_url('users')})
@@ -69,11 +71,10 @@ def create_user_crumbs(request, crumbs):
     return crumbs
 
 
-@view_config(route_name='users')
-@render({'text/html': 'users/list.html'})
+@view_config(route_name='users', renderer='wte:templates/users/list.kajiki')
 @current_user()
 def users(request):
-    u"""Handles the ``/users`` URL, displaying all users if the current
+    """Handles the ``/users`` URL, displaying all users if the current
     :class:`~wte.models.User` has the "admin.users.view"
     :class:`~wte.models.Permission`.
     """
@@ -99,14 +100,7 @@ def users(request):
                 pass
         users = users.order_by(User.display_name)
         users = users.offset(start).limit(30)
-        pages = [{'title': 'Show page:',
-                  'url': '#',
-                  'class': 'unavailable'}]
-        for idx in range(0, int(math.ceil(users.count() / 30.0))):
-            pages.append({'title': unicode(idx + 1),
-                          'url': request.route_url('users',
-                                                   _query=query_params + [('start', idx * 30)]),
-                          'class': 'current' if idx == (start / 30) else None})
+        pages = paginate(request, users, start, 30, query_params=query_params)
         return {'users': users,
                 'pages': pages,
                 'crumbs': create_user_crumbs(request, [])}
@@ -114,29 +108,28 @@ def users(request):
         unauthorised_redirect(request)
 
 
-class ActionSchema(formencode.Schema):
-    u"""The :class:`~wte.views.user.ActionSchema` handles the validation of
+class ActionSchema(CSRFSchema):
+    """The :class:`~wte.views.user.ActionSchema` handles the validation of
     user action requests.
     """
     action = formencode.All(formencode.validators.UnicodeString(not_empty=True),
                             formencode.validators.OneOf(['validate', 'password', 'delete']))
-    u"""The action to apply"""
+    """The action to apply"""
     confirm = formencode.validators.StringBool(if_empty=False, if_missing=False)
-    u"""Whether the user has confirmed the action"""
+    """Whether the user has confirmed the action"""
     user_id = formencode.ForEach(formencode.validators.Int(), if_missing=None)
     q = formencode.validators.UnicodeString(if_empty=None, if_missing=None)
-    u"""Optional query parameter for the redirect"""
+    """Optional query parameter for the redirect"""
     status = formencode.validators.UnicodeString(if_empty=None, if_missing=None)
-    u"""Optional status parameter for the redirect"""
+    """Optional status parameter for the redirect"""
     start = formencode.validators.UnicodeString(if_empty=None, if_missing=None)
-    u"""Optional start parameter for the redirect"""
+    """Optional start parameter for the redirect"""
 
 
-@view_config(route_name='users.action')
-@render({'text/html': 'users/action.html'})
+@view_config(route_name='users.action', renderer='wte:templates/users/action.kajiki')
 @current_user()
 def action(request):
-    u"""Handles the ``/users/action`` URL, applying the given action to the
+    """Handles the ``/users/action`` URL, applying the given action to the
     list of selected users. Requires that the current
     :class:`~wte.models.User` has the "admin.users.view"
     :class:`~wte.models.Permission`.
@@ -161,7 +154,6 @@ def action(request):
                         elif params['action'] == 'password':
                             if user.validation_token is None and user.allow('edit', request.current_user):
                                 user.random_password()
-                request.session.flash('Your action has been applied to the selected users', queue='info')
                 raise HTTPSeeOther(request.route_url('users', _query=query_params))
             else:
                 return {'params': params,
@@ -178,7 +170,7 @@ def action(request):
 
 
 class PasswordValidator(formencode.FancyValidator):
-    u"""The :class:`~wte.views.user.PasswordValidator` handles the checking of
+    """The :class:`~wte.views.user.PasswordValidator` handles the checking of
     user-provided passwords against the database to allow / dissallow login.
 
     Login is disallowed, if the password does not match the e-mail address or
@@ -203,25 +195,24 @@ class PasswordValidator(formencode.FancyValidator):
             raise formencode.api.Invalid(self.message('nologin', state), value, state)
 
 
-class LoginSchema(formencode.Schema):
-    u"""The :class:`~wte.views.user.LoginSchema` handles the validation of a
+class LoginSchema(CSRFSchema):
+    """The :class:`~wte.views.user.LoginSchema` handles the validation of a
     login request.
     """
     return_to = formencode.validators.UnicodeString(if_missing=None)
-    u"""URL to redirect to after a successful login (optional)"""
+    """URL to redirect to after a successful login (optional)"""
     email = formencode.validators.Email(not_empty=True)
-    u"""E-mail address to log in with"""
+    """E-mail address to log in with"""
     password = formencode.validators.UnicodeString(not_empty=True)
-    u"""Password to log in with"""
+    """Password to log in with"""
 
     chained_validators = [PasswordValidator()]
 
 
-@view_config(route_name='user.login')
-@render({'text/html': 'users/login.html'})
+@view_config(route_name='user.login', renderer='wte:templates/users/login.kajiki')
 @current_user()
 def login(request):
-    u"""Handles the "/users/login" URL, checking the submitted username and
+    """Handles the "/users/login" URL, checking the submitted username and
     password against the stored :class:`~wte.models.User` and setting the
     necessary session variables if the login is successful.
     """
@@ -231,43 +222,51 @@ def login(request):
             if request.params['return_to'] != request.route_url('root') and \
                     request.params['return_to'] != request.current_route_url():
                 raise HTTPSeeOther(request.params['return_to'])
-        raise HTTPSeeOther(request.route_url('user.modules', uid=request.current_user.id))
+        raise HTTPSeeOther(request.route_url('part.list',
+                                             _query={'user_id': request.current_user.id}))
     if request.method == 'POST':
         try:
             dbsession = DBSession()
-            params = LoginSchema().to_python(request.params, State(dbsession=dbsession))
+            params = LoginSchema().to_python(request.params, State(dbsession=dbsession,
+                                                                   request=request))
             user = dbsession.query(User).filter(User.email == params['email'].lower()).first()
             request.current_user = user
             request.current_user.logged_in = True
             request.session['uid'] = user.id
-            request.session.flash('Welcome, %s' % (user.display_name), queue='info')
+            request.session.new_csrf_token()
             if 'return_to' in request.params:
                 if request.params['return_to'] != request.route_url('root') and \
                         request.params['return_to'] != request.current_route_url():
                     raise HTTPSeeOther(request.params['return_to'])
-            raise HTTPSeeOther(request.route_url('user.modules', uid=user.id))
+            raise HTTPSeeOther(request.route_url('part.list',
+                                                 _query={'user_id': user.id}))
         except formencode.api.Invalid as e:
-            e.params = request.params
-            return {'e': e}
+            return {'errors': e.error_dict if e.error_dict else {'email': e.msg,
+                                                                 'password': e.msg},
+                    'values': request.params}
     return {'crumbs': [{'title': 'Login', 'url': request.route_url('user.login'), 'current': True}]}
 
 
-@view_config(route_name='user.logout')
-@render({'text/html': 'users/logout.html'})
+@view_config(route_name='user.logout', renderer='wte:templates/users/logout.kajiki')
 @current_user()
 def logout(request):
-    u"""Handles the "/users/logout" URL and deletes the current session,
+    """Handles the "/users/logout" URL and deletes the current session,
     thus logging the user out
     """
     if request.method == 'POST':
-        request.current_user.logged_in = False
-        request.session.delete()
-        raise HTTPSeeOther(request.route_url('root'))
+        try:
+            CSRFSchema().to_python(request.params, State(request=request))
+            request.current_user.logged_in = False
+            request.session.delete()
+            raise HTTPSeeOther(request.route_url('root'))
+        except formencode.Invalid as e:
+            return {'errors': e.error_dict,
+                    'crumbs': [{'title': 'Logout', 'url': request.route_url('user.logout'), 'current': True}]}
     return {'crumbs': [{'title': 'Logout', 'url': request.route_url('user.logout'), 'current': True}]}
 
 
 class UniqueEmailValidator(formencode.FancyValidator):
-    u"""The :class:`~wte.views.user.UniqueEmailValidator` checks that the given
+    """The :class:`~wte.views.user.UniqueEmailValidator` checks that the given
     e-mail address is not already used by a :class:`~wte.models.User`.
 
     Requires a SQLAlchemy database session to be available via
@@ -310,30 +309,29 @@ class EmailDomainValidator(formencode.FancyValidator):
                                          state)
 
 
-class RegisterSchema(formencode.Schema):
-    u"""The :class:`~wte.user.views.RegisterSchema` handles the validation of
+class RegisterSchema(CSRFSchema):
+    """The :class:`~wte.user.views.RegisterSchema` handles the validation of
     registration requests.
     s"""
     return_to = formencode.validators.UnicodeString(if_missing=None)
-    u"""URL to redirect to after a successful registration (optional)"""
+    """URL to redirect to after a successful registration (optional)"""
     email = formencode.All(UniqueEmailValidator(),
                            EmailDomainValidator(),
                            formencode.validators.Email(not_empty=True))
-    u"""E-mail address to register with"""
+    """E-mail address to register with"""
     email_confirm = formencode.validators.Email(not_empty=True)
-    u"""Confirmation of the registration e-mail address"""
+    """Confirmation of the registration e-mail address"""
     name = formencode.validators.UnicodeString(not_empty=True)
-    u"""Name of the registering user"""
+    """Name of the registering user"""
 
     chained_validators = [formencode.validators.FieldsMatch('email',
                                                             'email_confirm')]
 
 
-@view_config(route_name='user.register')
-@render({'text/html': 'users/register.html'})
+@view_config(route_name='user.register', renderer='wte:templates/users/register.kajiki')
 @current_user()
 def register(request):
-    u"""Handles the "/users/register" URL, displaying the registration form
+    """Handles the "/users/register" URL, displaying the registration form
     or if data is POSTed, creating a new user. Upon registration, a
     confirmation e-mail is sent to the given e-mail address.
     """
@@ -372,8 +370,8 @@ Web Teaching Environment''' % (user.display_name,
  the e-mail address you specified.''', queue='info')
             raise HTTPSeeOther(request.route_url('root'))
         except formencode.Invalid as e:
-            e.params = request.params
-            return {'e': e,
+            return {'errors': e.error_dict,
+                    'values': request.params,
                     'crumbs': [{'title': 'Login', 'url': request.route_url('user.login')},
                                {'title': 'Register', 'url': request.route_url('user.register'), 'current': True}]}
     return {'crumbs': [{'title': 'Login', 'url': request.route_url('user.login')},
@@ -381,7 +379,7 @@ Web Teaching Environment''' % (user.display_name,
 
 
 def process_confirmation(request, user):
-    u"""The :func:`~wte.views.user.process_confirmation` function handles
+    """The :func:`~wte.views.user.process_confirmation` function handles
     clearing the ``validation_token``, generating a new password, and sending
     a welcome e-mail if the validation of the :class:`~wte.models.User` was
     successful.
@@ -410,11 +408,10 @@ Best Regards,
 Web Teaching Environment''' % (user.display_name, user.email, new_password))
 
 
-@view_config(route_name='user.confirm')
-@render({'text/html': 'users/confirm.html'})
+@view_config(route_name='user.confirm', renderer="wte:templates/users/confirm.kajiki")
 @current_user()
 def confirm(request):
-    u"""Handles the "/users/{uid}/confirm/{token}" URL, validating that the
+    """Handles the "/users/{uid}/confirm/{token}" URL, validating that the
     user with the given ``{uid}`` received the ``{token}`` at the given e-mail
     address.
 
@@ -449,20 +446,19 @@ def confirm(request):
                            {'title': 'Confirmation',
                             'url': request.route_url('user.confirm',
                                                      uid=request.matchdict['uid'],
-                                                     token=request.matchdict['token']),
-                            'current': True}]}
+                                                     token=request.matchdict['token'])}]}
 
 
-class ForgottenPasswordSchema(formencode.Schema):
-    u"""The :class:`~wte.views.user.ForgottenPasswordSchema` handles the
+class ForgottenPasswordSchema(CSRFSchema):
+    """The :class:`~wte.views.user.ForgottenPasswordSchema` handles the
     validation of forgotten password requests.
     """
     email = formencode.validators.Email(not_empty=True)
-    u"""E-mail to request a new password or validation token for"""
+    """E-mail to request a new password or validation token for"""
 
 
 def process_forgotten_password(request, user):
-    u"""The :func:`~wte.views.user.process_forgotten_password` function handles
+    """The :func:`~wte.views.user.process_forgotten_password` function handles
     generating a new password and sending the information e-mail. It can
     distinguish between :class:`~wte.models.User` who have been validated and
     those that have not yet and will send the appropriate e-mail.
@@ -509,11 +505,10 @@ Best Regards,
 Web Teaching Environment''' % (user.display_name, user.email, new_password))
 
 
-@view_config(route_name='user.forgotten_password')
-@render({'text/html': 'users/forgotten_password.html'})
+@view_config(route_name='user.forgotten_password', renderer='wte:templates/users/forgotten_password.kajiki')
 @current_user()
 def forgotten_password(request):
-    u"""Handles the "/users/forgotten-password" URL, showing the form where
+    """Handles the "/users/forgotten-password" URL, showing the form where
     the user can provide their e-mail address. If the
     :class:`~wte.models.User` has a ``validation_token``, then an e-mail with a
     new validation token is sent, otherwise an e-mail with a new, random
@@ -547,20 +542,19 @@ def forgotten_password(request):
             else:
                 raise HTTPSeeOther(request.route_url('root'))
         except formencode.api.Invalid as e:
-            e.params = request.params
-            return {'e': e}
+            return {'errors': e.error_dict,
+                    'values': request.params}
     return {'crumbs': [{'title': 'Login',
                         'url': request.route_url('user.login')},
                        {'title': 'Forgotten Password',
                         'url': request.route_url('user.forgotten_password'), 'current': True}]}
 
 
-@view_config(route_name='user.view')
-@render({'text/html': 'users/view.html'})
+@view_config(route_name='user.view', renderer='wte:templates/users/view.kajiki')
 @current_user()
 @require_logged_in()
 def view(request):
-    u"""Handles the "/users/{uid}" URL, showing the user's profile.
+    """Handles the "/users/{uid}" URL, showing the user's profile.
     """
     dbsession = DBSession()
     user = dbsession.query(User).filter(User.id == request.matchdict['uid']).first()
@@ -575,26 +569,25 @@ def view(request):
         raise HTTPNotFound()
 
 
-class EditSchema(formencode.Schema):
-    u"""The class:`~wte.views.user.EditSchema` handles the validation of
+class EditSchema(CSRFSchema):
+    """The class:`~wte.views.user.EditSchema` handles the validation of
     changes to the :class:`~wte.models.User`.
     """
     email = formencode.All(UniqueEmailValidator(),
                            EmailDomainValidator(),
                            formencode.validators.Email(not_empty=True))
-    u"""Updated e-mail address"""
+    """Updated e-mail address"""
     name = formencode.validators.UnicodeString(not_empty=True)
-    u"""Updated name"""
+    """Updated name"""
     password = formencode.validators.UnicodeString()
-    u"""Updated password"""
+    """Updated password"""
 
 
-@view_config(route_name='user.edit')
-@render({'text/html': 'users/edit.html'})
+@view_config(route_name='user.edit', renderer='wte:templates/users/edit.kajiki')
 @current_user()
 @require_logged_in()
 def edit(request):
-    u"""Handles the "/users/{uid}/edit" URL, providing the form and backend
+    """Handles the "/users/{uid}/edit" URL, providing the form and backend
     functionality to update the user's profile.
     """
     dbsession = DBSession()
@@ -620,11 +613,10 @@ def edit(request):
                         user.display_name = params['name']
                         if params['password']:
                             user.new_password(params['password'])
-                    request.session.flash('Profile updated', queue='info')
                     raise HTTPSeeOther(request.route_url('user.view', uid=request.matchdict['uid']))
                 except formencode.api.Invalid as e:
-                    e.params = request.params
-                    return {'e': e,
+                    return {'e': e.error_dict,
+                            'values': request.params,
                             'user': user,
                             'crumbs': crumbs}
             return {'user': user,
@@ -635,12 +627,11 @@ def edit(request):
         raise HTTPNotFound()
 
 
-@view_config(route_name='user.permissions')
-@render({'text/html': 'users/permissions.html'})
+@view_config(route_name='user.permissions', renderer='wte:templates/users/permissions.kajiki')
 @current_user()
 @require_logged_in()
 def permissions(request):
-    u"""Handles the "/users/{uid}/permissions" URL, providing the form and
+    """Handles the "/users/{uid}/permissions" URL, providing the form and
     backend functionality for setting the :class:`~wte.models.Permission` and
     :class:`~wte.models.PermissionGroup` that the :class:`~wte.models.User`
     belongs to.
@@ -652,21 +643,39 @@ def permissions(request):
             permission_groups = dbsession.query(PermissionGroup).order_by(PermissionGroup.title)
             permissions = dbsession.query(Permission).order_by(Permission.title)
             if request.method == 'POST':
-                with transaction.manager:
+                try:
+                    CSRFSchema(allow_extra_fields=True).to_python(request.params, State(request=request))
+                    with transaction.manager:
+                        dbsession.add(user)
+                        ids = request.params.getall('permission_group')
+                        if ids:
+                            user.permission_groups = dbsession.query(PermissionGroup).\
+                                filter(PermissionGroup.id.in_(ids)).all()
+                        else:
+                            user.permission_groups = []
+                        ids = request.params.getall('permission')
+                        if ids:
+                            user.permissions = dbsession.query(Permission).filter(Permission.id.in_(ids)).all()
+                        else:
+                            user.permissions = []
                     dbsession.add(user)
-                    ids = request.params.getall('permission_group')
-                    if ids:
-                        user.permission_groups = dbsession.query(PermissionGroup).\
-                            filter(PermissionGroup.id.in_(ids)).all()
+                    dbsession.add(request.current_user)
+                    if request.current_user.has_permission('admin.users.view'):
+                        raise HTTPSeeOther(request.route_url('users'))
                     else:
-                        user.permission_groups = []
-                    ids = request.params.getall('permission')
-                    if ids:
-                        user.permissions = dbsession.query(Permission).filter(Permission.id.in_(ids)).all()
-                    else:
-                        user.permissions = []
-                dbsession.add(user)
-                request.session.flash('Permissions updated', queue='info')
+                        raise HTTPSeeOther(request.route_url('users.view', uid=user.id))
+                except formencode.Invalid as e:
+                    print(e)
+                    return {'errors': e.error_dict,
+                            'user': user,
+                            'permission_groups': permission_groups,
+                            'permissions': permissions,
+                            'crumbs': create_user_crumbs(request, [{'title': user.display_name,
+                                                                    'url': request.route_url('user.view',
+                                                                                             uid=user.id)},
+                                                                   {'title': 'Permissions',
+                                                                    'url': request.route_url('user.permissions',
+                                                                                             uid=user.id)}])}
             return {'user': user,
                     'permission_groups': permission_groups,
                     'permissions': permissions,
@@ -682,12 +691,11 @@ def permissions(request):
         unauthorised_redirect(request)
 
 
-@view_config(route_name='user.delete')
-@render({'text/html': 'users/delete.html'})
+@view_config(route_name='user.delete', renderer='wte:templates/users/delete.kajiki')
 @current_user()
 @require_logged_in()
 def delete(request):
-    u"""Handles the "/users/{uid}/delete" URL, providing the form and backend
+    """Handles the "/users/{uid}/delete" URL, providing the form and backend
     functionality for deleting a :class:`~wte.models.User`. Also deletes all
     the data that is linked to that :class:`~wte.models.User`.
     """
@@ -696,13 +704,23 @@ def delete(request):
     if user:
         if user.allow('delete', request.current_user):
             if request.method == 'POST':
-                with transaction.manager:
-                    dbsession.delete(user)
-                request.session.flash('The account has been deleted', queue='info')
-                if request.current_user.has_permission('admin.users.view'):
-                    raise HTTPSeeOther(request.route_url('users'))
-                else:
-                    raise HTTPSeeOther(request.route_url('root'))
+                try:
+                    CSRFSchema().to_python(request.params, State(request=request))
+                    with transaction.manager:
+                        dbsession.delete(user)
+                    request.session.flash('The account has been deleted', queue='info')
+                    if request.current_user.has_permission('admin.users.view'):
+                        raise HTTPSeeOther(request.route_url('users'))
+                    else:
+                        raise HTTPSeeOther(request.route_url('root'))
+                except formencode.Invalid as e:
+                    return {'errors': e.error_dict,
+                            'user': user,
+                            'crumbs': create_user_crumbs(request,
+                                                         [{'title': user.display_name,
+                                                           'url': request.route_url('user.view', uid=user.id)},
+                                                          {'title': 'Delete',
+                                                           'url': request.route_url('user.delete', uid=user.id)}])}
             return {'user': user,
                     'crumbs': create_user_crumbs(request, [{'title': user.display_name,
                                                             'url': request.route_url('user.view', uid=user.id)},

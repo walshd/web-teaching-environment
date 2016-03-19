@@ -13,27 +13,30 @@
     }
     div.source {
         &.panel {
-            margin-left: 1rem;
+            margin: $global-margin;
             padding-top: 0.3rem;
-            padding-bottom: 0.3rem;
+            background: scale-color($light-gray, $lightness: 40%);
+            border: 1px solid $light-gray;
         }
         .title {
             font-size: 0.7rem;
-            margin-left: -2.25rem;
+            position: relative;
 
             .main {
                 display: inline-block;
                 text-transform: uppercase;
-                color: #fff;
-                background-color: #222;
+                color: $white;
+                background: $black;
                 padding: 0.1rem 0.3rem;
                 float: left;
+                position: relative;
+                left: -1rem;
             }
             .filename {
                 display: block;
-                background-color: #ddd;
+                background: $light-gray;
                 text-align: right;
-                padding: 0.1rem 0.3rem;
+                padding: 0.1rem 0.5rem;
                 color: #666;
             }
             &:after {

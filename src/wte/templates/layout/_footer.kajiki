@@ -1,0 +1,5 @@
+<footer class="row expanded">
+  <?py from wte import util ?>
+  <div class="small-6 column">Powered by the <a href="http://web-teaching-environment.readthedocs.org/en/latest/">Web Teaching Environment</a></div>
+  <div class="small-6 column text-right">Version ${util.version()}</div>
+</footer>

@@ -1,0 +1,20 @@
+<py:extends href="wte:templates/layout/centred.kajiki">
+  <py:block name="title">Deregister from ${part.title}</py:block>
+  <py:block name="content">
+    <py:import href="wte:templates/helpers/menu.kajiki" alias="menu"/>
+    <py:import href="wte:templates/helpers/form.kajiki" alias="form"/>
+    <h1>Deregister from ${part.title}</h1>
+    <form action="${request.route_url('part.deregister', pid=part.id)}" method="post" class="row">
+      <div class="column small-12 medium-8 large-6 end">
+        <p>Please confirm that you wish to de-register from the module
+          &quot;${part.title}&quot;. This will also delete all progress
+          you have made on module's tutorials and all work you have done
+          on the exercises.</p>
+        <div class="text-right">
+          <a href="${request.route_url('part.view', pid=part.id)}" class="button secondary">Don't Deregister</a>
+          <input type="submit" value="Deregister" class="button"/>
+        </div>
+      </div>
+    </form>
+  </py:block>
+</py:extends>

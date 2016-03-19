@@ -1,0 +1,23 @@
+<py:extends href="wte:templates/layout/centred.kajiki">
+  <py:block name="title">Import</py:block>
+  <py:block name="content">
+    <py:import href="wte:templates/helpers/form.kajiki" alias="form"/>
+    <h1>Import</h1>
+    <form action="${request.route_url('part.import')}" method="post" enctype="multipart/form-data">
+      ${form.csrf_field()}
+      <py:if test="'parent_id' in request.params">${form.field('hidden', 'parent_id', '', value=request.params['parent_id'])}</py:if>
+      <div class="row">
+        <div class="column small-12 medium-8 large-6 end">
+          ${form.field('file', 'file', 'Import File')}
+        </div>
+      </div>
+      <div class="row">
+        <div class="column small-12 medium-8 large-6 end text-right">
+          <a py:if="'parent_id' not in request.params" href="${request.route_url('part.list')}" class="button secondary">Don't Import</a>
+          <a py:if="'parent_id' in request.params" href="${request.route_url('part.view', pid=request.params['parent_id'])}" class="button secondary">Don't Import</a>
+          <input type="submit" value="Import" class="button"/>
+        </div>
+      </div>
+    </form>
+  </py:block>
+</py:extends>

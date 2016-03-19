@@ -17,11 +17,11 @@ import transaction
 from datetime import datetime
 from pyramid.httpexceptions import (HTTPSeeOther, HTTPNotFound)
 from pyramid.view import view_config
-from pywebtools.renderer import render
 
 from wte.decorators import (current_user, require_logged_in)
 from wte.models import (DBSession, Part, TimedTask)
-from wte.util import (unauthorised_redirect, DateValidator, TimeValidator, DynamicSchema)
+from wte.util import (unauthorised_redirect, DateValidator, TimeValidator, DynamicSchema,
+                      CSRFSchema, State)
 from wte.views.part import create_part_crumbs
 
 
@@ -44,8 +44,7 @@ def init(config):
     config.add_route('part.timed_task.delete', '/parts/{pid}/timed-tasks/{tid}/delete')
 
 
-@view_config(route_name='part.timed_task')
-@render({'text/html': 'timed_tasks/view_part.html'})
+@view_config(route_name='part.timed_task', renderer='wte:templates/timed_task/view.kajiki')
 @current_user()
 @require_logged_in()
 def view_part_tasks(request):
@@ -74,7 +73,7 @@ def view_part_tasks(request):
         raise HTTPNotFound()
 
 
-class NewTimedTaskSchema(formencode.Schema):
+class NewTimedTaskSchema(CSRFSchema):
     u"""The :class:`~wte.views.timed_tasks.NewTimedTaskSchema` handles the
     validation of a new :class:`~wte.models.TimedTask`.
     """
@@ -83,8 +82,7 @@ class NewTimedTaskSchema(formencode.Schema):
     u"""The new task's name"""
 
 
-@view_config(route_name='part.timed_task.new')
-@render({'text/html': 'timed_tasks/new_part.html'})
+@view_config(route_name='part.timed_task.new', renderer='wte:templates/timed_task/new.kajiki')
 @current_user()
 @require_logged_in()
 def new_part_task(request):
@@ -104,34 +102,39 @@ def new_part_task(request):
                                         {'title': 'Timed Actions',
                                          'url': request.current_route_url()})
             available_tasks = [('change_status', 'Change Status')]
-            try:
-                params = NewTimedTaskSchema().to_python(request.params)
-                with transaction.manager:
-                    title = 'Unknown Task'
-                    if params['name'] == 'change_status':
-                        title = 'Change Status'
-                    new_task = TimedTask(name=params['name'],
-                                         part_id=part.id,
-                                         title=title,
-                                         status='new')
+            if request.method == 'POST':
+                try:
+                    params = NewTimedTaskSchema().to_python(request.params, State(request=request))
+                    with transaction.manager:
+                        title = 'Unknown Task'
+                        if params['name'] == 'change_status':
+                            title = 'Change Status'
+                        new_task = TimedTask(name=params['name'],
+                                             part_id=part.id,
+                                             title=title,
+                                             status='new')
+                        dbsession.add(new_task)
+                    dbsession.add(part)
                     dbsession.add(new_task)
-                dbsession.add(part)
-                dbsession.add(new_task)
-                raise HTTPSeeOther(request.route_url('part.timed_task.edit', pid=part.id, tid=new_task.id))
-            except formencode.Invalid as e:
-                e.params = request.params
-                return {'e': e,
-                        'part': part,
-                        'crumbs': crumbs,
-                        'available_tasks': available_tasks,
-                        'include_footer': True}
+                    raise HTTPSeeOther(request.route_url('part.timed_task.edit', pid=part.id, tid=new_task.id))
+                except formencode.Invalid as e:
+                    return {'errors': e.error_dict,
+                            'values': request.params,
+                            'part': part,
+                            'crumbs': crumbs,
+                            'available_tasks': available_tasks,
+                            'include_footer': True}
+            return {'part': part,
+                    'crumbs': crumbs,
+                    'available_tasks': available_tasks,
+                    'include_footer': True}
         else:
             unauthorised_redirect(request)
     else:
         raise HTTPNotFound()
 
 
-class EditTimedTaskSchema(formencode.Schema):
+class EditTimedTaskSchema(CSRFSchema):
     u"""The :class:`~wte.views.timed_tasks.EditTimedTaskSchema` handles the
     validation of changes to a :class:`~wte.models.TimedTask`.
 
@@ -158,8 +161,7 @@ class EditTimedTaskSchema(formencode.Schema):
             self.add_field('options', DynamicSchema(options))
 
 
-@view_config(route_name='part.timed_task.edit')
-@render({'text/html': 'timed_tasks/edit_part.html'})
+@view_config(route_name='part.timed_task.edit', renderer='wte:templates/timed_task/edit.kajiki')
 @current_user()
 @require_logged_in()
 def edit_part_task(request):
@@ -187,7 +189,7 @@ def edit_part_task(request):
                     if task.name == 'change_status':
                         options.append(('target_status', formencode.validators.OneOf(['available',
                                                                                       'unavailable'])))
-                    params = EditTimedTaskSchema(options).to_python(request.POST)
+                    params = EditTimedTaskSchema(options).to_python(request.params, State(request=request))
                     dbsession = DBSession()
                     with transaction.manager:
                         dbsession.add(task)
@@ -198,8 +200,8 @@ def edit_part_task(request):
                     dbsession.add(part)
                     raise HTTPSeeOther(request.route_url('part.timed_task', pid=part.id))
                 except formencode.Invalid as e:
-                    e.params = request.params
-                    return {'e': e,
+                    return {'errors': e.error_dict,
+                            'values': request.params,
                             'part': part,
                             'task': task,
                             'crumbs': crumbs,
@@ -214,8 +216,7 @@ def edit_part_task(request):
         raise HTTPNotFound()
 
 
-@view_config(route_name='part.timed_task.delete')
-@render({'text/html': 'timed_tasks/delete_part.html'})
+@view_config(route_name='part.timed_task.delete', renderer='wte:templates/timed_task/delete.kajiki')
 @current_user()
 @require_logged_in()
 def delete_part_task(request):
@@ -238,11 +239,19 @@ def delete_part_task(request):
                                          {'title': 'Delete',
                                           'url': request.current_route_url}])
             if request.method == 'POST':
-                dbsession = DBSession()
-                with transaction.manager:
-                    dbsession.delete(task)
-                dbsession.add(part)
-                raise HTTPSeeOther(request.route_url('part.timed_task', pid=part.id))
+                try:
+                    CSRFSchema().to_python(request.params, State(request=request))
+                    dbsession = DBSession()
+                    with transaction.manager:
+                        dbsession.delete(task)
+                    dbsession.add(part)
+                    raise HTTPSeeOther(request.route_url('part.timed_task', pid=part.id))
+                except formencode.Invalid as e:
+                    return {'errors': e.error_dict,
+                            'part': part,
+                            'task': task,
+                            'crumbs': crumbs,
+                            'include_footer': True}
             return {'part': part,
                     'task': task,
                     'crumbs': crumbs,

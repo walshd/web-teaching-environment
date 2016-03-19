@@ -12,10 +12,6 @@ render the frontend page displays.
 import inflect
 import json
 import math
-import re
-
-from genshi.builder import tag, Markup
-from pywebtools import text
 
 from wte.util import get_config_setting
 
@@ -84,7 +80,7 @@ def codemirror_scripts(request, mimetypes):
         script = request.static_url('wte:static/js/codemirror/mode/%s/%s.js' % mode)
         if script not in scripts:
             scripts.append(script)
-    return tag([tag.script(src=s) for s in scripts])
+    return scripts
 
 
 CODEMIRROR_OPTIONS = {'text/html': {'matchTags': True},
@@ -117,80 +113,6 @@ def codemirror_options(request, mimetype, include_mode=False):
     if mimetype in CODEMIRROR_OPTIONS:
         options.update(CODEMIRROR_OPTIONS[mimetype])
     return json.dumps(options)
-
-
-def page_pagination(request, part):
-    """Generates the pagination UI for the individual page display of a
-    :class:`~wte.models.Part`.
-
-    :param request: The current request
-    :type request: :class:`~pyramid.request.Request`
-    :param part: The current parte to display pagination for
-    :type part: :class:`~wte.models.Part`
-    :return: The resulting HTML markup
-    """
-    prev_page = None
-    next_page = None
-    state = 0
-    for child in part.parent.children:
-        if state == 0 and child != part:
-            prev_page = child
-        elif state == 0 and child == part:
-            state = 1
-        elif state == 1:
-            next_page = child
-            break
-    if prev_page:
-        prev_page = tag.a(tag.span(class_='fi-previous icon'),
-                          title='Previous page (%s)' % (prev_page.title),
-                          href=request.route_url('part.view', pid=prev_page.id))
-    else:
-        prev_page = tag.span(class_='fi-previous icon unavailable')
-    prev_page = tag.div(prev_page,
-                        class_='small-6 large-2 column text-center')
-    if next_page:
-        next_page = tag.a(tag.span(class_='fi-next icon'),
-                          title='Next page (%s)' % (next_page.title),
-                          href=request.route_url('part.view', pid=next_page.id))
-    else:
-        next_page = tag.span(class_='fi-next icon unavailable')
-    next_page = tag.div(next_page,
-                        class_='small-6 large-2 column text-center')
-    page_jump = tag.form(tag.select([tag.option(p.title,
-                                                value=p.id,
-                                                selected='selected' if p.id == part.id else None)
-                                     for p in part.parent.children]),
-                         action=request.route_url('part.view', pid='pid'),
-                         class_='show-for-large-up large-8 column')
-    min_progress = max(0, int(100.0 * (part.order) / len(part.parent.children)))
-    max_progress = min(100, int(100.0 * (part.order + 1) / len(part.parent.children)))
-    return tag.nav(tag.div(tag.div(tag.div(prev_page, page_jump, next_page,
-                                           class_='row collapse'),
-                                   tag.div(tag.span(class_='meter',
-                                                    style='width:%i%%;' % (min_progress)),
-                                           class_='progress',
-                                           title='Page %i of %i' % (part.order + 1, len(part.parent.children))),
-                                   class_='pagination',
-                                   data_progress='%s' % (json.dumps({'min': min_progress, 'max': max_progress}))),
-                           class_='small-12 column'),
-                   class_='row collapse')
-
-
-def primary_filename(progress):
-    """Returns the filename of the first :class:`~wte.models.File` from the
-    :class:`~wte.models.UserPartProgress` that has the mimetype "text/html".
-
-    :param progress: The :class:`~wte.models.UserPartProgress` to get the files
-                     from
-    :type progress: :class:`~wte.models.UserPartProgress`
-    :return: The filename as a string or the empty string
-    :rtype: :func:`unicode`
-    """
-    files = [f for f in progress.files if f.mimetype == 'text/html']
-    if files:
-        return files[0].filename
-    else:
-        return ''
 
 
 def confirm_action(title, message, cancel, ok):
@@ -237,115 +159,75 @@ def confirm_delete(obj_type, title, has_parts=False):
                            'class_': 'alert'})
 
 
-def part_summary(part):
-    """Generates summary text for a :class:`~wte.models.Part` by extracting the first HTML element
-    from the ``compiled_content``. Due to the use of ReST, this should in most cases be the first
-    paragraph.
-
-    :param part: The :class:`~wte.models.Part` to generate the summary for
-    :type part: :class:`~wte.models.Part`
-    :return: The first HTML element
-    :rtype: :class:`~genshi.builder.Markup`
+class MenuBuilder(object):
+    """The :class:`~wte.helpers.frontend.MenuBuilder` helps with creating the ``list``
+    structure used for creating the icon-menubar. Call :func:`~wte.helpers.frontend.MenuBuilder.group`
+    to start a new group of menu items. Call :func:`~wte.helpers.frontend.MenuBuilder.item`
+    to add a menu item to the current group. :func:`~wte.helpers.frontend.MenuBuilder.generate`
+    then generates the final structure for use in the menubar.
     """
-    content = part.compiled_content
-    if content:
-        m = re.search(r'<([a-zA-Z+])>', content)
-        if m:
-            start = content.find('<%s>' % (m.group(1)))
-            end = content.find('</%s>' % (m.group(1))) + len(m.group(1)) + 3
-            return Markup(content[start:end])
-    return None
 
+    def __init__(self):
+        self._groups = []
+        self._group = None
 
-def menubar(menu, drop_down_menu_left=True, class_=None):
-    """Generates a menu bar for a nested set of menu groups and menu items. Each menu group is specified as
-    a ``dict`` with the following keys:
+    def group(self, label, icon=None):
+        """Add a new group to the lost of groups in this :class:`~wte.helpers.frontend.MenuBuilder`.
 
-    * *group*: the name of the group
-    * *items*: a list of menu item ``dict``
+        :param label: The menu group's label
+        :type label: `unicode`
+        :param icon: The optional icon for this group. An icon must be provided in order to
+                     enable highlighting of menu items
+        :type icon: `unicode`
+        """
+        if self._group and self._group['items']:
+            self._groups.append(self._group)
+        self._group = {'label': label,
+                       'items': []}
+        if icon:
+            self._group['icon'] = icon
 
-    Each menu item is specified as a ``dict``, which has the following keys:
+    def menu(self, label, href, icon=None, highlight=False, attrs=None):
+        """Add a new menu item to the current group. Will create a new group with an empty
+        label if :func:`~wte.helpers.frontend.MenuBuilder.group` has not been called
 
-    * *visible*: whether the element is displayed (``True``/``False``)
-    * *label*: the label text to show
-    * *href*: the href for the menu link
-    * *class*: the CSS class to specify on the menu link [optional]
-    * *icon*: a foundation icon to show for the menu link [optional]
-    * *confirm*: confirmation text to show before the link is followed [optional]
-    * *highlight*: whether to also show the item at the top-level of the menubar (``True``/``False``) [optional]
-
-    Menu items that are marked as 'highlight: ``True`` and have an 'icon' set, will be shown at the top level of
-    the menubar. All other items are shown in a drop-down menu.
-
-    :param menu: The list of menu groups and items
-    :type menu: ``list``
-    :param drop_down_menu_left: Whether the drop-down menus should be left (True) or right-aligned (False)
-    :type drop_down_menu_left: ``bool``
-    :param class_: Additional CSS classes to add to the main menubar element
-    :type class_: ``unicode``
-    :return: The generated HTML elements
-    :rtype: :class:`~genshi.builder.tag`"""
-    full_menu = []
-    highlight = []
-    for group in menu:
-        if(len(full_menu) > 0):
-            full_menu.append(tag.li(class_='divider'))
-        for item in group['items']:
-            if item['visible']:
-                full_menu.append(tag.li(tag.a(item['label'],
-                                              href=item['href'],
-                                              class_=item['class'] if 'class' in item else None,
-                                              data_wte_confirm=item['confirm'] if 'confirm' in item else None,
-                                              target=item['target'] if 'target' in item else None)))
-                if 'highlight' in item and item['highlight'] and 'icon' in item:
-                    item['group'] = group['group']
-                    highlight.append(item)
-    groups = []
-    group = None
-    for item in highlight:
-        if group != item['group']:
-            groups.append([])
-            group = item['group']
-        groups[len(groups) - 1].append(item)
-    items = []
-    for group in groups:
-        if len(group) == 1:
-            item = group[0]
-            items.append(tag.li(tag.a(tag.span(class_=item['icon'],
-                                               aria_hidden='true'),
-                                      tag.span(group[0]['label'],
-                                               class_='show-for-sr'),
-                                      title=group[0]['label'],
-                                      href=item['href'],
-                                      class_=item['class'] if 'class' in item else None,
-                                      data_wte_confirm=item['confirm'] if 'confirm' in item else None,
-                                      target=item['target'] if 'target' in item else None)))
+        :param label: The menu item's label
+        :type label: `unicode`
+        :param href: The URL that the menu item loads
+        :type href: `unicode`
+        :param icon: The optional icon for this menu item
+        :type icon: `unicode`
+        :param highlight: Whether to highlight the menu item by displaying it at the top level
+        :type highlight: `boolean`
+        :param attrs: Additional attributes to set for the menu item link
+        :type attrs: :class:`dict`
+        """
+        if not self._group:
+            self._group = {'label': '',
+                           'items': []}
+        if attrs:
+            attrs['href'] = href
         else:
-            sub_menu = []
-            for item in group:
-                sub_menu.append(tag.li(tag.a(item['label'],
-                                             href=item['href'],
-                                             class_=item['class'] if 'class' in item else None,
-                                             data_wte_confirm=item['confirm'] if 'confirm' in item else None,
-                                             target=item['target'] if 'target' in item else None)))
-            items.append(tag.li(tag.div(tag.a(tag.span(class_=group[0]['icon'],
-                                                       aria_hidden='true'),
-                                              tag.span(text.title(group[0]['group']),
-                                                       class_='show-for-sr'),
-                                              href='#'),
-                                        tag.ul(sub_menu),
-                                        class_='menu',
-                                        data_wte_menu_position='left' if drop_down_menu_left else 'right')))
-    items.append(tag.li(tag.div(tag.a(tag.span(class_='fi-list',
-                                               aria_hidden='true'),
-                                      tag.span('Actions',
-                                               class_='show-for-sr'),
-                                      href='#',
-                                      title='All actions'),
-                                tag.ul(full_menu),
-                                class_='menu',
-                                data_wte_menu_position='left' if drop_down_menu_left else 'right')))
-    return tag.ul(items, class_='menubar %s' % (class_) if class_ else 'menubar')
+            attrs = {'href': href}
+        item = {'visible': True,
+                'label': label,
+                'attrs': attrs}
+        if icon:
+            item['icon'] = icon
+        if highlight:
+            item['highlight'] = True
+        self._group['items'].append(item)
+
+    def generate(self):
+        """Generate the final menu structure.
+
+        :return: The list of menu groups with their menu items
+        :r_type: ``list`` of menu groups
+        """
+        if self._group and self._group['items']:
+            self._groups.append(self._group)
+            self._group = None
+        return self._groups
 
 
 def readable_timedelta(delta):
