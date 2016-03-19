@@ -13,8 +13,6 @@ consulte the following documentation: :mod:`pywebtools.text`,
 """
 import asset
 
-from genshi.builder import Markup  # NOQA
-
 from . import frontend  # NOQA
 
 
