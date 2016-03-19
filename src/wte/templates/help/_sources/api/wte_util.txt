@@ -1,0 +1,2 @@
+.. automodule:: wte.util
+   :members:

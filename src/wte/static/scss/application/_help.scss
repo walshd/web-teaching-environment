@@ -1,0 +1,39 @@
+#help-viewer {
+    position: fixed;
+    z-index: 2000;
+    background: #fff;
+    border: 0;
+    width: 0px;
+    height: 300px;
+    right: 0px;
+    top: rem-calc(80);
+    max-width: 100%;
+    display: none;
+    
+    &.show {
+        display: block;
+        border: 1px solid $medium-gray;
+        box-shadow: -1px 1px 2px 0 $dark-gray;
+        @include breakpoint(small) {
+            width: 100%;
+        }
+        @include breakpoint(medium) {
+            width: rem-calc(500);
+        }
+        @include breakpoint(large) {
+            width: rem-calc(700);
+        }
+    
+        > a {
+            position: absolute;
+            top: 0px;
+            right: rem-calc(20);
+        }
+    }
+    
+    iframe {
+        border: 0;
+        width: 100%;
+        height: 100%;
+    }
+}

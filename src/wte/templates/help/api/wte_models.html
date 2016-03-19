@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="../../static/css/application.min.css"/>
+    <link rel="stylesheet" href="../_static/default.css"/>
+    <link rel="stylesheet" href="../_static/override.css"/>
+    <link rel="stylesheet" href="../_static/pygments.css"/>
+    <title><code class="docutils literal"><span class="pre">wte.models</span></code> &#8211; Database Models</title>
+  </head>
+  <body>
+    <nav>
+      <ul class="breadcrumbs">
+        
+          <li><a href="index.html">API Documentation</a></li>
+        
+        <li><code class="docutils literal"><span class="pre">wte.models</span></code> &#8211; Database Models</li>
+      </ul>
+      <div class="row">
+        <div class="column small-12">
+          <span class="target" id="module-wte.models"></span><div class="section" id="wte-models-database-models">
+<h1><a class="reference internal" href="#module-wte.models" title="wte.models"><code class="xref py py-mod docutils literal"><span class="pre">wte.models</span></code></a> &#8211; Database Models<a class="headerlink" href="#wte-models-database-models" title="Permalink to this headline">¶</a></h1>
+<p>The <a class="reference internal" href="#module-wte.models" title="wte.models"><code class="xref py py-mod docutils literal"><span class="pre">models</span></code></a> module contains the database models that are used to
+abstract the actual database.</p>
+<p>Additionally it provides the <a class="reference internal" href="#wte.models.check_database_version" title="wte.models.check_database_version"><code class="xref py py-func docutils literal"><span class="pre">check_database_version()</span></code></a>
+function, which compares the current Alembic version of the database to the
+required <a class="reference internal" href="#wte.models.DB_VERSION" title="wte.models.DB_VERSION"><code class="xref py py-data docutils literal"><span class="pre">DB_VERSION</span></code></a> to ensure that the application does
+not run on an outdated database schema.</p>
+<dl class="class">
+<dt id="wte.models.Asset">
+<em class="property">class </em><code class="descclassname">wte.models.</code><code class="descname">Asset</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/models.html#Asset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.models.Asset" title="Permalink to this definition">¶</a></dt>
+<dd><p>The class:<cite>~wte.models.Asset</cite> represents any kind of file data. What role the
+<a class="reference internal" href="#wte.models.Asset" title="wte.models.Asset"><code class="xref py py-class docutils literal"><span class="pre">Asset</span></code></a> is used in depends on the <code class="docutils literal"><span class="pre">type</span></code>.</p>
+<p>Instances of <a class="reference internal" href="#wte.models.Asset" title="wte.models.Asset"><code class="xref py py-class docutils literal"><span class="pre">Asset</span></code></a> have the following attributes:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">id</span></code> &#8211; The unique database identifier</li>
+<li><code class="docutils literal"><span class="pre">data</span></code> &#8211; The actual file content</li>
+<li><code class="docutils literal"><span class="pre">filename</span></code> &#8211; The filename used for accessing this <a class="reference internal" href="#wte.models.Asset" title="wte.models.Asset"><code class="xref py py-class docutils literal"><span class="pre">Asset</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">mimetype</span></code> &#8211; The mimetype of this <a class="reference internal" href="#wte.models.Asset" title="wte.models.Asset"><code class="xref py py-class docutils literal"><span class="pre">Asset</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">order</span></code> &#8211; The order to display this <a class="reference internal" href="#wte.models.Asset" title="wte.models.Asset"><code class="xref py py-class docutils literal"><span class="pre">Asset</span></code></a> in</li>
+<li><code class="docutils literal"><span class="pre">parts</span></code> &#8211; The <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a> that this <a class="reference internal" href="#wte.models.Asset" title="wte.models.Asset"><code class="xref py py-class docutils literal"><span class="pre">Asset</span></code></a> is used in</li>
+<li><code class="docutils literal"><span class="pre">type</span></code> &#8211; The type of <a class="reference internal" href="#wte.models.Asset" title="wte.models.Asset"><code class="xref py py-class docutils literal"><span class="pre">Asset</span></code></a> it is (asset, template, file)</li>
+</ul>
+<dl class="method">
+<dt id="wte.models.Asset.menu">
+<code class="descname">menu</code><span class="sig-paren">(</span><em>request</em>, <em>part=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/models.html#Asset.menu"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.models.Asset.menu" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate the menu for this <a class="reference internal" href="#wte.models.Asset" title="wte.models.Asset"><code class="xref py py-class docutils literal"><span class="pre">Asset</span></code></a>. Will distinguish between
+assets, templates, and files.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="wte.models.DBUpgradeException">
+<em class="property">exception </em><code class="descclassname">wte.models.</code><code class="descname">DBUpgradeException</code><span class="sig-paren">(</span><em>current</em>, <em>required</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/models.html#DBUpgradeException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.models.DBUpgradeException" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <a class="reference internal" href="#wte.models.DBUpgradeException" title="wte.models.DBUpgradeException"><code class="xref py py-class docutils literal"><span class="pre">DBUpgradeException</span></code></a> is used to indicate that
+the database requires an upgrade before the Web Teaching Environment system
+can be used.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="wte.models.DB_VERSION">
+<code class="descclassname">wte.models.</code><code class="descname">DB_VERSION</code><em class="property"> = u'510cc5b21636'</em><a class="headerlink" href="#wte.models.DB_VERSION" title="Permalink to this definition">¶</a></dt>
+<dd><p>The currently required database version.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="wte.models.Part">
+<em class="property">class </em><code class="descclassname">wte.models.</code><code class="descname">Part</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/models.html#Part"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.models.Part" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a> class represents the parts from which the teaching
+content is constructed. It supports the following types: module, tutorial, page,
+exercise, and task.</p>
+<p>Instances of <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a> have the following attributes:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">id</span></code> &#8211; The unique database identifier</li>
+<li><code class="docutils literal"><span class="pre">access_rights</span></code> &#8211; JSON structure representing the access rights to
+this <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">assets</span></code> &#8211; List of <a class="reference internal" href="#wte.models.Asset" title="wte.models.Asset"><code class="xref py py-class docutils literal"><span class="pre">Asset</span></code></a> that act as asset files</li>
+<li><code class="docutils literal"><span class="pre">children</span></code> &#8211; List of <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a> contained in this
+<a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">compiled_content</span></code> &#8211; The compiled HTML generated from the ReST <code class="docutils literal"><span class="pre">content</span></code></li>
+<li><code class="docutils literal"><span class="pre">content</span></code> &#8211; The ReST content for the <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">display_mode</span></code> &#8211; The display template mode to use for the <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">order</span></code> &#8211; The ordering position of this <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">parent_id</span></code> &#8211; The unique database identifier of the parent <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">parent</span></code> &#8211; The parent <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">progress</span></code> &#8211; The <a class="reference internal" href="#wte.models.UserPartProgress" title="wte.models.UserPartProgress"><code class="xref py py-class docutils literal"><span class="pre">UserPartProgress</span></code></a> linked to this <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">status</span></code> &#8211; The <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>&#8216;s availability status</li>
+<li><code class="docutils literal"><span class="pre">summary</span></code> &#8211; The shortened summary derived from the <code class="docutils literal"><span class="pre">compiled_content</span></code></li>
+<li><code class="docutils literal"><span class="pre">tasks</span></code> &#8211; List of <a class="reference internal" href="#wte.models.TimedTask" title="wte.models.TimedTask"><code class="xref py py-class docutils literal"><span class="pre">TimedTask</span></code></a> that are attached to this
+<a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">templates</span></code> &#8211; List of <a class="reference internal" href="#wte.models.Asset" title="wte.models.Asset"><code class="xref py py-class docutils literal"><span class="pre">Asset</span></code></a> that act as template files</li>
+<li><code class="docutils literal"><span class="pre">title</span></code> &#8211; The title displayed for this <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">type</span></code> &#8211; Whether the <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a> is a module, tutorial, page,
+exercise, or task.</li>
+<li><code class="docutils literal"><span class="pre">users</span></code> &#8211; The <a class="reference internal" href="#wte.models.User" title="wte.models.User"><code class="xref py py-class docutils literal"><span class="pre">User</span></code></a> that are linked to this <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a></li>
+</ul>
+<dl class="method">
+<dt id="wte.models.Part.allow">
+<code class="descname">allow</code><span class="sig-paren">(</span><em>action</em>, <em>user</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/models.html#Part.allow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.models.Part.allow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks whether the given <code class="docutils literal"><span class="pre">user</span></code> is allowed to perform the given
+<code class="docutils literal"><span class="pre">action</span></code>. Supports the following actions: view, edit, delete, and users.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>action</strong> (<cite>unicode</cite>) &#8211; The action to check for</li>
+<li><strong>user</strong> (<a class="reference internal" href="#wte.models.User" title="wte.models.User"><code class="xref py py-class docutils literal"><span class="pre">User</span></code></a>) &#8211; The user to check</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><code class="docutils literal"><span class="pre">True</span></code> if the <code class="docutils literal"><span class="pre">user</span></code> may perform the action, <code class="docutils literal"><span class="pre">False</span></code>
+otherwise</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><cite>bool</cite></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="wte.models.Part.has_role">
+<code class="descname">has_role</code><span class="sig-paren">(</span><em>role</em>, <em>user</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/models.html#Part.has_role"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.models.Part.has_role" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if the given <code class="docutils literal"><span class="pre">user</span></code> has the given <code class="docutils literal"><span class="pre">role</span></code> for this <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.
+If a <code class="docutils literal"><span class="pre">list</span></code> is specified as the <code class="docutils literal"><span class="pre">role</span></code>, then the <code class="docutils literal"><span class="pre">user</span></code> must have at least one of the
+specified roles.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>role</strong> (<code class="docutils literal"><span class="pre">unicode</span></code> or <code class="docutils literal"><span class="pre">list</span></code>) &#8211; The role the user must have.</li>
+<li><strong>user</strong> (<a class="reference internal" href="#wte.models.User" title="wte.models.User"><code class="xref py py-class docutils literal"><span class="pre">User</span></code></a>) &#8211; The user that has to have the role</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><code class="docutils literal"><span class="pre">True</span></code> if the <a class="reference internal" href="#wte.models.User" title="wte.models.User"><code class="xref py py-class docutils literal"><span class="pre">User</span></code></a> has the given role, <code class="docutils literal"><span class="pre">False</span></code> otherwise</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><code class="docutils literal"><span class="pre">bool</span></code></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="wte.models.Part.menu">
+<code class="descname">menu</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/models.html#Part.menu"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.models.Part.menu" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the menu for the <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wte.models.Part.next">
+<code class="descname">next</code><a class="headerlink" href="#wte.models.Part.next" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the next <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a> in the list of siblings.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The next <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a> sibling</td>
+</tr>
+<tr class="field-even field"><th class="field-name">R_type:</th><td class="field-body"><a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wte.models.Part.prev">
+<code class="descname">prev</code><a class="headerlink" href="#wte.models.Part.prev" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the previous <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a> in the list of siblings.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The previous <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a> sibling</td>
+</tr>
+<tr class="field-even field"><th class="field-name">R_type:</th><td class="field-body"><a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="wte.models.Part.root">
+<code class="descname">root</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/models.html#Part.root"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.models.Part.root" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the root <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a> for the current <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.
+If the <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a> has no parent, then returns itself.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The root <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wte.models.Part.summary">
+<code class="descname">summary</code><a class="headerlink" href="#wte.models.Part.summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the text summary for this <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.
+The text summary is generated by finding the first tag in the <code class="docutils literal"><span class="pre">compiled_content</span></code>
+and then returning that.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The content of the first tag in the <code class="docutils literal"><span class="pre">compiled_content</span></code></td>
+</tr>
+<tr class="field-even field"><th class="field-name">R_type:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">unicode</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="wte.models.Permission">
+<em class="property">class </em><code class="descclassname">wte.models.</code><code class="descname">Permission</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/models.html#Permission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.models.Permission" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <a class="reference internal" href="#wte.models.Permission" title="wte.models.Permission"><code class="xref py py-class docutils literal"><span class="pre">Permission</span></code></a> class represents a single
+permission that can be granted to a <a class="reference internal" href="#wte.models.User" title="wte.models.User"><code class="xref py py-class docutils literal"><span class="pre">User</span></code></a> or to a
+<a class="reference internal" href="#wte.models.PermissionGroup" title="wte.models.PermissionGroup"><code class="xref py py-class docutils literal"><span class="pre">PermissionGroup</span></code></a>.</p>
+<p>Instances of <a class="reference internal" href="#wte.models.Permission" title="wte.models.Permission"><code class="xref py py-class docutils literal"><span class="pre">Permission</span></code></a> have the following attributes:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">id</span></code> &#8211; The unique database identifier</li>
+<li><code class="docutils literal"><span class="pre">name</span></code> &#8211; The unique name used for permission checking</li>
+<li><code class="docutils literal"><span class="pre">permission_groups</span></code> &#8211; List of <a class="reference internal" href="#wte.models.PermissionGroup" title="wte.models.PermissionGroup"><code class="xref py py-class docutils literal"><span class="pre">PermissionGroup</span></code></a>
+that contain this <a class="reference internal" href="#wte.models.Permission" title="wte.models.Permission"><code class="xref py py-class docutils literal"><span class="pre">Permission</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">title</span></code> &#8211; The title displayed for this <a class="reference internal" href="#wte.models.Permission" title="wte.models.Permission"><code class="xref py py-class docutils literal"><span class="pre">Permission</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">users</span></code> &#8211; List of <a class="reference internal" href="#wte.models.User" title="wte.models.User"><code class="xref py py-class docutils literal"><span class="pre">User</span></code></a> that have this
+<a class="reference internal" href="#wte.models.Permission" title="wte.models.Permission"><code class="xref py py-class docutils literal"><span class="pre">Permission</span></code></a></li>
+</ul>
+</dd></dl>
+
+<dl class="class">
+<dt id="wte.models.PermissionGroup">
+<em class="property">class </em><code class="descclassname">wte.models.</code><code class="descname">PermissionGroup</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/models.html#PermissionGroup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.models.PermissionGroup" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <a class="reference internal" href="#wte.models.PermissionGroup" title="wte.models.PermissionGroup"><code class="xref py py-class docutils literal"><span class="pre">PermissionGroup</span></code></a> groups together one or more
+<a class="reference internal" href="#wte.models.Permission" title="wte.models.Permission"><code class="xref py py-class docutils literal"><span class="pre">Permission</span></code></a> for easier administration.</p>
+<p>Instances of <a class="reference internal" href="#wte.models.PermissionGroup" title="wte.models.PermissionGroup"><code class="xref py py-class docutils literal"><span class="pre">PermissionGroup</span></code></a> have the following
+attributes:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">id</span></code> &#8211; The unique database identifier</li>
+<li><code class="docutils literal"><span class="pre">permissions</span></code> &#8211; The list of grouped <a class="reference internal" href="#wte.models.Permission" title="wte.models.Permission"><code class="xref py py-class docutils literal"><span class="pre">Permission</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">title</span></code> &#8211; The title displayed for this
+<a class="reference internal" href="#wte.models.PermissionGroup" title="wte.models.PermissionGroup"><code class="xref py py-class docutils literal"><span class="pre">PermissionGroup</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">users</span></code> &#8211; List of <a class="reference internal" href="#wte.models.User" title="wte.models.User"><code class="xref py py-class docutils literal"><span class="pre">User</span></code></a> that have this
+<a class="reference internal" href="#wte.models.PermissionGroup" title="wte.models.PermissionGroup"><code class="xref py py-class docutils literal"><span class="pre">PermissionGroup</span></code></a></li>
+</ul>
+</dd></dl>
+
+<dl class="class">
+<dt id="wte.models.TimedTask">
+<em class="property">class </em><code class="descclassname">wte.models.</code><code class="descname">TimedTask</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/models.html#TimedTask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.models.TimedTask" title="Permalink to this definition">¶</a></dt>
+<dd><p>The class:<cite>~wte.models.TimedTask</cite> represents a task that is to be run at a specific
+time in the future.</p>
+<p>Instances of <a class="reference internal" href="#wte.models.TimedTask" title="wte.models.TimedTask"><code class="xref py py-class docutils literal"><span class="pre">TimedTask</span></code></a> have the following attributes:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">id</span></code> &#8211; The unique database identifier</li>
+<li><code class="docutils literal"><span class="pre">part_id</span></code> &#8211; The unique identifier of the <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a> the
+<a class="reference internal" href="#wte.models.TimedTask" title="wte.models.TimedTask"><code class="xref py py-class docutils literal"><span class="pre">TimedTask</span></code></a> belongs to</li>
+<li><code class="docutils literal"><span class="pre">name</span></code> &#8211; The name of this <a class="reference internal" href="#wte.models.TimedTask" title="wte.models.TimedTask"><code class="xref py py-class docutils literal"><span class="pre">TimedTask</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">title</span></code> &#8211; The title of this <a class="reference internal" href="#wte.models.TimedTask" title="wte.models.TimedTask"><code class="xref py py-class docutils literal"><span class="pre">TimedTask</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">timestamp</span></code> &#8211; The timestamp at which to execute this <a class="reference internal" href="#wte.models.TimedTask" title="wte.models.TimedTask"><code class="xref py py-class docutils literal"><span class="pre">TimedTask</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">_options</span></code> &#8211; The task options as JSON (do not use directly, use
+<a class="reference internal" href="#wte.models.TimedTask.options" title="wte.models.TimedTask.options"><code class="xref py py-attr docutils literal"><span class="pre">options</span></code></a>)</li>
+</ul>
+<dl class="attribute">
+<dt id="wte.models.TimedTask.delta">
+<code class="descname">delta</code><a class="headerlink" href="#wte.models.TimedTask.delta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the <code class="docutils literal"><span class="pre">timedelta</span></code> between the <a class="reference internal" href="#wte.models.TimedTask" title="wte.models.TimedTask"><code class="xref py py-class docutils literal"><span class="pre">TimedTask</span></code></a>&#8216;s
+<code class="docutils literal"><span class="pre">timestamp</span></code> and <code class="docutils literal"><span class="pre">datetime.now()</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="wte.models.TimedTask.menu">
+<code class="descname">menu</code><span class="sig-paren">(</span><em>request</em>, <em>part</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/models.html#TimedTask.menu"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.models.TimedTask.menu" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate the menu for this <a class="reference internal" href="#wte.models.TimedTask" title="wte.models.TimedTask"><code class="xref py py-class docutils literal"><span class="pre">TimedTask</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wte.models.TimedTask.options">
+<code class="descname">options</code><a class="headerlink" href="#wte.models.TimedTask.options" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get / Set the options for this <a class="reference internal" href="#wte.models.TimedTask" title="wte.models.TimedTask"><code class="xref py py-class docutils literal"><span class="pre">TimedTask</span></code></a>.</p>
+<p>When setting options, the new options must be of type <code class="docutils literal"><span class="pre">dict</span></code>.</p>
+<p>When getting options, the options will be returned as a <code class="docutils literal"><span class="pre">dict</span></code>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="wte.models.User">
+<em class="property">class </em><code class="descclassname">wte.models.</code><code class="descname">User</code><span class="sig-paren">(</span><em>email</em>, <em>display_name</em>, <em>password=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/models.html#User"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.models.User" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <a class="reference internal" href="#wte.models.User" title="wte.models.User"><code class="xref py py-class docutils literal"><span class="pre">User</span></code></a> represents a users in the WTE. Which
+functionality they can access is determined purely through the individual
+<a class="reference internal" href="#wte.models.User" title="wte.models.User"><code class="xref py py-class docutils literal"><span class="pre">User</span></code></a>&#8216;s <a class="reference internal" href="#wte.models.Permission" title="wte.models.Permission"><code class="xref py py-class docutils literal"><span class="pre">Permission</span></code></a>.</p>
+<p>Instances of the <a class="reference internal" href="#wte.models.User" title="wte.models.User"><code class="xref py py-class docutils literal"><span class="pre">User</span></code></a> have the following attributes:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">id</span></code> &#8211; The unique database identifier</li>
+<li><code class="docutils literal"><span class="pre">display_name</span></code> &#8211; The name to display</li>
+<li><code class="docutils literal"><span class="pre">email</span></code> &#8211; The e-mail address used for login and communication</li>
+<li><code class="docutils literal"><span class="pre">login_limit</span></code> &#8211; Login limitation counter to stop brute-force login
+attacks</li>
+<li><code class="docutils literal"><span class="pre">parts</span></code> &#8211; The <a class="reference internal" href="#wte.models.UserPartProgress" title="wte.models.UserPartProgress"><code class="xref py py-class docutils literal"><span class="pre">UserPartProgress</span></code></a> belonging to this
+<code class="xref py py-class docutils literal"><span class="pre">User</span></code></li>
+<li><code class="docutils literal"><span class="pre">password</span></code> &#8211; The hashed password</li>
+<li><code class="docutils literal"><span class="pre">permissions</span></code> &#8211; The <a class="reference internal" href="#wte.models.User" title="wte.models.User"><code class="xref py py-class docutils literal"><span class="pre">User</span></code></a>&#8216;s list of
+<a class="reference internal" href="#wte.models.Permission" title="wte.models.Permission"><code class="xref py py-class docutils literal"><span class="pre">Permission</span></code></a>.</li>
+<li><code class="docutils literal"><span class="pre">permission_groups</span></code> &#8211; The <a class="reference internal" href="#wte.models.User" title="wte.models.User"><code class="xref py py-class docutils literal"><span class="pre">User</span></code></a>&#8216;s list of
+<a class="reference internal" href="#wte.models.PermissionGroup" title="wte.models.PermissionGroup"><code class="xref py py-class docutils literal"><span class="pre">PermissionGroup</span></code></a>.</li>
+<li><code class="docutils literal"><span class="pre">salt</span></code> &#8211; The password hash salt</li>
+<li><code class="docutils literal"><span class="pre">validation_token</span></code> &#8211; The validation token for new users</li>
+</ul>
+<dl class="method">
+<dt id="wte.models.User.allow">
+<code class="descname">allow</code><span class="sig-paren">(</span><em>action</em>, <em>user</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/models.html#User.allow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.models.User.allow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks whether the given <code class="docutils literal"><span class="pre">user</span></code> is allowed to perform the given
+<code class="docutils literal"><span class="pre">action</span></code>. Supports the following actions: view, edit, delete.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>action</strong> (<cite>unicode</cite>) &#8211; The action to check for</li>
+<li><strong>user</strong> (<a class="reference internal" href="#wte.models.User" title="wte.models.User"><code class="xref py py-class docutils literal"><span class="pre">User</span></code></a>) &#8211; The user to check</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><code class="docutils literal"><span class="pre">True</span></code> if the <code class="docutils literal"><span class="pre">user</span></code> may perform the action, <code class="docutils literal"><span class="pre">False</span></code>
+otherwise</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><cite>bool</cite></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="wte.models.User.has_permission">
+<code class="descname">has_permission</code><span class="sig-paren">(</span><em>permission</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/models.html#User.has_permission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.models.User.has_permission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks whether the user has been granted the given <code class="docutils literal"><span class="pre">permission</span></code>,
+either directly or via a <a class="reference internal" href="#wte.models.PermissionGroup" title="wte.models.PermissionGroup"><code class="xref py py-class docutils literal"><span class="pre">PermissionGroup</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>permission</strong> (<cite>unicode</cite>) &#8211; The permission to check for</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal"><span class="pre">True</span></code> if the user has the permission, <code class="docutils literal"><span class="pre">False</span></code> otherwise</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>bool</cite></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="wte.models.User.new_password">
+<code class="descname">new_password</code><span class="sig-paren">(</span><em>password</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/models.html#User.new_password"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.models.User.new_password" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the given <code class="docutils literal"><span class="pre">password</span></code> as the <a class="reference internal" href="#wte.models.User" title="wte.models.User"><code class="xref py py-class docutils literal"><span class="pre">User</span></code></a>&#8216;s new
+password. Calls <a class="reference internal" href="#wte.models.User.new_salt" title="wte.models.User.new_salt"><code class="xref py py-func docutils literal"><span class="pre">new_salt()</span></code></a> to generate a new
+salt for the password.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>password</strong> (<cite>unicode</cite>) &#8211; The new cleartext password</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="wte.models.User.new_salt">
+<code class="descname">new_salt</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/models.html#User.new_salt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.models.User.new_salt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a new <code class="xref py py-data docutils literal"><span class="pre">salt`</span></code>. Will use
+<code class="docutils literal"><span class="pre">os.urandom</span></code> if available and the standard pseudo-random if not.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="wte.models.User.password_matches">
+<code class="descname">password_matches</code><span class="sig-paren">(</span><em>password</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/models.html#User.password_matches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.models.User.password_matches" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks whether the given password matches the hashed, stored
+password.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>password</strong> (<cite>unicode</cite>) &#8211; The password to check</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal"><span class="pre">True</span></code> if the passwords match, <code class="docutils literal"><span class="pre">False</span></code> otherwise</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>bool</cite></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="wte.models.User.random_password">
+<code class="descname">random_password</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/models.html#User.random_password"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.models.User.random_password" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a random password, 12 characters in length consisting of
+lower-case characters, upper-case characters, and numbers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The new password</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><cite>unicode</cite></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="wte.models.UserPartProgress">
+<em class="property">class </em><code class="descclassname">wte.models.</code><code class="descname">UserPartProgress</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/models.html#UserPartProgress"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.models.UserPartProgress" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <a class="reference internal" href="#wte.models.UserPartProgress" title="wte.models.UserPartProgress"><code class="xref py py-class docutils literal"><span class="pre">UserPartProgress</span></code></a> represents the progress a
+<a class="reference internal" href="#wte.models.User" title="wte.models.User"><code class="xref py py-class docutils literal"><span class="pre">User</span></code></a> has made through a <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</p>
+<p>Instances of <a class="reference internal" href="#wte.models.UserPartProgress" title="wte.models.UserPartProgress"><code class="xref py py-class docutils literal"><span class="pre">UserPartProgress</span></code></a> have the following
+attributes:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">id</span></code> &#8211; The unique database identifier</li>
+<li><code class="docutils literal"><span class="pre">current_id</span></code> &#8211; The unique database identifier of the current <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">current</span></code> &#8211; The current <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">files</span></code> &#8211; The <a class="reference internal" href="#wte.models.Asset" title="wte.models.Asset"><code class="xref py py-class docutils literal"><span class="pre">Asset</span></code></a> that are linked to this <a class="reference internal" href="#wte.models.UserPartProgress" title="wte.models.UserPartProgress"><code class="xref py py-class docutils literal"><span class="pre">UserPartProgress</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">part_id</span></code> &#8211; The unique identifier of the <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">part</span></code> &#8211; The <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a> that this represents the
+progress in</li>
+<li><code class="docutils literal"><span class="pre">user_id</span></code> &#8211; The unique identifier of the <a class="reference internal" href="#wte.models.User" title="wte.models.User"><code class="xref py py-class docutils literal"><span class="pre">User</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">user</span></code> &#8211; The <a class="reference internal" href="#wte.models.User" title="wte.models.User"><code class="xref py py-class docutils literal"><span class="pre">User</span></code></a> for which this represents the
+progress</li>
+</ul>
+<dl class="method">
+<dt id="wte.models.UserPartProgress.allow">
+<code class="descname">allow</code><span class="sig-paren">(</span><em>action</em>, <em>user</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/models.html#UserPartProgress.allow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.models.UserPartProgress.allow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks whether the given <code class="docutils literal"><span class="pre">user</span></code> is allowed to perform the given
+<code class="docutils literal"><span class="pre">action</span></code>. Supports the following action: view.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>action</strong> (<cite>unicode</cite>) &#8211; The action to check for</li>
+<li><strong>user</strong> (<a class="reference internal" href="#wte.models.User" title="wte.models.User"><code class="xref py py-class docutils literal"><span class="pre">User</span></code></a>) &#8211; The user to check</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><code class="docutils literal"><span class="pre">True</span></code> if the <code class="docutils literal"><span class="pre">user</span></code> may perform the action, <code class="docutils literal"><span class="pre">False</span></code>
+otherwise</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><cite>bool</cite></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="wte.models.UserPartRole">
+<em class="property">class </em><code class="descclassname">wte.models.</code><code class="descname">UserPartRole</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/models.html#UserPartRole"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.models.UserPartRole" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <a class="reference internal" href="#wte.models.UserPartRole" title="wte.models.UserPartRole"><code class="xref py py-class docutils literal"><span class="pre">UserPartRole</span></code></a> links users to <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>
+that have a type &#8220;module&#8221;. They represent the role the <a class="reference internal" href="#wte.models.User" title="wte.models.User"><code class="xref py py-class docutils literal"><span class="pre">User</span></code></a>
+plays for that <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</p>
+<p>Instances of <a class="reference internal" href="#wte.models.UserPartRole" title="wte.models.UserPartRole"><code class="xref py py-class docutils literal"><span class="pre">UserPartRole</span></code></a> have the following attributes:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">id</span></code> &#8211; The unique database identifier</li>
+<li><code class="docutils literal"><span class="pre">part_id</span></code> &#8211; The unique database identifier of the linked <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">part</span></code> &#8211; The linked <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">role</span></code> &#8211; The role the <a class="reference internal" href="#wte.models.User" title="wte.models.User"><code class="xref py py-class docutils literal"><span class="pre">User</span></code></a> plays in the <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">user_id</span></code> &#8211; The unique database identifier of the linked <a class="reference internal" href="#wte.models.User" title="wte.models.User"><code class="xref py py-class docutils literal"><span class="pre">User</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">user</span></code> &#8211; The linked <a class="reference internal" href="#wte.models.User" title="wte.models.User"><code class="xref py py-class docutils literal"><span class="pre">User</span></code></a></li>
+</ul>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.models.check_database_version">
+<code class="descclassname">wte.models.</code><code class="descname">check_database_version</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/models.html#check_database_version"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.models.check_database_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks that the current version of the database matches the version specified
+by <a class="reference internal" href="#wte.models.DB_VERSION" title="wte.models.DB_VERSION"><code class="xref py py-data docutils literal"><span class="pre">DB_VERSION</span></code></a>.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="wte.models.groups_permissions">
+<code class="descclassname">wte.models.</code><code class="descname">groups_permissions</code><em class="property"> = Table('permission_groups_permissions', MetaData(bind=None), Column('permission_group_id', Integer(), ForeignKey(u'permission_groups.id'), table=&lt;permission_groups_permissions&gt;, primary_key=True, nullable=False), Column('permission_id', Integer(), ForeignKey(u'permissions.id'), table=&lt;permission_groups_permissions&gt;, primary_key=True, nullable=False), schema=None)</em><a class="headerlink" href="#wte.models.groups_permissions" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.Table</span></code> to link <a class="reference internal" href="#wte.models.PermissionGroup" title="wte.models.PermissionGroup"><code class="xref py py-class docutils literal"><span class="pre">PermissionGroup</span></code></a> and
+<a class="reference internal" href="#wte.models.Permission" title="wte.models.Permission"><code class="xref py py-class docutils literal"><span class="pre">Permission</span></code></a>.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="wte.models.parts_assets">
+<code class="descclassname">wte.models.</code><code class="descname">parts_assets</code><em class="property"> = Table('parts_assets', MetaData(bind=None), Column('part_id', Integer(), ForeignKey('parts.id'), table=&lt;parts_assets&gt;, primary_key=True, nullable=False), Column('asset_id', Integer(), ForeignKey('assets.id'), table=&lt;parts_assets&gt;, primary_key=True, nullable=False), schema=None)</em><a class="headerlink" href="#wte.models.parts_assets" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.Table</span></code> to link <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a> and
+<a class="reference internal" href="#wte.models.Asset" title="wte.models.Asset"><code class="xref py py-class docutils literal"><span class="pre">Asset</span></code></a>.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="wte.models.progress_assets">
+<code class="descclassname">wte.models.</code><code class="descname">progress_assets</code><em class="property"> = Table('progress_assets', MetaData(bind=None), Column('progress_id', Integer(), ForeignKey('user_part_progress.id'), table=&lt;progress_assets&gt;, primary_key=True, nullable=False), Column('asset_id', Integer(), ForeignKey('assets.id'), table=&lt;progress_assets&gt;, primary_key=True, nullable=False), schema=None)</em><a class="headerlink" href="#wte.models.progress_assets" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.Table</span></code> to link <a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a> and
+<a class="reference internal" href="#wte.models.Asset" title="wte.models.Asset"><code class="xref py py-class docutils literal"><span class="pre">Asset</span></code></a>.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="wte.models.users_groups">
+<code class="descclassname">wte.models.</code><code class="descname">users_groups</code><em class="property"> = Table('users_permission_groups', MetaData(bind=None), Column('user_id', Integer(), ForeignKey(u'users.id'), table=&lt;users_permission_groups&gt;, primary_key=True, nullable=False), Column('permission_group_id', Integer(), ForeignKey(u'permission_groups.id'), table=&lt;users_permission_groups&gt;, primary_key=True, nullable=False), schema=None)</em><a class="headerlink" href="#wte.models.users_groups" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.Table</span></code> to link <a class="reference internal" href="#wte.models.User" title="wte.models.User"><code class="xref py py-class docutils literal"><span class="pre">User</span></code></a> and
+<a class="reference internal" href="#wte.models.PermissionGroup" title="wte.models.PermissionGroup"><code class="xref py py-class docutils literal"><span class="pre">PermissionGroup</span></code></a>.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="wte.models.users_permissions">
+<code class="descclassname">wte.models.</code><code class="descname">users_permissions</code><em class="property"> = Table('users_permissions', MetaData(bind=None), Column('user_id', Integer(), ForeignKey('users.id'), table=&lt;users_permissions&gt;, primary_key=True, nullable=False), Column('permission_id', Integer(), ForeignKey('permissions.id'), table=&lt;users_permissions&gt;, primary_key=True, nullable=False), schema=None)</em><a class="headerlink" href="#wte.models.users_permissions" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.Table</span></code> to link <a class="reference internal" href="#wte.models.User" title="wte.models.User"><code class="xref py py-class docutils literal"><span class="pre">User</span></code></a> and
+<a class="reference internal" href="#wte.models.Permission" title="wte.models.Permission"><code class="xref py py-class docutils literal"><span class="pre">Permission</span></code></a>.</p>
+</dd></dl>
+
+</div>
+
+        </div>
+      </div>
+      <ul class="pagination text-center" role="navigation" aria-label="Pagination">
+        
+          <li class="pagination-previous"><a href="wte_helpers_frontend.html"><code class="docutils literal"><span class="pre">wte.helpers.frontend</span></code> &#8211; Helpers for the frontend display</a></li>
+        
+        
+          <li class="pagination-next"><a href="wte_scripts.html"><code class="docutils literal"><span class="pre">wte.scripts</span></code> &#8211; Administration scripts</a></li>
+        
+      </ul>
+    </nav>
+  </body>
+</html>

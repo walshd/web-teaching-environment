@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="../../static/css/application.min.css"/>
+    <link rel="stylesheet" href="../_static/default.css"/>
+    <link rel="stylesheet" href="../_static/override.css"/>
+    <link rel="stylesheet" href="../_static/pygments.css"/>
+    <title>Setup</title>
+  </head>
+  <body>
+    <nav>
+      <ul class="breadcrumbs">
+        
+          <li><a href="index.html">Administrator Documentation</a></li>
+        
+        <li>Setup</li>
+      </ul>
+      <div class="row">
+        <div class="column small-12">
+          <div class="section" id="setup">
+<h1>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h1>
+<p>The next step is to set up the Web Teaching Environment so that it is ready
+to run. For this you need to:</p>
+<ol class="arabic simple">
+<li>Generate a configuration file</li>
+<li>Initialise the database</li>
+</ol>
+<p>Both tasks are done using the configuration application included in the
+Web Teaching Environment. To see all options provided by the configuration
+application run:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">WTE</span> <span class="o">-</span><span class="n">h</span>
+</pre></div>
+</div>
+<div class="section" id="generate-the-configuration">
+<h2>Generate the Configuration<a class="headerlink" href="#generate-the-configuration" title="Permalink to this headline">¶</a></h2>
+<p>To generate the configuration file run:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>WTE generate-config
+</pre></div>
+</div>
+<p>You will be asked to provide the <a class="reference external" href="http://docs.sqlalchemy.org/en/latest/core/engines.html#database-urls">SQLAlchemy connection string</a> for your
+database. If you don&#8217;t know it yet, you can accept the default test database
+and change the configuration setting later.</p>
+<p>You can also set the following parameters on the commandline:</p>
+<ul class="simple">
+<li>&#8211;sqla-connection-string &lt;SQL Alchemy connection string&gt;</li>
+<li>&#8211;filename &lt;Configuration Filename defaults to production.ini&gt;</li>
+</ul>
+<p>All further configuration is done via the generated configuration file.
+Details of the available options is in the <a class="reference internal" href="configuration.html"><em>Configuration</em></a>
+documentation.</p>
+</div>
+<div class="section" id="initialise-the-database">
+<h2>Initialise the Database<a class="headerlink" href="#initialise-the-database" title="Permalink to this headline">¶</a></h2>
+<p>After generating the configuration file, run:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>WTE initialise-database &lt;configuration.ini&gt;
+</pre></div>
+</div>
+<p>to create the initial database structure. This will also create a default
+administrative user with the following details:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>username: admin@example.com
+password: password
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Make sure you change the password after logging in the first
+time!</p>
+</div>
+<p>The database initialisation can take an additional, optional parameter that
+removes any tables from a previous installation of the Experiment Support
+System. If you need this, then run:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>WTE initialise-database &lt;configuration.ini&gt; --drop-existing
+</pre></div>
+</div>
+<p>After completing the application setup, continue either with the
+<a class="reference internal" href="configuration.html"><em>Configuration</em></a> or <a class="reference internal" href="deployment.html"><em>Deployment</em></a> documentation.</p>
+</div>
+</div>
+
+        </div>
+      </div>
+      <ul class="pagination text-center" role="navigation" aria-label="Pagination">
+        
+          <li class="pagination-previous"><a href="installation.html">Installation</a></li>
+        
+        
+          <li class="pagination-next"><a href="configuration.html">Configuration</a></li>
+        
+      </ul>
+    </nav>
+  </body>
+</html>

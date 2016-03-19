@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="../../../../static/css/application.min.css"/>
+    <link rel="stylesheet" href="../../../_static/default.css"/>
+    <link rel="stylesheet" href="../../../_static/override.css"/>
+    <link rel="stylesheet" href="../../../_static/pygments.css"/>
+    <title>wte.text_formatter.docutils_ext</title>
+  </head>
+  <body>
+    <nav>
+      <ul class="breadcrumbs">
+        
+          <li><a href="../../index.html">Module code</a></li>
+        
+          <li><a href="../../wte.html">wte</a></li>
+        
+          <li><a href="../text_formatter.html">wte.text_formatter</a></li>
+        
+        <li>wte.text_formatter.docutils_ext</li>
+      </ul>
+      <div class="row">
+        <div class="column small-12">
+          <h1>Source code for wte.text_formatter.docutils_ext</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">######################################</span>
+<span class="sd">:mod:`wte.text_formatter.docutils_ext`</span>
+<span class="sd">######################################</span>
+
+<span class="sd">This module contains docutils extensions (roles and directives) that provide</span>
+<span class="sd">the additional formatting support required by the</span>
+<span class="sd">:func:`~wte.text_formatter.compile_rst` function.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+<span class="kn">from</span> <span class="nn">docutils</span> <span class="kn">import</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">utils</span>
+<span class="kn">from</span> <span class="nn">docutils.parsers.rst</span> <span class="kn">import</span> <span class="n">directives</span><span class="p">,</span> <span class="n">roles</span><span class="p">,</span> <span class="n">Directive</span>
+<span class="kn">from</span> <span class="nn">pygments</span> <span class="kn">import</span> <span class="n">highlight</span>
+<span class="kn">from</span> <span class="nn">pygments.formatters</span> <span class="kn">import</span> <span class="n">HtmlFormatter</span>
+<span class="kn">from</span> <span class="nn">pygments.lexers</span> <span class="kn">import</span> <span class="n">get_lexer_by_name</span><span class="p">,</span> <span class="n">TextLexer</span><span class="p">,</span> <span class="n">get_all_lexers</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="n">and_</span>
+
+<span class="kn">from</span> <span class="nn">wte.models</span> <span class="kn">import</span> <span class="p">(</span><span class="n">DBSession</span><span class="p">,</span> <span class="n">Asset</span><span class="p">,</span> <span class="n">Part</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="init"><a class="viewcode-back" href="../../../api/wte_text_formatter_docutils_ext.html#wte.text_formatter.docutils_ext.init">[docs]</a><span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="n">settings</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initialise and load the docutils extensions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">directives</span><span class="o">.</span><span class="n">register_directive</span><span class="p">(</span><span class="s1">&#39;sourcecode&#39;</span><span class="p">,</span> <span class="n">Pygments</span><span class="p">)</span>
+    <span class="n">directives</span><span class="o">.</span><span class="n">register_directive</span><span class="p">(</span><span class="s1">&#39;youtube&#39;</span><span class="p">,</span> <span class="n">YouTube</span><span class="p">)</span>
+    <span class="n">roles</span><span class="o">.</span><span class="n">register_local_role</span><span class="p">(</span><span class="s1">&#39;asset&#39;</span><span class="p">,</span> <span class="n">asset_ref_role</span><span class="p">)</span>
+    <span class="n">roles</span><span class="o">.</span><span class="n">register_local_role</span><span class="p">(</span><span class="s1">&#39;crossref&#39;</span><span class="p">,</span> <span class="n">crossref_role</span><span class="p">)</span>
+    <span class="n">roles</span><span class="o">.</span><span class="n">register_local_role</span><span class="p">(</span><span class="s1">&#39;style&#39;</span><span class="p">,</span> <span class="n">inline_css_role</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">aliases</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">get_all_lexers</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">alias</span> <span class="ow">in</span> <span class="n">aliases</span><span class="p">:</span>
+            <span class="n">roles</span><span class="o">.</span><span class="n">register_local_role</span><span class="p">(</span><span class="s1">&#39;code-</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">alias</span><span class="p">),</span> <span class="n">inline_pygments_role</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="HtmlTitleFormatter"><a class="viewcode-back" href="../../../api/wte_text_formatter_docutils_ext.html#wte.text_formatter.docutils_ext.HtmlTitleFormatter">[docs]</a><span class="k">class</span> <span class="nc">HtmlTitleFormatter</span><span class="p">(</span><span class="n">HtmlFormatter</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The :class:`~wte.text_formatter.docutils_ext.HtmlTitleFormatter` is</span>
+<span class="sd">    an extension of :class:`pygments.formatters.HtmlFormatter` that supports</span>
+<span class="sd">    adding the optional language name and filename to the top of the code</span>
+<span class="sd">    block.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">language</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">HtmlFormatter</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">language</span> <span class="o">=</span> <span class="n">language</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span>
+
+    <span class="k">def</span> <span class="nf">wrap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">outfile</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wrap_code</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_wrap_code</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;&lt;div class=&quot;source panel </span><span class="si">%s</span><span class="s1">&quot;&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">language</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">language</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">language</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;&lt;div class=&quot;title&quot;&gt;&lt;span class=&quot;main&quot;&gt;</span><span class="si">%s</span><span class="s1">&lt;/span&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">language</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;&lt;span class=&quot;filename&quot;&gt;</span><span class="si">%s</span><span class="s1">&lt;/span&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+            <span class="k">yield</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;&lt;/div&gt;&lt;pre&gt;&#39;</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">source</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">i</span><span class="p">,</span> <span class="n">t</span>
+        <span class="k">yield</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;&lt;/pre&gt;&lt;/div&gt;&#39;</span></div>
+
+
+<div class="viewcode-block" id="flag_bool_option"><a class="viewcode-back" href="../../../api/wte_text_formatter_docutils_ext.html#wte.text_formatter.docutils_ext.flag_bool_option">[docs]</a><span class="k">def</span> <span class="nf">flag_bool_option</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;Options conversion function for ReST</span>
+<span class="sd">    :class:`~docutils.parser.rst.Directive` that returns ``True`` if the</span>
+<span class="sd">    value is set and has any value except &quot;false&quot;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s1">&#39;false&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span></div>
+
+
+<div class="viewcode-block" id="Pygments"><a class="viewcode-back" href="../../../api/wte_text_formatter_docutils_ext.html#wte.text_formatter.docutils_ext.Pygments">[docs]</a><span class="k">class</span> <span class="nc">Pygments</span><span class="p">(</span><span class="n">Directive</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The Pygments reStructuredText directive</span>
+
+<span class="sd">    This fragment is a Docutils_ 0.5 directive that renders source code</span>
+<span class="sd">    (to HTML only, currently) via Pygments.</span>
+
+<span class="sd">    To use it, adjust the options below and copy the code into a module</span>
+<span class="sd">    that you import on initialization.  The code then automatically</span>
+<span class="sd">    registers a ``sourcecode`` directive that you can use instead of</span>
+<span class="sd">    normal code blocks like this::</span>
+
+<span class="sd">        .. sourcecode:: python</span>
+
+<span class="sd">            My code goes here.</span>
+
+<span class="sd">    If you want to have different code styles, e.g. one with line numbers</span>
+<span class="sd">    and one without, add formatters with their names in the VARIANTS dict</span>
+<span class="sd">    below.  You can invoke them instead of the DEFAULT one by using a</span>
+<span class="sd">    directive option::</span>
+
+<span class="sd">        .. sourcecode:: python</span>
+<span class="sd">            :linenos:</span>
+
+<span class="sd">            My code goes here.</span>
+
+<span class="sd">    Look at the `directive documentation`_ to get all the gory details.</span>
+
+<span class="sd">    .. _Docutils: http://docutils.sf.net/</span>
+<span class="sd">    .. _directive documentation:</span>
+<span class="sd">       http://docutils.sourceforge.net/docs/howto/rst-directives.html</span>
+
+<span class="sd">    :copyright: Copyright 2006-2014 by the Pygments team, see AUTHORS.</span>
+<span class="sd">    :license: BSD, see LICENSE for details.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">required_arguments</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">optional_arguments</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">final_argument_whitespace</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">option_spec</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;filename&#39;</span><span class="p">:</span> <span class="n">directives</span><span class="o">.</span><span class="n">unchanged</span><span class="p">,</span>
+                   <span class="s1">&#39;startinline&#39;</span><span class="p">:</span> <span class="n">flag_bool_option</span><span class="p">,</span>
+                   <span class="s1">&#39;linenos&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">}</span>
+    <span class="n">has_content</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_has_content</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">lexer</span> <span class="o">=</span> <span class="n">get_lexer_by_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="c1"># no lexer found - use the text one instead of an exception</span>
+            <span class="n">lexer</span> <span class="o">=</span> <span class="n">TextLexer</span><span class="p">()</span>
+        <span class="c1"># take an arbitrary option if more than one is given</span>
+        <span class="n">formatter</span> <span class="o">=</span> <span class="n">HtmlTitleFormatter</span><span class="p">(</span><span class="n">language</span><span class="o">=</span><span class="n">lexer</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                                       <span class="n">filename</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="s1">&#39;filename&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="k">else</span> <span class="bp">None</span><span class="p">,</span>
+                                       <span class="n">noclasses</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                                       <span class="n">style</span><span class="o">=</span><span class="s1">&#39;native&#39;</span><span class="p">,</span>
+                                       <span class="n">cssclass</span><span class="o">=</span><span class="s1">u&#39;source </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">lexer</span><span class="o">.</span><span class="n">name</span><span class="p">),</span>
+                                       <span class="n">linenos</span><span class="o">=</span><span class="s1">&#39;inline&#39;</span> <span class="k">if</span> <span class="s1">&#39;linenos&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="k">else</span> <span class="bp">False</span><span class="p">,</span>
+                                       <span class="n">linenostart</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;linenos&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="s1">&#39;linenos&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="k">else</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">parsed</span> <span class="o">=</span> <span class="n">highlight</span><span class="p">(</span><span class="s1">u&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">content</span><span class="p">),</span> <span class="n">lexer</span><span class="p">,</span> <span class="n">formatter</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">nodes</span><span class="o">.</span><span class="n">raw</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">parsed</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s1">&#39;html&#39;</span><span class="p">)]</span></div>
+
+
+<span class="n">YOUTUBE_BASE_TEMPLATE</span> <span class="o">=</span> <span class="s1">&#39;&lt;iframe width=&quot;560&quot; height=&quot;315&quot; &#39;</span> <span class="o">+</span> \
+    <span class="s1">&#39;src=&quot;</span><span class="si">%s</span><span class="s1">&quot; allowfullscreen=&quot;allowfullscreen&quot;&gt;&lt;/iframe&gt;&#39;</span>
+
+
+<div class="viewcode-block" id="YouTube"><a class="viewcode-back" href="../../../api/wte_text_formatter_docutils_ext.html#wte.text_formatter.docutils_ext.YouTube">[docs]</a><span class="k">class</span> <span class="nc">YouTube</span><span class="p">(</span><span class="n">Directive</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The :class:`~wte.text_formatter.docutils_ext.YouTube` directive enables</span>
+<span class="sd">    support for embeddeding YouTube videos in ReST. It takes a single parameter</span>
+<span class="sd">    that is the YouTube URL to embed::</span>
+
+<span class="sd">      .. youtube:: https://URL/TO/VIDEO</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">required_arguments</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">nodes</span><span class="o">.</span><span class="n">raw</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">YOUTUBE_BASE_TEMPLATE</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">format</span><span class="o">=</span><span class="s1">&#39;html&#39;</span><span class="p">)]</span></div>
+
+
+<span class="n">CROSSREF_PATTERN</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">r&#39;([0-9]+)|(?:(.*)&lt;([0-9]+)&gt;)&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="crossref_role"><a class="viewcode-back" href="../../../api/wte_text_formatter_docutils_ext.html#wte.text_formatter.docutils_ext.crossref_role">[docs]</a><span class="k">def</span> <span class="nf">crossref_role</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">rawtext</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">lineno</span><span class="p">,</span> <span class="n">inliner</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{},</span> <span class="n">content</span><span class="o">=</span><span class="p">[]):</span>
+    <span class="sd">&quot;&quot;&quot;The :func:`~wte.text_formatter.docutils_ext.crossref_role` function</span>
+<span class="sd">    implements an additional docutils role that handles cross-references</span>
+<span class="sd">    between :class:`~wte.models.Part`\ s.</span>
+
+<span class="sd">    Usage in ReST is \:crossref\:\`part_id\` or \:crossref\:\`link text</span>
+<span class="sd">    &lt;part_id&gt;\`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">request</span> <span class="o">=</span> <span class="n">inliner</span><span class="o">.</span><span class="n">document</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">pyramid_request</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">messages</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">unescape</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">CROSSREF_PATTERN</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+        <span class="n">groups</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">groups</span><span class="p">()</span>
+        <span class="n">target_id</span> <span class="o">=</span> <span class="n">groups</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">groups</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">else</span> <span class="n">groups</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">dbsession</span> <span class="o">=</span> <span class="n">DBSession</span><span class="p">()</span>
+        <span class="n">part</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Part</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">Part</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">target_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">part</span><span class="p">:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">reference</span><span class="p">(</span><span class="n">rawtext</span><span class="p">,</span> <span class="n">groups</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">groups</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">else</span> <span class="n">part</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+                                          <span class="n">internal</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                                          <span class="n">refuri</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.view&#39;</span><span class="p">,</span>
+                                                                   <span class="n">pid</span><span class="o">=</span><span class="n">target_id</span><span class="p">)))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inliner</span><span class="o">.</span><span class="n">reporter</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;There is no target to link to for &quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">text</span><span class="p">),</span> <span class="n">line</span><span class="o">=</span><span class="n">lineno</span><span class="p">))</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inliner</span><span class="o">.</span><span class="n">problematic</span><span class="p">(</span><span class="n">rawtext</span><span class="p">,</span> <span class="n">rawtext</span><span class="p">,</span> <span class="n">messages</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inliner</span><span class="o">.</span><span class="n">reporter</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;No valid link target identifier could be identified in &quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">text</span><span class="p">),</span>
+                                               <span class="n">line</span><span class="o">=</span><span class="n">lineno</span><span class="p">))</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inliner</span><span class="o">.</span><span class="n">problematic</span><span class="p">(</span><span class="n">rawtext</span><span class="p">,</span> <span class="n">rawtext</span><span class="p">,</span> <span class="n">messages</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">result</span><span class="p">,</span> <span class="n">messages</span></div>
+
+
+<div class="viewcode-block" id="inline_pygments_role"><a class="viewcode-back" href="../../../api/wte_text_formatter_docutils_ext.html#wte.text_formatter.docutils_ext.inline_pygments_role">[docs]</a><span class="k">def</span> <span class="nf">inline_pygments_role</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">rawtext</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">lineno</span><span class="p">,</span> <span class="n">inliner</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{},</span> <span class="n">content</span><span class="o">=</span><span class="p">[]):</span>
+    <span class="sd">&quot;&quot;&quot;The :func:`~wte.text_formatter.docutils_ext.inline_pygments_role`</span>
+<span class="sd">    function provides a docutils role that handles inline code highlighting</span>
+<span class="sd">    using Pygments. The name of the language to use for highlighting is taken</span>
+<span class="sd">    from the name of the role (which must be formatted ``code-language_name``).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">lexer</span> <span class="o">=</span> <span class="n">get_lexer_by_name</span><span class="p">(</span><span class="n">name</span><span class="p">[</span><span class="mi">5</span><span class="p">:])</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="n">lexer</span> <span class="o">=</span> <span class="n">TextLexer</span><span class="p">()</span>
+    <span class="n">formatter</span> <span class="o">=</span> <span class="n">HtmlFormatter</span><span class="p">(</span><span class="n">nowrap</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="n">parsed</span> <span class="o">=</span> <span class="n">highlight</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">lexer</span><span class="p">,</span> <span class="n">formatter</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">nodes</span><span class="o">.</span><span class="n">raw</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;span class=&quot;source&quot;&gt;</span><span class="si">%s</span><span class="s1">&lt;/span&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">parsed</span><span class="p">),</span> <span class="n">format</span><span class="o">=</span><span class="s1">&#39;html&#39;</span><span class="p">)],</span> <span class="p">[]</span></div>
+
+
+<span class="n">ASSET_PATTERN</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">r&#39;((?:(parent):)?([a-zA-Z0-9_\-.]+)$)|((.+)(?:&lt;(?:(parent):)?([a-zA-Z0-9_\-.]+)&gt;)$)&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="asset_ref_role"><a class="viewcode-back" href="../../../api/wte_text_formatter_docutils_ext.html#wte.text_formatter.docutils_ext.asset_ref_role">[docs]</a><span class="k">def</span> <span class="nf">asset_ref_role</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">rawtext</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">lineno</span><span class="p">,</span> <span class="n">inliner</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{},</span> <span class="n">content</span><span class="o">=</span><span class="p">[]):</span>
+    <span class="sd">&quot;&quot;&quot;The :func:`~wte.text_formatter.docutils_ext.asset_ref_role` function</span>
+<span class="sd">    provides a docutils role that handles linking in :class:`~wte.models.Asset`</span>
+<span class="sd">    into the text. If the :class:`~wte.models.Asset` is an image, then the</span>
+<span class="sd">    image is loaded inline, otherwise a download link for all other types</span>
+<span class="sd">    of :class:`~wte.models.Asset` is created.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">messages</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">settings</span> <span class="o">=</span> <span class="n">inliner</span><span class="o">.</span><span class="n">document</span><span class="o">.</span><span class="n">settings</span>
+    <span class="n">request</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">pyramid_request</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="s1">&#39;wte_part&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">settings</span><span class="o">.</span><span class="n">wte_part</span><span class="p">:</span>
+        <span class="n">dbsession</span> <span class="o">=</span> <span class="n">DBSession</span><span class="p">()</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">ASSET_PATTERN</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+            <span class="n">groups</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">groups</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">groups</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="n">title</span> <span class="o">=</span> <span class="bp">None</span>
+                <span class="n">filename</span> <span class="o">=</span> <span class="n">groups</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">title</span> <span class="o">=</span> <span class="n">groups</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+                <span class="n">filename</span> <span class="o">=</span> <span class="n">groups</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span>
+            <span class="n">part_ids</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">part</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">wte_part</span>
+            <span class="k">while</span> <span class="n">part</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">part_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+                <span class="n">part</span> <span class="o">=</span> <span class="n">part</span><span class="o">.</span><span class="n">parent</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Asset</span><span class="p">,</span> <span class="n">Part</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">Asset</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">and_</span><span class="p">(</span><span class="n">Part</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">part_ids</span><span class="p">),</span>
+                                                                              <span class="n">Asset</span><span class="o">.</span><span class="n">filename</span> <span class="o">==</span> <span class="n">filename</span><span class="p">))</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">data</span><span class="p">:</span>
+                <span class="n">asset</span><span class="p">,</span> <span class="n">part</span> <span class="o">=</span> <span class="n">data</span>
+                <span class="k">if</span> <span class="n">asset</span><span class="o">.</span><span class="n">mimetype</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;image/&#39;</span><span class="p">):</span>
+                    <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="n">rawtext</span><span class="p">,</span>
+                                              <span class="n">uri</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;asset.view&#39;</span><span class="p">,</span>
+                                                                    <span class="n">pid</span><span class="o">=</span><span class="n">part</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                                                    <span class="n">filename</span><span class="o">=</span><span class="n">asset</span><span class="o">.</span><span class="n">filename</span><span class="p">),</span>
+                                              <span class="n">alt</span><span class="o">=</span><span class="n">title</span> <span class="k">if</span> <span class="n">title</span> <span class="k">else</span> <span class="n">asset</span><span class="o">.</span><span class="n">filename</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">reference</span><span class="p">(</span><span class="n">rawtext</span><span class="p">,</span>
+                                                  <span class="n">title</span> <span class="k">if</span> <span class="n">title</span> <span class="k">else</span> <span class="n">asset</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span>
+                                                  <span class="n">internal</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                                                  <span class="n">refuri</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;asset.view&#39;</span><span class="p">,</span>
+                                                                           <span class="n">pid</span><span class="o">=</span><span class="n">part</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                                                           <span class="n">filename</span><span class="o">=</span><span class="n">asset</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span>
+                                                                           <span class="n">_query</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;download&#39;</span><span class="p">,</span> <span class="s1">&#39;true&#39;</span><span class="p">)])))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inliner</span><span class="o">.</span><span class="n">reporter</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;No asset found for the filename &quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">filename</span><span class="p">),</span>
+                                                       <span class="n">line</span><span class="o">=</span><span class="n">lineno</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inliner</span><span class="o">.</span><span class="n">reporter</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;No asset found for the filename &quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">text</span><span class="p">),</span>
+                                                   <span class="n">line</span><span class="o">=</span><span class="n">lineno</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inliner</span><span class="o">.</span><span class="n">reporter</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Internal error: no part set&#39;</span><span class="p">,</span>
+                                               <span class="n">line</span><span class="o">=</span><span class="n">lineno</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">result</span><span class="p">,</span> <span class="n">messages</span></div>
+
+
+<span class="n">CSS_PATTERN</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">r&#39;(.+)&lt;([a-zA-Z0-9_\-.:;#]+)&gt;$&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="inline_css_role"><a class="viewcode-back" href="../../../api/wte_text_formatter_docutils_ext.html#wte.text_formatter.docutils_ext.inline_css_role">[docs]</a><span class="k">def</span> <span class="nf">inline_css_role</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">rawtext</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">lineno</span><span class="p">,</span> <span class="n">inliner</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{},</span> <span class="n">content</span><span class="o">=</span><span class="p">[]):</span>
+    <span class="sd">&quot;&quot;&quot;The :func:`~wte.text_formatter.docutils_ext.inline_css_role` function</span>
+<span class="sd">    provides a docutils role that allows for the specification of arbitrary CSS</span>
+<span class="sd">    that is then assigned to a &lt;span&gt; element.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">messages</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">CSS_PATTERN</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">raw</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;span style=&quot;</span><span class="si">%s</span><span class="s1">&quot;&gt;</span><span class="si">%s</span><span class="s1">&lt;/span&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)),</span> <span class="n">format</span><span class="o">=</span><span class="s1">&#39;html&#39;</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inliner</span><span class="o">.</span><span class="n">reporter</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;No CSS definition found in &quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">text</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">result</span><span class="p">,</span> <span class="n">messages</span></div>
+</pre></div>
+        </div>
+      </div>
+      <ul class="pagination text-center" role="navigation" aria-label="Pagination">
+        
+        
+      </ul>
+    </nav>
+  </body>
+</html>

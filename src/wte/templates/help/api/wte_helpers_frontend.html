@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="../../static/css/application.min.css"/>
+    <link rel="stylesheet" href="../_static/default.css"/>
+    <link rel="stylesheet" href="../_static/override.css"/>
+    <link rel="stylesheet" href="../_static/pygments.css"/>
+    <title><code class="docutils literal"><span class="pre">wte.helpers.frontend</span></code> &#8211; Helpers for the frontend display</title>
+  </head>
+  <body>
+    <nav>
+      <ul class="breadcrumbs">
+        
+          <li><a href="index.html">API Documentation</a></li>
+        
+        <li><code class="docutils literal"><span class="pre">wte.helpers.frontend</span></code> &#8211; Helpers for the frontend display</li>
+      </ul>
+      <div class="row">
+        <div class="column small-12">
+          <span class="target" id="module-wte.helpers.frontend"></span><div class="section" id="wte-helpers-frontend-helpers-for-the-frontend-display">
+<h1><a class="reference internal" href="#module-wte.helpers.frontend" title="wte.helpers.frontend"><code class="xref py py-mod docutils literal"><span class="pre">wte.helpers.frontend</span></code></a> &#8211; Helpers for the frontend display<a class="headerlink" href="#wte-helpers-frontend-helpers-for-the-frontend-display" title="Permalink to this headline">¶</a></h1>
+<p>The <a class="reference internal" href="#module-wte.helpers.frontend" title="wte.helpers.frontend"><code class="xref py py-mod docutils literal"><span class="pre">frontend</span></code></a> module provides helper functionality used to
+render the frontend page displays.</p>
+<dl class="class">
+<dt id="wte.helpers.frontend.MenuBuilder">
+<em class="property">class </em><code class="descclassname">wte.helpers.frontend.</code><code class="descname">MenuBuilder</code><a class="reference internal" href="../_modules/wte/helpers/frontend.html#MenuBuilder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.helpers.frontend.MenuBuilder" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <a class="reference internal" href="#wte.helpers.frontend.MenuBuilder" title="wte.helpers.frontend.MenuBuilder"><code class="xref py py-class docutils literal"><span class="pre">MenuBuilder</span></code></a> helps with creating the <code class="docutils literal"><span class="pre">list</span></code>
+structure used for creating the icon-menubar. Call <a class="reference internal" href="#wte.helpers.frontend.MenuBuilder.group" title="wte.helpers.frontend.MenuBuilder.group"><code class="xref py py-func docutils literal"><span class="pre">group()</span></code></a>
+to start a new group of menu items. Call <code class="xref py py-func docutils literal"><span class="pre">item()</span></code>
+to add a menu item to the current group. <a class="reference internal" href="#wte.helpers.frontend.MenuBuilder.generate" title="wte.helpers.frontend.MenuBuilder.generate"><code class="xref py py-func docutils literal"><span class="pre">generate()</span></code></a>
+then generates the final structure for use in the menubar.</p>
+<dl class="method">
+<dt id="wte.helpers.frontend.MenuBuilder.generate">
+<code class="descname">generate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/helpers/frontend.html#MenuBuilder.generate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.helpers.frontend.MenuBuilder.generate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate the final menu structure.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The list of menu groups with their menu items</td>
+</tr>
+<tr class="field-even field"><th class="field-name">R_type:</th><td class="field-body"><code class="docutils literal"><span class="pre">list</span></code> of menu groups</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="wte.helpers.frontend.MenuBuilder.group">
+<code class="descname">group</code><span class="sig-paren">(</span><em>label</em>, <em>icon=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/helpers/frontend.html#MenuBuilder.group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.helpers.frontend.MenuBuilder.group" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a new group to the lost of groups in this <a class="reference internal" href="#wte.helpers.frontend.MenuBuilder" title="wte.helpers.frontend.MenuBuilder"><code class="xref py py-class docutils literal"><span class="pre">MenuBuilder</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>label</strong> (<cite>unicode</cite>) &#8211; The menu group&#8217;s label</li>
+<li><strong>icon</strong> (<cite>unicode</cite>) &#8211; The optional icon for this group. An icon must be provided in order to
+enable highlighting of menu items</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="wte.helpers.frontend.MenuBuilder.menu">
+<code class="descname">menu</code><span class="sig-paren">(</span><em>label</em>, <em>href</em>, <em>icon=None</em>, <em>highlight=False</em>, <em>attrs=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/helpers/frontend.html#MenuBuilder.menu"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.helpers.frontend.MenuBuilder.menu" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a new menu item to the current group. Will create a new group with an empty
+label if <a class="reference internal" href="#wte.helpers.frontend.MenuBuilder.group" title="wte.helpers.frontend.MenuBuilder.group"><code class="xref py py-func docutils literal"><span class="pre">group()</span></code></a> has not been called</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>label</strong> (<cite>unicode</cite>) &#8211; The menu item&#8217;s label</li>
+<li><strong>href</strong> (<cite>unicode</cite>) &#8211; The URL that the menu item loads</li>
+<li><strong>icon</strong> (<cite>unicode</cite>) &#8211; The optional icon for this menu item</li>
+<li><strong>highlight</strong> (<cite>boolean</cite>) &#8211; Whether to highlight the menu item by displaying it at the top level</li>
+<li><strong>attrs</strong> (<a class="reference external" href="http://docs.python.org/library/stdtypes.html#dict" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">dict</span></code></a>) &#8211; Additional attributes to set for the menu item link</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.helpers.frontend.codemirror_options">
+<code class="descclassname">wte.helpers.frontend.</code><code class="descname">codemirror_options</code><span class="sig-paren">(</span><em>request</em>, <em>mimetype</em>, <em>include_mode=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/helpers/frontend.html#codemirror_options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.helpers.frontend.codemirror_options" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a JSON representation of CodeMirror options that are valid
+for the given <code class="docutils literal"><span class="pre">mimetype</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>request</strong> (<a class="reference external" href="http://docs.pylonsproject.org/projects/pyramid/en/latest/api/request.html#pyramid.request.Request" title="(in The Pyramid Web Framework v1.6.1)"><code class="xref py py-class docutils literal"><span class="pre">Request</span></code></a>) &#8211; The current request</li>
+<li><strong>mimetype</strong> (<cite>unicode</cite>) &#8211; The mimetype to generate CodeMirror options for</li>
+<li><strong>include_mode</strong> (<cite>bool</cite>) &#8211; Whether to include the <code class="docutils literal"><span class="pre">mode</span></code> setting in the options</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The JSON representation of options</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.helpers.frontend.codemirror_scripts">
+<code class="descclassname">wte.helpers.frontend.</code><code class="descname">codemirror_scripts</code><span class="sig-paren">(</span><em>request</em>, <em>mimetypes</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/helpers/frontend.html#codemirror_scripts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.helpers.frontend.codemirror_scripts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the <code class="docutils literal"><span class="pre">&lt;script&gt;</span></code> tags necessary to load the CodeMirror mode
+JS files for the given list of <code class="docutils literal"><span class="pre">mimetypes</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>request</strong> (<cite>~pyramid.request.Request</cite>) &#8211; The request to use for generating URLs</li>
+<li><strong>mimetypes</strong> (<cite>list</cite> of <cite>unicode</cite>) &#8211; The mimetypes to load the CodeMirror modes for</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The necessary <code class="docutils literal"><span class="pre">&lt;script&gt;</span></code> tags</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.helpers.frontend.confirm_action">
+<code class="descclassname">wte.helpers.frontend.</code><code class="descname">confirm_action</code><span class="sig-paren">(</span><em>title</em>, <em>message</em>, <em>cancel</em>, <em>ok</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/helpers/frontend.html#confirm_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.helpers.frontend.confirm_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a confirmation JSON object for use with the jQuery.postLink() plugin.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>title</strong> (<code class="docutils literal"><span class="pre">unicode</span></code>) &#8211; The title of the confirmation dialog box</li>
+<li><strong>message</strong> (<code class="docutils literal"><span class="pre">unicode</span></code>) &#8211; The main message to show</li>
+<li><strong>cancel</strong> (<code class="docutils literal"><span class="pre">dict</span></code> or <code class="docutils literal"><span class="pre">unicode</span></code>) &#8211; The cancel button&#8217;s settings</li>
+<li><strong>ok</strong> (<code class="docutils literal"><span class="pre">dict</span></code> or <code class="docutils literal"><span class="pre">unicode</span></code>) &#8211; The ok button&#8217;s settings</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">JSON object</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="http://docs.python.org/library/functions.html#unicode" title="(in Python v2.7)"><code class="xref py py-func docutils literal"><span class="pre">unicode()</span></code></a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.helpers.frontend.confirm_delete">
+<code class="descclassname">wte.helpers.frontend.</code><code class="descname">confirm_delete</code><span class="sig-paren">(</span><em>obj_type</em>, <em>title</em>, <em>has_parts=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/helpers/frontend.html#confirm_delete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.helpers.frontend.confirm_delete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the confirmation JSON object for use with the jQuery.postLink() plugin.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj_type</strong> (<code class="docutils literal"><span class="pre">unicode</span></code>) &#8211; The type of object that is being deleted</li>
+<li><strong>title</strong> (<code class="docutils literal"><span class="pre">unicode</span></code>) &#8211; The title of the object that is being delete</li>
+<li><strong>has_parts</strong> (<code class="docutils literal"><span class="pre">bool</span></code>) &#8211; Whether to add the suffix &#8221; and all its parts&#8221;</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">JSON object</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="http://docs.python.org/library/functions.html#unicode" title="(in Python v2.7)"><code class="xref py py-func docutils literal"><span class="pre">unicode()</span></code></a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.helpers.frontend.html_id">
+<code class="descclassname">wte.helpers.frontend.</code><code class="descname">html_id</code><span class="sig-paren">(</span><em>text</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/helpers/frontend.html#html_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.helpers.frontend.html_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Turns a given text into a valid HTML id attribute value. Removes
+spaces and full-stops.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>text</strong> (<cite>unicode</cite>) &#8211; The text to convert</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The corresponding HTML id</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="http://docs.python.org/library/functions.html#unicode" title="(in Python v2.7)"><code class="xref py py-func docutils literal"><span class="pre">unicode()</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.helpers.frontend.readable_timedelta">
+<code class="descclassname">wte.helpers.frontend.</code><code class="descname">readable_timedelta</code><span class="sig-paren">(</span><em>delta</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/helpers/frontend.html#readable_timedelta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.helpers.frontend.readable_timedelta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a <a class="reference external" href="http://docs.python.org/library/datetime.html#datetime.timedelta" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">datetime.timedelta</span></code></a> into a human-readable string.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>delta</strong> (<a class="reference external" href="http://docs.python.org/library/datetime.html#datetime.timedelta" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">datetime.timedelta</span></code></a>) &#8211; The time-delta to convert</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The human-readable string representation of the <code class="docutils literal"><span class="pre">delta</span></code></td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="http://docs.python.org/library/functions.html#unicode" title="(in Python v2.7)"><code class="xref py py-func docutils literal"><span class="pre">unicode()</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.helpers.frontend.template_for_part">
+<code class="descclassname">wte.helpers.frontend.</code><code class="descname">template_for_part</code><span class="sig-paren">(</span><em>part</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/helpers/frontend.html#template_for_part"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.helpers.frontend.template_for_part" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the correct partial template path for a given
+<a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>. If there is no partial template for the given
+<a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>, then <code class="docutils literal"><span class="pre">None</span></code> is returned.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>part</strong> (<a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>) &#8211; The <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a> to generate the template path for</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The partial template path or <code class="docutils literal"><span class="pre">None</span></code></td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return_type:</th><td class="field-body"><code class="docutils literal"><span class="pre">string</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+        </div>
+      </div>
+      <ul class="pagination text-center" role="navigation" aria-label="Pagination">
+        
+          <li class="pagination-previous"><a href="wte_helpers.html"><code class="docutils literal"><span class="pre">wte.helpers</span></code> &#8211; Helper functionality for views</a></li>
+        
+        
+          <li class="pagination-next"><a href="wte_models.html"><code class="docutils literal"><span class="pre">wte.models</span></code> &#8211; Database Models</a></li>
+        
+      </ul>
+    </nav>
+  </body>
+</html>

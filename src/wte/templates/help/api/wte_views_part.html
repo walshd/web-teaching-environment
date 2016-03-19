@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="../../static/css/application.min.css"/>
+    <link rel="stylesheet" href="../_static/default.css"/>
+    <link rel="stylesheet" href="../_static/override.css"/>
+    <link rel="stylesheet" href="../_static/pygments.css"/>
+    <title><code class="docutils literal"><span class="pre">wte.views.part</span></code> &#8211; Part Backend</title>
+  </head>
+  <body>
+    <nav>
+      <ul class="breadcrumbs">
+        
+          <li><a href="index.html">API Documentation</a></li>
+        
+        <li><code class="docutils literal"><span class="pre">wte.views.part</span></code> &#8211; Part Backend</li>
+      </ul>
+      <div class="row">
+        <div class="column small-12">
+          <span class="target" id="module-wte.views.part"></span><div class="section" id="wte-views-part-part-backend">
+<h1><a class="reference internal" href="#module-wte.views.part" title="wte.views.part"><code class="xref py py-mod docutils literal"><span class="pre">wte.views.part</span></code></a> &#8211; Part Backend<a class="headerlink" href="#wte-views-part-part-backend" title="Permalink to this headline">¶</a></h1>
+<p>The <a class="reference internal" href="#module-wte.views.part" title="wte.views.part"><code class="xref py py-mod docutils literal"><span class="pre">part</span></code></a> module provides the functionality for
+creating, viewing, editing, and deleting <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</p>
+<p>Routes are defined in <a class="reference internal" href="#wte.views.part.init" title="wte.views.part.init"><code class="xref py py-func docutils literal"><span class="pre">init()</span></code></a>.</p>
+<dl class="class">
+<dt id="wte.views.part.ChangeStatusSchema">
+<em class="property">class </em><code class="descclassname">wte.views.part.</code><code class="descname">ChangeStatusSchema</code><span class="sig-paren">(</span><em>*args</em>, <em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/part.html#ChangeStatusSchema"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.part.ChangeStatusSchema" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>The <a class="reference internal" href="#wte.views.part.ChangeStatusSchema" title="wte.views.part.ChangeStatusSchema"><code class="xref py py-class docutils literal"><span class="pre">ChangeStatusSchema</span></code></a> handles the validation</dt>
+<dd>for editing <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</dd>
+</dl>
+<p><strong>Messages</strong></p>
+<dl class="docutils">
+<dt><code class="docutils literal"><span class="pre">badDictType</span></code>:</dt>
+<dd>The input must be dict-like (not a <code class="docutils literal"><span class="pre">%(type)s</span></code>: <code class="docutils literal"><span class="pre">%(value)r</span></code>)</dd>
+<dt><code class="docutils literal"><span class="pre">badType</span></code>:</dt>
+<dd>The input must be a string (not a <code class="docutils literal"><span class="pre">%(type)s</span></code>: <code class="docutils literal"><span class="pre">%(value)r</span></code>)</dd>
+<dt><code class="docutils literal"><span class="pre">empty</span></code>:</dt>
+<dd>Please enter a value</dd>
+<dt><code class="docutils literal"><span class="pre">missingValue</span></code>:</dt>
+<dd>Missing value</dd>
+<dt><code class="docutils literal"><span class="pre">noneType</span></code>:</dt>
+<dd>The input must be a string (not None)</dd>
+<dt><code class="docutils literal"><span class="pre">notExpected</span></code>:</dt>
+<dd>The input field <code class="docutils literal"><span class="pre">%(name)s</span></code> was not expected.</dd>
+<dt><code class="docutils literal"><span class="pre">singleValueExpected</span></code>:</dt>
+<dd>Please provide only one value</dd>
+</dl>
+<dl class="attribute">
+<dt id="wte.views.part.ChangeStatusSchema.return_to">
+<code class="descname">return_to</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.part.ChangeStatusSchema.return_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return to this URL</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wte.views.part.ChangeStatusSchema.status">
+<code class="descname">status</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.part.ChangeStatusSchema.status" title="Permalink to this definition">¶</a></dt>
+<dd><p>The part&#8217;s status</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="wte.views.part.EditPartSchema">
+<em class="property">class </em><code class="descclassname">wte.views.part.</code><code class="descname">EditPartSchema</code><span class="sig-paren">(</span><em>*args</em>, <em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/part.html#EditPartSchema"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.part.EditPartSchema" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>The <a class="reference internal" href="#wte.views.part.EditPartSchema" title="wte.views.part.EditPartSchema"><code class="xref py py-class docutils literal"><span class="pre">EditPartSchema</span></code></a> handles the validation</dt>
+<dd>for editing <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</dd>
+</dl>
+<p><strong>Messages</strong></p>
+<dl class="docutils">
+<dt><code class="docutils literal"><span class="pre">badDictType</span></code>:</dt>
+<dd>The input must be dict-like (not a <code class="docutils literal"><span class="pre">%(type)s</span></code>: <code class="docutils literal"><span class="pre">%(value)r</span></code>)</dd>
+<dt><code class="docutils literal"><span class="pre">badType</span></code>:</dt>
+<dd>The input must be a string (not a <code class="docutils literal"><span class="pre">%(type)s</span></code>: <code class="docutils literal"><span class="pre">%(value)r</span></code>)</dd>
+<dt><code class="docutils literal"><span class="pre">empty</span></code>:</dt>
+<dd>Please enter a value</dd>
+<dt><code class="docutils literal"><span class="pre">missingValue</span></code>:</dt>
+<dd>Missing value</dd>
+<dt><code class="docutils literal"><span class="pre">noneType</span></code>:</dt>
+<dd>The input must be a string (not None)</dd>
+<dt><code class="docutils literal"><span class="pre">notExpected</span></code>:</dt>
+<dd>The input field <code class="docutils literal"><span class="pre">%(name)s</span></code> was not expected.</dd>
+<dt><code class="docutils literal"><span class="pre">singleValueExpected</span></code>:</dt>
+<dd>Please provide only one value</dd>
+</dl>
+<dl class="attribute">
+<dt id="wte.views.part.EditPartSchema.child_part_id">
+<code class="descname">child_part_id</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.part.EditPartSchema.child_part_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>The child <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a> ids for re-ordering</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wte.views.part.EditPartSchema.content">
+<code class="descname">content</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.part.EditPartSchema.content" title="Permalink to this definition">¶</a></dt>
+<dd><p>The ReST content</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wte.views.part.EditPartSchema.display_mode">
+<code class="descname">display_mode</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.part.EditPartSchema.display_mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>The part&#8217;s display mode</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wte.views.part.EditPartSchema.status">
+<code class="descname">status</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.part.EditPartSchema.status" title="Permalink to this definition">¶</a></dt>
+<dd><p>The part&#8217;s status</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wte.views.part.EditPartSchema.template_id">
+<code class="descname">template_id</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.part.EditPartSchema.template_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <code class="xref py py-class docutils literal"><span class="pre">Template</span></code> ids for re-ordering</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wte.views.part.EditPartSchema.title">
+<code class="descname">title</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.part.EditPartSchema.title" title="Permalink to this definition">¶</a></dt>
+<dd><p>The part&#8217;s title</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="wte.views.part.ImportPartConverter">
+<em class="property">class </em><code class="descclassname">wte.views.part.</code><code class="descname">ImportPartConverter</code><span class="sig-paren">(</span><em>*args</em>, <em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/part.html#ImportPartConverter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.part.ImportPartConverter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>The <a class="reference internal" href="#wte.views.part.ImportPartConverter" title="wte.views.part.ImportPartConverter"><code class="xref py py-class docutils literal"><span class="pre">ImportPartConverter</span></code></a> converts a <code class="xref py py-class docutils literal"><span class="pre">FieldStorage</span></code></dt>
+<dd>into a (<code class="docutils literal"><span class="pre">dict</span></code>, <a class="reference external" href="http://docs.python.org/library/zipfile.html#zipfile.ZipFile" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">ZipFile</span></code></a>) <code class="docutils literal"><span class="pre">tuple</span></code>. Checks that the uploaded
+zip file is actually a valid file and that it can be imported with the given parent
+<a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>. The <code class="docutils literal"><span class="pre">dict</span></code> contains the <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a> data to
+import.</dd>
+</dl>
+<p><strong>Messages</strong></p>
+<dl class="docutils">
+<dt><code class="docutils literal"><span class="pre">badType</span></code>:</dt>
+<dd>The input must be a string (not a <code class="docutils literal"><span class="pre">%(type)s</span></code>: <code class="docutils literal"><span class="pre">%(value)r</span></code>)</dd>
+<dt><code class="docutils literal"><span class="pre">empty</span></code>:</dt>
+<dd>Please enter a value</dd>
+<dt><code class="docutils literal"><span class="pre">invalidpart</span></code>:</dt>
+<dd>You cannot import a <code class="docutils literal"><span class="pre">%(part_type)s</span></code> here</dd>
+<dt><code class="docutils literal"><span class="pre">invalidstructure</span></code>:</dt>
+<dd>The ZIP file does not have the correct internal structure</dd>
+<dt><code class="docutils literal"><span class="pre">noneType</span></code>:</dt>
+<dd>The input must be a string (not None)</dd>
+<dt><code class="docutils literal"><span class="pre">nopart</span></code>:</dt>
+<dd>The ZIP file does not contain any data to import</dd>
+<dt><code class="docutils literal"><span class="pre">notzip</span></code>:</dt>
+<dd>Only ZIP files can be imported</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="wte.views.part.ImportPartSchema">
+<em class="property">class </em><code class="descclassname">wte.views.part.</code><code class="descname">ImportPartSchema</code><span class="sig-paren">(</span><em>*args</em>, <em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/part.html#ImportPartSchema"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.part.ImportPartSchema" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>The <a class="reference internal" href="#wte.views.part.ImportPartSchema" title="wte.views.part.ImportPartSchema"><code class="xref py py-class docutils literal"><span class="pre">ImportPartSchema</span></code></a> validates the request to import</dt>
+<dd><p class="first">a <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a> (and any children and <a class="reference internal" href="wte_models.html#wte.models.Asset" title="wte.models.Asset"><code class="xref py py-class docutils literal"><span class="pre">Asset</span></code></a>).</p>
+<p class="last">Uses the <a class="reference internal" href="#wte.views.part.ImportPartConverter" title="wte.views.part.ImportPartConverter"><code class="xref py py-class docutils literal"><span class="pre">ImportPartConverter</span></code></a> to actually check whether the
+uploaded file is a valid export generated from <a class="reference internal" href="#wte.views.part.export" title="wte.views.part.export"><code class="xref py py-func docutils literal"><span class="pre">export()</span></code></a>.</p>
+</dd>
+</dl>
+<p><strong>Messages</strong></p>
+<dl class="docutils">
+<dt><code class="docutils literal"><span class="pre">badDictType</span></code>:</dt>
+<dd>The input must be dict-like (not a <code class="docutils literal"><span class="pre">%(type)s</span></code>: <code class="docutils literal"><span class="pre">%(value)r</span></code>)</dd>
+<dt><code class="docutils literal"><span class="pre">badType</span></code>:</dt>
+<dd>The input must be a string (not a <code class="docutils literal"><span class="pre">%(type)s</span></code>: <code class="docutils literal"><span class="pre">%(value)r</span></code>)</dd>
+<dt><code class="docutils literal"><span class="pre">empty</span></code>:</dt>
+<dd>Please enter a value</dd>
+<dt><code class="docutils literal"><span class="pre">missingValue</span></code>:</dt>
+<dd>Missing value</dd>
+<dt><code class="docutils literal"><span class="pre">noneType</span></code>:</dt>
+<dd>The input must be a string (not None)</dd>
+<dt><code class="docutils literal"><span class="pre">notExpected</span></code>:</dt>
+<dd>The input field <code class="docutils literal"><span class="pre">%(name)s</span></code> was not expected.</dd>
+<dt><code class="docutils literal"><span class="pre">singleValueExpected</span></code>:</dt>
+<dd>Please provide only one value</dd>
+</dl>
+<dl class="attribute">
+<dt id="wte.views.part.ImportPartSchema.file">
+<code class="descname">file</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.part.ImportPartSchema.file" title="Permalink to this definition">¶</a></dt>
+<dd><p>The file to import.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wte.views.part.ImportPartSchema.parent_id">
+<code class="descname">parent_id</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.part.ImportPartSchema.parent_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>The id of the parent <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a> to import into.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="wte.views.part.NewPartSchema">
+<em class="property">class </em><code class="descclassname">wte.views.part.</code><code class="descname">NewPartSchema</code><span class="sig-paren">(</span><em>*args</em>, <em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/part.html#NewPartSchema"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.part.NewPartSchema" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>The <code class="xref py py-class docutils literal"><span class="pre">NewPartSchema</span></code> handles the validation</dt>
+<dd>of a new <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</dd>
+</dl>
+<p><strong>Messages</strong></p>
+<dl class="docutils">
+<dt><code class="docutils literal"><span class="pre">badDictType</span></code>:</dt>
+<dd>The input must be dict-like (not a <code class="docutils literal"><span class="pre">%(type)s</span></code>: <code class="docutils literal"><span class="pre">%(value)r</span></code>)</dd>
+<dt><code class="docutils literal"><span class="pre">badType</span></code>:</dt>
+<dd>The input must be a string (not a <code class="docutils literal"><span class="pre">%(type)s</span></code>: <code class="docutils literal"><span class="pre">%(value)r</span></code>)</dd>
+<dt><code class="docutils literal"><span class="pre">empty</span></code>:</dt>
+<dd>Please enter a value</dd>
+<dt><code class="docutils literal"><span class="pre">missingValue</span></code>:</dt>
+<dd>Missing value</dd>
+<dt><code class="docutils literal"><span class="pre">noneType</span></code>:</dt>
+<dd>The input must be a string (not None)</dd>
+<dt><code class="docutils literal"><span class="pre">notExpected</span></code>:</dt>
+<dd>The input field <code class="docutils literal"><span class="pre">%(name)s</span></code> was not expected.</dd>
+<dt><code class="docutils literal"><span class="pre">singleValueExpected</span></code>:</dt>
+<dd>Please provide only one value</dd>
+</dl>
+<dl class="attribute">
+<dt id="wte.views.part.NewPartSchema.display_mode">
+<code class="descname">display_mode</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.part.NewPartSchema.display_mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>The part&#8217;s display mode</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wte.views.part.NewPartSchema.order">
+<code class="descname">order</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.part.NewPartSchema.order" title="Permalink to this definition">¶</a></dt>
+<dd><p>The optional order index to create the new <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a> at</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wte.views.part.NewPartSchema.parent_id">
+<code class="descname">parent_id</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.part.NewPartSchema.parent_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>The parent <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wte.views.part.NewPartSchema.status">
+<code class="descname">status</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.part.NewPartSchema.status" title="Permalink to this definition">¶</a></dt>
+<dd><p>The part&#8217;s status</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wte.views.part.NewPartSchema.title">
+<code class="descname">title</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.part.NewPartSchema.title" title="Permalink to this definition">¶</a></dt>
+<dd><p>The part&#8217;s title</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="wte.views.part.RegisterSettingsSchema">
+<em class="property">class </em><code class="descclassname">wte.views.part.</code><code class="descname">RegisterSettingsSchema</code><span class="sig-paren">(</span><em>*args</em>, <em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/part.html#RegisterSettingsSchema"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.part.RegisterSettingsSchema" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>The <a class="reference internal" href="#wte.views.part.RegisterSettingsSchema" title="wte.views.part.RegisterSettingsSchema"><code class="xref py py-class docutils literal"><span class="pre">RegisterSettingsSchema</span></code></a> handles the validation</dt>
+<dd>for modifying the <code class="docutils literal"><span class="pre">access_rights</span></code> of a <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</dd>
+</dl>
+<p><strong>Messages</strong></p>
+<dl class="docutils">
+<dt><code class="docutils literal"><span class="pre">badDictType</span></code>:</dt>
+<dd>The input must be dict-like (not a <code class="docutils literal"><span class="pre">%(type)s</span></code>: <code class="docutils literal"><span class="pre">%(value)r</span></code>)</dd>
+<dt><code class="docutils literal"><span class="pre">badType</span></code>:</dt>
+<dd>The input must be a string (not a <code class="docutils literal"><span class="pre">%(type)s</span></code>: <code class="docutils literal"><span class="pre">%(value)r</span></code>)</dd>
+<dt><code class="docutils literal"><span class="pre">empty</span></code>:</dt>
+<dd>Please enter a value</dd>
+<dt><code class="docutils literal"><span class="pre">missingValue</span></code>:</dt>
+<dd>Missing value</dd>
+<dt><code class="docutils literal"><span class="pre">noneType</span></code>:</dt>
+<dd>The input must be a string (not None)</dd>
+<dt><code class="docutils literal"><span class="pre">notExpected</span></code>:</dt>
+<dd>The input field <code class="docutils literal"><span class="pre">%(name)s</span></code> was not expected.</dd>
+<dt><code class="docutils literal"><span class="pre">singleValueExpected</span></code>:</dt>
+<dd>Please provide only one value</dd>
+</dl>
+<dl class="attribute">
+<dt id="wte.views.part.RegisterSettingsSchema.email_domains">
+<code class="descname">email_domains</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.part.RegisterSettingsSchema.email_domains" title="Permalink to this definition">¶</a></dt>
+<dd><p>The email domains that the user must belong to</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wte.views.part.RegisterSettingsSchema.password">
+<code class="descname">password</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.part.RegisterSettingsSchema.password" title="Permalink to this definition">¶</a></dt>
+<dd><p>The password to use for access rights</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wte.views.part.RegisterSettingsSchema.require">
+<code class="descname">require</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.part.RegisterSettingsSchema.require" title="Permalink to this definition">¶</a></dt>
+<dd><p>Which access rights are required</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="wte.views.part.ResetFilesSchema">
+<em class="property">class </em><code class="descclassname">wte.views.part.</code><code class="descname">ResetFilesSchema</code><span class="sig-paren">(</span><em>*args</em>, <em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/part.html#ResetFilesSchema"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.part.ResetFilesSchema" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Validator for resetting all the files in the user&#8217;s <a class="reference internal" href="wte_models.html#wte.models.UserPartProgress" title="wte.models.UserPartProgress"><code class="xref py py-class docutils literal"><span class="pre">UserPartProgress</span></code></a></dt>
+<dd>to their initial values.</dd>
+</dl>
+<p><strong>Messages</strong></p>
+<dl class="docutils">
+<dt><code class="docutils literal"><span class="pre">badDictType</span></code>:</dt>
+<dd>The input must be dict-like (not a <code class="docutils literal"><span class="pre">%(type)s</span></code>: <code class="docutils literal"><span class="pre">%(value)r</span></code>)</dd>
+<dt><code class="docutils literal"><span class="pre">badType</span></code>:</dt>
+<dd>The input must be a string (not a <code class="docutils literal"><span class="pre">%(type)s</span></code>: <code class="docutils literal"><span class="pre">%(value)r</span></code>)</dd>
+<dt><code class="docutils literal"><span class="pre">empty</span></code>:</dt>
+<dd>Please enter a value</dd>
+<dt><code class="docutils literal"><span class="pre">missingValue</span></code>:</dt>
+<dd>Missing value</dd>
+<dt><code class="docutils literal"><span class="pre">noneType</span></code>:</dt>
+<dd>The input must be a string (not None)</dd>
+<dt><code class="docutils literal"><span class="pre">notExpected</span></code>:</dt>
+<dd>The input field <code class="docutils literal"><span class="pre">%(name)s</span></code> was not expected.</dd>
+<dt><code class="docutils literal"><span class="pre">singleValueExpected</span></code>:</dt>
+<dd>Please provide only one value</dd>
+</dl>
+<dl class="attribute">
+<dt id="wte.views.part.ResetFilesSchema.filename">
+<code class="descname">filename</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.part.ResetFilesSchema.filename" title="Permalink to this definition">¶</a></dt>
+<dd><p>The optional filename to reset.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.part.change_status">
+<code class="descclassname">wte.views.part.</code><code class="descname">change_status</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/part.html#change_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.part.change_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles the <code class="docutils literal"><span class="pre">/parts/{pid}/change_status</span></code> URL,
+providing the UI and backend for changing the status of a <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</p>
+<p>Requires that the user has &#8220;edit&#8221; rights on the <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.part.create_part_crumbs">
+<code class="descclassname">wte.views.part.</code><code class="descname">create_part_crumbs</code><span class="sig-paren">(</span><em>request</em>, <em>part</em>, <em>current=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/part.html#create_part_crumbs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.part.create_part_crumbs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the list of breadcrumbs for a given <code class="docutils literal"><span class="pre">part</span></code>. If the <code class="docutils literal"><span class="pre">current</span></code> is a <code class="docutils literal"><span class="pre">list</span></code>,
+then all will be added to the end of the crumbs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>part</strong> (<a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>) &#8211; The part to create the breadcrumbs to</li>
+<li><strong>current</strong> (<code class="docutils literal"><span class="pre">dict</span></code> or <code class="docutils literal"><span class="pre">list</span></code>) &#8211; The final, current breadcrumb</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A list of <cite>dict</cite> for use in the breadcrumbs</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><code class="docutils literal"><span class="pre">list</span></code></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.part.crossref_replace">
+<code class="descclassname">wte.views.part.</code><code class="descname">crossref_replace</code><span class="sig-paren">(</span><em>match</em>, <em>id_mapping</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/part.html#crossref_replace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.part.crossref_replace" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <a class="reference internal" href="#wte.views.part.crossref_replace" title="wte.views.part.crossref_replace"><code class="xref py py-func docutils literal"><span class="pre">crossref_replace()</span></code></a> function updates a single
+cross-reference ReST role identified by the <code class="docutils literal"><span class="pre">match</span></code> parameter with the
+correct new target part identifier from the <code class="docutils literal"><span class="pre">id_mapping</span></code>. If the
+identifier in the current cross-reference is not in the <code class="docutils literal"><span class="pre">id_mapping</span></code>,
+then it is replaced with the string &#8216;external&#8217;.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>match</strong> (<a class="reference external" href="http://docs.python.org/library/re.html#re.MatchObject" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">MatchObject</span></code></a>) &#8211; The regexp match</li>
+<li><strong>id_mapping</strong> (<cite>dict</cite>) &#8211; The identifier change mappings</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The updated cross-reference</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return_type:</th><td class="field-body"><p class="first last"><cite>string</cite></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.part.delete">
+<code class="descclassname">wte.views.part.</code><code class="descname">delete</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/part.html#delete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.part.delete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles the <code class="docutils literal"><span class="pre">/modules/{mid}/parts/{pid}/delete</span></code> URL, providing
+the UI and backend for deleting a <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</p>
+<p>Requires that the user has &#8220;delete&#8221; rights on the <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.part.deregister">
+<code class="descclassname">wte.views.part.</code><code class="descname">deregister</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/part.html#deregister"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.part.deregister" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles the <code class="docutils literal"><span class="pre">/parts/{pid}/deregister</span></code> URL, to allow users to de-register
+from a <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a> that is a &#8220;module&#8221;.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.part.download">
+<code class="descclassname">wte.views.part.</code><code class="descname">download</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/part.html#download"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.part.download" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles the <code class="docutils literal"><span class="pre">/parts/{pid}/download</span></code> URL, providing the UI and backend
+for downloading a <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</p>
+<p>The difference between exporting (<a class="reference internal" href="#wte.views.part.export" title="wte.views.part.export"><code class="xref py py-func docutils literal"><span class="pre">export()</span></code></a>) and
+downloading is that exporting creates an archive that can be imported into
+another WTE instance, while downloading creates an HTML version for
+offline viewing.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.part.download_part_progress">
+<code class="descclassname">wte.views.part.</code><code class="descname">download_part_progress</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/part.html#download_part_progress"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.part.download_part_progress" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles the <code class="docutils literal"><span class="pre">/users/{uid}/progress/{pid}/download</span></code>
+URL, sending back the complete set of data associated with the
+<a class="reference internal" href="wte_models.html#wte.models.UserPartProgress" title="wte.models.UserPartProgress"><code class="xref py py-class docutils literal"><span class="pre">UserPartProgress</span></code></a>.</p>
+<p>Requires that the user has &#8220;view&#8221; rights on the
+<a class="reference internal" href="wte_models.html#wte.models.UserPartProgress" title="wte.models.UserPartProgress"><code class="xref py py-class docutils literal"><span class="pre">UserPartProgress</span></code></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.part.edit">
+<code class="descclassname">wte.views.part.</code><code class="descname">edit</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/part.html#edit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.part.edit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles the <code class="docutils literal"><span class="pre">/parts/{pid}/edit</span></code> URL,
+providing the UI and backend for editing a <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</p>
+<p>Requires that the user has &#8220;edit&#8221; rights on the <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.part.edit_register_settings">
+<code class="descclassname">wte.views.part.</code><code class="descname">edit_register_settings</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/part.html#edit_register_settings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.part.edit_register_settings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles the <code class="docutils literal"><span class="pre">/parts/{pid}/register/settings</span></code> URL,
+providing the UI and backend for editing the settings for registering for
+a &#8220;module&#8221; type <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</p>
+<p>Requires that the user has &#8220;edit&#8221; rights on the <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.part.export">
+<code class="descclassname">wte.views.part.</code><code class="descname">export</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/part.html#export"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.part.export" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles the <code class="docutils literal"><span class="pre">/parts/{pid}/export</span></code> URL, providing the UI and backend
+for exporting a <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</p>
+<p>The difference between exporting and downloading
+(<a class="reference internal" href="#wte.views.part.download" title="wte.views.part.download"><code class="xref py py-func docutils literal"><span class="pre">download()</span></code></a>) is that exporting creates an archive
+that can be imported into another WTE instance, while downloading creates
+an HTML version for offline viewing.</p>
+<p>Requires that the user has &#8220;edit&#8221; rights on the <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.part.get_all_parts">
+<code class="descclassname">wte.views.part.</code><code class="descname">get_all_parts</code><span class="sig-paren">(</span><em>part</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/part.html#get_all_parts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.part.get_all_parts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recursively returns the <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a> and all its children.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>part</strong> (<a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>) &#8211; The <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a> for which to find it children</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The <code class="docutils literal"><span class="pre">part</span></code> and all its children</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal"><span class="pre">list</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.part.get_user_part_progress">
+<code class="descclassname">wte.views.part.</code><code class="descname">get_user_part_progress</code><span class="sig-paren">(</span><em>dbsession</em>, <em>user</em>, <em>part</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/part.html#get_user_part_progress"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.part.get_user_part_progress" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the <a class="reference internal" href="wte_models.html#wte.models.UserPartProgress" title="wte.models.UserPartProgress"><code class="xref py py-class docutils literal"><span class="pre">UserPartProgress</span></code></a> for the given
+<code class="docutils literal"><span class="pre">user</span></code> and <code class="docutils literal"><span class="pre">part.</span> <span class="pre">If</span> <span class="pre">none</span> <span class="pre">exists,</span> <span class="pre">then</span> <span class="pre">a</span> <span class="pre">new</span> <span class="pre">one</span> <span class="pre">is</span> <span class="pre">instantiated.</span> <span class="pre">If</span>
+<span class="pre">the</span> <span class="pre">:class:`~wte.models.UserPartProgress`</span> <span class="pre">points</span> <span class="pre">to</span> <span class="pre">a</span> <span class="pre">current</span> <span class="pre">page</span> <span class="pre">that</span>
+<span class="pre">is</span> <span class="pre">different</span> <span class="pre">to</span> <span class="pre">``page</span></code>, then the <a class="reference internal" href="wte_models.html#wte.models.UserPartProgress" title="wte.models.UserPartProgress"><code class="xref py py-class docutils literal"><span class="pre">UserPartProgress</span></code></a>
+is updated.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>user</strong> (<a class="reference internal" href="wte_models.html#wte.models.User" title="wte.models.User"><code class="xref py py-class docutils literal"><span class="pre">User</span></code></a>) &#8211; The user to get the progress for</li>
+<li><strong>part</strong> (<a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>) &#8211; The part to get the progress for</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The <a class="reference internal" href="wte_models.html#wte.models.UserPartProgress" title="wte.models.UserPartProgress"><code class="xref py py-class docutils literal"><span class="pre">UserPartProgress</span></code></a></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="wte_models.html#wte.models.UserPartProgress" title="wte.models.UserPartProgress"><code class="xref py py-class docutils literal"><span class="pre">UserPartProgress</span></code></a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.part.import_file">
+<code class="descclassname">wte.views.part.</code><code class="descname">import_file</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/part.html#import_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.part.import_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles the <code class="docutils literal"><span class="pre">/parts/import</span></code> URL, providing the UI and
+backend for importing a <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</p>
+<p>The required permissions depend on the type of <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>
+to create:
+* <cite>module</cite> &#8211; User permission &#8220;modules.create&#8221;
+* <cite>tutorial</cite> &#8211; &#8220;edit&#8221; permission on the parent <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>
+* <cite>page</cite> &#8211; &#8220;edit&#8221; permission on the parent <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>
+* <cite>exercise</cite> &#8211; &#8220;edit&#8221; permission on the parent <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>
+* <cite>task</cite> &#8211; &#8220;edit&#8221; permission on the parent <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.part.init">
+<code class="descclassname">wte.views.part.</code><code class="descname">init</code><span class="sig-paren">(</span><em>config</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/part.html#init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.part.init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds the part-specific backend routes (route name, URL pattern
+handler):</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">part.list</span></code> &#8211; <code class="docutils literal"><span class="pre">/parts</span></code> &#8211; <a class="reference internal" href="#wte.views.part.list_parts" title="wte.views.part.list_parts"><code class="xref py py-func docutils literal"><span class="pre">list_parts()</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">part.new</span></code> &#8211; <code class="docutils literal"><span class="pre">/parts/new</span></code> &#8211;
+<a class="reference internal" href="#wte.views.part.new" title="wte.views.part.new"><code class="xref py py-func docutils literal"><span class="pre">new()</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">part.search</span></code> &#8211; <code class="docutils literal"><span class="pre">/parts/search</span></code> &#8211;
+<a class="reference internal" href="#wte.views.part.search" title="wte.views.part.search"><code class="xref py py-func docutils literal"><span class="pre">search()</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">part.import</span></code> &#8211; <code class="docutils literal"><span class="pre">/parts/import</span></code> &#8211;
+<a class="reference internal" href="#wte.views.part.import_file" title="wte.views.part.import_file"><code class="xref py py-func docutils literal"><span class="pre">import_file()</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">part.view</span></code> &#8211; <code class="docutils literal"><span class="pre">/parts/{pid}</span></code> &#8211;
+<code class="xref py py-func docutils literal"><span class="pre">view_part()</span></code></li>
+<li><code class="docutils literal"><span class="pre">part.edit</span></code> &#8211; <code class="docutils literal"><span class="pre">/parts/{pid}/edit</span></code> &#8211;
+<a class="reference internal" href="#wte.views.part.edit" title="wte.views.part.edit"><code class="xref py py-func docutils literal"><span class="pre">edit()</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">part.delete</span></code> &#8211; <code class="docutils literal"><span class="pre">/parts/{pid}/delete</span></code>
+&#8211; <a class="reference internal" href="#wte.views.part.delete" title="wte.views.part.delete"><code class="xref py py-func docutils literal"><span class="pre">delete()</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">part.delete</span></code> &#8211; <code class="docutils literal"><span class="pre">/parts/{pid}/delete</span></code>
+&#8211; <a class="reference internal" href="#wte.views.part.delete" title="wte.views.part.delete"><code class="xref py py-func docutils literal"><span class="pre">delete()</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">part.preview</span></code> &#8211; <code class="docutils literal"><span class="pre">/parts/{pid}/rst_preview</span></code> &#8211;
+<a class="reference internal" href="#wte.views.part.preview" title="wte.views.part.preview"><code class="xref py py-func docutils literal"><span class="pre">preview()</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">part.register</span></code> &#8211; <code class="docutils literal"><span class="pre">/parts/{pid}/register</span></code>
+&#8211; <a class="reference internal" href="#wte.views.part.register" title="wte.views.part.register"><code class="xref py py-func docutils literal"><span class="pre">register()</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">part.register.settings</span></code> &#8211; <code class="docutils literal"><span class="pre">/parts/{pid}/register/settings</span></code>
+&#8211; <a class="reference internal" href="#wte.views.part.edit_register_settings" title="wte.views.part.edit_register_settings"><code class="xref py py-func docutils literal"><span class="pre">edit_register_settings()</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">part.deregister</span></code> &#8211; <code class="docutils literal"><span class="pre">/parts/{pid}/deregister</span></code>
+&#8211; <a class="reference internal" href="#wte.views.part.deregister" title="wte.views.part.deregister"><code class="xref py py-func docutils literal"><span class="pre">deregister()</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">part.change_status</span></code> &#8211; <code class="docutils literal"><span class="pre">/parts/{pid}/change_status</span></code>
+&#8211; <a class="reference internal" href="#wte.views.part.change_status" title="wte.views.part.change_status"><code class="xref py py-func docutils literal"><span class="pre">change_status()</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">part.export</span></code> &#8211; <code class="docutils literal"><span class="pre">/parts/{pid}/export</span></code>
+&#8211; <a class="reference internal" href="#wte.views.part.export" title="wte.views.part.export"><code class="xref py py-func docutils literal"><span class="pre">export()</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">part.download</span></code> &#8211; <code class="docutils literal"><span class="pre">/parts/{pid}/download</span></code>
+&#8211; <a class="reference internal" href="#wte.views.part.download" title="wte.views.part.download"><code class="xref py py-func docutils literal"><span class="pre">download()</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">part.reset-files</span></code> &#8211; <code class="docutils literal"><span class="pre">/parts/{pid}/reset_files</span></code> &#8211;
+<a class="reference internal" href="#wte.views.part.reset_files" title="wte.views.part.reset_files"><code class="xref py py-func docutils literal"><span class="pre">reset_files()</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">part.progress.download</span></code> &#8211; <code class="docutils literal"><span class="pre">/users/{uid}/progress/{pid}/download</span></code>
+&#8211; <code class="xref py py-func docutils literal"><span class="pre">download_part_progress()</span></code></li>
+</ul>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.part.list_parts">
+<code class="descclassname">wte.views.part.</code><code class="descname">list_parts</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/part.html#list_parts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.part.list_parts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles the <code class="docutils literal"><span class="pre">/parts</span></code> URL, displaying modules. If no parameters are specified,
+lists all available modules. If a &#8220;user_id&#8221; parameter is specified, lists all
+modules for that user.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.part.new">
+<code class="descclassname">wte.views.part.</code><code class="descname">new</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/part.html#new"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.part.new" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles the <code class="docutils literal"><span class="pre">/parts/new</span></code> URL, providing the UI and
+backend for creating a new <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</p>
+<p>The required permissions depend on the type of <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>
+to create:
+* <cite>module</cite> &#8211; User permission &#8220;modules.create&#8221;
+* <cite>tutorial</cite> &#8211; &#8220;edit&#8221; permission on the parent <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>
+* <cite>page</cite> &#8211; &#8220;edit&#8221; permission on the parent <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>
+* <cite>exercise</cite> &#8211; &#8220;edit&#8221; permission on the parent <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>
+* <cite>task</cite> &#8211; &#8220;edit&#8221; permission on the parent <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.part.preview">
+<code class="descclassname">wte.views.part.</code><code class="descname">preview</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/part.html#preview"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.part.preview" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles the <code class="docutils literal"><span class="pre">/parts/{pid}/rst_preview</span></code> URL, generating an HTML preview of
+the submitted ReST. The ReST text to render has to be set as the <code class="docutils literal"><span class="pre">content</span></code> parameter.</p>
+<p>In addition to rendering the ReST the in the same way that it is rendered when
+saving a <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>, this will also insert a &lt;span id=&#8221;focus&#8221;&gt;&lt;/span&gt;
+at the current cursor position indicated by the string &#8220;§§§§§§§&#8221;.</p>
+<p>Requires that the user has &#8220;edit&#8221; rights on the current <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.part.register">
+<code class="descclassname">wte.views.part.</code><code class="descname">register</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/part.html#register"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.part.register" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles the <code class="docutils literal"><span class="pre">/parts/{pid}/register</span></code> URL, to allow users to register
+for a <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a> that is a &#8220;module&#8221;.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.part.reset_files">
+<code class="descclassname">wte.views.part.</code><code class="descname">reset_files</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/part.html#reset_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.part.reset_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles the <code class="docutils literal"><span class="pre">/parts/{pid}/reset_files</span></code> URL, providing
+the UI and backend for resetting all <code class="xref py py-class docutils literal"><span class="pre">Assets</span></code> of a
+<a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a> to the default for the current user.</p>
+<p>Requires that the user has &#8220;view&#8221; rights on the current
+<a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.part.search">
+<code class="descclassname">wte.views.part.</code><code class="descname">search</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/part.html#search"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.part.search" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles the <code class="docutils literal"><span class="pre">/parts/search</span></code> URL, searching all
+<a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a> for matches to the request parameter &#8216;q&#8217;.
+Returns all <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a> that the current user is
+allowed to view.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.part.view_part">
+<code class="descclassname">wte.views.part.</code><code class="descname">view_part</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/part.html#view_part"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.part.view_part" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles the <code class="docutils literal"><span class="pre">parts/{pid}</span></code> URL, displaying the
+<a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</p>
+<p>Requires that the user has &#8220;view&#8221; rights on the
+<a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</p>
+</dd></dl>
+
+</div>
+
+        </div>
+      </div>
+      <ul class="pagination text-center" role="navigation" aria-label="Pagination">
+        
+          <li class="pagination-previous"><a href="wte_views_asset.html"><code class="docutils literal"><span class="pre">wte.views.asset</span></code> &#8211; Assets</a></li>
+        
+        
+          <li class="pagination-next"><a href="wte_views_timed_tasks.html"><code class="docutils literal"><span class="pre">wte.views.timed_tasks</span></code> &#8211; Timed Tasks Backend</a></li>
+        
+      </ul>
+    </nav>
+  </body>
+</html>

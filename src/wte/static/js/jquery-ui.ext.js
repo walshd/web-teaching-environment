@@ -315,3 +315,45 @@ function codemirror_for_textarea(textarea) {
         }
     };
 }(jQuery));
+
+(function($) {
+    /**
+     * The helpViewer jQuery plugin handles the showing/hiding of
+     * the help overlay.
+     */
+    var methods = {
+        init : function(options) {
+            return this.each(function() {
+            	$('#toggle-help').on('click', function(ev) {
+            		ev.preventDefault();
+            		$('#help-viewer').toggleClass('show');
+            	});
+            	$('#help-viewer > a').on('click', function(ev) {
+            		ev.preventDefault();
+            		$('#help-viewer').toggleClass('show');
+            	});
+            	$(window).on('keyup', function(ev) {
+            		if(ev.keyCode == 27) {
+                		$('#help-viewer').removeClass('show');
+            		}
+            	});
+            	$(window).on('resize', function() {
+            		$(document).helpViewer('resize');
+            	});
+            }).helpViewer('resize');
+        },
+        resize: function() {
+        	$('#help-viewer').css('height', $(window).innerHeight() - $('#help-viewer').position().top - 10 + 'px');
+        }
+    };
+
+    $.fn.helpViewer = function(method) {
+        if (methods[method]) {
+            return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
+        } else if (typeof method === 'object' || !method) {
+            return methods.init.apply(this, arguments);
+        } else {
+            $.error('Method ' + method + ' does not exist on jQuery.helpViewer');
+        }
+    };
+}(jQuery));

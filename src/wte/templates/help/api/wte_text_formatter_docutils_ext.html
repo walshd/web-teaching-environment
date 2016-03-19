@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="../../static/css/application.min.css"/>
+    <link rel="stylesheet" href="../_static/default.css"/>
+    <link rel="stylesheet" href="../_static/override.css"/>
+    <link rel="stylesheet" href="../_static/pygments.css"/>
+    <title><code class="docutils literal"><span class="pre">wte.text_formatter.docutils_ext</span></code></title>
+  </head>
+  <body>
+    <nav>
+      <ul class="breadcrumbs">
+        
+          <li><a href="index.html">API Documentation</a></li>
+        
+        <li><code class="docutils literal"><span class="pre">wte.text_formatter.docutils_ext</span></code></li>
+      </ul>
+      <div class="row">
+        <div class="column small-12">
+          <span class="target" id="module-wte.text_formatter.docutils_ext"></span><div class="section" id="wte-text-formatter-docutils-ext">
+<h1><a class="reference internal" href="#module-wte.text_formatter.docutils_ext" title="wte.text_formatter.docutils_ext"><code class="xref py py-mod docutils literal"><span class="pre">wte.text_formatter.docutils_ext</span></code></a><a class="headerlink" href="#wte-text-formatter-docutils-ext" title="Permalink to this headline">¶</a></h1>
+<p>This module contains docutils extensions (roles and directives) that provide
+the additional formatting support required by the
+<a class="reference internal" href="wte_text_formatter.html#wte.text_formatter.compile_rst" title="wte.text_formatter.compile_rst"><code class="xref py py-func docutils literal"><span class="pre">compile_rst()</span></code></a> function.</p>
+<dl class="class">
+<dt id="wte.text_formatter.docutils_ext.HtmlTitleFormatter">
+<em class="property">class </em><code class="descclassname">wte.text_formatter.docutils_ext.</code><code class="descname">HtmlTitleFormatter</code><span class="sig-paren">(</span><em>language=None</em>, <em>filename=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/text_formatter/docutils_ext.html#HtmlTitleFormatter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.text_formatter.docutils_ext.HtmlTitleFormatter" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <a class="reference internal" href="#wte.text_formatter.docutils_ext.HtmlTitleFormatter" title="wte.text_formatter.docutils_ext.HtmlTitleFormatter"><code class="xref py py-class docutils literal"><span class="pre">HtmlTitleFormatter</span></code></a> is
+an extension of <code class="xref py py-class docutils literal"><span class="pre">pygments.formatters.HtmlFormatter</span></code> that supports
+adding the optional language name and filename to the top of the code
+block.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="wte.text_formatter.docutils_ext.Pygments">
+<em class="property">class </em><code class="descclassname">wte.text_formatter.docutils_ext.</code><code class="descname">Pygments</code><span class="sig-paren">(</span><em>name</em>, <em>arguments</em>, <em>options</em>, <em>content</em>, <em>lineno</em>, <em>content_offset</em>, <em>block_text</em>, <em>state</em>, <em>state_machine</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/text_formatter/docutils_ext.html#Pygments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.text_formatter.docutils_ext.Pygments" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Pygments reStructuredText directive</p>
+<p>This fragment is a <a class="reference external" href="http://docutils.sf.net/">Docutils</a> 0.5 directive that renders source code
+(to HTML only, currently) via Pygments.</p>
+<p>To use it, adjust the options below and copy the code into a module
+that you import on initialization.  The code then automatically
+registers a <code class="docutils literal"><span class="pre">sourcecode</span></code> directive that you can use instead of
+normal code blocks like this:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>.. sourcecode:: python
+
+    My code goes here.
+</pre></div>
+</div>
+<p>If you want to have different code styles, e.g. one with line numbers
+and one without, add formatters with their names in the VARIANTS dict
+below.  You can invoke them instead of the DEFAULT one by using a
+directive option:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>.. sourcecode:: python
+    :linenos:
+
+    My code goes here.
+</pre></div>
+</div>
+<p>Look at the <a class="reference external" href="http://docutils.sourceforge.net/docs/howto/rst-directives.html">directive documentation</a> to get all the gory details.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Copyright:</th><td class="field-body">Copyright 2006-2014 by the Pygments team, see AUTHORS.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">License:</th><td class="field-body">BSD, see LICENSE for details.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="wte.text_formatter.docutils_ext.YouTube">
+<em class="property">class </em><code class="descclassname">wte.text_formatter.docutils_ext.</code><code class="descname">YouTube</code><span class="sig-paren">(</span><em>name</em>, <em>arguments</em>, <em>options</em>, <em>content</em>, <em>lineno</em>, <em>content_offset</em>, <em>block_text</em>, <em>state</em>, <em>state_machine</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/text_formatter/docutils_ext.html#YouTube"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.text_formatter.docutils_ext.YouTube" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <a class="reference internal" href="#wte.text_formatter.docutils_ext.YouTube" title="wte.text_formatter.docutils_ext.YouTube"><code class="xref py py-class docutils literal"><span class="pre">YouTube</span></code></a> directive enables
+support for embeddeding YouTube videos in ReST. It takes a single parameter
+that is the YouTube URL to embed:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>.. youtube:: https://URL/TO/VIDEO
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.text_formatter.docutils_ext.and_">
+<code class="descclassname">wte.text_formatter.docutils_ext.</code><code class="descname">and_</code><span class="sig-paren">(</span><em>*clauses</em><span class="sig-paren">)</span><a class="headerlink" href="#wte.text_formatter.docutils_ext.and_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Produce a conjunction of expressions joined by <code class="docutils literal"><span class="pre">AND</span></code>.</p>
+<p>E.g.:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="n">and_</span>
+
+<span class="n">stmt</span> <span class="o">=</span> <span class="n">select</span><span class="p">([</span><span class="n">users_table</span><span class="p">])</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+                <span class="n">and_</span><span class="p">(</span>
+                    <span class="n">users_table</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;wendy&#39;</span><span class="p">,</span>
+                    <span class="n">users_table</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">enrolled</span> <span class="o">==</span> <span class="bp">True</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+</pre></div>
+</div>
+<p>The <a class="reference internal" href="#wte.text_formatter.docutils_ext.and_" title="wte.text_formatter.docutils_ext.and_"><code class="xref py py-func docutils literal"><span class="pre">and_()</span></code></a> conjunction is also available using the
+Python <code class="docutils literal"><span class="pre">&amp;</span></code> operator (though note that compound expressions
+need to be parenthesized in order to function with Python
+operator precedence behavior):</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">stmt</span> <span class="o">=</span> <span class="n">select</span><span class="p">([</span><span class="n">users_table</span><span class="p">])</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">users_table</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;wendy&#39;</span><span class="p">)</span> <span class="o">&amp;</span>
+                <span class="p">(</span><span class="n">users_table</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">enrolled</span> <span class="o">==</span> <span class="bp">True</span><span class="p">)</span>
+            <span class="p">)</span>
+</pre></div>
+</div>
+<p>The <a class="reference internal" href="#wte.text_formatter.docutils_ext.and_" title="wte.text_formatter.docutils_ext.and_"><code class="xref py py-func docutils literal"><span class="pre">and_()</span></code></a> operation is also implicit in some cases;
+the <code class="xref py py-meth docutils literal"><span class="pre">Select.where()</span></code> method for example can be invoked multiple
+times against a statement, which will have the effect of each
+clause being combined using <a class="reference internal" href="#wte.text_formatter.docutils_ext.and_" title="wte.text_formatter.docutils_ext.and_"><code class="xref py py-func docutils literal"><span class="pre">and_()</span></code></a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">stmt</span> <span class="o">=</span> <span class="n">select</span><span class="p">([</span><span class="n">users_table</span><span class="p">])</span><span class="o">.</span>\
+            <span class="n">where</span><span class="p">(</span><span class="n">users_table</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;wendy&#39;</span><span class="p">)</span><span class="o">.</span>\
+            <span class="n">where</span><span class="p">(</span><span class="n">users_table</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">enrolled</span> <span class="o">==</span> <span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><code class="xref py py-func docutils literal"><span class="pre">or_()</span></code></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.text_formatter.docutils_ext.asset_ref_role">
+<code class="descclassname">wte.text_formatter.docutils_ext.</code><code class="descname">asset_ref_role</code><span class="sig-paren">(</span><em>name</em>, <em>rawtext</em>, <em>text</em>, <em>lineno</em>, <em>inliner</em>, <em>options={}</em>, <em>content=[]</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/text_formatter/docutils_ext.html#asset_ref_role"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.text_formatter.docutils_ext.asset_ref_role" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <a class="reference internal" href="#wte.text_formatter.docutils_ext.asset_ref_role" title="wte.text_formatter.docutils_ext.asset_ref_role"><code class="xref py py-func docutils literal"><span class="pre">asset_ref_role()</span></code></a> function
+provides a docutils role that handles linking in <a class="reference internal" href="wte_models.html#wte.models.Asset" title="wte.models.Asset"><code class="xref py py-class docutils literal"><span class="pre">Asset</span></code></a>
+into the text. If the <a class="reference internal" href="wte_models.html#wte.models.Asset" title="wte.models.Asset"><code class="xref py py-class docutils literal"><span class="pre">Asset</span></code></a> is an image, then the
+image is loaded inline, otherwise a download link for all other types
+of <a class="reference internal" href="wte_models.html#wte.models.Asset" title="wte.models.Asset"><code class="xref py py-class docutils literal"><span class="pre">Asset</span></code></a> is created.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.text_formatter.docutils_ext.crossref_role">
+<code class="descclassname">wte.text_formatter.docutils_ext.</code><code class="descname">crossref_role</code><span class="sig-paren">(</span><em>name</em>, <em>rawtext</em>, <em>text</em>, <em>lineno</em>, <em>inliner</em>, <em>options={}</em>, <em>content=[]</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/text_formatter/docutils_ext.html#crossref_role"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.text_formatter.docutils_ext.crossref_role" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <a class="reference internal" href="#wte.text_formatter.docutils_ext.crossref_role" title="wte.text_formatter.docutils_ext.crossref_role"><code class="xref py py-func docutils literal"><span class="pre">crossref_role()</span></code></a> function
+implements an additional docutils role that handles cross-references
+between <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>s.</p>
+<p>Usage in ReST is :crossref:`part_id` or :crossref:`link text
+&lt;part_id&gt;`.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.text_formatter.docutils_ext.flag_bool_option">
+<code class="descclassname">wte.text_formatter.docutils_ext.</code><code class="descname">flag_bool_option</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/text_formatter/docutils_ext.html#flag_bool_option"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.text_formatter.docutils_ext.flag_bool_option" title="Permalink to this definition">¶</a></dt>
+<dd><p>Options conversion function for ReST
+<code class="xref py py-class docutils literal"><span class="pre">Directive</span></code> that returns <code class="docutils literal"><span class="pre">True</span></code> if the
+value is set and has any value except &#8220;false&#8221;.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.text_formatter.docutils_ext.init">
+<code class="descclassname">wte.text_formatter.docutils_ext.</code><code class="descname">init</code><span class="sig-paren">(</span><em>settings</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/text_formatter/docutils_ext.html#init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.text_formatter.docutils_ext.init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialise and load the docutils extensions.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.text_formatter.docutils_ext.inline_css_role">
+<code class="descclassname">wte.text_formatter.docutils_ext.</code><code class="descname">inline_css_role</code><span class="sig-paren">(</span><em>name</em>, <em>rawtext</em>, <em>text</em>, <em>lineno</em>, <em>inliner</em>, <em>options={}</em>, <em>content=[]</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/text_formatter/docutils_ext.html#inline_css_role"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.text_formatter.docutils_ext.inline_css_role" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <a class="reference internal" href="#wte.text_formatter.docutils_ext.inline_css_role" title="wte.text_formatter.docutils_ext.inline_css_role"><code class="xref py py-func docutils literal"><span class="pre">inline_css_role()</span></code></a> function
+provides a docutils role that allows for the specification of arbitrary CSS
+that is then assigned to a &lt;span&gt; element.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.text_formatter.docutils_ext.inline_pygments_role">
+<code class="descclassname">wte.text_formatter.docutils_ext.</code><code class="descname">inline_pygments_role</code><span class="sig-paren">(</span><em>name</em>, <em>rawtext</em>, <em>text</em>, <em>lineno</em>, <em>inliner</em>, <em>options={}</em>, <em>content=[]</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/text_formatter/docutils_ext.html#inline_pygments_role"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.text_formatter.docutils_ext.inline_pygments_role" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <a class="reference internal" href="#wte.text_formatter.docutils_ext.inline_pygments_role" title="wte.text_formatter.docutils_ext.inline_pygments_role"><code class="xref py py-func docutils literal"><span class="pre">inline_pygments_role()</span></code></a>
+function provides a docutils role that handles inline code highlighting
+using Pygments. The name of the language to use for highlighting is taken
+from the name of the role (which must be formatted <code class="docutils literal"><span class="pre">code-language_name</span></code>).</p>
+</dd></dl>
+
+</div>
+
+        </div>
+      </div>
+      <ul class="pagination text-center" role="navigation" aria-label="Pagination">
+        
+          <li class="pagination-previous"><a href="wte_text_formatter.html"><code class="docutils literal"><span class="pre">wte.text_formatter</span></code></a></li>
+        
+        
+          <li class="pagination-next"><a href="wte_util.html"><code class="docutils literal"><span class="pre">wte.util</span></code> &#8211; Utility functions</a></li>
+        
+      </ul>
+    </nav>
+  </body>
+</html>

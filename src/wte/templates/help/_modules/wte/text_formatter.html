@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="../../../static/css/application.min.css"/>
+    <link rel="stylesheet" href="../../_static/default.css"/>
+    <link rel="stylesheet" href="../../_static/override.css"/>
+    <link rel="stylesheet" href="../../_static/pygments.css"/>
+    <title>wte.text_formatter</title>
+  </head>
+  <body>
+    <nav>
+      <ul class="breadcrumbs">
+        
+          <li><a href="../index.html">Module code</a></li>
+        
+          <li><a href="../wte.html">wte</a></li>
+        
+        <li>wte.text_formatter</li>
+      </ul>
+      <div class="row">
+        <div class="column small-12">
+          <h1>Source code for wte.text_formatter</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">u&quot;&quot;&quot;</span>
+<span class="sd">#########################</span>
+<span class="sd">:mod:`wte.text_formatter`</span>
+<span class="sd">#########################</span>
+
+<span class="sd">This module contains functions for formatting the instruction texts shown to</span>
+<span class="sd">the student.</span>
+
+<span class="sd">.. moduleauthor:: Mark Hall &lt;mark.hall@mail.room3b.eu&gt;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">docutils</span> <span class="kn">import</span> <span class="n">core</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">docutils_ext</span>  <span class="c1"># NOQA</span>
+
+<span class="n">SETTINGS</span> <span class="o">=</span> <span class="p">{}</span>
+
+
+<div class="viewcode-block" id="init"><a class="viewcode-back" href="../../api/wte_text_formatter.html#wte.text_formatter.init">[docs]</a><span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="n">settings</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initialise the module and all docutils extensions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">SETTINGS</span>
+    <span class="n">docutils_ext</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
+    <span class="n">SETTINGS</span><span class="p">[</span><span class="s1">&#39;initial_header_level&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">SETTINGS</span><span class="p">[</span><span class="s1">&#39;raw_enabled&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">SETTINGS</span><span class="p">[</span><span class="s1">&#39;file_insertion_enabled&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">False</span></div>
+
+
+<div class="viewcode-block" id="compile_rst"><a class="viewcode-back" href="../../api/wte_text_formatter.html#wte.text_formatter.compile_rst">[docs]</a><span class="k">def</span> <span class="nf">compile_rst</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">part</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;Compiles the given ReStructuredText into HTML. Returns only the actual</span>
+<span class="sd">    content of the generated HTML document, without headers or footers.</span>
+
+<span class="sd">    :param text: The ReST to compile</span>
+<span class="sd">    :type text: `unicode`</span>
+<span class="sd">    :return: The body content of the generated HTML</span>
+<span class="sd">    :return_type: `unicode`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">settings</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">SETTINGS</span><span class="p">)</span>
+    <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;pyramid_request&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">request</span>
+    <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;wte_part&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">part</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="n">core</span><span class="o">.</span><span class="n">publish_parts</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="n">text</span><span class="p">,</span> <span class="n">writer_name</span><span class="o">=</span><span class="s1">u&#39;html&#39;</span><span class="p">,</span> <span class="n">settings_overrides</span><span class="o">=</span><span class="n">settings</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">parts</span><span class="p">[</span><span class="s1">&#39;body&#39;</span><span class="p">]</span></div>
+</pre></div>
+        </div>
+      </div>
+      <ul class="pagination text-center" role="navigation" aria-label="Pagination">
+        
+        
+      </ul>
+    </nav>
+  </body>
+</html>

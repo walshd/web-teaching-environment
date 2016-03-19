@@ -22,6 +22,7 @@
           <li><a href="${request.route_url('user.register')}">Register</a></li>
           <li><a href="${request.route_url('user.login', _query={'return_to': request.current_route_url() if request.matched_route else ''})}">Log in</a></li>
         </py:else>
+        <li><a id="toggle-help" href="#">?</a></li>
       </ul>
     </div>
   </nav>

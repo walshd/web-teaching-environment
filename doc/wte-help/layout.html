@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="{{ pathto('', 1) }}../static/css/application.min.css"/>
+    <link rel="stylesheet" href="{{ pathto('_static/default.css', 1) }}"/>
+    <link rel="stylesheet" href="{{ pathto('_static/override.css', 1) }}"/>
+    <link rel="stylesheet" href="{{ pathto('_static/pygments.css', 1) }}"/>
+    <title>{{ title }}</title>
+  </head>
+  <body>
+    <nav>
+      <ul class="breadcrumbs">
+        {% for item in parents %}
+          <li><a href="{{ item.link }}">{{ item.title }}</a></li>
+        {% endfor %}
+        <li>{{ title }}</li>
+      </ul>
+      <div class="row">
+        <div class="column small-12">
+          {{ body }}
+        </div>
+      </div>
+      <ul class="pagination text-center" role="navigation" aria-label="Pagination">
+        {% if prev %}
+          <li class="pagination-previous"><a href="{{ prev.link }}">{{ prev.title }}</a></li>
+        {% endif %}
+        {% if next %}
+          <li class="pagination-next"><a href="{{ next.link }}">{{ next.title }}</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+  </body>
+</html>

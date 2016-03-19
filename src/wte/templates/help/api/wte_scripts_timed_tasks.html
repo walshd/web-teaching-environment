@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="../../static/css/application.min.css"/>
+    <link rel="stylesheet" href="../_static/default.css"/>
+    <link rel="stylesheet" href="../_static/override.css"/>
+    <link rel="stylesheet" href="../_static/pygments.css"/>
+    <title><code class="docutils literal"><span class="pre">wte.scripts.timed_tasks</span></code> &#8211; Script to run timed tasks</title>
+  </head>
+  <body>
+    <nav>
+      <ul class="breadcrumbs">
+        
+          <li><a href="index.html">API Documentation</a></li>
+        
+        <li><code class="docutils literal"><span class="pre">wte.scripts.timed_tasks</span></code> &#8211; Script to run timed tasks</li>
+      </ul>
+      <div class="row">
+        <div class="column small-12">
+          <span class="target" id="module-wte.scripts.timed_tasks"></span><div class="section" id="wte-scripts-timed-tasks-script-to-run-timed-tasks">
+<h1><a class="reference internal" href="#module-wte.scripts.timed_tasks" title="wte.scripts.timed_tasks"><code class="xref py py-mod docutils literal"><span class="pre">wte.scripts.timed_tasks</span></code></a> &#8211; Script to run timed tasks<a class="headerlink" href="#wte-scripts-timed-tasks-script-to-run-timed-tasks" title="Permalink to this headline">¶</a></h1>
+<p>The <a class="reference internal" href="#module-wte.scripts.timed_tasks" title="wte.scripts.timed_tasks"><code class="xref py py-mod docutils literal"><span class="pre">timed_tasks</span></code></a> module provides the functionality for
+running <a class="reference internal" href="wte_models.html#wte.models.TimedTask" title="wte.models.TimedTask"><code class="xref py py-class docutils literal"><span class="pre">TimedTask</span></code></a>. Only a single instance of it should
+ever be run as otherwise it is possible that tasks are run multiple times.</p>
+<dl class="function">
+<dt id="wte.scripts.timed_tasks.init">
+<code class="descclassname">wte.scripts.timed_tasks.</code><code class="descname">init</code><span class="sig-paren">(</span><em>subparsers</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/scripts/timed_tasks.html#init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.scripts.timed_tasks.init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialises the <a class="reference external" href="http://docs.python.org/library/argparse.html#argparse.ArgumentParser" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">ArgumentParser</span></code></a>, adding the
+&#8220;run-timed-tasks&#8221; command that runs <a class="reference internal" href="#wte.scripts.timed_tasks.run_timed_tasks" title="wte.scripts.timed_tasks.run_timed_tasks"><code class="xref py py-func docutils literal"><span class="pre">run_timed_tasks()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.scripts.timed_tasks.run_change_status">
+<code class="descclassname">wte.scripts.timed_tasks.</code><code class="descname">run_change_status</code><span class="sig-paren">(</span><em>task_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/scripts/timed_tasks.html#run_change_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.scripts.timed_tasks.run_change_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run the status change task for the <a class="reference internal" href="wte_models.html#wte.models.TimedTask" title="wte.models.TimedTask"><code class="xref py py-class docutils literal"><span class="pre">TimedTask</span></code></a> with the
+id <code class="docutils literal"><span class="pre">task_id</span></code>. It changes the <a class="reference internal" href="wte_models.html#wte.models.TimedTask" title="wte.models.TimedTask"><code class="xref py py-class docutils literal"><span class="pre">TimedTask</span></code></a>s status to the
+value of the &#8220;target_status&#8221; key in the <a class="reference internal" href="wte_models.html#wte.models.TimedTask.options" title="wte.models.TimedTask.options"><code class="xref py py-attr docutils literal"><span class="pre">options</span></code></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.scripts.timed_tasks.run_timed_tasks">
+<code class="descclassname">wte.scripts.timed_tasks.</code><code class="descname">run_timed_tasks</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/scripts/timed_tasks.html#run_timed_tasks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.scripts.timed_tasks.run_timed_tasks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs all timed tasks where the timestamp is in the past and the status is &#8220;ready&#8221;.</p>
+<p>All <a class="reference internal" href="wte_models.html#wte.models.TimedTask" title="wte.models.TimedTask"><code class="xref py py-class docutils literal"><span class="pre">TimedTask</span></code></a> that are to be run are given a unique &#8220;run-{random-number}&#8221;
+<code class="docutils literal"><span class="pre">status</span></code> to uniquely identify them for this run. Individual task runners are then
+responsible for setting that status to &#8220;completed&#8221; after the task completes successfully
+or to &#8220;failed&#8221; if it failed.</p>
+<p>All task runners are run in independent <a class="reference external" href="http://docs.python.org/library/threading.html#threading.Thread" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">threading.Thread</span></code></a>s. After all
+<a class="reference external" href="http://docs.python.org/library/threading.html#threading.Thread" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">Thread</span></code></a> complete, any <a class="reference internal" href="wte_models.html#wte.models.TimedTask" title="wte.models.TimedTask"><code class="xref py py-class docutils literal"><span class="pre">TimedTask</span></code></a> that still have
+the unique &#8220;run-{random-number}&#8221; status are automatically set to the &#8220;failed&#8221; status.</p>
+</dd></dl>
+
+</div>
+
+        </div>
+      </div>
+      <ul class="pagination text-center" role="navigation" aria-label="Pagination">
+        
+          <li class="pagination-previous"><a href="wte_scripts_main.html"><code class="docutils literal"><span class="pre">wte.scripts.main</span></code> &#8211; Administration application</a></li>
+        
+        
+          <li class="pagination-next"><a href="wte_text_formatter.html"><code class="docutils literal"><span class="pre">wte.text_formatter</span></code></a></li>
+        
+      </ul>
+    </nav>
+  </body>
+</html>

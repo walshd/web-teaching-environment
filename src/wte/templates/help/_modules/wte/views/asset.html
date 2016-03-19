@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="../../../../static/css/application.min.css"/>
+    <link rel="stylesheet" href="../../../_static/default.css"/>
+    <link rel="stylesheet" href="../../../_static/override.css"/>
+    <link rel="stylesheet" href="../../../_static/pygments.css"/>
+    <title>wte.views.asset</title>
+  </head>
+  <body>
+    <nav>
+      <ul class="breadcrumbs">
+        
+          <li><a href="../../index.html">Module code</a></li>
+        
+          <li><a href="../../wte.html">wte</a></li>
+        
+          <li><a href="../views.html">wte.views</a></li>
+        
+        <li>wte.views.asset</li>
+      </ul>
+      <div class="row">
+        <div class="column small-12">
+          <h1>Source code for wte.views.asset</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">################################</span>
+<span class="sd">:mod:`wte.views.asset` -- Assets</span>
+<span class="sd">################################</span>
+
+<span class="sd">The :mod:`~wte.views.asset` module provides the backend functionality for</span>
+<span class="sd">creating, editing, and deleting :class:`~wte.models.Asset`.</span>
+
+<span class="sd">Routes are defined in :func:`~wte.views.asset.init`.</span>
+
+<span class="sd">.. moduleauthor:: Mark Hall &lt;mark.hall@work.room3b.eu&gt;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">formencode</span>
+<span class="kn">import</span> <span class="nn">hashlib</span>
+<span class="kn">import</span> <span class="nn">transaction</span>
+
+<span class="kn">from</span> <span class="nn">mimetypes</span> <span class="kn">import</span> <span class="n">guess_type</span>
+<span class="kn">from</span> <span class="nn">pyramid.httpexceptions</span> <span class="kn">import</span> <span class="p">(</span><span class="n">HTTPSeeOther</span><span class="p">,</span> <span class="n">HTTPNotFound</span><span class="p">,</span> <span class="n">HTTPNotModified</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">pyramid.response</span> <span class="kn">import</span> <span class="n">Response</span>
+<span class="kn">from</span> <span class="nn">pyramid.view</span> <span class="kn">import</span> <span class="n">view_config</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="n">and_</span>
+
+<span class="kn">from</span> <span class="nn">wte.decorators</span> <span class="kn">import</span> <span class="p">(</span><span class="n">current_user</span><span class="p">,</span> <span class="n">require_logged_in</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">wte.models</span> <span class="kn">import</span> <span class="p">(</span><span class="n">DBSession</span><span class="p">,</span> <span class="n">Part</span><span class="p">,</span> <span class="n">Asset</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">wte.views.part</span> <span class="kn">import</span> <span class="p">(</span><span class="n">create_part_crumbs</span><span class="p">,</span> <span class="n">get_user_part_progress</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">wte.util</span> <span class="kn">import</span> <span class="p">(</span><span class="n">unauthorised_redirect</span><span class="p">,</span> <span class="n">CSRFSchema</span><span class="p">,</span> <span class="n">State</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="init"><a class="viewcode-back" href="../../../api/wte_views_asset.html#wte.views.asset.init">[docs]</a><span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;Adds the asset-specific routes (route name, URL pattern</span>
+<span class="sd">    handler):</span>
+
+<span class="sd">    * ``asset.new`` -- ``/parts/{pid}/assets/new/{new_type}`` --</span>
+<span class="sd">      :func:`~wte.views.asset.new`</span>
+<span class="sd">    * ``asset.search`` -- ``/parts/{pid}/assets/search`` --</span>
+<span class="sd">      :func:`~wte.views.asset.search`</span>
+<span class="sd">    * ``asset.edit`` -- ``/parts/{pid}/assets/{aid}/edit`` --</span>
+<span class="sd">      :func:`~wte.views.asset.edit`</span>
+<span class="sd">    * ``asset.delete`` -- ``/parts/{pid}/assets/{aid}/delete`` --</span>
+<span class="sd">      :func:`~wte.views.asset.delete`</span>
+<span class="sd">    * ``asset.view`` -- ``/parts/{pid}/files/name/assets/{filename}``</span>
+<span class="sd">      -- :func:`~wte.views.frontend.view_asset`</span>
+<span class="sd">    * ``file.view`` -- ``/parts/{pid}/files/name/{filename}``</span>
+<span class="sd">      -- :func:`~wte.views.frontend.view_file`</span>
+<span class="sd">    * ``file.save`` -- ``/parts/{pid}/files/id/{fid}/save``</span>
+<span class="sd">      -- :func:`~wte.views.frontend.save_file`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">add_route</span><span class="p">(</span><span class="s1">&#39;asset.new&#39;</span><span class="p">,</span> <span class="s1">&#39;/parts/{pid}/assets/new/{new_type}&#39;</span><span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">add_route</span><span class="p">(</span><span class="s1">&#39;asset.search&#39;</span><span class="p">,</span> <span class="s1">&#39;/parts/{pid}/assets/search&#39;</span><span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">add_route</span><span class="p">(</span><span class="s1">&#39;asset.edit&#39;</span><span class="p">,</span> <span class="s1">&#39;/parts/{pid}/assets/{aid}/edit&#39;</span><span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">add_route</span><span class="p">(</span><span class="s1">&#39;asset.delete&#39;</span><span class="p">,</span> <span class="s1">&#39;/parts/{pid}/assets/{aid}/delete&#39;</span><span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">add_route</span><span class="p">(</span><span class="s1">&#39;asset.view&#39;</span><span class="p">,</span> <span class="s1">&#39;/parts/{pid}/files/name/assets/{filename}&#39;</span><span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">add_route</span><span class="p">(</span><span class="s1">&#39;file.view&#39;</span><span class="p">,</span> <span class="s1">&#39;/parts/{pid}/files/name/{filename}&#39;</span><span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">add_route</span><span class="p">(</span><span class="s1">&#39;file.save&#39;</span><span class="p">,</span> <span class="s1">&#39;/parts/{pid}/files/id/{fid}/save&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="NewAssetSchema"><a class="viewcode-back" href="../../../api/wte_views_asset.html#wte.views.asset.NewAssetSchema">[docs]</a><span class="k">class</span> <span class="nc">NewAssetSchema</span><span class="p">(</span><span class="n">CSRFSchema</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;The :class:`~wte.views.asset.NewAssetSchema` handles the</span>
+<span class="sd">    validation of a new :class:`~wte.models.Asset`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">UnicodeString</span><span class="p">(</span><span class="n">if_empty</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">if_missing</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+    <span class="sd">u&quot;&quot;&quot;The asset&#39;s filename&quot;&quot;&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">FieldStorageUploadConverter</span><span class="p">(</span><span class="n">not_empty</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">if_missing</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+    <span class="sd">u&quot;&quot;&quot;The asset&#39;s data&quot;&quot;&quot;</span></div>
+
+
+<span class="nd">@view_config</span><span class="p">(</span><span class="n">route_name</span><span class="o">=</span><span class="s1">&#39;asset.new&#39;</span><span class="p">,</span> <span class="n">renderer</span><span class="o">=</span><span class="s1">&#39;wte:templates/asset/new.kajiki&#39;</span><span class="p">)</span>
+<span class="nd">@current_user</span><span class="p">()</span>
+<span class="nd">@require_logged_in</span><span class="p">()</span>
+<div class="viewcode-block" id="new"><a class="viewcode-back" href="../../../api/wte_views_asset.html#wte.views.asset.new">[docs]</a><span class="k">def</span> <span class="nf">new</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;Handles the ``/parts/{pid}/assets/new/{new_type}`` URL, providing the UI and</span>
+<span class="sd">    backend for creating a new :class:`~wte.models.Asset`.</span>
+
+<span class="sd">    Requires that the user has &quot;edit&quot; rights on the current :class:`~wte.models.Part`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dbsession</span> <span class="o">=</span> <span class="n">DBSession</span><span class="p">()</span>
+    <span class="n">part</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Part</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">Part</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">u&#39;pid&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">part</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">allow</span><span class="p">(</span><span class="s1">&#39;edit&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="p">):</span>
+            <span class="n">crumbs</span> <span class="o">=</span> <span class="n">create_part_crumbs</span><span class="p">(</span><span class="n">request</span><span class="p">,</span>
+                                        <span class="n">part</span><span class="p">,</span>
+                                        <span class="p">{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Add </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">&#39;new_type&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">title</span><span class="p">()),</span>
+                                         <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">current_route_url</span><span class="p">()})</span>
+            <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">u&#39;POST&#39;</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">schema</span> <span class="o">=</span> <span class="n">NewAssetSchema</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">&#39;new_type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;asset&#39;</span><span class="p">:</span>
+                        <span class="n">schema</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">not_empty</span> <span class="o">=</span> <span class="bp">True</span>
+                    <span class="n">params</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">to_python</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="n">State</span><span class="p">(</span><span class="n">request</span><span class="o">=</span><span class="n">request</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="n">formencode</span><span class="o">.</span><span class="n">Invalid</span><span class="p">(</span><span class="s1">&#39;You must specify either a file or filename&#39;</span><span class="p">,</span>
+                                                 <span class="bp">None</span><span class="p">,</span>
+                                                 <span class="bp">None</span><span class="p">,</span>
+                                                 <span class="n">error_dict</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;filename&#39;</span><span class="p">:</span> <span class="s1">&#39;You must specify either a file or filename&#39;</span><span class="p">,</span>
+                                                             <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="s1">&#39;You must specify either a file or filename&#39;</span><span class="p">})</span>
+                    <span class="n">dbsession</span> <span class="o">=</span> <span class="n">DBSession</span><span class="p">()</span>
+                    <span class="n">progress</span> <span class="o">=</span> <span class="n">get_user_part_progress</span><span class="p">(</span><span class="n">dbsession</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="p">,</span> <span class="n">part</span><span class="p">)</span>
+                    <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">manager</span><span class="p">:</span>
+                        <span class="n">dbsession</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">part</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">progress</span><span class="p">:</span>
+                            <span class="n">dbsession</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">progress</span><span class="p">)</span>
+                        <span class="n">mimetype</span> <span class="o">=</span> <span class="s1">&#39;application/binary&#39;</span>
+                        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                            <span class="n">mimetype</span> <span class="o">=</span> <span class="n">guess_type</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">])</span>
+                        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                            <span class="n">mimetype</span> <span class="o">=</span> <span class="n">guess_type</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                                <span class="n">params</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">filename</span>
+                        <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">&#39;new_type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;template&#39;</span><span class="p">:</span>
+                            <span class="n">new_order</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">order</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">part</span><span class="o">.</span><span class="n">templates</span><span class="p">]</span>
+                        <span class="k">elif</span> <span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">&#39;new_type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;asset&#39;</span><span class="p">:</span>
+                            <span class="n">new_order</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">order</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">part</span><span class="o">.</span><span class="n">assets</span><span class="p">]</span>
+                        <span class="k">elif</span> <span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">&#39;new_type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;file&#39;</span><span class="p">:</span>
+                            <span class="n">new_order</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">order</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">progress</span><span class="o">.</span><span class="n">files</span><span class="p">]</span> <span class="k">if</span> <span class="n">progress</span> <span class="k">else</span> <span class="p">[]</span>
+                        <span class="n">new_order</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                        <span class="n">new_order</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">new_order</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+                        <span class="n">new_asset</span> <span class="o">=</span> <span class="n">Asset</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">],</span>
+                                          <span class="n">mimetype</span><span class="o">=</span><span class="n">mimetype</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">mimetype</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">else</span> <span class="s1">&#39;application/binary&#39;</span><span class="p">,</span>
+                                          <span class="nb">type</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">&#39;new_type&#39;</span><span class="p">],</span>
+                                          <span class="n">order</span><span class="o">=</span><span class="n">new_order</span><span class="p">,</span>
+                                          <span class="n">data</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span> <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="k">else</span> <span class="bp">None</span><span class="p">,</span>
+                                          <span class="n">etag</span><span class="o">=</span><span class="n">hashlib</span><span class="o">.</span><span class="n">sha512</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">())</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+                                          <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="k">else</span> <span class="bp">None</span><span class="p">)</span>
+                        <span class="n">dbsession</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">new_asset</span><span class="p">)</span>
+                        <span class="n">part</span><span class="o">.</span><span class="n">all_assets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_asset</span><span class="p">)</span>
+                    <span class="n">dbsession</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">part</span><span class="p">)</span>
+                    <span class="k">raise</span> <span class="n">HTTPSeeOther</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.view&#39;</span><span class="p">,</span> <span class="n">pid</span><span class="o">=</span><span class="n">part</span><span class="o">.</span><span class="n">id</span><span class="p">))</span>
+                <span class="k">except</span> <span class="n">formencode</span><span class="o">.</span><span class="n">Invalid</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;errors&#39;</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">error_dict</span><span class="p">,</span>
+                            <span class="s1">&#39;values&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">,</span>
+                            <span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
+                            <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">}</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
+                    <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPNotFound</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="EditAssetSchema"><a class="viewcode-back" href="../../../api/wte_views_asset.html#wte.views.asset.EditAssetSchema">[docs]</a><span class="k">class</span> <span class="nc">EditAssetSchema</span><span class="p">(</span><span class="n">CSRFSchema</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;The :class:`~wte.views.asset.EditAssetSchema` handles the</span>
+<span class="sd">    validation of updates to an :class:`~wte.models.Asset`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">UnicodeString</span><span class="p">(</span><span class="n">not_empty</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="sd">u&quot;&quot;&quot;The asset&#39;s filename&quot;&quot;&quot;</span>
+    <span class="n">mimetype</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">UnicodeString</span><span class="p">(</span><span class="n">not_empty</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="sd">u&quot;&quot;&quot;The asset&#39;s mimetype&quot;&quot;&quot;</span>
+    <span class="n">mimetype_other</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">UnicodeString</span><span class="p">(</span><span class="n">not_empty</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="sd">u&quot;&quot;&quot;The asset&#39;s alternative mimetype&quot;&quot;&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">FieldStorageUploadConverter</span><span class="p">(</span><span class="n">if_missing</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+    <span class="sd">u&quot;&quot;&quot;The asset&#39;s file content&quot;&quot;&quot;</span>
+    <span class="n">content</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">UnicodeString</span><span class="p">(</span><span class="n">if_missing</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+    <span class="sd">u&quot;&quot;&quot;The asset&#39;s content&quot;&quot;&quot;</span></div>
+
+
+<span class="nd">@view_config</span><span class="p">(</span><span class="n">route_name</span><span class="o">=</span><span class="s1">&#39;asset.edit&#39;</span><span class="p">,</span> <span class="n">renderer</span><span class="o">=</span><span class="s1">&#39;wte:templates/asset/edit.kajiki&#39;</span><span class="p">)</span>
+<span class="nd">@current_user</span><span class="p">()</span>
+<span class="nd">@require_logged_in</span><span class="p">()</span>
+<div class="viewcode-block" id="edit"><a class="viewcode-back" href="../../../api/wte_views_asset.html#wte.views.asset.edit">[docs]</a><span class="k">def</span> <span class="nf">edit</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;Handles the ``/parts/{pid}/assets/{aid}/edit`` URL, providing</span>
+<span class="sd">    the UI and backend for editing :class:`~wte.models.Asset`.</span>
+
+<span class="sd">    Requires that the user has &quot;edit&quot; rights on the current :class:`~wte.models.Part`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dbsession</span> <span class="o">=</span> <span class="n">DBSession</span><span class="p">()</span>
+    <span class="n">part</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Part</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">Part</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">u&#39;pid&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="n">asset</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Asset</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">Part</span><span class="o">.</span><span class="n">all_assets</span><span class="p">)</span><span class="o">.</span>\
+        <span class="nb">filter</span><span class="p">(</span><span class="n">and_</span><span class="p">(</span><span class="n">Asset</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">u&#39;aid&#39;</span><span class="p">],</span>
+                    <span class="n">Part</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">u&#39;pid&#39;</span><span class="p">]))</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">part</span> <span class="ow">and</span> <span class="n">asset</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">allow</span><span class="p">(</span><span class="s1">&#39;edit&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="p">):</span>
+            <span class="n">crumbs</span> <span class="o">=</span> <span class="n">create_part_crumbs</span><span class="p">(</span><span class="n">request</span><span class="p">,</span>
+                                        <span class="n">part</span><span class="p">,</span>
+                                        <span class="p">{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Edit </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">asset</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">title</span><span class="p">()),</span>
+                                         <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">current_route_url</span><span class="p">()})</span>
+            <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">u&#39;POST&#39;</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">params</span> <span class="o">=</span> <span class="n">EditAssetSchema</span><span class="p">()</span><span class="o">.</span><span class="n">to_python</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="n">State</span><span class="p">(</span><span class="n">request</span><span class="o">=</span><span class="n">request</span><span class="p">))</span>
+                    <span class="n">dbsession</span> <span class="o">=</span> <span class="n">DBSession</span><span class="p">()</span>
+                    <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">manager</span><span class="p">:</span>
+                        <span class="n">dbsession</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">asset</span><span class="p">)</span>
+                        <span class="n">asset</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                            <span class="n">asset</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+                            <span class="n">asset</span><span class="o">.</span><span class="n">etag</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha512</span><span class="p">(</span><span class="n">asset</span><span class="o">.</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+                            <span class="n">mimetype</span> <span class="o">=</span> <span class="n">guess_type</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">mimetype</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                                <span class="n">mimetype</span> <span class="o">=</span> <span class="n">mimetype</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;mimetype&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;other&#39;</span><span class="p">:</span>
+                                    <span class="n">mimetype</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;mimetype&#39;</span><span class="p">]</span>
+                                <span class="k">else</span><span class="p">:</span>
+                                    <span class="n">mimetype</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;mimetype_other&#39;</span><span class="p">]</span>
+                        <span class="k">elif</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;content&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                            <span class="n">asset</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;content&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+                            <span class="n">asset</span><span class="o">.</span><span class="n">etag</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha512</span><span class="p">(</span><span class="n">asset</span><span class="o">.</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+                            <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;mimetype&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;other&#39;</span><span class="p">:</span>
+                                <span class="n">mimetype</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;mimetype&#39;</span><span class="p">]</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">mimetype</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;mimetype_other&#39;</span><span class="p">]</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;mimetype&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;other&#39;</span><span class="p">:</span>
+                                <span class="n">mimetype</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;mimetype&#39;</span><span class="p">]</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">mimetype</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;mimetype_other&#39;</span><span class="p">]</span>
+                        <span class="n">asset</span><span class="o">.</span><span class="n">mimetype</span> <span class="o">=</span> <span class="n">mimetype</span>
+                    <span class="n">dbsession</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">part</span><span class="p">)</span>
+                    <span class="n">dbsession</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">asset</span><span class="p">)</span>
+                    <span class="k">raise</span> <span class="n">HTTPSeeOther</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.view&#39;</span><span class="p">,</span> <span class="n">pid</span><span class="o">=</span><span class="n">part</span><span class="o">.</span><span class="n">id</span><span class="p">))</span>
+                <span class="k">except</span> <span class="n">formencode</span><span class="o">.</span><span class="n">Invalid</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;errors&#39;</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">error_dict</span><span class="p">,</span>
+                            <span class="s1">&#39;values&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">,</span>
+                            <span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
+                            <span class="s1">&#39;asset&#39;</span><span class="p">:</span> <span class="n">asset</span><span class="p">,</span>
+                            <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">}</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
+                    <span class="s1">&#39;asset&#39;</span><span class="p">:</span> <span class="n">asset</span><span class="p">,</span>
+                    <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPNotFound</span><span class="p">()</span></div>
+
+
+<span class="nd">@view_config</span><span class="p">(</span><span class="n">route_name</span><span class="o">=</span><span class="s1">&#39;asset.delete&#39;</span><span class="p">,</span> <span class="n">renderer</span><span class="o">=</span><span class="s1">&#39;wte:templates/asset/delete.kajiki&#39;</span><span class="p">)</span>
+<span class="nd">@current_user</span><span class="p">()</span>
+<span class="nd">@require_logged_in</span><span class="p">()</span>
+<div class="viewcode-block" id="delete"><a class="viewcode-back" href="../../../api/wte_views_asset.html#wte.views.asset.delete">[docs]</a><span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;Handles the ``/parts/{pid}/assets/{aid}/delete`` URL,</span>
+<span class="sd">    providing the UI and backend for deleting :class:`~wte.models.Asset`.</span>
+
+<span class="sd">    Requires that the user has &quot;edit&quot; rights on the current :class:`~wte.models.Part`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dbsession</span> <span class="o">=</span> <span class="n">DBSession</span><span class="p">()</span>
+    <span class="n">part</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Part</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">Part</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">u&#39;pid&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="n">asset</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Asset</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">Part</span><span class="o">.</span><span class="n">all_assets</span><span class="p">)</span><span class="o">.</span>\
+        <span class="nb">filter</span><span class="p">(</span><span class="n">and_</span><span class="p">(</span><span class="n">Asset</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">u&#39;aid&#39;</span><span class="p">],</span>
+                    <span class="n">Part</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">u&#39;pid&#39;</span><span class="p">]))</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">part</span> <span class="ow">and</span> <span class="n">asset</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">allow</span><span class="p">(</span><span class="s1">&#39;edit&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="p">):</span>
+            <span class="n">crumbs</span> <span class="o">=</span> <span class="n">create_part_crumbs</span><span class="p">(</span><span class="n">request</span><span class="p">,</span>
+                                        <span class="n">part</span><span class="p">,</span>
+                                        <span class="p">{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Delete Asset&#39;</span><span class="p">,</span>
+                                         <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">current_route_url</span><span class="p">()})</span>
+            <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">u&#39;POST&#39;</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">CSRFSchema</span><span class="p">()</span><span class="o">.</span><span class="n">to_python</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="n">State</span><span class="p">(</span><span class="n">request</span><span class="o">=</span><span class="n">request</span><span class="p">))</span>
+                    <span class="n">dbsession</span> <span class="o">=</span> <span class="n">DBSession</span><span class="p">()</span>
+                    <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">manager</span><span class="p">:</span>
+                        <span class="n">dbsession</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">asset</span><span class="p">)</span>
+                        <span class="n">asset</span><span class="o">.</span><span class="n">parts</span> <span class="o">=</span> <span class="p">[]</span>
+                        <span class="n">dbsession</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">asset</span><span class="p">)</span>
+                    <span class="n">dbsession</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">part</span><span class="p">)</span>
+                    <span class="k">raise</span> <span class="n">HTTPSeeOther</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.view&#39;</span><span class="p">,</span> <span class="n">pid</span><span class="o">=</span><span class="n">part</span><span class="o">.</span><span class="n">id</span><span class="p">))</span>
+                <span class="k">except</span> <span class="n">formencode</span><span class="o">.</span><span class="n">Invalid</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;errors&#39;</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">error_dict</span><span class="p">,</span>
+                            <span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
+                            <span class="s1">&#39;asset&#39;</span><span class="p">:</span> <span class="n">asset</span><span class="p">,</span>
+                            <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">}</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
+                    <span class="s1">&#39;asset&#39;</span><span class="p">:</span> <span class="n">asset</span><span class="p">,</span>
+                    <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPNotFound</span><span class="p">()</span></div>
+
+
+<span class="nd">@view_config</span><span class="p">(</span><span class="n">route_name</span><span class="o">=</span><span class="s1">&#39;file.view&#39;</span><span class="p">)</span>
+<span class="nd">@current_user</span><span class="p">()</span>
+<span class="nd">@require_logged_in</span><span class="p">()</span>
+<div class="viewcode-block" id="view_file"><a class="viewcode-back" href="../../../api/wte_views_asset.html#wte.views.asset.view_file">[docs]</a><span class="k">def</span> <span class="nf">view_file</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;Handles the ``parts/{ptid}/pages/{pid}/users/{uid}/files/name/{filename}``</span>
+<span class="sd">    URL, sending back the correct :class:`~wte.models.Asset`.</span>
+
+<span class="sd">    Requires that the user has &quot;view&quot; rights on the :class:`~wte.models.Part`.</span>
+<span class="sd">    It will also only send an :class:`~wte.models.Asset` belonging to the current</span>
+<span class="sd">    :class:`~wte.models.User`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dbsession</span> <span class="o">=</span> <span class="n">DBSession</span><span class="p">()</span>
+    <span class="n">part</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Part</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">Part</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">u&#39;pid&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">part</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">allow</span><span class="p">(</span><span class="s1">&#39;view&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="p">):</span>
+            <span class="n">progress</span> <span class="o">=</span> <span class="n">get_user_part_progress</span><span class="p">(</span><span class="n">dbsession</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="p">,</span> <span class="n">part</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">user_file</span> <span class="ow">in</span> <span class="n">progress</span><span class="o">.</span><span class="n">files</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">user_file</span><span class="o">.</span><span class="n">filename</span> <span class="o">==</span> <span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="s1">&#39;If-None-Match&#39;</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">headers</span> <span class="ow">and</span> <span class="n">request</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;If-None-Match&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">user_file</span><span class="o">.</span><span class="n">etag</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="n">HTTPNotModified</span><span class="p">()</span>
+                    <span class="n">headers</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;Content-Type&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">user_file</span><span class="o">.</span><span class="n">mimetype</span><span class="p">))]</span>
+                    <span class="k">if</span> <span class="n">user_file</span><span class="o">.</span><span class="n">etag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                        <span class="n">headers</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s1">&#39;ETag&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">user_file</span><span class="o">.</span><span class="n">etag</span><span class="p">)))</span>
+                    <span class="k">if</span> <span class="s1">&#39;download&#39;</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">:</span>
+                        <span class="n">headers</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s1">&#39;Content-Disposition&#39;</span><span class="p">,</span>
+                                        <span class="nb">str</span><span class="p">(</span><span class="s1">&#39;attachment; filename=&quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">user_file</span><span class="o">.</span><span class="n">filename</span><span class="p">))))</span>
+                    <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">user_file</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                                    <span class="n">headerlist</span><span class="o">=</span><span class="n">headers</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">HTTPNotFound</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPNotFound</span><span class="p">()</span></div>
+
+
+<span class="nd">@view_config</span><span class="p">(</span><span class="n">route_name</span><span class="o">=</span><span class="s1">&#39;file.save&#39;</span><span class="p">,</span> <span class="n">renderer</span><span class="o">=</span><span class="s1">&#39;json&#39;</span><span class="p">)</span>
+<span class="nd">@current_user</span><span class="p">()</span>
+<span class="nd">@require_logged_in</span><span class="p">()</span>
+<div class="viewcode-block" id="save_file"><a class="viewcode-back" href="../../../api/wte_views_asset.html#wte.views.asset.save_file">[docs]</a><span class="k">def</span> <span class="nf">save_file</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;Handles the ``/parts/{pid}/files/id/{fid}/save``</span>
+<span class="sd">    URL, updating the :class:`~wte.models.Asset`&#39;s content.</span>
+
+<span class="sd">    Requires that the user has &quot;view&quot; rights on the :class:`~wte.models.Part`.</span>
+<span class="sd">    It will also only update an :class:`~wte.models.Asset` belonging to the</span>
+<span class="sd">    current :class:`~wte.models.User`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dbsession</span> <span class="o">=</span> <span class="n">DBSession</span><span class="p">()</span>
+    <span class="n">part</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Part</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">Part</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">u&#39;pid&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">part</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">allow</span><span class="p">(</span><span class="s1">&#39;view&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="p">):</span>
+            <span class="n">progress</span> <span class="o">=</span> <span class="n">get_user_part_progress</span><span class="p">(</span><span class="n">dbsession</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="p">,</span> <span class="n">part</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">user_file</span> <span class="ow">in</span> <span class="n">progress</span><span class="o">.</span><span class="n">files</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">user_file</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">&#39;fid&#39;</span><span class="p">]):</span>
+                    <span class="k">if</span> <span class="s1">&#39;content&#39;</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">:</span>
+                        <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">manager</span><span class="p">:</span>
+                            <span class="n">dbsession</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">user_file</span><span class="p">)</span>
+                            <span class="n">user_file</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;content&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+                            <span class="n">user_file</span><span class="o">.</span><span class="n">etag</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha512</span><span class="p">(</span><span class="n">user_file</span><span class="o">.</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+                        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="s1">&#39;saved&#39;</span><span class="p">}</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="s1">&#39;no-changes&#39;</span><span class="p">}</span>
+            <span class="k">raise</span> <span class="n">HTTPNotFound</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPNotFound</span><span class="p">()</span></div>
+
+
+<span class="nd">@view_config</span><span class="p">(</span><span class="n">route_name</span><span class="o">=</span><span class="s1">&#39;asset.view&#39;</span><span class="p">)</span>
+<span class="nd">@current_user</span><span class="p">()</span>
+<span class="nd">@require_logged_in</span><span class="p">()</span>
+<div class="viewcode-block" id="view_asset"><a class="viewcode-back" href="../../../api/wte_views_asset.html#wte.views.asset.view_asset">[docs]</a><span class="k">def</span> <span class="nf">view_asset</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;Handles the ``/parts/{pid}/files/name/assets/{filename}``</span>
+<span class="sd">    URL, sending back the correct :class:`~wte.models.Asset`.</span>
+
+<span class="sd">    Requires that the user has &quot;view&quot; rights on the :class:`~wte.models.Part`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dbsession</span> <span class="o">=</span> <span class="n">DBSession</span><span class="p">()</span>
+    <span class="n">part</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Part</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">Part</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">u&#39;pid&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">u&#39;page&#39;</span><span class="p">:</span>
+        <span class="n">part</span> <span class="o">=</span> <span class="n">part</span><span class="o">.</span><span class="n">parent</span>
+    <span class="n">asset</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Asset</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">Part</span><span class="o">.</span><span class="n">assets</span><span class="p">)</span><span class="o">.</span>\
+        <span class="nb">filter</span><span class="p">(</span><span class="n">and_</span><span class="p">(</span><span class="n">Asset</span><span class="o">.</span><span class="n">filename</span> <span class="o">==</span> <span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">u&#39;filename&#39;</span><span class="p">],</span>
+                    <span class="n">Part</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">part</span><span class="o">.</span><span class="n">id</span><span class="p">))</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">part</span> <span class="ow">and</span> <span class="n">asset</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">allow</span><span class="p">(</span><span class="s1">&#39;view&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="p">):</span>
+            <span class="k">if</span> <span class="s1">&#39;If-None-Match&#39;</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">headers</span> <span class="ow">and</span> <span class="n">request</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;If-None-Match&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">asset</span><span class="o">.</span><span class="n">etag</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">HTTPNotModified</span><span class="p">()</span>
+            <span class="n">headerlist</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;Content-Type&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">asset</span><span class="o">.</span><span class="n">mimetype</span><span class="p">))]</span>
+            <span class="k">if</span> <span class="n">asset</span><span class="o">.</span><span class="n">etag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">headerlist</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s1">&#39;ETag&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">asset</span><span class="o">.</span><span class="n">etag</span><span class="p">)))</span>
+            <span class="k">if</span> <span class="s1">&#39;download&#39;</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;download&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;true&#39;</span><span class="p">:</span>
+                    <span class="n">headerlist</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s1">&#39;Content-Disposition&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="s1">&#39;attachment; filename=&quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">asset</span><span class="o">.</span><span class="n">filename</span><span class="p">))))</span>
+            <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">asset</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                            <span class="n">headerlist</span><span class="o">=</span><span class="n">headerlist</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPNotFound</span><span class="p">()</span></div>
+
+
+<span class="nd">@view_config</span><span class="p">(</span><span class="n">route_name</span><span class="o">=</span><span class="s1">&#39;asset.search&#39;</span><span class="p">,</span> <span class="n">renderer</span><span class="o">=</span><span class="s1">&#39;json&#39;</span><span class="p">)</span>
+<span class="nd">@current_user</span><span class="p">()</span>
+<span class="nd">@require_logged_in</span><span class="p">()</span>
+<div class="viewcode-block" id="search"><a class="viewcode-back" href="../../../api/wte_views_asset.html#wte.views.asset.search">[docs]</a><span class="k">def</span> <span class="nf">search</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Handles the ``/parts/{pid}/assets/search`` URL, searching</span>
+<span class="sd">    for all :class:`~wte.models.Asset` that have a filename that</span>
+<span class="sd">    matches the &#39;q&#39; request parameter and that belong to either the</span>
+<span class="sd">    current :class:`~wte.models.Part` or any of its ancestors.</span>
+<span class="sd">    The current user must have the &quot;view&quot; permission on the current</span>
+<span class="sd">    :class:`~wte.models.Part` to see any results.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dbsession</span> <span class="o">=</span> <span class="n">DBSession</span><span class="p">()</span>
+    <span class="n">part</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Part</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">Part</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">u&#39;pid&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">part</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">allow</span><span class="p">(</span><span class="s1">&#39;view&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="p">):</span>
+            <span class="n">assets</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="s1">&#39;q&#39;</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">:</span>
+                <span class="k">while</span> <span class="n">part</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="n">assets</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">asset</span> <span class="k">for</span> <span class="n">asset</span> <span class="ow">in</span> <span class="n">part</span><span class="o">.</span><span class="n">assets</span> <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;q&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">asset</span><span class="o">.</span><span class="n">filename</span><span class="p">])</span>
+                    <span class="n">part</span> <span class="o">=</span> <span class="n">part</span><span class="o">.</span><span class="n">parent</span>
+            <span class="k">return</span> <span class="p">[{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="n">asset</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="n">asset</span><span class="o">.</span><span class="n">filename</span><span class="p">}</span> <span class="k">for</span> <span class="n">asset</span> <span class="ow">in</span> <span class="n">assets</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPNotFound</span><span class="p">()</span></div>
+</pre></div>
+        </div>
+      </div>
+      <ul class="pagination text-center" role="navigation" aria-label="Pagination">
+        
+        
+      </ul>
+    </nav>
+  </body>
+</html>

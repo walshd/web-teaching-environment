@@ -243,8 +243,11 @@ def login(request):
         except formencode.api.Invalid as e:
             return {'errors': e.error_dict if e.error_dict else {'email': e.msg,
                                                                  'password': e.msg},
-                    'values': request.params}
-    return {'crumbs': [{'title': 'Login', 'url': request.route_url('user.login'), 'current': True}]}
+                    'values': request.params,
+                    'crumbs': [{'title': 'Login', 'url': request.route_url('user.login'), 'current': True}],
+                    'help': ['user', 'user', 'login.html']}
+    return {'crumbs': [{'title': 'Login', 'url': request.route_url('user.login'), 'current': True}],
+            'help': ['user', 'user', 'login.html']}
 
 
 @view_config(route_name='user.logout', renderer='wte:templates/users/logout.kajiki')
@@ -373,9 +376,11 @@ Web Teaching Environment''' % (user.display_name,
             return {'errors': e.error_dict,
                     'values': request.params,
                     'crumbs': [{'title': 'Login', 'url': request.route_url('user.login')},
-                               {'title': 'Register', 'url': request.route_url('user.register'), 'current': True}]}
+                               {'title': 'Register', 'url': request.route_url('user.register'), 'current': True}],
+                    'help': ['user', 'user', 'register.html']}
     return {'crumbs': [{'title': 'Login', 'url': request.route_url('user.login')},
-                       {'title': 'Register', 'url': request.route_url('user.register'), 'current': True}]}
+                       {'title': 'Register', 'url': request.route_url('user.register'), 'current': True}],
+            'help': ['user', 'user', 'register.html']}
 
 
 def process_confirmation(request, user):
@@ -446,7 +451,8 @@ def confirm(request):
                            {'title': 'Confirmation',
                             'url': request.route_url('user.confirm',
                                                      uid=request.matchdict['uid'],
-                                                     token=request.matchdict['token'])}]}
+                                                     token=request.matchdict['token'])}],
+                'help': ['user', 'user', 'register.html']}
 
 
 class ForgottenPasswordSchema(CSRFSchema):
@@ -543,11 +549,17 @@ def forgotten_password(request):
                 raise HTTPSeeOther(request.route_url('root'))
         except formencode.api.Invalid as e:
             return {'errors': e.error_dict,
-                    'values': request.params}
+                    'values': request.params,
+                    'crumbs': [{'title': 'Login',
+                                'url': request.route_url('user.login')},
+                               {'title': 'Forgotten Password',
+                                'url': request.route_url('user.forgotten_password'), 'current': True}],
+                    'help': ['user', 'user', 'forgotten_password.html']}
     return {'crumbs': [{'title': 'Login',
                         'url': request.route_url('user.login')},
                        {'title': 'Forgotten Password',
-                        'url': request.route_url('user.forgotten_password'), 'current': True}]}
+                        'url': request.route_url('user.forgotten_password'), 'current': True}],
+            'help': ['user', 'user', 'forgotten_password.html']}
 
 
 @view_config(route_name='user.view', renderer='wte:templates/users/view.kajiki')

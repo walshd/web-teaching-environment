@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="../../static/css/application.min.css"/>
+    <link rel="stylesheet" href="../_static/default.css"/>
+    <link rel="stylesheet" href="../_static/override.css"/>
+    <link rel="stylesheet" href="../_static/pygments.css"/>
+    <title>Deployment</title>
+  </head>
+  <body>
+    <nav>
+      <ul class="breadcrumbs">
+        
+          <li><a href="index.html">Administrator Documentation</a></li>
+        
+        <li>Deployment</li>
+      </ul>
+      <div class="row">
+        <div class="column small-12">
+          <div class="section" id="deployment">
+<h1>Deployment<a class="headerlink" href="#deployment" title="Permalink to this headline">¶</a></h1>
+<p>In-production deployment has been tested using <a class="reference external" href="http://httpd.apache.org/">Apache2</a> and <a class="reference external" href="http://code.google.com/p/modwsgi/">mod_wsgi</a>.
+For other deployment scenarios, please consult the <a class="reference external" href="http://docs.pylonsproject.org/projects/pyramid_cookbook/en/latest/deployment/index.html">pyramid deployment</a>
+documentation.</p>
+<div class="section" id="deploying-with-apache2-mod-wsgi">
+<h2>Deploying with Apache2 &amp; mod_wsgi<a class="headerlink" href="#deploying-with-apache2-mod-wsgi" title="Permalink to this headline">¶</a></h2>
+<p>To deploy the Experiment Support System via <a class="reference external" href="http://httpd.apache.org/">Apache2</a> and <a class="reference external" href="http://code.google.com/p/modwsgi/">mod_wsgi</a> add the
+following settings to the VirtualHost configuration:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>WSGIDaemonProcess wte user=www-data group=www-data processes=1 threads=4 python-path=/path/to/virtualenv/lib/python2.7/site-packages
+WSGIScriptAlias /web-teaching-environment /path/to/the/application.wsgi
+&lt;Location /wte&gt;
+    WSGIProcessGroup wte
+&lt;/Location&gt;
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Use the <code class="docutils literal"><span class="pre">processes</span></code> option to specify the number of parallel
+processes to create. How many you need depends on the amount of load
+you are expecting.</p>
+</div>
+<p>Then create the following script to to run the application via <a class="reference external" href="http://wsgi.readthedocs.org/en/latest/">WSGI</a>. Adapt
+it by replacing the paths with the paths to where the Web Teaching Environment
+is installed:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">__file__</span><span class="p">))</span>
+<span class="kn">import</span> <span class="nn">site</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="c1"># Remember original sys.path.</span>
+<span class="n">prev_sys_path</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+
+<span class="n">site</span><span class="o">.</span><span class="n">addsitedir</span><span class="p">(</span><span class="s1">&#39;/path/to/virtualenv/lib/python2.7/site-packages&#39;</span><span class="p">)</span>
+
+<span class="c1"># Reorder sys.path so new directories at the front.</span>
+<span class="n">new_sys_path</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">item</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">prev_sys_path</span><span class="p">:</span>
+        <span class="n">new_sys_path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">[:</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_sys_path</span>
+
+<span class="kn">from</span> <span class="nn">pyramid.paster</span> <span class="kn">import</span> <span class="n">get_app</span>
+<span class="kn">from</span> <span class="nn">paste.script.util.logging_config</span> <span class="kn">import</span> <span class="n">fileConfig</span>
+<span class="n">fileConfig</span><span class="p">(</span><span class="s1">&#39;/path/to/the/application/production.ini&#39;</span><span class="p">)</span>
+<span class="n">application</span> <span class="o">=</span> <span class="n">get_app</span><span class="p">(</span><span class="s1">&#39;/path/to/the/application/production.ini&#39;</span><span class="p">,</span> <span class="s1">&#39;main&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="running-timed-tasks">
+<h2>Running Timed Tasks<a class="headerlink" href="#running-timed-tasks" title="Permalink to this headline">¶</a></h2>
+<p>The Web Teaching Environment provides a number of automated tasks that can be
+set up from within it. To ensure that the automated tasks are actually executed
+the following command needs to be run regularly:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>WTE run-timed-tasks &lt;configuration.ini&gt;
+</pre></div>
+</div>
+<p>In the Web Teaching Environment the automated tasks can be scheduled to a
+maximum precision of one (1) minute. To ensure that tasks are run close to the
+desired time, the command should be run once a minute.</p>
+<p>Running the command has been tested using Cron, but any other command scheduler
+should work as well. If you have installed WTE into a virtualenv, then in your
+command scheduler instructions you need to activate the virtualenv first,
+before running the command.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You should probably not run the command more frequently than once
+every 20 seconds as otherwise it is possible that tasks are run multiple
+times.</p>
+</div>
+</div>
+</div>
+
+        </div>
+      </div>
+      <ul class="pagination text-center" role="navigation" aria-label="Pagination">
+        
+          <li class="pagination-previous"><a href="configuration.html">Configuration</a></li>
+        
+        
+          <li class="pagination-next"><a href="updating.html">Updating</a></li>
+        
+      </ul>
+    </nav>
+  </body>
+</html>

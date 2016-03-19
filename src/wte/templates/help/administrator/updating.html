@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="../../static/css/application.min.css"/>
+    <link rel="stylesheet" href="../_static/default.css"/>
+    <link rel="stylesheet" href="../_static/override.css"/>
+    <link rel="stylesheet" href="../_static/pygments.css"/>
+    <title>Updating</title>
+  </head>
+  <body>
+    <nav>
+      <ul class="breadcrumbs">
+        
+          <li><a href="index.html">Administrator Documentation</a></li>
+        
+        <li>Updating</li>
+      </ul>
+      <div class="row">
+        <div class="column small-12">
+          <div class="section" id="updating">
+<h1>Updating<a class="headerlink" href="#updating" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="preparation">
+<h2>Preparation<a class="headerlink" href="#preparation" title="Permalink to this headline">¶</a></h2>
+<p>Before updating the Web Teaching Environment, perform the following three
+steps to put the Web Teaching Environment into a state that is ready for the
+update:</p>
+<ol class="arabic simple">
+<li>The first step is to download the latest Web Teaching Environment release
+from <a class="reference external" href="https://bitbucket.org/mhall/web-teaching-environment">https://bitbucket.org/mhall/web-teaching-environment</a>.</li>
+<li>Next stop the Web Teaching Environment application. How to do this depends
+on how you have deployed it (see <a class="reference internal" href="deployment.html"><em>Deployment</em></a>).</li>
+<li>Finally, make a backup of the database. This will allow you to roll-back the
+application in case of there being any issues that arise during or after the
+update.</li>
+</ol>
+</div>
+<div class="section" id="update">
+<h2>Update<a class="headerlink" href="#update" title="Permalink to this headline">¶</a></h2>
+<p>To perform the actual update of the Web Teaching Environment, first activate
+the <a class="reference external" href="https://pypi.python.org/pypi/virtualenv">virtual environment</a> you previously installed the Web Teaching
+Environment into. To install the new version you downloaded, run the following
+command:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>pip install WebTeachingEnvironment-x.y.z.tar.gz
+</pre></div>
+</div>
+<p>This will install the downloaded version and also automatically install and
+update any libraries the Web Teaching Environment depends on.</p>
+</div>
+<div class="section" id="restart">
+<h2>Restart<a class="headerlink" href="#restart" title="Permalink to this headline">¶</a></h2>
+<p>You can then re-start the Web Teaching Environment and test that the update
+has installed successfully.</p>
+</div>
+</div>
+
+        </div>
+      </div>
+      <ul class="pagination text-center" role="navigation" aria-label="Pagination">
+        
+          <li class="pagination-previous"><a href="deployment.html">Deployment</a></li>
+        
+        
+          <li class="pagination-next"><a href="../user/index.html">User Documentation</a></li>
+        
+      </ul>
+    </nav>
+  </body>
+</html>

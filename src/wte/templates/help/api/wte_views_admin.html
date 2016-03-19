@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="../../static/css/application.min.css"/>
+    <link rel="stylesheet" href="../_static/default.css"/>
+    <link rel="stylesheet" href="../_static/override.css"/>
+    <link rel="stylesheet" href="../_static/pygments.css"/>
+    <title><code class="docutils literal"><span class="pre">wte.views.admin</span></code> &#8211; Admin view handlers</title>
+  </head>
+  <body>
+    <nav>
+      <ul class="breadcrumbs">
+        
+          <li><a href="index.html">API Documentation</a></li>
+        
+        <li><code class="docutils literal"><span class="pre">wte.views.admin</span></code> &#8211; Admin view handlers</li>
+      </ul>
+      <div class="row">
+        <div class="column small-12">
+          <span class="target" id="module-wte.views.admin"></span><div class="section" id="wte-views-admin-admin-view-handlers">
+<h1><a class="reference internal" href="#module-wte.views.admin" title="wte.views.admin"><code class="xref py py-mod docutils literal"><span class="pre">wte.views.admin</span></code></a> &#8211; Admin view handlers<a class="headerlink" href="#wte-views-admin-admin-view-handlers" title="Permalink to this headline">¶</a></h1>
+<p>The <a class="reference internal" href="#module-wte.views.admin" title="wte.views.admin"><code class="xref py py-mod docutils literal"><span class="pre">admin</span></code></a> handles the requests relating to general
+administrative functionality.</p>
+<p>Routes are defined in <a class="reference internal" href="#wte.views.admin.init" title="wte.views.admin.init"><code class="xref py py-func docutils literal"><span class="pre">init()</span></code></a>.</p>
+<dl class="function">
+<dt id="wte.views.admin.admin">
+<code class="descclassname">wte.views.admin.</code><code class="descname">admin</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/admin.html#admin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.admin.admin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles the <code class="docutils literal"><span class="pre">/admin</span></code> URL, displaying all available administrative
+functions.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.admin.content_admin">
+<code class="descclassname">wte.views.admin.</code><code class="descname">content_admin</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/admin.html#content_admin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.admin.content_admin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles the <code class="docutils literal"><span class="pre">/admin/content</span></code> URL, displaying all available administrative
+functions related to the content administrations.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.admin.content_regenerate">
+<code class="descclassname">wte.views.admin.</code><code class="descname">content_regenerate</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/admin.html#content_regenerate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.admin.content_regenerate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles the <code class="docutils literal"><span class="pre">/admin/content/regenerate</span></code> URL, regenerating the
+<code class="docutils literal"><span class="pre">compiled_content</span></code> attribute for all <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>s.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.admin.init">
+<code class="descclassname">wte.views.admin.</code><code class="descname">init</code><span class="sig-paren">(</span><em>config</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/admin.html#init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.admin.init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds the admin-specific routes (route name, URL pattern
+handler):</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">admin</span></code> &#8211; <code class="docutils literal"><span class="pre">/admin</span></code> &#8211; <a class="reference internal" href="#wte.views.admin.admin" title="wte.views.admin.admin"><code class="xref py py-func docutils literal"><span class="pre">admin()</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">admin.content</span></code> &#8211; <code class="docutils literal"><span class="pre">/admin/content</span></code> &#8211;
+<a class="reference internal" href="#wte.views.admin.content_admin" title="wte.views.admin.content_admin"><code class="xref py py-func docutils literal"><span class="pre">content_admin()</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">admin.content.regenerate</span></code> &#8211; <code class="docutils literal"><span class="pre">/admin/content/regenerate</span></code>
+&#8211; <a class="reference internal" href="#wte.views.admin.content_regenerate" title="wte.views.admin.content_regenerate"><code class="xref py py-func docutils literal"><span class="pre">content_regenerate()</span></code></a></li>
+</ul>
+</dd></dl>
+
+</div>
+
+        </div>
+      </div>
+      <ul class="pagination text-center" role="navigation" aria-label="Pagination">
+        
+          <li class="pagination-previous"><a href="wte_views.html"><code class="docutils literal"><span class="pre">wte.views</span></code> &#8211; View handlers</a></li>
+        
+        
+          <li class="pagination-next"><a href="wte_views_asset.html"><code class="docutils literal"><span class="pre">wte.views.asset</span></code> &#8211; Assets</a></li>
+        
+      </ul>
+    </nav>
+  </body>
+</html>

@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="../../../static/css/application.min.css"/>
+    <link rel="stylesheet" href="../../_static/default.css"/>
+    <link rel="stylesheet" href="../../_static/override.css"/>
+    <link rel="stylesheet" href="../../_static/pygments.css"/>
+    <title>wte.models</title>
+  </head>
+  <body>
+    <nav>
+      <ul class="breadcrumbs">
+        
+          <li><a href="../index.html">Module code</a></li>
+        
+          <li><a href="../wte.html">wte</a></li>
+        
+        <li>wte.models</li>
+      </ul>
+      <div class="row">
+        <div class="column small-12">
+          <h1>Source code for wte.models</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">u&quot;&quot;&quot;</span>
+<span class="sd">####################################</span>
+<span class="sd">:mod:`wte.models` -- Database Models</span>
+<span class="sd">####################################</span>
+
+<span class="sd">The :mod:`~wte.models` module contains the database models that are used to</span>
+<span class="sd">abstract the actual database.</span>
+
+<span class="sd">Additionally it provides the :func:`~wte.models.check_database_version`</span>
+<span class="sd">function, which compares the current Alembic version of the database to the</span>
+<span class="sd">required :data:`~wte.models.DB_VERSION` to ensure that the application does</span>
+<span class="sd">not run on an outdated database schema.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">hashlib</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Column</span><span class="p">,</span> <span class="n">Index</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">,</span> <span class="n">Integer</span><span class="p">,</span> <span class="n">Unicode</span><span class="p">,</span>
+                        <span class="n">UnicodeText</span><span class="p">,</span> <span class="n">Table</span><span class="p">,</span> <span class="n">LargeBinary</span><span class="p">,</span> <span class="n">DateTime</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy.engine.reflection</span> <span class="kn">import</span> <span class="n">Inspector</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy.exc</span> <span class="kn">import</span> <span class="n">OperationalError</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy.ext.declarative</span> <span class="kn">import</span> <span class="n">declarative_base</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy.orm</span> <span class="kn">import</span> <span class="p">(</span><span class="n">scoped_session</span><span class="p">,</span> <span class="n">sessionmaker</span><span class="p">,</span> <span class="n">relationship</span><span class="p">,</span>
+                            <span class="n">reconstructor</span><span class="p">,</span> <span class="n">backref</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">zope.sqlalchemy</span> <span class="kn">import</span> <span class="n">ZopeTransactionExtension</span>
+
+<span class="kn">from</span> <span class="nn">wte.helpers.frontend</span> <span class="kn">import</span> <span class="n">confirm_delete</span><span class="p">,</span> <span class="n">MenuBuilder</span><span class="p">,</span> <span class="n">confirm_action</span>
+
+<span class="n">DBSession</span> <span class="o">=</span> <span class="n">scoped_session</span><span class="p">(</span><span class="n">sessionmaker</span><span class="p">(</span><span class="n">extension</span><span class="o">=</span><span class="n">ZopeTransactionExtension</span><span class="p">()))</span>
+<span class="n">Base</span> <span class="o">=</span> <span class="n">declarative_base</span><span class="p">()</span>
+
+<span class="n">DB_VERSION</span> <span class="o">=</span> <span class="s1">u&#39;510cc5b21636&#39;</span>
+<span class="sd">&quot;&quot;&quot;The currently required database version.&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="DBUpgradeException"><a class="viewcode-back" href="../../api/wte_models.html#wte.models.DBUpgradeException">[docs]</a><span class="k">class</span> <span class="nc">DBUpgradeException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The :class:`~wte.models.DBUpgradeException` is used to indicate that</span>
+<span class="sd">    the database requires an upgrade before the Web Teaching Environment system</span>
+<span class="sd">    can be used.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current</span><span class="p">,</span> <span class="n">required</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current</span> <span class="o">=</span> <span class="n">current</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">required</span> <span class="o">=</span> <span class="n">required</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;DBUpgradeException(&#39;</span><span class="si">%s</span><span class="s2">&#39;, &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">required</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;A database upgrade is required.</span><span class="se">\n\n</span><span class="s2">&quot;</span> <span class="o">+</span> \
+            <span class="s2">&quot;You are currently running version &#39;</span><span class="si">%s</span><span class="s2">&#39;, but version &#39;</span><span class="si">%s</span><span class="s2">&#39; is &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">required</span><span class="p">)</span> <span class="o">+</span> \
+            <span class="s2">&quot; required. Please run WTE update-database config.ini upgrade to upgrade the database &quot;</span> <span class="o">+</span> \
+            <span class="s2">&quot;and then start the application again.&quot;</span></div>
+
+
+<div class="viewcode-block" id="check_database_version"><a class="viewcode-back" href="../../api/wte_models.html#wte.models.check_database_version">[docs]</a><span class="k">def</span> <span class="nf">check_database_version</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Checks that the current version of the database matches the version specified</span>
+<span class="sd">    by :data:`~wte.models.DB_VERSION`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dbsession</span> <span class="o">=</span> <span class="n">DBSession</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">inspector</span> <span class="o">=</span> <span class="n">Inspector</span><span class="o">.</span><span class="n">from_engine</span><span class="p">(</span><span class="n">dbsession</span><span class="o">.</span><span class="n">bind</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;alembic_version&#39;</span> <span class="ow">in</span> <span class="n">inspector</span><span class="o">.</span><span class="n">get_table_names</span><span class="p">():</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">&#39;version_num&#39;</span><span class="p">)</span><span class="o">.</span>\
+                <span class="n">from_statement</span><span class="p">(</span><span class="s1">&#39;SELECT version_num FROM alembic_version WHERE version_num = :version_num&#39;</span><span class="p">)</span><span class="o">.</span>\
+                <span class="n">params</span><span class="p">(</span><span class="n">version_num</span><span class="o">=</span><span class="n">DB_VERSION</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">&#39;version_num&#39;</span><span class="p">)</span><span class="o">.</span>\
+                    <span class="n">from_statement</span><span class="p">(</span><span class="s1">&#39;SELECT version_num FROM alembic_version&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+                <span class="k">raise</span> <span class="n">DBUpgradeException</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">DB_VERSION</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">OperationalError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">DBUpgradeException</span><span class="p">(</span><span class="s1">&#39;no version-information found&#39;</span><span class="p">,</span> <span class="n">DB_VERSION</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="User"><a class="viewcode-back" href="../../api/wte_models.html#wte.models.User">[docs]</a><span class="k">class</span> <span class="nc">User</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;The :class:`~wte.models.User` represents a users in the WTE. Which</span>
+<span class="sd">    functionality they can access is determined purely through the individual</span>
+<span class="sd">    :class:`~wte.models.User`&#39;s :class:`~wte.models.Permission`.</span>
+
+<span class="sd">    Instances of the :class:`~wte.models.User` have the following attributes:</span>
+
+<span class="sd">    * ``id`` -- The unique database identifier</span>
+<span class="sd">    * ``display_name`` -- The name to display</span>
+<span class="sd">    * ``email`` -- The e-mail address used for login and communication</span>
+<span class="sd">    * ``login_limit`` -- Login limitation counter to stop brute-force login</span>
+<span class="sd">      attacks</span>
+<span class="sd">    * ``parts`` -- The :class:`~wte.models.UserPartProgress` belonging to this</span>
+<span class="sd">      :class:`~wte.modes.User`</span>
+<span class="sd">    * ``password`` -- The hashed password</span>
+<span class="sd">    * ``permissions`` -- The :class:`~wte.models.User`&#39;s list of</span>
+<span class="sd">      :class:`~wte.models.Permission`.</span>
+<span class="sd">    * ``permission_groups`` -- The :class:`~wte.models.User`&#39;s list of</span>
+<span class="sd">      :class:`~wte.models.PermissionGroup`.</span>
+<span class="sd">    * ``salt`` -- The password hash salt</span>
+<span class="sd">    * ``validation_token`` -- The validation token for new users</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="s1">&#39;users&#39;</span>
+
+    <span class="nb">id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">email</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Unicode</span><span class="p">(</span><span class="mi">255</span><span class="p">),</span> <span class="n">unique</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">salt</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Unicode</span><span class="p">(</span><span class="mi">255</span><span class="p">))</span>
+    <span class="n">password</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Unicode</span><span class="p">(</span><span class="mi">255</span><span class="p">))</span>
+    <span class="n">display_name</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Unicode</span><span class="p">(</span><span class="mi">64</span><span class="p">))</span>
+    <span class="n">login_limit</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">)</span>
+    <span class="n">validation_token</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Unicode</span><span class="p">(</span><span class="mi">255</span><span class="p">))</span>
+
+    <span class="n">permissions</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">&#39;Permission&#39;</span><span class="p">,</span> <span class="n">backref</span><span class="o">=</span><span class="s1">&#39;users&#39;</span><span class="p">,</span> <span class="n">secondary</span><span class="o">=</span><span class="s1">&#39;users_permissions&#39;</span><span class="p">)</span>
+    <span class="n">permission_groups</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">&#39;PermissionGroup&#39;</span><span class="p">,</span> <span class="n">backref</span><span class="o">=</span><span class="s1">&#39;users&#39;</span><span class="p">,</span> <span class="n">secondary</span><span class="o">=</span><span class="s1">&#39;users_permission_groups&#39;</span><span class="p">)</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">&#39;UserPartProgress&#39;</span><span class="p">,</span> <span class="n">cascade</span><span class="o">=</span><span class="s1">u&#39;all&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">email</span><span class="p">,</span> <span class="n">display_name</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">u&quot;&quot;&quot;Constructs a new :class:`~wte.models.User` with the given email</span>
+<span class="sd">        address, display name, and optionally password.</span>
+
+<span class="sd">        :param email: The e-mail address to use</span>
+<span class="sd">        :type email: `unicode`</span>
+<span class="sd">        :param display_name: The name to display</span>
+<span class="sd">        :type display_name: `unicode`</span>
+<span class="sd">        :param password: The optional password to set</span>
+<span class="sd">        :type password: `unicode`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">email</span> <span class="o">=</span> <span class="n">email</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">display_name</span> <span class="o">=</span> <span class="n">display_name</span>
+        <span class="k">if</span> <span class="n">password</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">new_password</span><span class="p">(</span><span class="n">password</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">new_salt</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">password</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">login_limit</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">preferences_</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="nd">@reconstructor</span>
+    <span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">preferences_</span> <span class="o">=</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="User.new_salt"><a class="viewcode-back" href="../../api/wte_models.html#wte.models.User.new_salt">[docs]</a>    <span class="k">def</span> <span class="nf">new_salt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generates a new :data:`~wte.models.User.salt``. Will use</span>
+<span class="sd">        ``os.urandom`` if available and the standard pseudo-random if not.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">rng</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">SystemRandom</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">salt</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">unichr</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">127</span><span class="p">))</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">32</span><span class="p">))</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">salt</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">unichr</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">127</span><span class="p">))</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">32</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="User.new_password"><a class="viewcode-back" href="../../api/wte_models.html#wte.models.User.new_password">[docs]</a>    <span class="k">def</span> <span class="nf">new_password</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">password</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets the given ``password`` as the :class:`~wte.models.User`&#39;s new</span>
+<span class="sd">        password. Calls :func:`~wte.models.User.new_salt` to generate a new</span>
+<span class="sd">        salt for the password.</span>
+
+<span class="sd">        :param password: The new cleartext password</span>
+<span class="sd">        :type password: `unicode`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">new_salt</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">password</span> <span class="o">=</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">hashlib</span><span class="o">.</span><span class="n">sha512</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">$$</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">salt</span><span class="p">,</span> <span class="n">password</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="User.random_password"><a class="viewcode-back" href="../../api/wte_models.html#wte.models.User.random_password">[docs]</a>    <span class="k">def</span> <span class="nf">random_password</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generates a random password, 12 characters in length consisting of</span>
+<span class="sd">        lower-case characters, upper-case characters, and numbers.</span>
+
+<span class="sd">        :return: The new password</span>
+<span class="sd">        :rtype: `unicode`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">password</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">12</span><span class="p">):</span>
+            <span class="n">choice</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">choice</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">password</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">unichr</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">48</span><span class="p">,</span> <span class="mi">57</span><span class="p">)))</span>
+            <span class="k">elif</span> <span class="n">choice</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">password</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">unichr</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">65</span><span class="p">,</span> <span class="mi">90</span><span class="p">)))</span>
+            <span class="k">elif</span> <span class="n">choice</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">password</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">unichr</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">97</span><span class="p">,</span> <span class="mi">122</span><span class="p">)))</span>
+        <span class="n">password</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">password</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">new_password</span><span class="p">(</span><span class="n">password</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">password</span></div>
+
+<div class="viewcode-block" id="User.password_matches"><a class="viewcode-back" href="../../api/wte_models.html#wte.models.User.password_matches">[docs]</a>    <span class="k">def</span> <span class="nf">password_matches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">password</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Checks whether the given password matches the hashed, stored</span>
+<span class="sd">        password.</span>
+
+<span class="sd">        :param password: The password to check</span>
+<span class="sd">        :type password: `unicode`</span>
+<span class="sd">        :return: ``True`` if the passwords match, ``False`` otherwise</span>
+<span class="sd">        :rtype: `bool`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">password</span> <span class="o">=</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">hashlib</span><span class="o">.</span><span class="n">sha512</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">$$</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">salt</span><span class="p">,</span> <span class="n">password</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">password</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">password</span></div>
+
+<div class="viewcode-block" id="User.has_permission"><a class="viewcode-back" href="../../api/wte_models.html#wte.models.User.has_permission">[docs]</a>    <span class="k">def</span> <span class="nf">has_permission</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">permission</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Checks whether the user has been granted the given ``permission``,</span>
+<span class="sd">        either directly or via a :class:`~wte.models.PermissionGroup`.</span>
+
+<span class="sd">        :param permission: The permission to check for</span>
+<span class="sd">        :type permission: `unicode`</span>
+<span class="sd">        :return: ``True`` if the user has the permission, ``False`` otherwise</span>
+<span class="sd">        :rtype: `bool`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_permissions&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">permission</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_permissions</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dbsession</span> <span class="o">=</span> <span class="n">DBSession</span><span class="p">()</span>
+            <span class="n">direct_perm</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Permission</span><span class="o">.</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">User</span><span class="p">,</span> <span class="n">Permission</span><span class="o">.</span><span class="n">users</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="n">group_perm</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Permission</span><span class="o">.</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PermissionGroup</span><span class="p">,</span> <span class="n">Permission</span><span class="o">.</span><span class="n">permission_groups</span><span class="p">)</span><span class="o">.</span>\
+                <span class="n">join</span><span class="p">(</span><span class="n">User</span><span class="p">,</span> <span class="n">PermissionGroup</span><span class="o">.</span><span class="n">users</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_permissions</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">direct_perm</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">group_perm</span><span class="p">)]</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_permission</span><span class="p">(</span><span class="n">permission</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="User.allow"><a class="viewcode-back" href="../../api/wte_models.html#wte.models.User.allow">[docs]</a>    <span class="k">def</span> <span class="nf">allow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Checks whether the given ``user`` is allowed to perform the given</span>
+<span class="sd">        ``action``. Supports the following actions: view, edit, delete.</span>
+
+<span class="sd">        :param action: The action to check for</span>
+<span class="sd">        :type action: `unicode`</span>
+<span class="sd">        :param user: The user to check</span>
+<span class="sd">        :type user: :class:`~wte.models.User`</span>
+<span class="sd">        :return: ``True`` if the ``user`` may perform the action, ``False``</span>
+<span class="sd">                 otherwise</span>
+<span class="sd">        :rtype: `bool`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="s1">&#39;view&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>  <span class="c1"># TODO: Add support for showing / hiding profile</span>
+        <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="s1">&#39;edit&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">user</span><span class="o">.</span><span class="n">has_permission</span><span class="p">(</span><span class="s1">&#39;admin.users.edit&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="s1">&#39;delete&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">user</span><span class="o">.</span><span class="n">has_permission</span><span class="p">(</span><span class="s1">&#39;admin.users.delete&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">False</span></div></div>
+
+<span class="n">Index</span><span class="p">(</span><span class="s1">&#39;users_email_ix&#39;</span><span class="p">,</span> <span class="n">User</span><span class="o">.</span><span class="n">email</span><span class="p">)</span>
+
+
+<span class="n">users_permissions</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="s1">&#39;users_permissions&#39;</span><span class="p">,</span> <span class="n">Base</span><span class="o">.</span><span class="n">metadata</span><span class="p">,</span>
+                          <span class="n">Column</span><span class="p">(</span><span class="s1">&#39;user_id&#39;</span><span class="p">,</span>
+                                 <span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;users.id&#39;</span><span class="p">,</span>
+                                            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;users_permissions_users_fk&#39;</span><span class="p">),</span>
+                                 <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
+                          <span class="n">Column</span><span class="p">(</span><span class="s1">&#39;permission_id&#39;</span><span class="p">,</span>
+                                 <span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;permissions.id&#39;</span><span class="p">,</span>
+                                            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;users_permissions_permissions_fk&#39;</span><span class="p">),</span>
+                                 <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+<span class="sd">u&quot;&quot;&quot;:class:`sqlalchemy.Table` to link :class:`~wte.models.User` and</span>
+<span class="sd">:class:`~wte.models.Permission`.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="Permission"><a class="viewcode-back" href="../../api/wte_models.html#wte.models.Permission">[docs]</a><span class="k">class</span> <span class="nc">Permission</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;The :class:`~wte.models.Permission` class represents a single</span>
+<span class="sd">    permission that can be granted to a :class:`~wte.models.User` or to a</span>
+<span class="sd">    :class:`~wte.models.PermissionGroup`.</span>
+
+<span class="sd">    Instances of :class:`~wte.models.Permission` have the following attributes:</span>
+
+<span class="sd">    * ``id`` -- The unique database identifier</span>
+<span class="sd">    * ``name`` -- The unique name used for permission checking</span>
+<span class="sd">    * ``permission_groups`` -- List of :class:`~wte.models.PermissionGroup`</span>
+<span class="sd">      that contain this :class:`~wte.models.Permission`</span>
+<span class="sd">    * ``title`` -- The title displayed for this :class:`~wte.models.Permission`</span>
+<span class="sd">    * ``users`` -- List of :class:`~wte.models.User` that have this</span>
+<span class="sd">      :class:`~wte.models.Permission`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="s1">&#39;permissions&#39;</span>
+
+    <span class="nb">id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Unicode</span><span class="p">(</span><span class="mi">255</span><span class="p">),</span> <span class="n">unique</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Unicode</span><span class="p">(</span><span class="mi">255</span><span class="p">))</span></div>
+
+<span class="n">Index</span><span class="p">(</span><span class="s1">&#39;permissions_name_ix&#39;</span><span class="p">,</span> <span class="n">Permission</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="PermissionGroup"><a class="viewcode-back" href="../../api/wte_models.html#wte.models.PermissionGroup">[docs]</a><span class="k">class</span> <span class="nc">PermissionGroup</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;The :class:`~wte.models.PermissionGroup` groups together one or more</span>
+<span class="sd">    :class:`~wte.models.Permission` for easier administration.</span>
+
+<span class="sd">    Instances of :class:`~wte.models.PermissionGroup` have the following</span>
+<span class="sd">    attributes:</span>
+
+<span class="sd">    * ``id`` -- The unique database identifier</span>
+<span class="sd">    * ``permissions`` -- The list of grouped :class:`~wte.models.Permission`</span>
+<span class="sd">    * ``title`` -- The title displayed for this</span>
+<span class="sd">      :class:`~wte.models.PermissionGroup`</span>
+<span class="sd">    * ``users`` -- List of :class:`~wte.models.User` that have this</span>
+<span class="sd">      :class:`~wte.models.PermissionGroup`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="s1">&#39;permission_groups&#39;</span>
+
+    <span class="nb">id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Unicode</span><span class="p">(</span><span class="mi">255</span><span class="p">))</span>
+
+    <span class="n">permissions</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">&#39;Permission&#39;</span><span class="p">,</span> <span class="n">backref</span><span class="o">=</span><span class="s1">&#39;permission_groups&#39;</span><span class="p">,</span> <span class="n">secondary</span><span class="o">=</span><span class="s1">&#39;permission_groups_permissions&#39;</span><span class="p">)</span></div>
+
+
+<span class="n">groups_permissions</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="s1">&#39;permission_groups_permissions&#39;</span><span class="p">,</span> <span class="n">Base</span><span class="o">.</span><span class="n">metadata</span><span class="p">,</span>
+                           <span class="n">Column</span><span class="p">(</span><span class="s1">&#39;permission_group_id&#39;</span><span class="p">,</span>
+                                  <span class="n">ForeignKey</span><span class="p">(</span><span class="n">PermissionGroup</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                             <span class="n">name</span><span class="o">=</span><span class="s1">&#39;permission_groups_permissions_groups_fk&#39;</span><span class="p">),</span>
+                                  <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
+                           <span class="n">Column</span><span class="p">(</span><span class="s1">&#39;permission_id&#39;</span><span class="p">,</span>
+                                  <span class="n">ForeignKey</span><span class="p">(</span><span class="n">Permission</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                             <span class="n">name</span><span class="o">=</span><span class="s1">&#39;permission_groups_permissions_permissions_fk&#39;</span><span class="p">),</span>
+                                  <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+<span class="sd">u&quot;&quot;&quot;:class:`sqlalchemy.Table` to link :class:`~wte.models.PermissionGroup` and</span>
+<span class="sd">:class:`~wte.models.Permission`.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="n">users_groups</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="s1">&#39;users_permission_groups&#39;</span><span class="p">,</span> <span class="n">Base</span><span class="o">.</span><span class="n">metadata</span><span class="p">,</span>
+                     <span class="n">Column</span><span class="p">(</span><span class="s1">&#39;user_id&#39;</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                                  <span class="n">name</span><span class="o">=</span><span class="s1">&#39;users_permission_groups_users_fk&#39;</span><span class="p">),</span>
+                            <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
+                     <span class="n">Column</span><span class="p">(</span><span class="s1">&#39;permission_group_id&#39;</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="n">PermissionGroup</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                                              <span class="n">name</span><span class="o">=</span><span class="s1">&#39;users_permission_groups_groups_fk&#39;</span><span class="p">),</span>
+                            <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+<span class="sd">u&quot;&quot;&quot;:class:`sqlalchemy.Table` to link :class:`~wte.models.User` and</span>
+<span class="sd">:class:`~wte.models.PermissionGroup`.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="UserPartRole"><a class="viewcode-back" href="../../api/wte_models.html#wte.models.UserPartRole">[docs]</a><span class="k">class</span> <span class="nc">UserPartRole</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;The :class:`~wte.models.UserPartRole` links users to :class:`~wte.models.Part`</span>
+<span class="sd">    that have a type &quot;module&quot;. They represent the role the :class:`~wte.models.User`</span>
+<span class="sd">    plays for that :class:`~wte.models.Part`.</span>
+
+<span class="sd">    Instances of :class:`~wte.models.UserPartRole` have the following attributes:</span>
+
+<span class="sd">    * ``id`` -- The unique database identifier</span>
+<span class="sd">    * ``part_id`` -- The unique database identifier of the linked :class:`~wte.models.Part`</span>
+<span class="sd">    * ``part`` -- The linked :class:`~wte.models.Part`</span>
+<span class="sd">    * ``role`` -- The role the :class:`~wte.models.User` plays in the :class:`~wte.models.Part`</span>
+<span class="sd">    * ``user_id`` -- The unique database identifier of the linked :class:`~wte.models.User`</span>
+<span class="sd">    * ``user`` -- The linked :class:`~wte.models.User`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="s1">u&#39;users_parts&#39;</span>
+
+    <span class="nb">id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">user_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">u&#39;users_parts_user_id_fk&#39;</span><span class="p">))</span>
+    <span class="n">part_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;parts.id&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">u&#39;users_parts_part_id_fk&#39;</span><span class="p">))</span>
+    <span class="n">role</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Unicode</span><span class="p">(</span><span class="mi">255</span><span class="p">))</span>
+
+    <span class="n">user</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="n">User</span><span class="p">)</span>
+    <span class="n">part</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">u&#39;Part&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Part"><a class="viewcode-back" href="../../api/wte_models.html#wte.models.Part">[docs]</a><span class="k">class</span> <span class="nc">Part</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;The :class:`~wte.models.Part` class represents the parts from which the teaching</span>
+<span class="sd">    content is constructed. It supports the following types: module, tutorial, page,</span>
+<span class="sd">    exercise, and task.</span>
+
+<span class="sd">    Instances of :class:`~wte.models.Part` have the following attributes:</span>
+
+<span class="sd">    * ``id`` -- The unique database identifier</span>
+<span class="sd">    * ``access_rights`` -- JSON structure representing the access rights to</span>
+<span class="sd">      this :class:`~wte.models.Part`</span>
+<span class="sd">    * ``assets`` -- List of :class:`~wte.models.Asset` that act as asset files</span>
+<span class="sd">    * ``children`` -- List of :class:`~wte.models.Part` contained in this</span>
+<span class="sd">      :class:`~wte.models.Part`</span>
+<span class="sd">    * ``compiled_content`` -- The compiled HTML generated from the ReST ``content``</span>
+<span class="sd">    * ``content`` -- The ReST content for the :class:`~wte.models.Part`</span>
+<span class="sd">    * ``display_mode`` -- The display template mode to use for the :class:`~wte.models.Part`</span>
+<span class="sd">    * ``order`` -- The ordering position of this :class:`~wte.models.Part`</span>
+<span class="sd">    * ``parent_id`` -- The unique database identifier of the parent :class:`~wte.models.Part`</span>
+<span class="sd">    * ``parent`` -- The parent :class:`~wte.models.Part`</span>
+<span class="sd">    * ``progress`` -- The :class:`~wte.models.UserPartProgress` linked to this :class:`~wte.models.Part`</span>
+<span class="sd">    * ``status`` -- The :class:`~wte.models.Part`&#39;s availability status</span>
+<span class="sd">    * ``summary`` -- The shortened summary derived from the ``compiled_content``</span>
+<span class="sd">    * ``tasks`` -- List of :class:`~wte.models.TimedTask` that are attached to this</span>
+<span class="sd">      :class:`~wte.models.Part`</span>
+<span class="sd">    * ``templates`` -- List of :class:`~wte.models.Asset` that act as template files</span>
+<span class="sd">    * ``title`` -- The title displayed for this :class:`~wte.models.Part`</span>
+<span class="sd">    * ``type`` -- Whether the :class:`~wte.models.Part` is a module, tutorial, page,</span>
+<span class="sd">      exercise, or task.</span>
+<span class="sd">    * ``users`` -- The :class:`~wte.models.User` that are linked to this :class:`~wte.models.Part`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="s1">u&#39;parts&#39;</span>
+
+    <span class="nb">id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">parent_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="s1">u&#39;parts.id&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">u&#39;parts_parent_id_fk&#39;</span><span class="p">))</span>
+    <span class="n">order</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">)</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Unicode</span><span class="p">(</span><span class="mi">255</span><span class="p">))</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Unicode</span><span class="p">(</span><span class="mi">255</span><span class="p">))</span>
+    <span class="nb">type</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Unicode</span><span class="p">(</span><span class="mi">255</span><span class="p">))</span>
+    <span class="n">display_mode</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Unicode</span><span class="p">(</span><span class="mi">255</span><span class="p">))</span>
+    <span class="n">content</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">UnicodeText</span><span class="p">)</span>
+    <span class="n">compiled_content</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">UnicodeText</span><span class="p">)</span>
+    <span class="n">access_rights</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">UnicodeText</span><span class="p">)</span>
+
+    <span class="n">children</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">u&#39;Part&#39;</span><span class="p">,</span>
+                            <span class="n">backref</span><span class="o">=</span><span class="n">backref</span><span class="p">(</span><span class="s1">u&#39;parent&#39;</span><span class="p">,</span> <span class="n">remote_side</span><span class="o">=</span><span class="p">[</span><span class="nb">id</span><span class="p">]),</span>
+                            <span class="n">cascade</span><span class="o">=</span><span class="s1">u&#39;all,delete&#39;</span><span class="p">,</span>
+                            <span class="n">order_by</span><span class="o">=</span><span class="s1">u&#39;Part.order&#39;</span><span class="p">)</span>
+    <span class="n">templates</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">u&#39;Asset&#39;</span><span class="p">,</span>
+                             <span class="n">secondary</span><span class="o">=</span><span class="s1">u&#39;parts_assets&#39;</span><span class="p">,</span>
+                             <span class="n">secondaryjoin</span><span class="o">=</span><span class="s2">u&quot;and_(Asset.id==parts_assets.c.asset_id, Asset.type==&#39;template&#39;)&quot;</span><span class="p">,</span>
+                             <span class="n">order_by</span><span class="o">=</span><span class="s1">u&#39;Asset.order&#39;</span><span class="p">,</span>
+                             <span class="n">viewonly</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">assets</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">u&#39;Asset&#39;</span><span class="p">,</span>
+                          <span class="n">secondary</span><span class="o">=</span><span class="s1">u&#39;parts_assets&#39;</span><span class="p">,</span>
+                          <span class="n">secondaryjoin</span><span class="o">=</span><span class="s2">u&quot;and_(Asset.id==parts_assets.c.asset_id, Asset.type==&#39;asset&#39;)&quot;</span><span class="p">,</span>
+                          <span class="n">order_by</span><span class="o">=</span><span class="s1">u&#39;Asset.order&#39;</span><span class="p">,</span>
+                          <span class="n">viewonly</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">all_assets</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">u&#39;Asset&#39;</span><span class="p">,</span>
+                              <span class="n">cascade</span><span class="o">=</span><span class="s1">u&#39;all&#39;</span><span class="p">,</span>
+                              <span class="n">secondary</span><span class="o">=</span><span class="s1">u&#39;parts_assets&#39;</span><span class="p">,</span>
+                              <span class="n">backref</span><span class="o">=</span><span class="s1">u&#39;parts&#39;</span><span class="p">)</span>
+    <span class="n">users</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">u&#39;UserPartRole&#39;</span><span class="p">,</span>
+                         <span class="n">cascade</span><span class="o">=</span><span class="s1">u&#39;all&#39;</span><span class="p">)</span>
+    <span class="n">progress</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">u&#39;UserPartProgress&#39;</span><span class="p">,</span>
+                            <span class="n">cascade</span><span class="o">=</span><span class="s1">u&#39;all&#39;</span><span class="p">,</span>
+                            <span class="n">primaryjoin</span><span class="o">=</span><span class="s1">u&#39;Part.id==UserPartProgress.part_id&#39;</span><span class="p">)</span>
+    <span class="n">tasks</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">u&#39;TimedTask&#39;</span><span class="p">,</span>
+                         <span class="n">cascade</span><span class="o">=</span><span class="s1">u&#39;all&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Part.root"><a class="viewcode-back" href="../../api/wte_models.html#wte.models.Part.root">[docs]</a>    <span class="k">def</span> <span class="nf">root</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">u&quot;&quot;&quot;Gets the root :class:`~wte.models.Part` for the current :class:`~wte.models.Part`.</span>
+<span class="sd">        If the :class:`~wte.models.Part` has no parent, then returns itself.</span>
+
+<span class="sd">        :return: The root :class:`~wte.models.Part`</span>
+<span class="sd">        :rtype: :class:`~wte.models.Part`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">root</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="Part.allow"><a class="viewcode-back" href="../../api/wte_models.html#wte.models.Part.allow">[docs]</a>    <span class="k">def</span> <span class="nf">allow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Checks whether the given ``user`` is allowed to perform the given</span>
+<span class="sd">        ``action``. Supports the following actions: view, edit, delete, and users.</span>
+
+<span class="sd">        :param action: The action to check for</span>
+<span class="sd">        :type action: `unicode`</span>
+<span class="sd">        :param user: The user to check</span>
+<span class="sd">        :type user: :class:`~wte.models.User`</span>
+<span class="sd">        :return: ``True`` if the ``user`` may perform the action, ``False``</span>
+<span class="sd">                 otherwise</span>
+<span class="sd">        :rtype: `bool`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">user</span><span class="o">.</span><span class="n">logged_in</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s1">u&#39;view&#39;</span><span class="p">:</span>
+            <span class="n">root</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">has_permission</span><span class="p">(</span><span class="s1">&#39;admin.modules.view&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">True</span>
+            <span class="k">elif</span> <span class="n">root</span><span class="o">.</span><span class="n">has_role</span><span class="p">([</span><span class="s1">&#39;owner&#39;</span><span class="p">,</span> <span class="s1">&#39;tutor&#39;</span><span class="p">],</span> <span class="n">user</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">True</span>
+            <span class="k">elif</span> <span class="n">root</span><span class="o">.</span><span class="n">has_role</span><span class="p">(</span><span class="s1">&#39;student&#39;</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">allow</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">user</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">u&#39;available&#39;</span><span class="p">,</span> <span class="s1">u&#39;archived&#39;</span><span class="p">]:</span>
+                        <span class="k">return</span> <span class="bp">True</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">u&#39;available&#39;</span><span class="p">,</span> <span class="s1">u&#39;archived&#39;</span><span class="p">]:</span>
+                        <span class="k">return</span> <span class="bp">True</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">u&#39;module&#39;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s1">u&#39;available&#39;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="s1">u&#39;edit&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">has_permission</span><span class="p">(</span><span class="s1">&#39;admin.modules.edit&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">True</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_role</span><span class="p">(</span><span class="s1">u&#39;owner&#39;</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">True</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">allow</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">user</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="s1">u&#39;delete&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">has_permission</span><span class="p">(</span><span class="s1">&#39;admin.modules.delete&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">True</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_role</span><span class="p">(</span><span class="s1">u&#39;owner&#39;</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">True</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">allow</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">user</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="s1">u&#39;users&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">u&#39;module&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_role</span><span class="p">(</span><span class="s1">&#39;owner&#39;</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="bp">True</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">False</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">allow</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">user</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">False</span></div>
+
+<div class="viewcode-block" id="Part.has_role"><a class="viewcode-back" href="../../api/wte_models.html#wte.models.Part.has_role">[docs]</a>    <span class="k">def</span> <span class="nf">has_role</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">role</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
+        <span class="sd">u&quot;&quot;&quot;Checks if the given ``user`` has the given ``role`` for this :class:`~wte.models.Part`.</span>
+<span class="sd">        If a ``list`` is specified as the ``role``, then the ``user`` must have at least one of the</span>
+<span class="sd">        specified roles.</span>
+
+<span class="sd">        :param role: The role the user must have.</span>
+<span class="sd">        :type role: ``unicode`` or ``list``</span>
+<span class="sd">        :param user: The user that has to have the role</span>
+<span class="sd">        :type user: :class:`~wte.models.User`</span>
+<span class="sd">        :return: ``True`` if the :class:`~wte.models.User` has the given role, ``False`` otherwise</span>
+<span class="sd">        :rtype: ``bool``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">role</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">sub_role</span> <span class="ow">in</span> <span class="n">role</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_role</span><span class="p">(</span><span class="n">sub_role</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">user_role</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">user_role</span><span class="o">.</span><span class="n">role</span> <span class="o">==</span> <span class="n">role</span> <span class="ow">and</span> <span class="n">user_role</span><span class="o">.</span><span class="n">user</span> <span class="o">==</span> <span class="n">user</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">has_role</span><span class="p">(</span><span class="n">role</span><span class="p">,</span> <span class="n">user</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">False</span></div>
+
+    <span class="k">def</span> <span class="nf">register_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_role</span><span class="p">([</span><span class="s1">&#39;student&#39;</span><span class="p">,</span> <span class="s1">&#39;owner&#39;</span><span class="p">],</span> <span class="n">user</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s1">&#39;already_registered&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">access_rights</span><span class="p">:</span>
+            <span class="n">rights</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">access_rights</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">rights</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s1">&#39;password&#39;</span> <span class="ow">in</span> <span class="n">rights</span> <span class="ow">and</span> <span class="s1">&#39;email_domains&#39;</span> <span class="ow">in</span> <span class="n">rights</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="p">[</span><span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;@&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span> <span class="ow">in</span> <span class="n">rights</span><span class="p">[</span><span class="s1">&#39;email_domains&#39;</span><span class="p">]:</span>
+                        <span class="k">return</span> <span class="s1">&#39;password_register&#39;</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="s1">&#39;invalid_email_domain&#39;</span>
+                <span class="k">elif</span> <span class="s1">&#39;password&#39;</span> <span class="ow">in</span> <span class="n">rights</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="s1">&#39;password_register&#39;</span>
+                <span class="k">elif</span> <span class="s1">&#39;email_domains&#39;</span> <span class="ow">in</span> <span class="n">rights</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="p">[</span><span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;@&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span> <span class="ow">in</span> <span class="n">rights</span><span class="p">[</span><span class="s1">&#39;email_domains&#39;</span><span class="p">]:</span>
+                        <span class="k">return</span> <span class="s1">&#39;plain_register&#39;</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="s1">&#39;invalid_email_domain&#39;</span>
+        <span class="k">return</span> <span class="s1">&#39;plain_register&#39;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">summary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generates the text summary for this :class:`~wte.models.Part`.</span>
+<span class="sd">        The text summary is generated by finding the first tag in the ``compiled_content``</span>
+<span class="sd">        and then returning that.</span>
+
+<span class="sd">        :return: The content of the first tag in the ``compiled_content``</span>
+<span class="sd">        :r_type: :class:`unicode`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">compiled_content</span><span class="p">:</span>
+            <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s1">r&#39;&lt;([a-zA-Z+])&gt;&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">compiled_content</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+                <span class="n">start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compiled_content</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;&lt;</span><span class="si">%s</span><span class="s1">&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)))</span>
+                <span class="n">end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compiled_content</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;&lt;/</span><span class="si">%s</span><span class="s1">&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)))</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span> <span class="o">+</span> <span class="mi">3</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">compiled_content</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">prev</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the previous :class:`~wte.models.Part` in the list of siblings.</span>
+
+<span class="sd">        :return: The previous :class:`~wte.models.Part` sibling</span>
+<span class="sd">        :r_type: :class:`~wte.models.Part`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">prev</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">child</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">prev</span>
+            <span class="n">prev</span> <span class="o">=</span> <span class="n">child</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">next</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the next :class:`~wte.models.Part` in the list of siblings.</span>
+
+<span class="sd">        :return: The next :class:`~wte.models.Part` sibling</span>
+<span class="sd">        :r_type: :class:`~wte.models.Part`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">found</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">found</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">child</span>
+            <span class="k">if</span> <span class="n">child</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">:</span>
+                <span class="n">found</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+<div class="viewcode-block" id="Part.menu"><a class="viewcode-back" href="../../api/wte_models.html#wte.models.Part.menu">[docs]</a>    <span class="k">def</span> <span class="nf">menu</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generates the menu for the :class:`~wte.models.Part`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">builder</span> <span class="o">=</span> <span class="n">MenuBuilder</span><span class="p">()</span>
+        <span class="n">builder</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;Status&#39;</span><span class="p">,</span> <span class="s1">&#39;fi-lock&#39;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;available&#39;</span> <span class="k">else</span> <span class="s1">&#39;fi-unlock&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">allow</span><span class="p">(</span><span class="s1">&#39;edit&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="p">):</span>
+            <span class="c1"># Status Change Items</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;page&#39;</span><span class="p">,</span> <span class="s1">&#39;task&#39;</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;available&#39;</span><span class="p">:</span>
+                    <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Make unavailable&#39;</span><span class="p">,</span>
+                                 <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.change_status&#39;</span><span class="p">,</span>
+                                                   <span class="n">pid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                                   <span class="n">_query</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;unavailable&#39;</span><span class="p">),</span>
+                                                           <span class="p">(</span><span class="s1">&#39;return_to&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_route_url</span><span class="p">()),</span>
+                                                           <span class="p">(</span><span class="s1">&#39;csrf_token&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get_csrf_token</span><span class="p">())]),</span>
+                                 <span class="n">icon</span><span class="o">=</span><span class="s1">&#39;fi-lock&#39;</span><span class="p">,</span>
+                                 <span class="n">highlight</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                                 <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;post-link&#39;</span><span class="p">})</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Make available&#39;</span><span class="p">,</span>
+                                 <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.change_status&#39;</span><span class="p">,</span>
+                                                   <span class="n">pid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                                   <span class="n">_query</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;available&#39;</span><span class="p">),</span>
+                                                           <span class="p">(</span><span class="s1">&#39;return_to&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_route_url</span><span class="p">()),</span>
+                                                           <span class="p">(</span><span class="s1">&#39;csrf_token&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get_csrf_token</span><span class="p">())]),</span>
+                                 <span class="n">icon</span><span class="o">=</span><span class="s1">&#39;fi-unlock&#39;</span><span class="p">,</span>
+                                 <span class="n">highlight</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                                 <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;post-link&#39;</span><span class="p">})</span>
+            <span class="c1"># Archive Menu Item</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;module&#39;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">!=</span> <span class="s1">&#39;archived&#39;</span><span class="p">:</span>
+                <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Archive&#39;</span><span class="p">,</span>
+                             <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.change_status&#39;</span><span class="p">,</span>
+                                               <span class="n">pid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                               <span class="n">_query</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;archived&#39;</span><span class="p">),</span>
+                                                       <span class="p">(</span><span class="s1">&#39;return_to&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_route_url</span><span class="p">()),</span>
+                                                       <span class="p">(</span><span class="s1">&#39;csrf_token&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get_csrf_token</span><span class="p">())]),</span>
+                             <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;post-link&#39;</span><span class="p">})</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;Edit&#39;</span><span class="p">,</span> <span class="s1">&#39;fi-pencil&#39;</span><span class="p">)</span>
+            <span class="c1"># Edit Menu Item</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Edit&#39;</span><span class="p">,</span>
+                         <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.edit&#39;</span><span class="p">,</span> <span class="n">pid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+                         <span class="n">icon</span><span class="o">=</span><span class="s1">&#39;fi-pencil&#39;</span><span class="p">,</span>
+                         <span class="n">highlight</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="c1"># Edit Timed Actions Menu</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;module&#39;</span><span class="p">:</span>
+                <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Edit Timed Actions&#39;</span><span class="p">,</span>
+                             <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.timed_task&#39;</span><span class="p">,</span> <span class="n">pid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+                             <span class="n">icon</span><span class="o">=</span><span class="s1">&#39;fi-clock&#39;</span><span class="p">)</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;Users&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;module&#39;</span><span class="p">:</span>
+                <span class="c1"># User Menu Item</span>
+                <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Users&#39;</span><span class="p">,</span>
+                             <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.users&#39;</span><span class="p">,</span> <span class="n">pid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+                             <span class="n">icon</span><span class="o">=</span><span class="s1">&#39;fi-torsos-all&#39;</span><span class="p">)</span>
+                <span class="c1"># Access Settings Menu Item</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">!=</span> <span class="s1">&#39;archived&#39;</span><span class="p">:</span>
+                    <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Edit Access Settings&#39;</span><span class="p">,</span>
+                                 <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.register.settings&#39;</span><span class="p">,</span> <span class="n">pid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+                                 <span class="n">icon</span><span class="o">=</span><span class="s1">&#39;fi-key&#39;</span><span class="p">)</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;add&#39;</span><span class="p">,</span> <span class="s1">&#39;fi-plus&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;module&#39;</span><span class="p">:</span>
+                <span class="c1"># Add Tutorial Menu Item</span>
+                <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Add Tutorial&#39;</span><span class="p">,</span>
+                             <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.new&#39;</span><span class="p">,</span> <span class="n">new_type</span><span class="o">=</span><span class="s1">&#39;tutorial&#39;</span><span class="p">,</span> <span class="n">_query</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;parent_id&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)]),</span>
+                             <span class="n">highlight</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+                <span class="c1"># Add Exercise Menu Item</span>
+                <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Add Exercise&#39;</span><span class="p">,</span>
+                             <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.new&#39;</span><span class="p">,</span> <span class="n">new_type</span><span class="o">=</span><span class="s1">&#39;exercise&#39;</span><span class="p">,</span> <span class="n">_query</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;parent_id&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)]),</span>
+                             <span class="n">highlight</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;tutorial&#39;</span><span class="p">:</span>
+                <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Add Page&#39;</span><span class="p">,</span>
+                             <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.new&#39;</span><span class="p">,</span> <span class="n">new_type</span><span class="o">=</span><span class="s1">&#39;page&#39;</span><span class="p">,</span> <span class="n">_query</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;parent_id&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)]),</span>
+                             <span class="n">icon</span><span class="o">=</span><span class="s1">&#39;fi-plus&#39;</span><span class="p">,</span>
+                             <span class="n">highlight</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+                <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Add Template&#39;</span><span class="p">,</span>
+                             <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;asset.new&#39;</span><span class="p">,</span> <span class="n">pid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">new_type</span><span class="o">=</span><span class="s1">&#39;template&#39;</span><span class="p">),</span>
+                             <span class="n">highlight</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;exercise&#39;</span><span class="p">:</span>
+                <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Add Task&#39;</span><span class="p">,</span>
+                             <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.new&#39;</span><span class="p">,</span> <span class="n">new_type</span><span class="o">=</span><span class="s1">&#39;task&#39;</span><span class="p">,</span> <span class="n">_query</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;parent_id&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)]),</span>
+                             <span class="n">icon</span><span class="o">=</span><span class="s1">&#39;fi-plus&#39;</span><span class="p">,</span>
+                             <span class="n">highlight</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+                <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Add Template&#39;</span><span class="p">,</span>
+                             <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;asset.new&#39;</span><span class="p">,</span> <span class="n">pid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">new_type</span><span class="o">=</span><span class="s1">&#39;template&#39;</span><span class="p">),</span>
+                             <span class="n">highlight</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;page&#39;</span><span class="p">,</span> <span class="s1">&#39;task&#39;</span><span class="p">]:</span>
+                <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Add Page before&#39;</span><span class="p">,</span>
+                             <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.new&#39;</span><span class="p">,</span>
+                                               <span class="n">new_type</span><span class="o">=</span><span class="s1">&#39;page&#39;</span><span class="p">,</span>
+                                               <span class="n">_query</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;parent_id&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+                                                       <span class="p">(</span><span class="s1">&#39;order&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">)]),</span>
+                             <span class="n">highlight</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+                <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Add Page after&#39;</span><span class="p">,</span>
+                             <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.new&#39;</span><span class="p">,</span>
+                                               <span class="n">new_type</span><span class="o">=</span><span class="s1">&#39;page&#39;</span><span class="p">,</span>
+                                               <span class="n">_query</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;parent_id&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+                                                       <span class="p">(</span><span class="s1">&#39;order&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]),</span>
+                             <span class="n">highlight</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="c1"># Add Asset Menu Item</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;module&#39;</span><span class="p">,</span> <span class="s1">&#39;tutorial&#39;</span><span class="p">,</span> <span class="s1">&#39;exercise&#39;</span><span class="p">,</span> <span class="s1">&#39;task&#39;</span><span class="p">]:</span>
+                <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Add Asset&#39;</span><span class="p">,</span>
+                             <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;asset.new&#39;</span><span class="p">,</span> <span class="n">pid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">new_type</span><span class="o">=</span><span class="s1">&#39;asset&#39;</span><span class="p">))</span>
+
+        <span class="n">builder</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;Import / Export&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">allow</span><span class="p">(</span><span class="s1">&#39;edit&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;module&#39;</span><span class="p">,</span> <span class="s1">&#39;tutorial&#39;</span><span class="p">,</span> <span class="s1">&#39;exercise&#39;</span><span class="p">]:</span>
+                <span class="c1"># Import Menu Item</span>
+                <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Import&#39;</span><span class="p">,</span>
+                             <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.import&#39;</span><span class="p">,</span> <span class="n">_query</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;parent_id&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)]))</span>
+            <span class="c1"># Export Menu Item</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Export&#39;</span><span class="p">,</span>
+                         <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.export&#39;</span><span class="p">,</span>
+                                           <span class="n">pid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                           <span class="n">_query</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;csrf_token&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get_csrf_token</span><span class="p">())]),</span>
+                         <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;post-link&#39;</span><span class="p">})</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">allow</span><span class="p">(</span><span class="s1">&#39;view&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="p">):</span>
+            <span class="c1"># Download Menu Item</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Download&#39;</span><span class="p">,</span>
+                         <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.download&#39;</span><span class="p">,</span> <span class="n">pid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+                         <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;post-link&#39;</span><span class="p">})</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">allow</span><span class="p">(</span><span class="s1">&#39;delete&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="p">):</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;Delete&#39;</span><span class="p">)</span>
+            <span class="c1"># Delete Menu Item</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Delete&#39;</span><span class="p">,</span>
+                         <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.delete&#39;</span><span class="p">,</span>
+                                           <span class="n">pid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                           <span class="n">_query</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;csrf_token&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get_csrf_token</span><span class="p">())]),</span>
+                         <span class="n">icon</span><span class="o">=</span><span class="s1">&#39;fi-trash&#39;</span><span class="p">,</span>
+                         <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;alert post-link&#39;</span><span class="p">,</span>
+                                <span class="s1">&#39;data-wte-confirm&#39;</span><span class="p">:</span> <span class="n">confirm_delete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="bp">True</span><span class="p">)})</span>
+        <span class="k">return</span> <span class="n">builder</span><span class="o">.</span><span class="n">generate</span><span class="p">()</span></div></div>
+
+
+<span class="n">Index</span><span class="p">(</span><span class="s1">&#39;parts_parent_id_ix&#39;</span><span class="p">,</span> <span class="n">Part</span><span class="o">.</span><span class="n">parent_id</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="UserPartProgress"><a class="viewcode-back" href="../../api/wte_models.html#wte.models.UserPartProgress">[docs]</a><span class="k">class</span> <span class="nc">UserPartProgress</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;The :class:`~wte.models.UserPartProgress` represents the progress a</span>
+<span class="sd">    :class:`~wte.models.User` has made through a :class:`~wte.models.Part`.</span>
+
+<span class="sd">    Instances of :class:`~wte.models.UserPartProgress` have the following</span>
+<span class="sd">    attributes:</span>
+
+<span class="sd">    * ``id`` -- The unique database identifier</span>
+<span class="sd">    * ``current_id`` -- The unique database identifier of the current :class:`~wte.models.Part`</span>
+<span class="sd">    * ``current`` -- The current :class:`~wte.models.Part`</span>
+<span class="sd">    * ``files`` -- The :class:`~wte.models.Asset` that are linked to this :class:`~wte.models.UserPartProgress`</span>
+<span class="sd">    * ``part_id`` -- The unique identifier of the :class:`~wte.models.Part`</span>
+<span class="sd">    * ``part`` -- The :class:`~wte.models.Part` that this represents the</span>
+<span class="sd">      progress in</span>
+<span class="sd">    * ``user_id`` -- The unique identifier of the :class:`~wte.models.User`</span>
+<span class="sd">    * ``user`` -- The :class:`~wte.models.User` for which this represents the</span>
+<span class="sd">      progress</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="s1">u&#39;user_part_progress&#39;</span>
+
+    <span class="nb">id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">user_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">u&#39;user_part_progress_user_id_fk&#39;</span><span class="p">))</span>
+    <span class="n">part_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="n">Part</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">u&#39;user_part_progress_part_id_fk&#39;</span><span class="p">))</span>
+    <span class="n">current_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="n">Part</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">u&#39;user_part_progress_current_id_fk&#39;</span><span class="p">))</span>
+
+    <span class="n">user</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">u&#39;User&#39;</span><span class="p">)</span>
+    <span class="n">part</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">u&#39;Part&#39;</span><span class="p">,</span> <span class="n">foreign_keys</span><span class="o">=</span><span class="p">[</span><span class="n">part_id</span><span class="p">])</span>
+    <span class="n">current</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">u&#39;Part&#39;</span><span class="p">,</span> <span class="n">foreign_keys</span><span class="o">=</span><span class="p">[</span><span class="n">current_id</span><span class="p">])</span>
+    <span class="n">files</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">u&#39;Asset&#39;</span><span class="p">,</span>
+                         <span class="n">cascade</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span>
+                         <span class="n">secondary</span><span class="o">=</span><span class="s1">u&#39;progress_assets&#39;</span><span class="p">,</span>
+                         <span class="n">order_by</span><span class="o">=</span><span class="s1">u&#39;Asset.order&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="UserPartProgress.allow"><a class="viewcode-back" href="../../api/wte_models.html#wte.models.UserPartProgress.allow">[docs]</a>    <span class="k">def</span> <span class="nf">allow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Checks whether the given ``user`` is allowed to perform the given</span>
+<span class="sd">        ``action``. Supports the following action: view.</span>
+
+<span class="sd">        :param action: The action to check for</span>
+<span class="sd">        :type action: `unicode`</span>
+<span class="sd">        :param user: The user to check</span>
+<span class="sd">        :type user: :class:`~wte.models.User`</span>
+<span class="sd">        :return: ``True`` if the ``user`` may perform the action, ``False``</span>
+<span class="sd">                 otherwise</span>
+<span class="sd">        :rtype: `bool`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_id</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">return</span> <span class="bp">False</span></div></div>
+
+<span class="n">Index</span><span class="p">(</span><span class="s1">&#39;user_part_progress_user_id_ix&#39;</span><span class="p">,</span> <span class="n">UserPartProgress</span><span class="o">.</span><span class="n">user_id</span><span class="p">)</span>
+<span class="n">Index</span><span class="p">(</span><span class="s1">&#39;user_part_progress_part_id_ix&#39;</span><span class="p">,</span> <span class="n">UserPartProgress</span><span class="o">.</span><span class="n">part_id</span><span class="p">)</span>
+<span class="n">Index</span><span class="p">(</span><span class="s1">&#39;user_part_progress_user_id_part_id_ix&#39;</span><span class="p">,</span> <span class="n">UserPartProgress</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">UserPartProgress</span><span class="o">.</span><span class="n">part_id</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Asset"><a class="viewcode-back" href="../../api/wte_models.html#wte.models.Asset">[docs]</a><span class="k">class</span> <span class="nc">Asset</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;The class:`~wte.models.Asset` represents any kind of file data. What role the</span>
+<span class="sd">    :class:`~wte.models.Asset` is used in depends on the ``type``.</span>
+
+<span class="sd">    Instances of :class:`~wte.models.Asset` have the following attributes:</span>
+
+<span class="sd">    * ``id`` -- The unique database identifier</span>
+<span class="sd">    * ``data`` -- The actual file content</span>
+<span class="sd">    * ``filename`` -- The filename used for accessing this :class:`~wte.models.Asset`</span>
+<span class="sd">    * ``mimetype`` -- The mimetype of this :class:`~wte.models.Asset`</span>
+<span class="sd">    * ``order`` -- The order to display this :class:`~wte.models.Asset` in</span>
+<span class="sd">    * ``parts`` -- The :class:`~wte.models.Part` that this :class:`~wte.models.Asset` is used in</span>
+<span class="sd">    * ``type`` -- The type of :class:`~wte.models.Asset` it is (asset, template, file)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="s1">u&#39;assets&#39;</span>
+
+    <span class="nb">id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="nb">type</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Unicode</span><span class="p">(</span><span class="mi">255</span><span class="p">))</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Unicode</span><span class="p">(</span><span class="mi">255</span><span class="p">))</span>
+    <span class="n">mimetype</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Unicode</span><span class="p">(</span><span class="mi">255</span><span class="p">))</span>
+    <span class="n">order</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">LargeBinary</span><span class="p">)</span>
+    <span class="n">etag</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Unicode</span><span class="p">(</span><span class="mi">255</span><span class="p">))</span>
+
+<div class="viewcode-block" id="Asset.menu"><a class="viewcode-back" href="../../api/wte_models.html#wte.models.Asset.menu">[docs]</a>    <span class="k">def</span> <span class="nf">menu</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">part</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generate the menu for this :class:`~wte.models.Asset`. Will distinguish between</span>
+<span class="sd">        assets, templates, and files.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">builder</span> <span class="o">=</span> <span class="n">MenuBuilder</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;asset&#39;</span><span class="p">,</span> <span class="s1">&#39;template&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">part</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">allow</span><span class="p">(</span><span class="s1">&#39;edit&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="p">):</span>
+                <span class="n">builder</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;Edit&#39;</span><span class="p">,</span>
+                              <span class="n">icon</span><span class="o">=</span><span class="s1">&#39;fi-pencil&#39;</span><span class="p">)</span>
+                <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Edit&#39;</span><span class="p">,</span>
+                             <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;asset.edit&#39;</span><span class="p">,</span> <span class="n">pid</span><span class="o">=</span><span class="n">part</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">aid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+                             <span class="n">icon</span><span class="o">=</span><span class="s1">&#39;fi-pencil&#39;</span><span class="p">,</span>
+                             <span class="n">highlight</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+                <span class="n">builder</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;Delete&#39;</span><span class="p">)</span>
+                <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Delete&#39;</span><span class="p">,</span>
+                             <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;asset.delete&#39;</span><span class="p">,</span>
+                                               <span class="n">pid</span><span class="o">=</span><span class="n">part</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                               <span class="n">aid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                               <span class="n">_query</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;csrf_token&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get_csrf_token</span><span class="p">())]),</span>
+                             <span class="n">icon</span><span class="o">=</span><span class="s1">&#39;fi-trash&#39;</span><span class="p">,</span>
+                             <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;alert post-link&#39;</span><span class="p">,</span>
+                                    <span class="s1">&#39;data-wte-confirm&#39;</span><span class="p">:</span> <span class="n">confirm_delete</span><span class="p">(</span><span class="s1">&#39;asset&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="bp">False</span><span class="p">)})</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;file&#39;</span><span class="p">:</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;Save&#39;</span><span class="p">,</span>
+                          <span class="n">icon</span><span class="o">=</span><span class="s1">&#39;fi-save&#39;</span><span class="p">)</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Save&#39;</span><span class="p">,</span>
+                         <span class="s1">&#39;#&#39;</span><span class="p">,</span>
+                         <span class="n">icon</span><span class="o">=</span><span class="s1">&#39;fi-save&#39;</span><span class="p">,</span>
+                         <span class="n">highlight</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                         <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;save&#39;</span><span class="p">})</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Download&#39;</span><span class="p">,</span>
+                         <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;file.view&#39;</span><span class="p">,</span>
+                                           <span class="n">pid</span><span class="o">=</span><span class="n">part</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                           <span class="n">filename</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span>
+                                           <span class="n">_query</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;download&#39;</span><span class="p">,</span> <span class="s1">&#39;true&#39;</span><span class="p">)]))</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;Delete&#39;</span><span class="p">)</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Discard Changes&#39;</span><span class="p">,</span>
+                         <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.reset-files&#39;</span><span class="p">,</span>
+                                           <span class="n">pid</span><span class="o">=</span><span class="n">part</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                           <span class="n">_query</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;filename&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span>
+                                                   <span class="s1">&#39;csrf_token&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get_csrf_token</span><span class="p">()}),</span>
+                         <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;alert post-link&#39;</span><span class="p">,</span>
+                                <span class="s1">&#39;data-wte-confirm&#39;</span><span class="p">:</span> <span class="n">confirm_action</span><span class="p">(</span><span class="s1">&#39;Discard Changes&#39;</span><span class="p">,</span>
+                                                                   <span class="s1">&#39;Please confirm that you wish to discard the &#39;</span> <span class="o">+</span>
+                                                                   <span class="s1">&#39;changes you made to the file &#39;</span> <span class="o">+</span>
+                                                                   <span class="s1">&#39;&quot;</span><span class="si">%s</span><span class="s1">&quot; and reset it &#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span> <span class="o">+</span>
+                                                                   <span class="s1">&#39;to its initial content.&#39;</span><span class="p">,</span>
+                                                                   <span class="s2">&quot;Don&#39;t Discard&quot;</span><span class="p">,</span>
+                                                                   <span class="p">{</span><span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;Discard&#39;</span><span class="p">,</span>
+                                                                    <span class="s1">&#39;class_&#39;</span><span class="p">:</span> <span class="s1">&#39;alert&#39;</span><span class="p">})})</span>
+        <span class="k">return</span> <span class="n">builder</span><span class="o">.</span><span class="n">generate</span><span class="p">()</span></div></div>
+
+
+<span class="n">Index</span><span class="p">(</span><span class="s1">u&#39;assets_filename_ix&#39;</span><span class="p">,</span> <span class="n">Asset</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+<span class="n">Index</span><span class="p">(</span><span class="s1">u&#39;assets_type_ix&#39;</span><span class="p">,</span> <span class="n">Asset</span><span class="o">.</span><span class="n">type</span><span class="p">)</span>
+
+
+<span class="n">parts_assets</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="s1">&#39;parts_assets&#39;</span><span class="p">,</span> <span class="n">Base</span><span class="o">.</span><span class="n">metadata</span><span class="p">,</span>
+                     <span class="n">Column</span><span class="p">(</span><span class="s1">&#39;part_id&#39;</span><span class="p">,</span>
+                            <span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;parts.id&#39;</span><span class="p">,</span>
+                                       <span class="n">name</span><span class="o">=</span><span class="s1">&#39;parts_assets_part_id_fk&#39;</span><span class="p">),</span>
+                            <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
+                     <span class="n">Column</span><span class="p">(</span><span class="s1">&#39;asset_id&#39;</span><span class="p">,</span>
+                            <span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;assets.id&#39;</span><span class="p">,</span>
+                                       <span class="n">name</span><span class="o">=</span><span class="s1">&#39;parts_assets_asset_id_fk&#39;</span><span class="p">),</span>
+                            <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+<span class="sd">u&quot;&quot;&quot;:class:`sqlalchemy.Table` to link :class:`~wte.models.Part` and</span>
+<span class="sd">:class:`~wte.models.Asset`.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">progress_assets</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="s1">&#39;progress_assets&#39;</span><span class="p">,</span> <span class="n">Base</span><span class="o">.</span><span class="n">metadata</span><span class="p">,</span>
+                        <span class="n">Column</span><span class="p">(</span><span class="s1">&#39;progress_id&#39;</span><span class="p">,</span>
+                               <span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;user_part_progress.id&#39;</span><span class="p">,</span>
+                                          <span class="n">name</span><span class="o">=</span><span class="s1">&#39;progress_assets_progress_id_fk&#39;</span><span class="p">),</span>
+                               <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
+                        <span class="n">Column</span><span class="p">(</span><span class="s1">&#39;asset_id&#39;</span><span class="p">,</span>
+                               <span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;assets.id&#39;</span><span class="p">,</span>
+                                          <span class="n">name</span><span class="o">=</span><span class="s1">&#39;parts_assets_asset_id_fk&#39;</span><span class="p">),</span>
+                               <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+<span class="sd">u&quot;&quot;&quot;:class:`sqlalchemy.Table` to link :class:`~wte.models.Part` and</span>
+<span class="sd">:class:`~wte.models.Asset`.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="TimedTask"><a class="viewcode-back" href="../../api/wte_models.html#wte.models.TimedTask">[docs]</a><span class="k">class</span> <span class="nc">TimedTask</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;The class:`~wte.models.TimedTask` represents a task that is to be run at a specific</span>
+<span class="sd">    time in the future.</span>
+
+<span class="sd">    Instances of :class:`~wte.models.TimedTask` have the following attributes:</span>
+
+<span class="sd">    * ``id`` -- The unique database identifier</span>
+<span class="sd">    * ``part_id`` -- The unique identifier of the :class:`~wte.models.Part` the</span>
+<span class="sd">      :class:`~wte.models.TimedTask` belongs to</span>
+<span class="sd">    * ``name`` -- The name of this :class:`~wte.models.TimedTask`</span>
+<span class="sd">    * ``title`` -- The title of this :class:`~wte.models.TimedTask`</span>
+<span class="sd">    * ``timestamp`` -- The timestamp at which to execute this :class:`~wte.models.TimedTask`</span>
+<span class="sd">    * ``_options`` -- The task options as JSON (do not use directly, use</span>
+<span class="sd">      :attr:`~wte.models.TimedTask.options`)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="s1">&#39;timed_tasks&#39;</span>
+
+    <span class="nb">id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">part_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;parts.id&#39;</span><span class="p">,</span>
+                                         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;timed_tasks_part_id_fk&#39;</span><span class="p">))</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Unicode</span><span class="p">(</span><span class="mi">255</span><span class="p">))</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Unicode</span><span class="p">(</span><span class="mi">255</span><span class="p">))</span>
+    <span class="n">timestamp</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">DateTime</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">_options</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">UnicodeText</span><span class="p">)</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Unicode</span><span class="p">(</span><span class="mi">255</span><span class="p">))</span>
+
+    <span class="n">__table_args__</span> <span class="o">=</span> <span class="p">(</span><span class="n">Index</span><span class="p">(</span><span class="s1">&#39;ix_timed_tasks_timestamp_status&#39;</span><span class="p">,</span> <span class="s1">&#39;timestamp&#39;</span><span class="p">,</span> <span class="s1">&#39;status&#39;</span><span class="p">),</span> <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_options</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get / Set the options for this :class:`~wte.models.TimedTask`.</span>
+
+<span class="sd">        When setting options, the new options must be of type ``dict``.</span>
+
+<span class="sd">        When getting options, the options will be returned as a ``dict``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_options_cache&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_options_cache</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_options_cache</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_options_cache</span>
+
+    <span class="k">def</span> <span class="nf">_set_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_options_cache&#39;</span><span class="p">):</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_options_cache</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">options</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_options</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_options</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({})</span>
+
+    <span class="n">options</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">_get_options</span><span class="p">,</span> <span class="n">_set_options</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the ``timedelta`` between the :class:`~wte.models.TimedTask`\&#39;s</span>
+<span class="sd">        ``timestamp`` and ``datetime.now()``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span> <span class="o">-</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+
+    <span class="n">delta</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">_get_delta</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TimedTask.menu"><a class="viewcode-back" href="../../api/wte_models.html#wte.models.TimedTask.menu">[docs]</a>    <span class="k">def</span> <span class="nf">menu</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">part</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generate the menu for this :class:`~wte.models.TimedTask`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">builder</span> <span class="o">=</span> <span class="n">MenuBuilder</span><span class="p">()</span>
+        <span class="n">builder</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;Edit&#39;</span><span class="p">,</span>
+                      <span class="n">icon</span><span class="o">=</span><span class="s1">&#39;fi-pencil&#39;</span><span class="p">)</span>
+        <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Edit&#39;</span><span class="p">,</span>
+                     <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.timed_task.edit&#39;</span><span class="p">,</span> <span class="n">pid</span><span class="o">=</span><span class="n">part</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">tid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+                     <span class="n">icon</span><span class="o">=</span><span class="s1">&#39;fi-pencil&#39;</span><span class="p">,</span>
+                     <span class="n">highlight</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">builder</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;Delete&#39;</span><span class="p">)</span>
+        <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Delete&#39;</span><span class="p">,</span>
+                     <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.timed_task.delete&#39;</span><span class="p">,</span>
+                                       <span class="n">pid</span><span class="o">=</span><span class="n">part</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                       <span class="n">tid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                       <span class="n">_query</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;csrf_token&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get_csrf_token</span><span class="p">()}),</span>
+                     <span class="n">icon</span><span class="o">=</span><span class="s1">&#39;fi-trash&#39;</span><span class="p">,</span>
+                     <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;alert post-link&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;data-wte-confirm&#39;</span><span class="p">:</span> <span class="n">confirm_delete</span><span class="p">(</span><span class="s1">&#39;timed action&#39;</span><span class="p">,</span>
+                                                               <span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+                                                               <span class="bp">False</span><span class="p">)})</span>
+        <span class="k">return</span> <span class="n">builder</span><span class="o">.</span><span class="n">generate</span><span class="p">()</span></div></div>
+</pre></div>
+        </div>
+      </div>
+      <ul class="pagination text-center" role="navigation" aria-label="Pagination">
+        
+        
+      </ul>
+    </nav>
+  </body>
+</html>
