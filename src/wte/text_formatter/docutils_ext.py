@@ -232,7 +232,7 @@ def asset_ref_role(name, rawtext, text, lineno, inliner, options={}, content=[])
                 part_ids.append(part.id)
                 part = part.parent
             data = dbsession.query(Asset, Part).join(Asset.parts).filter(and_(Part.id.in_(part_ids),
-                                                                                Asset.filename == filename)).first()
+                                                                              Asset.filename == filename)).first()
             if data:
                 asset, part = data
                 if asset.mimetype.startswith('image/'):

@@ -21,7 +21,7 @@ from pyramid.view import view_config
 from wte.decorators import (current_user, require_logged_in)
 from wte.models import (DBSession, Part, TimedTask)
 from wte.util import (unauthorised_redirect, DateValidator, TimeValidator, DynamicSchema,
-    CSRFSchema, State)
+                      CSRFSchema, State)
 from wte.views.part import create_part_crumbs
 
 

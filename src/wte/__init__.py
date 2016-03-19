@@ -12,7 +12,7 @@ the ``WSGIApplication``.
 from pyramid.config import Configurator
 from sqlalchemy import engine_from_config
 
-from wte import helpers, views, text_formatter
+from wte import views, text_formatter
 from wte.models import (DBSession, Base, check_database_version)
 
 

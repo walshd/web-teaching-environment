@@ -1281,6 +1281,7 @@ def download_part_progress(request):
     else:
         raise HTTPNotFound()
 
+
 @view_config(route_name='part.search', renderer='json')
 @current_user()
 @require_logged_in()

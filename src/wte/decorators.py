@@ -20,7 +20,7 @@ from wte.util import unauthorised_redirect
 def request_from_args(*args):
     """Returns the :class:`~pyramid.request.Request` from the function
     parameters list ``args``.
-    
+
     :param args: The parameters passed to a function
     :return: The request object
     :r_type: :class:`~pyramid.request.Request`

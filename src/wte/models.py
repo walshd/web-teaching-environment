@@ -926,7 +926,7 @@ class TimedTask(Base):
         return self.timestamp - datetime.now()
 
     delta = property(_get_delta)
-    
+
     def menu(self, request, part):
         """Generate the menu for this :class:`~wte.models.TimedTask`.
         """
