@@ -1,9 +1,0 @@
-<nav xmlns:py="http://genshi.edgewall.org/">
-  <ul class="breadcrumbs">
-    <li><a href="${r.route_url('root')}">Home</a></li>
-    <li py:for="crumb in crumbs" class="${'current' if 'current' in crumb else ''} ${'unavailable' if 'url' not in crumb else ''}">
-      <a py:if="'url' in crumb" href="${crumb['url']}">${crumb['title']}</a>
-      <span py:if="'url' not in crumb">${crumb['title']}</span>
-    </li>
-  </ul>
-</nav>
