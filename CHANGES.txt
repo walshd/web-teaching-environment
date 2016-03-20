@@ -12,9 +12,11 @@ DEV
 - *NEW*: Keyboard shortcuts in the part editor (#61)
 - *NEW*: Enable/disable line-wrapping in the part editor (#42)
 - *NEW*: New UI for adding assets and parts in the part editor (#38)
+- *NEW*: Parts can now be labelled
 - *UPDATE*: Use Kajiki as the rendering engine (#49)
 - *UPDATE*: Improve caching of permission lookups (#49)
-- *UPDATE*: The :asset: directive now automatically searches in all parent Parts
+- *UPDATE*: The :asset: directive now automatically searches in all parent parts
+- *UPDATE*: Simplified part structure: module, part, page
 
 1.1.1
 -----

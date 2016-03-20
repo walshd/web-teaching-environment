@@ -104,7 +104,7 @@ def get_user_part_progress(dbsession, user, part):
     :return: The :class:`~wte.models.UserPartProgress`
     :rtype: :class:`~wte.models.UserPartProgress`
     """
-    if part.type in [u'tutorial', u'task']:
+    if part.type == u'part':
         progress = dbsession.query(UserPartProgress).\
             filter(and_(UserPartProgress.user_id == user.id,
                         UserPartProgress.part_id == part.id)).first()
@@ -225,16 +225,16 @@ def view_part(request):
             crumbs = create_part_crumbs(request,
                                         part,
                                         None)
-            if part.type in ['module', 'tutorial', 'exercise']:
-                template_path = 'wte:templates/part/display_modes/%s.kajiki' % part.type
+            if part.type == 'page':
+                template_path = 'wte:templates/part/view/%s.kajiki' % part.parent.display_mode
             else:
-                template_path = 'wte:templates/part/display_modes/%s.kajiki' % part.parent.display_mode
+                template_path = 'wte:templates/part/view/%s.kajiki' % part.type
             return render_to_response(template_path,
                                       {'part': part,
                                        'crumbs': crumbs,
                                        'progress': progress,
-                                       'include_footer': part.type not in [u'task', u'page']},
-                                      request=request)
+                                       'include_footer': part.type != 'page'},
+                                       request=request)
         else:
             if part.type == 'module':
                 unauthorised_redirect(request)
@@ -254,16 +254,17 @@ class NewPartSchema(CSRFSchema):
     u"""The parent :class:`~wte.models.Part`"""
     order = formencode.validators.Int(if_missing=None)
     """The optional order index to create the new :class:`~wte.models.Part` at"""
-    status = formencode.All(formencode.validators.UnicodeString(not_empty=True),
+    status = formencode.All(formencode.validators.UnicodeString(if_empty=u'available', if_missing=u'available'),
                             formencode.validators.OneOf([u'unavailable',
                                                          u'available']))
     u"""The part's status"""
-    display_mode = formencode.All(formencode.validators.UnicodeString(not_empty=True),
-                                  formencode.validators.OneOf([u'default',
+    display_mode = formencode.All(formencode.validators.UnicodeString(if_empty=None, if_missing=None),
+                                  formencode.validators.OneOf([None,
                                                                u'three_pane_html',
-                                                               u'text_only',
-                                                               u'inherit']))
+                                                               u'text_only']))
     u"""The part's display mode"""
+    label = formencode.validators.UnicodeString(if_empty=None, if_missing=None)
+    """The part's label"""
 
 
 def create_part_crumbs(request, part, current=None):
@@ -327,33 +328,19 @@ def new(request):
         elif parent:
             request.session.flash('You cannot create a new module here', queue='error')
             raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
-    elif request.matchdict['new_type'] == 'tutorial':
+    elif request.matchdict['new_type'] == 'part':
         if not parent:
-            request.session.flash('You cannot create a new tutorial without a parent', queue='error')
+            request.session.flash('You cannot create a new part without a parent', queue='error')
             raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
         elif parent.type != u'module':
-            request.session.flash('You can only add tutorials to a module', queue='error')
+            request.session.flash('You can only add parts to a module', queue='error')
             raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
     elif request.matchdict['new_type'] == 'page':
         if not parent:
-            request.session.flash('You cannot create a new tutorial without a parent', queue='error')
+            request.session.flash('You cannot create a new page without a parent', queue='error')
             raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
-        elif parent.type != u'tutorial':
-            request.session.flash('You can only add pages to a tutorial', queue='error')
-            raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
-    elif request.matchdict['new_type'] == 'exercise':
-        if not parent:
-            request.session.flash('You cannot create a new exercise without a parent', queue='error')
-            raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
-        elif parent.type != u'module':
-            request.session.flash('You can only add exercises to a module', queue='error')
-            raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
-    elif request.matchdict['new_type'] == 'task':
-        if not parent:
-            request.session.flash('You cannot create a new task without a parent', queue='error')
-            raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
-        elif parent.type != u'exercise':
-            request.session.flash('You can only add tasks to a task', queue='error')
+        elif parent.type != u'part':
+            request.session.flash('You can only add pages to a part', queue='error')
             raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
     else:
         request.session.flash('You cannot create a new part of that type', queue='error')
@@ -388,8 +375,10 @@ def new(request):
                                 status=params['status'],
                                 type=request.matchdict['new_type'],
                                 display_mode=params['display_mode'],
+                                label=params['label'],
                                 parent=parent,
-                                order=max_order)
+                                order=max_order,
+                                content='')
                 if request.matchdict['new_type'] == 'module':
                     new_part.users.append(UserPartRole(user=request.current_user,
                                                        role=u'owner'))
@@ -409,18 +398,18 @@ class EditPartSchema(CSRFSchema):
     """
     title = formencode.validators.UnicodeString(not_empty=True)
     u"""The part's title"""
-    status = formencode.All(formencode.validators.UnicodeString(not_empty=True),
+    status = formencode.All(formencode.validators.UnicodeString(if_empty=u'available', if_missing=u'available'),
                             formencode.validators.OneOf([u'unavailable',
-                                                         u'available',
-                                                         u'archived']))
+                                                         u'available']))
     u"""The part's status"""
-    display_mode = formencode.All(formencode.validators.UnicodeString(not_empty=True),
-                                  formencode.validators.OneOf([u'default',
+    display_mode = formencode.All(formencode.validators.UnicodeString(if_empty=None, if_missing=None),
+                                  formencode.validators.OneOf([None,
                                                                u'three_pane_html',
-                                                               u'text_only',
-                                                               u'inherit']))
+                                                               u'text_only']))
     u"""The part's display mode"""
-    content = formencode.validators.UnicodeString(not_empty=True)
+    label = formencode.validators.UnicodeString(if_empty=None, if_missing=None)
+    """The part's label"""
+    content = formencode.validators.UnicodeString(if_missing=u'')
     u"""The ReST content"""
     child_part_id = formencode.ForEach(formencode.validators.Int, if_missing=None)
     u"""The child :class:`~wte.models.Part` ids for re-ordering"""
@@ -457,6 +446,7 @@ def edit(request):
                         part.compiled_content = compile_rst(params['content'],
                                                             request,
                                                             part=part)
+                        part.label = params['label']
                         if params['child_part_id']:
                             for idx, cpid in enumerate(params['child_part_id']):
                                 child_part = dbsession.query(Part).filter(and_(Part.id == cpid,
@@ -855,6 +845,7 @@ def export(request):
         data = {'id': len(id_mapping),
                 'type': part.type,
                 'display_mode': part.display_mode,
+                'label': part.label,
                 'title': part.title,
                 'status': part.status,
                 'order': part.order,
@@ -976,18 +967,23 @@ class ImportPartConverter(formencode.FancyValidator):
             raise formencode.api.Invalid(self.message('invalidpart', state, part_type=data['type']), value, state)
         if state.parent:
             if state.parent.type == 'module':
-                if data['type'] not in ['tutorial', 'exercise']:
+                if data['type'] not in ['tutorial', 'exercise', 'part']:
                     raise formencode.api.Invalid(self.message('invalidpart',
                                                               state,
                                                               part_type=data['type']),
                                                  value,
                                                  state)
-            elif state.parent.type == 'tutorial':
+            elif state.parent.type == 'part':
                 if data['type'] != 'page':
                     raise formencode.api.Invalid(self.message('invalidpart', state, part_type=data['type']),
                                                  value,
                                                  state)
-            elif state.parent.type == 'exercise':
+            elif state.parent.type == 'tutorial':  # Handle old "page" Part imports
+                if data['type'] != 'page':
+                    raise formencode.api.Invalid(self.message('invalidpart', state, part_type=data['type']),
+                                                 value,
+                                                 state)
+            elif state.parent.type == 'exercise':  # Handle old "task" Part imports
                 if data['type'] != 'task':
                     raise formencode.api.Invalid(self.message('invalidpart', state, part_type=data['type']),
                                                  value,
@@ -1029,9 +1025,14 @@ def import_file(request):
     * `task` -- "edit" permission on the parent :class:`~wte.models.Part`
     """
     def recursive_import(data, zip_file, id_mapping):
-        part = Part(type=data['type'],
+        part_type = data['type']
+        if part_type == 'task':
+            part_type = 'page'
+        elif part_type in ['tutorial', 'exercise']:
+            part_type = 'part'
+        part = Part(type=part_type,
                     title=data['title'],
-                    status=u'available' if data['type'] in ['page', 'task'] else u'unavailable')
+                    status=u'available' if part_type == u'page' else u'unavailable')
         if 'id' in data:
             id_mapping[unicode(data['id'])] = part
         if 'order' in data:
@@ -1041,10 +1042,12 @@ def import_file(request):
                 part.order = 0
         if 'content' in data:
             part.content = data['content']
-        if 'display_mode' in data:
+        if part_type == 'part' and 'display_mode' in data:
             part.display_mode = data['display_mode']
-        else:
+        elif part_type == 'part':
             part.display_mode = 'three_pane_html'
+        if 'label' in data:
+            part.label = data['label']
         if 'assets' in data:
             for tmpl in data['assets']:
                 if 'filename' in tmpl and 'mimetype' in tmpl and 'id' in tmpl and 'type' in tmpl:

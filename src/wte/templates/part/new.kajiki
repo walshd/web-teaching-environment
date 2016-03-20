@@ -8,27 +8,27 @@
       ${form.csrf_field()}
       <py:if test="'parent_id' in request.params"><input type="hidden" name="parent_id" value="${request.params['parent_id']}"/></py:if>
       <py:if test="'order' in request.params"><input type="hidden" name="order" value="${request.params['order']}"/></py:if>
-      <py:if test="request.matchdict['new_type'] in ['page', 'task']">
-        <input type="hidden" name="status" value="available"/>
-        <input type="hidden" name="display_mode" value="inherit"/>
-      </py:if>
-      <py:if test="request.matchdict['new_type'] == 'module'"><input type="hidden" name="display_mode" value="default"/></py:if>
       <div class="row">
         <div class="column small-12 medium-8 large-6 end">
           ${form.field('text', 'title', 'Title')}
         </div>
       </div>
-      <py:if test="request.matchdict['new_type'] not in ['page', 'task']">
+      <py:if test="request.matchdict['new_type'] != 'page'">
         <div class="row">
           <div class="column small-12 medium-8 large-6 end">
             ${form.field('select', 'status', 'Status', values=[('unavailable', 'Unavailable'), ('available', 'Available'), ('archived', 'Archived')] if request.matchdict['new_type'] == 'module' else [('unavailable', 'Unavailable'), ('available', 'Available')])}
           </div>
         </div>
-      </py:if>
-      <py:if test="request.matchdict['new_type'] in ['tutorial', 'exercise']">
         <div class="row">
           <div class="column small-12 medium-8 large-6 end">
-            ${form.field('select', 'display_mode', 'Type', values=[('text_only', 'Text Only'), ('three_pane_html', 'Text, Editor &amp; HTML Viewer')])}
+            ${form.field('text', 'label', 'Label (optional)')}
+          </div>
+        </div>
+      </py:if>
+      <py:if test="request.matchdict['new_type'] == 'part'">
+        <div class="row">
+          <div class="column small-12 medium-8 large-6 end">
+            ${form.field('select', 'display_mode', 'Page Display Mode', values=[('text_only', 'Text Only'), ('three_pane_html', 'Text, Editor &amp; HTML Viewer')])}
           </div>
         </div>
       </py:if>

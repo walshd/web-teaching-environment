@@ -32,7 +32,7 @@ from wte.helpers.frontend import confirm_delete, MenuBuilder, confirm_action
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
 
-DB_VERSION = u'510cc5b21636'
+DB_VERSION = u'465d42577343'
 """The currently required database version."""
 
 
@@ -360,6 +360,7 @@ class Part(Base):
     * ``compiled_content`` -- The compiled HTML generated from the ReST ``content``
     * ``content`` -- The ReST content for the :class:`~wte.models.Part`
     * ``display_mode`` -- The display template mode to use for the :class:`~wte.models.Part`
+    * ``label`` -- The classification label to use for the :class:`~wte.models.Part`
     * ``order`` -- The ordering position of this :class:`~wte.models.Part`
     * ``parent_id`` -- The unique database identifier of the parent :class:`~wte.models.Part`
     * ``parent`` -- The parent :class:`~wte.models.Part`
@@ -383,6 +384,7 @@ class Part(Base):
     status = Column(Unicode(255))
     type = Column(Unicode(255))
     display_mode = Column(Unicode(255))
+    label = Column(Unicode(255), index=True)
     content = Column(UnicodeText)
     compiled_content = Column(UnicodeText)
     access_rights = Column(UnicodeText)
@@ -574,7 +576,7 @@ class Part(Base):
         builder.group('Status', 'fi-lock' if self.status == 'available' else 'fi-unlock')
         if self.allow('edit', request.current_user):
             # Status Change Items
-            if self.type not in ['page', 'task']:
+            if self.type != 'page':
                 if self.status == 'available':
                     builder.menu('Make unavailable',
                                  request.route_url('part.change_status',
@@ -628,15 +630,12 @@ class Part(Base):
                                  icon='fi-key')
             builder.group('add', 'fi-plus')
             if self.type == 'module':
-                # Add Tutorial Menu Item
-                builder.menu('Add Tutorial',
-                             request.route_url('part.new', new_type='tutorial', _query=[('parent_id', self.id)]),
+                # Add Part Menu Item
+                builder.menu('Add Part',
+                             request.route_url('part.new', new_type='part', _query=[('parent_id', self.id)]),
+                             icon = 'fi-plus',
                              highlight=True)
-                # Add Exercise Menu Item
-                builder.menu('Add Exercise',
-                             request.route_url('part.new', new_type='exercise', _query=[('parent_id', self.id)]),
-                             highlight=True)
-            if self.type == 'tutorial':
+            if self.type == 'part':
                 builder.menu('Add Page',
                              request.route_url('part.new', new_type='page', _query=[('parent_id', self.id)]),
                              icon='fi-plus',
@@ -644,15 +643,8 @@ class Part(Base):
                 builder.menu('Add Template',
                              request.route_url('asset.new', pid=self.id, new_type='template'),
                              highlight=True)
-            if self.type == 'exercise':
-                builder.menu('Add Task',
-                             request.route_url('part.new', new_type='task', _query=[('parent_id', self.id)]),
-                             icon='fi-plus',
-                             highlight=True)
-                builder.menu('Add Template',
-                             request.route_url('asset.new', pid=self.id, new_type='template'),
-                             highlight=True)
-            if self.type in ['page', 'task']:
+            if self.type == 'page':
+                # Add page bfore / after Menu Item
                 builder.menu('Add Page before',
                              request.route_url('part.new',
                                                new_type='page',
@@ -666,13 +658,11 @@ class Part(Base):
                                                        ('order', self.order + 1)]),
                              highlight=True)
             # Add Asset Menu Item
-            if self.type in ['module', 'tutorial', 'exercise', 'task']:
-                builder.menu('Add Asset',
-                             request.route_url('asset.new', pid=self.id, new_type='asset'))
-
+            builder.menu('Add Asset',
+                         request.route_url('asset.new', pid=self.id, new_type='asset'))
         builder.group('Import / Export')
         if self.allow('edit', request.current_user):
-            if self.type in ['module', 'tutorial', 'exercise']:
+            if self.type in ['module', 'part']:
                 # Import Menu Item
                 builder.menu('Import',
                              request.route_url('part.import', _query=[('parent_id', self.id)]))

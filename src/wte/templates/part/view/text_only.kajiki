@@ -15,15 +15,6 @@
       ${literal(part.compiled_content.replace('\n\n', '\n&amp;nbsp;\n'))}
       ${nav.page_pagination(part)}
     </div>
-    <section py:if="part.templates and part.has_role('owner', request.current_user)">
-      <h2>Templates</h2>
-      <ul class="no-symbol">
-        <li py:for="asset in part.templates">
-          <div class="float-right">${menu.menubar(asset.menu(request, part))}</div>
-          <h3><a href="${request.route_url('asset.view', mid=-1, pid=part.id, filename=asset.filename)}">${asset.filename} (${asset.mimetype})</a></h3>
-        </li>
-      </ul>
-    </section>
     <section py:if="part.assets and part.has_role('owner', request.current_user)">
       <h2>Assets</h2>
       <ul class="no-symbol">

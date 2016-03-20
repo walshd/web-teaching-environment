@@ -356,3 +356,54 @@ def template_for_part(part):
     elif part_type in DISPLAY_MODES['default']:
         return 'default/%s' % (DISPLAY_MODES['default'][part_type])
     return None
+
+
+def natural_list(items, separator=', ', final_separator=' & '):
+    """Returns a string representation of the ``items`` list. For an empty list
+    or a single item the value is returned. For a list of two items, the items
+    are joined together using the ``final_separator``. For a list of more than
+    two items, the all but the last item are joined using ``separator`` and the
+    last item is joined using ``final_separator``.
+    
+    :param items: The list of items to join
+    :type items: :func:`list`
+    :param separator: The separator to use when more than 2 items are joined.
+                      Defaults to ', '.
+    :type separator: :func:`unicode`
+    :param final_separator: The separator to use for the last two items in the list.
+                            Defaults to ' & '.
+    :type separator: :func:`unicode`
+    :return: A string representation of the list
+    :r_type: :func:`unicode`
+    """
+    if len(items) == 0:
+        return ''
+    if len(items) == 1:
+        return items[0]
+    elif len(items) == 2:
+        return final_separator.join(items)
+    else:
+        return '%s %s %s' % (separator.join(items[:-1]), final_separator, items[-1])
+
+
+def set_list(items):
+    """Returns a string representation of the unique items in the ``items``. The unique items
+    are joined using :func:`~wte.helpers.frontend.natural_list`. The order of the unique
+    items is the order in which they first appear in the source ``items`` . The string value
+    for each unique item will be pluralised if the item occurs more than once in the list.
+    
+    :param items: The list of items to generate the unique items for
+    :type istems: :func:`list`
+    :return: A string containing all unique items
+    :r_type: :func:`unicode`
+    """
+    categories = []
+    counts = []
+    for item in items:
+        if item in categories:
+            idx = categories.index(item)
+            counts[idx] = counts[idx] + 1
+        else:
+            categories.append(item)
+            counts.append(1)
+    return natural_list([inflector.plural(category, count) for (category, count) in zip(categories, counts)])
