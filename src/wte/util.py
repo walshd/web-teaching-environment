@@ -336,3 +336,26 @@ def paginate(request, query, start, rows, query_params=None):
     else:
         pages.append({'type': 'next'})
     return pages
+
+
+def ordered_counted_set(items):
+    """Returns a list of ``(item, count)`` tuples derived from the ``items``.
+    Each unique item is listed once with the number of times it appears in
+    the ``items`` The unique items are ordered in the same order in which
+    they appear in the ``items``.
+    
+    :param items: The list of items to create the ordered, counted set for
+    :type items: :func:`list`
+    :return: A list of unique items with their frequency counts
+    :r_type: :func:`list` of :func:`tuple`
+    """
+    categories = []
+    counts = []
+    for item in items:
+        if item in categories:
+            idx = categories.index(item)
+            counts[idx] = counts[idx] + 1
+        else:
+            categories.append(item)
+            counts.append(1)
+    return zip(categories, counts)

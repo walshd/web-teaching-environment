@@ -12,11 +12,11 @@
     <div class="rest">${literal(part.compiled_content)}</div>
     <py:if test="part.register_state(request.current_user) == 'already_registered'">
       <section py:if="part.children">
-        <h2>${set_list([child.label.title() if child.label else 'Part' for child in part.children])}</h2>
+        <h2>${set_list(labels)}</h2>
         <ul class="no-symbol">
           <li py:for="child in part.children" py:if="child.allow('view', request.current_user)">
             <div class="float-right">${menu.menubar(child.menu(request))}</div>
-            <h3><a href="${request.route_url('part.view', pid=child.id)}">${child.title}</a> <small py:if="child.label" class="label secondary">${child.label.title()}</small> <small py:if="child.status != 'available'" class="label">${child.status.title()}</small></h3>
+            <h3><a href="${request.route_url('part.view', pid=child.id)}">${child.title}</a> <small py:if="labels != 1 and child.label" class="label secondary">${child.label.title()}</small> <small py:if="child.status != 'available'" class="label">${child.status.title()}</small></h3>
             <div class="rest">${literal(child.summary)}</div>
           </li>
         </ul>

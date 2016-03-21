@@ -5,6 +5,7 @@
   </py:block>
   <py:block name="content">
     <py:import href="wte:templates/helpers/menu.kajiki" alias="menu"/>
+    <?py from wte.helpers.frontend import set_list ?>
     <div class="float-right">${menu.menubar(part.menu(request))}</div>
     <h1>${part.title} <small py:if="part.status != 'available'" class="label">${part.status.title()}</small></h1>
     <py:if test="part.has_role('student', request.current_user)">
@@ -28,11 +29,11 @@
     </py:if><py:else>
       <div class="rest">${literal(part.compiled_content)}</div>
       <section py:if="part.children">
-        <h2>Pages</h2>
+        <h2>${set_list(labels)}</h2>
         <ul class="no-symbol">
           <li py:for="child in part.children" py:if="child.allow('view', request.current_user)">
             <div class="float-right">${menu.menubar(child.menu(request))}</div>
-            <h3><a href="${request.route_url('part.view', pid=child.id)}">${child.title}</a> <small py:if="child.status != 'available'" class="label">${child.status.title()}</small></h3>
+            <h3><a href="${request.route_url('part.view', pid=child.id)}">${child.title}</a> <small py:if="len(labels) != 1 and child.label" class="label secondary">${child.label.title()}</small> <small py:if="child.status != 'available'" class="label">${child.status.title()}</small></h3>
             <div class="rest">${literal(child.summary)}</div>
           </li>
         </ul>

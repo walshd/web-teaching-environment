@@ -387,23 +387,13 @@ def natural_list(items, separator=', ', final_separator=' & '):
 
 
 def set_list(items):
-    """Returns a string representation of the unique items in the ``items``. The unique items
-    are joined using :func:`~wte.helpers.frontend.natural_list`. The order of the unique
-    items is the order in which they first appear in the source ``items`` . The string value
-    for each unique item will be pluralised if the item occurs more than once in the list.
+    """Returns a string representation of the unique items in the ``items``. The
+    ``items`` must be a :func:`list` of :func:`tuple` ``(item, count)`` as returned
+    by :func:`~wte.util.ordered_counted_set`.
     
-    :param items: The list of items to generate the unique items for
-    :type istems: :func:`list`
+    :param items: The list of items to transform into a string
+    :type istems: :func:`list` of :func:`tuple`
     :return: A string containing all unique items
     :r_type: :func:`unicode`
     """
-    categories = []
-    counts = []
-    for item in items:
-        if item in categories:
-            idx = categories.index(item)
-            counts[idx] = counts[idx] + 1
-        else:
-            categories.append(item)
-            counts.append(1)
-    return natural_list([inflector.plural(category, count) for (category, count) in zip(categories, counts)])
+    return natural_list([inflector.plural(category, count) for (category, count) in items])

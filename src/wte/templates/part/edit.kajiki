@@ -52,6 +52,8 @@
               ${form.field('select', 'status', 'Status', values=[('unavailable', 'Unavailable'), ('available', 'Available'), ('archived', 'Archived')] if part.type == 'module' else [('unavailable', 'Unavailable'), ('available', 'Available')], value=part.status)}
             </div>
           </div>
+        </py:if>
+        <py:if test="request.matchdict['new_type'] != 'module'">
           <div class="row">
             <div class="column small-12">
               ${form.field('text', 'label', 'Label (optional)', value=part.label if part.label else '')}

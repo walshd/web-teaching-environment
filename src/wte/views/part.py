@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from sqlalchemy.util._collections import ordered_column_set
 u"""
 #####################################
 :mod:`wte.views.part` -- Part Backend
@@ -31,7 +32,7 @@ from zipfile import ZipFile, ZIP_DEFLATED, ZIP_STORED, BadZipfile
 from wte.decorators import (current_user, require_logged_in, require_method)
 from wte.models import (DBSession, Part, UserPartRole, Asset, UserPartProgress, User)
 from wte.text_formatter import compile_rst
-from wte.util import (unauthorised_redirect, State, CSRFSchema)
+from wte.util import (unauthorised_redirect, State, CSRFSchema, ordered_counted_set)
 
 
 def init(config):
@@ -229,11 +230,13 @@ def view_part(request):
                 template_path = 'wte:templates/part/view/%s.kajiki' % part.parent.display_mode
             else:
                 template_path = 'wte:templates/part/view/%s.kajiki' % part.type
+            labels = [child.label.title() if child.label else child.type.title() for child in part.children]
             return render_to_response(template_path,
                                       {'part': part,
                                        'crumbs': crumbs,
                                        'progress': progress,
-                                       'include_footer': part.type != 'page'},
+                                       'include_footer': part.type != 'page',
+                                       'labels': ordered_counted_set(labels)},
                                        request=request)
         else:
             if part.type == 'module':
@@ -1048,6 +1051,9 @@ def import_file(request):
             part.display_mode = 'three_pane_html'
         if 'label' in data:
             part.label = data['label']
+        else:
+            if data['type'] in ['tutorial', 'exercise', 'page', 'task']:
+                part.label = data['type'].title()
         if 'assets' in data:
             for tmpl in data['assets']:
                 if 'filename' in tmpl and 'mimetype' in tmpl and 'id' in tmpl and 'type' in tmpl:
