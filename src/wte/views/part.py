@@ -446,9 +446,17 @@ def edit(request):
                         part.status = params['status']
                         part.display_mode = params['display_mode']
                         part.content = params['content']
-                        part.compiled_content = compile_rst(params['content'],
-                                                            request,
-                                                            part=part)
+                        try:
+                            part.compiled_content = compile_rst(params['content'],
+                                                                request,
+                                                                part=part)
+                        except Exception as e:
+                            msg = e.message.replace('<string>:', 'Invalid ReST: Line ').replace('(SEVERE/4) ', '')
+                            msg = msg[:msg.find('\n')]
+                            raise formencode.Invalid('Invalid ReST',
+                                                     params['content'],
+                                                     None,
+                                                     error_dict={'content': msg})
                         part.label = params['label']
                         if params['child_part_id']:
                             for idx, cpid in enumerate(params['child_part_id']):
@@ -464,6 +472,7 @@ def edit(request):
                     dbsession.add(part)
                     raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
                 except formencode.Invalid as e:
+                    dbsession.add(part)
                     return {'errors': e.error_dict,
                             'values': request.params,
                             'part': part,
@@ -610,8 +619,19 @@ def preview(request):
     if part:
         if part.allow('edit', request.current_user):
             if 'content' in request.params:
-                content = compile_rst(request.params['content'], request, part=part)
-                content = content.replace(u'§§§§§§§', '<span id="focus"></span>')
+                try :
+                    content = compile_rst(request.params['content'], request, part=part)
+                except Exception as e:
+                    content = ['<div class="callout alert"><p>']
+                    for line in e.message.split('\n'):
+                        if line:
+                            content.append(line)
+                            content.append('<br />')
+                        else:
+                            content.append('</p><p>')
+                    content.append('</p></div>')
+                    content = ''.join(content).replace('<br /></p>', '</p>').\
+                        replace('<string>:', 'Line ').replace('(SEVERE/4) ', '')
                 return {'content': content}
             else:
                 raise HTTPNotFound()

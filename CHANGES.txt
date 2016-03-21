@@ -17,6 +17,7 @@ DEV
 - *UPDATE*: Improve caching of permission lookups (#49)
 - *UPDATE*: The :asset: directive now automatically searches in all parent parts
 - *UPDATE*: Simplified part structure: module, part, page
+- *UPDATE*: Show an error message if the part content is broken (#62)
 
 1.1.1
 -----
