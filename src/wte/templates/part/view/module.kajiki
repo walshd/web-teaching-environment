@@ -16,7 +16,7 @@
         <ul class="no-symbol">
           <li py:for="child in part.children" py:if="child.allow('view', request.current_user)">
             <div class="float-right">${menu.menubar(child.menu(request))}</div>
-            <h3><a href="${request.route_url('part.view', pid=child.id)}">${child.title}</a> <small py:if="labels != 1 and child.label" class="label secondary">${child.label.title()}</small> <small py:if="child.status != 'available'" class="label">${child.status.title()}</small></h3>
+            <h3><a href="${request.route_url('part.view', pid=child.id)}">${child.title}</a> <small py:if="len(labels) != 1 and child.label" class="label secondary">${child.label.title()}</small> <small py:if="child.status != 'available'" class="label">${child.status.title()}</small></h3>
             <div class="rest">${literal(child.summary)}</div>
           </li>
         </ul>
