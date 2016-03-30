@@ -574,7 +574,8 @@ def view(request):
         if user.allow('view', request.current_user):
             return {'user': user,
                     'crumbs': create_user_crumbs(request, [{'title': user.display_name,
-                                                            'url': request.route_url('user.view', uid=user.id)}])}
+                                                            'url': request.route_url('user.view', uid=user.id)}]),
+                    'help': ['user', 'user', 'profile.html']}
         else:
             unauthorised_redirect(request)
     else:
@@ -630,9 +631,11 @@ def edit(request):
                     return {'e': e.error_dict,
                             'values': request.params,
                             'user': user,
-                            'crumbs': crumbs}
+                            'crumbs': crumbs,
+                            'help': ['user', 'user', 'profile.html']}
             return {'user': user,
-                    'crumbs': crumbs}
+                    'crumbs': crumbs,
+                    'help': ['user', 'user', 'profile.html']}
         else:
             unauthorised_redirect(request)
     else:

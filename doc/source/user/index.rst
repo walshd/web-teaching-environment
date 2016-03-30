@@ -10,6 +10,6 @@ Environment and covers instructions for both :doc:`teacher/index` and
    :maxdepth: 2
 
    user/index
-   teacher/index
    learner/index
+   teacher/index
    
