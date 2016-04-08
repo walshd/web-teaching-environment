@@ -7,9 +7,10 @@
     <link rel="stylesheet" href="../../../_static/pygments.css"/>
     <title>wte.helpers.frontend</title>
   </head>
-  <body>
+  <body class="help">
     <nav>
       <ul class="breadcrumbs">
+        <li><a href="../../../index.html">Home</a></li>
         
           <li><a href="../../index.html">Module code</a></li>
         
@@ -380,6 +381,47 @@
     <span class="k">elif</span> <span class="n">part_type</span> <span class="ow">in</span> <span class="n">DISPLAY_MODES</span><span class="p">[</span><span class="s1">&#39;default&#39;</span><span class="p">]:</span>
         <span class="k">return</span> <span class="s1">&#39;default/</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">DISPLAY_MODES</span><span class="p">[</span><span class="s1">&#39;default&#39;</span><span class="p">][</span><span class="n">part_type</span><span class="p">])</span>
     <span class="k">return</span> <span class="bp">None</span></div>
+
+
+<div class="viewcode-block" id="natural_list"><a class="viewcode-back" href="../../../api/wte_helpers_frontend.html#wte.helpers.frontend.natural_list">[docs]</a><span class="k">def</span> <span class="nf">natural_list</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">separator</span><span class="o">=</span><span class="s1">&#39;, &#39;</span><span class="p">,</span> <span class="n">final_separator</span><span class="o">=</span><span class="s1">&#39; &amp; &#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a string representation of the ``items`` list. For an empty list</span>
+<span class="sd">    or a single item the value is returned. For a list of two items, the items</span>
+<span class="sd">    are joined together using the ``final_separator``. For a list of more than</span>
+<span class="sd">    two items, the all but the last item are joined using ``separator`` and the</span>
+<span class="sd">    last item is joined using ``final_separator``.</span>
+<span class="sd">    </span>
+<span class="sd">    :param items: The list of items to join</span>
+<span class="sd">    :type items: :func:`list`</span>
+<span class="sd">    :param separator: The separator to use when more than 2 items are joined.</span>
+<span class="sd">                      Defaults to &#39;, &#39;.</span>
+<span class="sd">    :type separator: :func:`unicode`</span>
+<span class="sd">    :param final_separator: The separator to use for the last two items in the list.</span>
+<span class="sd">                            Defaults to &#39; &amp; &#39;.</span>
+<span class="sd">    :type separator: :func:`unicode`</span>
+<span class="sd">    :return: A string representation of the list</span>
+<span class="sd">    :r_type: :func:`unicode`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;&#39;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">final_separator</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">separator</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">items</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="n">final_separator</span><span class="p">,</span> <span class="n">items</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="set_list"><a class="viewcode-back" href="../../../api/wte_helpers_frontend.html#wte.helpers.frontend.set_list">[docs]</a><span class="k">def</span> <span class="nf">set_list</span><span class="p">(</span><span class="n">items</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a string representation of the unique items in the ``items``. The</span>
+<span class="sd">    ``items`` must be a :func:`list` of :func:`tuple` ``(item, count)`` as returned</span>
+<span class="sd">    by :func:`~wte.util.ordered_counted_set`.</span>
+<span class="sd">    </span>
+<span class="sd">    :param items: The list of items to transform into a string</span>
+<span class="sd">    :type istems: :func:`list` of :func:`tuple`</span>
+<span class="sd">    :return: A string containing all unique items</span>
+<span class="sd">    :r_type: :func:`unicode`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">natural_list</span><span class="p">([</span><span class="n">inflector</span><span class="o">.</span><span class="n">plural</span><span class="p">(</span><span class="n">category</span><span class="p">,</span> <span class="n">count</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">category</span><span class="p">,</span> <span class="n">count</span><span class="p">)</span> <span class="ow">in</span> <span class="n">items</span><span class="p">])</span></div>
 </pre></div>
         </div>
       </div>

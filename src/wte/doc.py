@@ -32,8 +32,14 @@ def link_role(role, rawtext, text, node_id, inliner):
         return [nodes.inline(rawtext, text, classes=['text-link'])], []
     elif role == 'topbar_link':
         return [nodes.inline(rawtext, text, classes=['topbar-link'])], []
+    elif role == 'dropdown_link':
+        return [nodes.inline(rawtext, text, classes=['dropdown-link'])], []
     else:
         return [], []
+
+
+def icon_role(role, rawtext, text, node_id, inliner):
+    return [nodes.inline(rawtext, '', classes=[text])], []
 
 
 def setup(app):
@@ -44,3 +50,5 @@ def setup(app):
     app.add_role('alert_btn', button_role)
     app.add_role('text_link', link_role)
     app.add_role('topbar_link', link_role)
+    app.add_role('dropdown_link', link_role)
+    app.add_role('icon', icon_role)

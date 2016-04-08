@@ -10,6 +10,5 @@ Teaching Environment as a learner.
 
    modules
    take_module
-   tutorials
-   exercises
-   projects
+   my_modules
+   module

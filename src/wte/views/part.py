@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from sqlalchemy.util._collections import ordered_column_set
 u"""
 #####################################
 :mod:`wte.views.part` -- Part Backend
@@ -192,6 +191,7 @@ def list_parts(request):
                        'url': request.route_url('part.list',
                                                 _query={'user_id': request.params['user_id']}),
                        'current': True}]
+            help_path = ['user', 'learner', 'my_modules.html']
         else:
             raise HTTPNotFound()
     else:
@@ -201,11 +201,13 @@ def list_parts(request):
         missing = 'There are currently no modules available.'
         crumbs = [{'title': 'Modules', 'url': request.route_url('part.list'), 'current': True}]
         has_archived = False
+        help_path = ['user', 'learner', 'modules.html']
     return {'parts': parts,
             'title': title,
             'missing': missing,
             'crumbs': crumbs,
-            'has_archived': has_archived}
+            'has_archived': has_archived,
+            'help': help_path}
 
 
 @view_config(route_name='part.view')
@@ -228,15 +230,21 @@ def view_part(request):
                                         None)
             if part.type == 'page':
                 template_path = 'wte:templates/part/view/%s.kajiki' % part.parent.display_mode
+                if part.parent.display_mode == 'three_pane_html':
+                    help_path = ['user', 'learner', 'html_editor_part.html']
+                else:
+                    help_path = ['user', 'learner', 'text_part.html']
             else:
                 template_path = 'wte:templates/part/view/%s.kajiki' % part.type
+                help_path = ['user', 'learner', 'module.html']
             labels = [child.label.title() if child.label else child.type.title() for child in part.children]
             return render_to_response(template_path,
                                       {'part': part,
                                        'crumbs': crumbs,
                                        'progress': progress,
                                        'include_footer': part.type != 'page',
-                                       'labels': ordered_counted_set(labels)},
+                                       'labels': ordered_counted_set(labels),
+                                       'help': help_path},
                                        request=request)
         else:
             if part.type == 'module':

@@ -55,8 +55,6 @@ def help_page(request):
     url = 'templates/help/%s' % '/'.join(request.matchdict['path'])
     if url.endswith('/'):
         url = '%sindex.html' % url
-    if url.endswith('.html') and 'user' not in url:
-        raise HTTPSeeOther(request.route_url('help', path=['user', 'index.html']))
     try:
         mimetype = guess_type(url)
         if mimetype:

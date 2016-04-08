@@ -202,8 +202,35 @@ button::-moz-focus-inner {
       padding-right: 0.6rem;
       padding-bottom: 0.4625rem;
       padding-left: 0.6rem;}
+.dropdown-link {
+      display: inline-block;
+      border: 1px solid #cacaca;
+      padding: 0 0.3rem;
+}
+.help #viewer {
+    border: none;
+    box-shadow: none;
+    padding: 0;
+}
+.admonition {
+    margin: 0 0 1rem 0;
+    padding: 1rem;
+    border: 1px solid rgba(10, 10, 10, 0.25);
+    border-radius: 0;
+    position: relative;
+    color: #0a0a0a;
+    background-color: white;
+}
+.admonition.note {
+    background-color: #ebebeb;
+}
+.admonition.warning {
+    background-color: #fff3d9;
+}
+.admonition p.admonition-title {
+    font-size: 1.25rem;
+}
 
 dt {
     font-weight: bold;
 }
-

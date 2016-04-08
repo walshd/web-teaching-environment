@@ -7,6 +7,5 @@ information. To register for the module, click on the :primary_btn:`Register`
 button at the bottom of the module information.
 
 You will be asked to confirm that you wish to register for the module. After
-you confirm your registration, you will be taken back to the module information
-page. This time, you will see the list of :doc:`tutorials` and :doc:`exercises`
-that make up the module.
+you confirm your registration, you will be taken back to the :doc:`module information <module>`
+page, but this time you will see all of the module's sections.

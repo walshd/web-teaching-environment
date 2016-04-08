@@ -7,9 +7,10 @@
     <link rel="stylesheet" href="{{ pathto('_static/pygments.css', 1) }}"/>
     <title>{{ title }}</title>
   </head>
-  <body>
+  <body class="help">
     <nav>
       <ul class="breadcrumbs">
+        <li><a href="{{ pathto('index') }}">Home</a></li>
         {% for item in parents %}
           <li><a href="{{ item.link }}">{{ item.title }}</a></li>
         {% endfor %}
