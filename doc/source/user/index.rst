@@ -7,12 +7,9 @@ Environment and covers instructions for both :doc:`teacher/index` and
 :doc:`learner/index`.
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
-   register
-   login
-   forgotten_password
-   profile
-   teacher/index
+   user/index
    learner/index
+   teacher/index
    

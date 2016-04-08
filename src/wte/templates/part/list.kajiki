@@ -1,0 +1,42 @@
+<py:extends href="wte:templates/layout/centred.kajiki">
+  <py:block name="title">${title}</py:block>
+  <py:block name="content">
+    <py:import href="wte:templates/helpers/menu.kajiki" alias="menu"/>
+    <py:import href="wte:templates/helpers/form.kajiki" alias="form"/>
+    <div py:if="request.current_user.has_permission('modules.create')" class="float-right">${menu.menubar([
+                {'items': [{'visible': True,
+                            'icon': 'fi-plus',
+                            'label': 'New Module',
+                            'attrs': {'href': request.route_url('part.new', new_type='module'),
+                                      'title': 'Create a new module'}},
+                           {'visible': True,
+                            'icon': 'fi-upload',
+                            'label': 'Import Module',
+                            'attrs': {'href': request.route_url('part.import'),
+                                      'title': 'Import a previously exported module'}}]},
+                ])}</div>
+    <h1>${title}</h1>
+    <nav py:if="has_archived">
+      <ul class="menu align-right">
+        <li py:attrs="{'class': 'active' if 'status' in request.params and request.params['status'] == 'all' else None}"><a href="${request.route_url('part.list', _query=[('user_id', request.params['user_id']), ('status', 'all')])}">All</a></li>
+        <li py:attrs="{'class': 'active' if 'status' in request.params and request.params['status'] == 'archived' else None}"><a href="${request.route_url('part.list', _query=[('user_id', request.params['user_id']), ('status', 'archived')])}">Archived</a></li>
+        <li py:attrs="{'class': 'active' if 'status' not in request.params else None}"><a href="${request.route_url('part.list', _query=[('user_id', request.params['user_id'])])}">Current</a></li>
+        <li class="menu-text">Show:</li>
+      </ul>
+    </nav>
+    <ul class="no-symbol">
+      <li py:for="part in parts">
+        <div class="float-right">${menu.menubar(part.menu(request))}</div>
+        <h2>
+          <py:if test="part.allow('view', request.current_user)">
+            <a href="${request.route_url('part.view', pid=part.id)}">${part.title}</a>
+          </py:if><py:else>
+            <span>${part.title}</span>
+          </py:else>
+          <small py:if="part.status != 'available'" class="label">${part.status.title()}</small>
+        </h2>
+        <div py:if="part.compiled_content" class="rest">${literal(part.summary)}</div>
+      </li>
+    </ul>
+  </py:block>
+</py:extends>

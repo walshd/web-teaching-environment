@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="../../../static/css/application.min.css"/>
+    <link rel="stylesheet" href="../../_static/default.css"/>
+    <link rel="stylesheet" href="../../_static/override.css"/>
+    <link rel="stylesheet" href="../../_static/pygments.css"/>
+    <title>wte.util</title>
+  </head>
+  <body>
+    <nav>
+      <ul class="breadcrumbs">
+        
+          <li><a href="../index.html">Module code</a></li>
+        
+          <li><a href="../wte.html">wte</a></li>
+        
+        <li>wte.util</li>
+      </ul>
+      <div class="row">
+        <div class="column small-12">
+          <h1>Source code for wte.util</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">u&quot;&quot;&quot;</span>
+<span class="sd">####################################</span>
+<span class="sd">:mod:`wte.util` -- Utility functions</span>
+<span class="sd">####################################</span>
+
+<span class="sd">The :mod:`~wte.util` module provides various utility objects and</span>
+<span class="sd">functions.</span>
+
+<span class="sd">.. moduleauthor:: Mark Hall &lt;mark.hall@work.room3b.eu&gt;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">asset</span>
+<span class="kn">import</span> <span class="nn">formencode</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">smtplib</span>
+
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">pyramid.httpexceptions</span> <span class="kn">import</span> <span class="n">HTTPSeeOther</span>
+<span class="kn">from</span> <span class="nn">email.mime.text</span> <span class="kn">import</span> <span class="n">MIMEText</span>
+<span class="kn">from</span> <span class="nn">email.utils</span> <span class="kn">import</span> <span class="n">formatdate</span>
+
+
+<div class="viewcode-block" id="State"><a class="viewcode-back" href="../../api/wte_util.html#wte.util.State">[docs]</a><span class="k">class</span> <span class="nc">State</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;The :class:`~wte.util.State` provides a blank state object for use</span>
+<span class="sd">    with Formencode validation. Any parameters passed to the constructor are</span>
+<span class="sd">    automatically set as attributes of the :class:`~wte.util.State`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">u&quot;&quot;&quot;Any parameters passed to the constructor are automatically set as</span>
+<span class="sd">        attributes of the :class:`~wte.util.State`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CSRFValidator"><a class="viewcode-back" href="../../api/wte_util.html#wte.util.CSRFValidator">[docs]</a><span class="k">class</span> <span class="nc">CSRFValidator</span><span class="p">(</span><span class="n">formencode</span><span class="o">.</span><span class="n">FancyValidator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Validator that checks a value against the Cross-Site Request Forgery</span>
+<span class="sd">    token stored in the user&#39;s session.&quot;&quot;&quot;</span>
+
+    <span class="n">messages</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;invalid_csrf_token&#39;</span><span class="p">:</span> <span class="s1">&#39;The CSRF token is invalid. This might indicate a malicious attack.&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;missing&#39;</span><span class="p">:</span> <span class="s1">&#39;No CSRF token was provided. This might indicate a malicious attack.&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;empty&#39;</span><span class="p">:</span> <span class="s1">&#39;An empty CSRF token was provided. This might indicate a malicious attack.&#39;</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_validate_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;If a :pyramid:class:`request.Request` is set in the ``state``, then</span>
+<span class="sd">        checks whether the ``value`` matches the CSRF token stored in the request.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="s1">&#39;request&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get_csrf_token</span><span class="p">()</span> <span class="o">!=</span> <span class="n">value</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">formencode</span><span class="o">.</span><span class="n">Invalid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">(</span><span class="s1">&#39;invalid_csrf_token&#39;</span><span class="p">,</span> <span class="n">state</span><span class="p">),</span>
+                                         <span class="n">value</span><span class="p">,</span>
+                                         <span class="n">state</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CSRFSchema"><a class="viewcode-back" href="../../api/wte_util.html#wte.util.CSRFSchema">[docs]</a><span class="k">class</span> <span class="nc">CSRFSchema</span><span class="p">(</span><span class="n">formencode</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The class:`wte.util.CSRFSchema` is a base :class:`formencode.Schema`</span>
+<span class="sd">    that includes Cross-Site Request Forgery detection.</span>
+
+<span class="sd">    It should be used as the base class for all specific request schemas.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">csrf_token</span> <span class="o">=</span> <span class="n">CSRFValidator</span><span class="p">(</span><span class="n">strip</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">not_empty</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DynamicSchema"><a class="viewcode-back" href="../../api/wte_util.html#wte.util.DynamicSchema">[docs]</a><span class="k">class</span> <span class="nc">DynamicSchema</span><span class="p">(</span><span class="n">formencode</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;The :class:`~wte.util.DynamicSchema` provides a dynamic</span>
+<span class="sd">    :class:`~formencode.schema.Schema` for which the validation fields are</span>
+<span class="sd">    defined from the ``list`` of (field-name,</span>
+<span class="sd">    :class:`~formencode.api.FancyValidator`) pairs passed to the</span>
+<span class="sd">    constructor.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">accept_iterator</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">formencode</span><span class="o">.</span><span class="n">Schema</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">fields</span><span class="p">:</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">validator</span><span class="p">)</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_field</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">validator</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DateValidator"><a class="viewcode-back" href="../../api/wte_util.html#wte.util.DateValidator">[docs]</a><span class="k">class</span> <span class="nc">DateValidator</span><span class="p">(</span><span class="n">formencode</span><span class="o">.</span><span class="n">FancyValidator</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;The :class:`~wte.util.DateValidator` provides date validation and</span>
+<span class="sd">    conversion from the formats &quot;YYYY-MM-DD&quot; or &quot;DD/MM/YYYY&quot; to a python</span>
+<span class="sd">    :class:`datetime.date`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">messages</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;invalid_format&#39;</span><span class="p">:</span> <span class="s1">&#39;Please enter a date either as YYYY-MM-DD or DD/MM/YYYY&#39;</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_convert_to_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="sd">u&quot;&quot;&quot;Try to convert from either &quot;YYYY-MM-DD&quot; or &quot;DD-MM-YYYY&quot; to a</span>
+<span class="sd">        :class:`datetime.date`. Raises :class:`~formencode.api.Invalid` if the</span>
+<span class="sd">        conversion fails.</span>
+
+<span class="sd">        :param value: The `unicode` value to convert</span>
+<span class="sd">        :param type: `unicode`</span>
+<span class="sd">        :return: The converted date</span>
+<span class="sd">        :return_type: :class:`datetime.date`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s1">&#39;</span><span class="si">%d</span><span class="s1">/%m/%Y&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">formencode</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">Invalid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">(</span><span class="s1">&#39;invalid_format&#39;</span><span class="p">,</span> <span class="n">state</span><span class="p">),</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TimeValidator"><a class="viewcode-back" href="../../api/wte_util.html#wte.util.TimeValidator">[docs]</a><span class="k">class</span> <span class="nc">TimeValidator</span><span class="p">(</span><span class="n">formencode</span><span class="o">.</span><span class="n">FancyValidator</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;The :class:`~wte.util.DateValidator` provides time validation and</span>
+<span class="sd">    conversion from the format &quot;HH:MM&quot; to a python :class:`datetime.time`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">messages</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;invalid_format&#39;</span><span class="p">:</span> <span class="s1">&#39;Please enter a time as HH:MM&#39;</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_convert_to_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="sd">u&quot;&quot;&quot;Try to convert from &quot;HH:MM&quot; to a :class:`datetime.time`. Raises</span>
+<span class="sd">        :class:`~formencode.api.Invalid` if the conversion fails.</span>
+
+<span class="sd">        :param value: The `unicode` value to convert</span>
+<span class="sd">        :param type: `unicode`</span>
+<span class="sd">        :return: The converted time</span>
+<span class="sd">        :return_type: :class:`datetime.time`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s1">&#39;%H:%M&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">formencode</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">Invalid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">(</span><span class="s1">&#39;invalid_format&#39;</span><span class="p">,</span> <span class="n">state</span><span class="p">),</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="unauthorised_redirect"><a class="viewcode-back" href="../../api/wte_util.html#wte.util.unauthorised_redirect">[docs]</a><span class="k">def</span> <span class="nf">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">redirect_to</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Provides standardised handling of &quot;unauthorised&quot; redirection. Depending</span>
+<span class="sd">    on whether the user is currently logged in, it will set the appropriate</span>
+<span class="sd">    error message into the session flash and redirect to the appropriate page.</span>
+<span class="sd">    If the user is logged in, it will redirect to the root page or to the</span>
+<span class="sd">    ``redirect_to`` URL if specified. If the user is not logged in, it will</span>
+<span class="sd">    always redirect to the login page.</span>
+
+<span class="sd">    :param request: The pyramid request</span>
+<span class="sd">    :param redirect_to: The URL to redirect to, if the user is currently</span>
+<span class="sd">                        logged in.</span>
+<span class="sd">    :type redirect_to: `unicode`</span>
+<span class="sd">    :param message: The message to show to the user</span>
+<span class="sd">    :type message: ``unicode``</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="o">.</span><span class="n">logged_in</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">message</span><span class="p">:</span>
+            <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">flash</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">queue</span><span class="o">=</span><span class="s1">&#39;auth&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">flash</span><span class="p">(</span><span class="s1">&#39;You are not authorised to access this area.&#39;</span><span class="p">,</span> <span class="n">queue</span><span class="o">=</span><span class="s1">&#39;auth&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">redirect_to</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTTPSeeOther</span><span class="p">(</span><span class="n">redirect_to</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTTPSeeOther</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">message</span><span class="p">:</span>
+            <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">flash</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">queue</span><span class="o">=</span><span class="s1">&#39;auth&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">flash</span><span class="p">(</span><span class="s1">&#39;Please log in to access this area.&#39;</span><span class="p">,</span> <span class="n">queue</span><span class="o">=</span><span class="s1">&#39;auth&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">HTTPSeeOther</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;user.login&#39;</span><span class="p">,</span> <span class="n">_query</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;return_to&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">current_route_url</span><span class="p">()}))</span></div>
+
+
+<div class="viewcode-block" id="send_email"><a class="viewcode-back" href="../../api/wte_util.html#wte.util.send_email">[docs]</a><span class="k">def</span> <span class="nf">send_email</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">recipient</span><span class="p">,</span> <span class="n">sender</span><span class="p">,</span> <span class="n">subject</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+    <span class="sd">u&quot;&quot;&quot;Sends an e-mail based on the settings in the configuration file. If</span>
+<span class="sd">    the configuration does not have e-mail settings or if there is an</span>
+<span class="sd">    exception sending the e-mail, then it will log an error.</span>
+
+<span class="sd">    :param request: The current request used to access the settings</span>
+<span class="sd">    :type request: :class:`pyramid.request.Request`</span>
+<span class="sd">    :param recipient: The recipient&#39;s e-mail address</span>
+<span class="sd">    :type recipient: `unicode`</span>
+<span class="sd">    :param sender: The sender&#39;s e-mail address</span>
+<span class="sd">    :type sender: `unicode`</span>
+<span class="sd">    :param subject: The e-mail&#39;s subject line</span>
+<span class="sd">    :type subject: `unicode`</span>
+<span class="sd">    :param text: The e-mail&#39;s text body content</span>
+<span class="sd">    :type text: `unicode`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">get_config_setting</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;email.smtp_host&#39;</span><span class="p">):</span>
+        <span class="n">email</span> <span class="o">=</span> <span class="n">MIMEText</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+        <span class="n">email</span><span class="p">[</span><span class="s1">&#39;Subject&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">subject</span>
+        <span class="n">email</span><span class="p">[</span><span class="s1">&#39;From&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sender</span>
+        <span class="n">email</span><span class="p">[</span><span class="s1">&#39;To&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">recipient</span>
+        <span class="n">email</span><span class="p">[</span><span class="s1">&#39;Date&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">formatdate</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">smtp</span> <span class="o">=</span> <span class="n">smtplib</span><span class="o">.</span><span class="n">SMTP</span><span class="p">(</span><span class="n">get_config_setting</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;email.smtp_host&#39;</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">get_config_setting</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;email.ssl&#39;</span><span class="p">,</span> <span class="n">target_type</span><span class="o">=</span><span class="s1">&#39;bool&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+                <span class="n">smtp</span><span class="o">.</span><span class="n">starttls</span><span class="p">()</span>
+            <span class="n">username</span> <span class="o">=</span> <span class="n">get_config_setting</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;email.username&#39;</span><span class="p">)</span>
+            <span class="n">password</span> <span class="o">=</span> <span class="n">get_config_setting</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;email.password&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">username</span> <span class="ow">and</span> <span class="n">password</span><span class="p">:</span>
+                <span class="n">smtp</span><span class="o">.</span><span class="n">login</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">)</span>
+            <span class="n">smtp</span><span class="o">.</span><span class="n">sendmail</span><span class="p">(</span><span class="n">sender</span><span class="p">,</span> <span class="n">recipient</span><span class="p">,</span> <span class="n">email</span><span class="o">.</span><span class="n">as_string</span><span class="p">())</span>
+            <span class="n">smtp</span><span class="o">.</span><span class="n">quit</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;wte&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="nb">unicode</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+            <span class="k">print</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>  <span class="c1"># TODO: Remove</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;wte&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Could not send e-mail as &quot;email.smtp_host&quot; setting not specified&#39;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>  <span class="c1"># TODO: Remove</span></div>
+
+
+<div class="viewcode-block" id="convert_type"><a class="viewcode-back" href="../../api/wte_util.html#wte.util.convert_type">[docs]</a><span class="k">def</span> <span class="nf">convert_type</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">target_type</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;Attempts to convert the ``value`` to the given ``target_type``. Will</span>
+<span class="sd">    return ``default`` if the conversion fails.</span>
+
+<span class="sd">    Supported ``target_type`` values are:</span>
+
+<span class="sd">    * `int` -- Convert to an integer value</span>
+<span class="sd">    * `boolean` -- Convert to a boolean value (``True`` if the value is the</span>
+<span class="sd">      ``unicode`` string &quot;true&quot; in any capitalisation</span>
+<span class="sd">    * `list` -- Convert to a list, splitting on line-breaks and commas</span>
+
+<span class="sd">    :param value: The value to convert</span>
+<span class="sd">    :type value: `unicode`</span>
+<span class="sd">    :param target_type: The target type to convert to</span>
+<span class="sd">    :type target_type: `unicode`</span>
+<span class="sd">    :param default: The default value if the conversion fails</span>
+<span class="sd">    :return: The converted value</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">target_type</span> <span class="o">==</span> <span class="s1">&#39;int&#39;</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">default</span>
+    <span class="k">elif</span> <span class="n">target_type</span> <span class="o">==</span> <span class="s1">&#39;boolean&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">and</span> <span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;true&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">elif</span> <span class="n">target_type</span> <span class="o">==</span> <span class="s1">&#39;list&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">v</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">value</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="n">value</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">value</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">default</span></div>
+
+
+<span class="n">CACHED_SETTINGS</span> <span class="o">=</span> <span class="p">{}</span>
+
+
+<div class="viewcode-block" id="get_config_setting"><a class="viewcode-back" href="../../api/wte_util.html#wte.util.get_config_setting">[docs]</a><span class="k">def</span> <span class="nf">get_config_setting</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">target_type</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;Gets a configuration setting from the application configuration.</span>
+<span class="sd">    Settings are cached for faster access.</span>
+
+<span class="sd">    :param request: The request used to access the configuration settings</span>
+<span class="sd">    :type request: :class:`~pyramid.request.Request`</span>
+<span class="sd">    :param key: The configuration key</span>
+<span class="sd">    :type key: `unicode`</span>
+<span class="sd">    :param target_type: If specified, will convert the configuration setting</span>
+<span class="sd">                        to the given type using :func:`~wte.util.convert_type`</span>
+<span class="sd">    :type default: The default value to return if there is no setting with the</span>
+<span class="sd">                   given key</span>
+<span class="sd">    :return: The configuration setting value or ``default``</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">CACHED_SETTINGS</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">CACHED_SETTINGS</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">CACHED_SETTINGS</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">registry</span><span class="o">.</span><span class="n">settings</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">target_type</span><span class="p">:</span>
+                <span class="n">CACHED_SETTINGS</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">convert_type</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">registry</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">target_type</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">default</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">CACHED_SETTINGS</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">registry</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">CACHED_SETTINGS</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">default</span>
+        <span class="k">return</span> <span class="n">get_config_setting</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">target_type</span><span class="o">=</span><span class="n">target_type</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">default</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="version"><a class="viewcode-back" href="../../api/wte_util.html#wte.util.version">[docs]</a><span class="k">def</span> <span class="nf">version</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Return the current application version.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">asset</span><span class="o">.</span><span class="n">version</span><span class="p">(</span><span class="s1">&#39;WebTeachingEnvironment&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="timing_tween_factory"><a class="viewcode-back" href="../../api/wte_util.html#wte.util.timing_tween_factory">[docs]</a><span class="k">def</span> <span class="nf">timing_tween_factory</span><span class="p">(</span><span class="n">handler</span><span class="p">,</span> <span class="n">registry</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Pyramid tween factory that logs the time taken for a request.</span>
+<span class="sd">    Will not time static requests.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">time</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">timing_tween</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Handle the actual timing of the request.&quot;&quot;&quot;</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="n">handler</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">end</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">request</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;/static&#39;</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> - </span><span class="si">%.4f</span><span class="s1"> seconds&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="p">(</span><span class="n">end</span> <span class="o">-</span> <span class="n">start</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">response</span>
+    <span class="k">return</span> <span class="n">timing_tween</span></div>
+
+
+<div class="viewcode-block" id="paginate"><a class="viewcode-back" href="../../api/wte_util.html#wte.util.paginate">[docs]</a><span class="k">def</span> <span class="nf">paginate</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">query_params</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generates the list of pages for a query.</span>
+
+<span class="sd">    :param request: The request used to generate URLs</span>
+<span class="sd">    :type request: :class:`~pyramid.request.Request`</span>
+<span class="sd">    :param query: The SQLAlchemy query to generate the pagination for</span>
+<span class="sd">    :type query: :class:`~sqlalchemy.orm.query.Query`</span>
+<span class="sd">    :param start: The current starting index</span>
+<span class="sd">    :type start: :py:func:`int`</span>
+<span class="sd">    :param rows: The number of rows per page</span>
+<span class="sd">    :type rows: :py:func:`int`</span>
+<span class="sd">    :param query_params: An optional list of query parameters to include in all</span>
+<span class="sd">                         URLs that are generated</span>
+<span class="sd">    :type query_params: :py:func:`list` of :py:func:`tuple`</span>
+<span class="sd">    :return: The :py:func:`list` of pages to use with the &quot;navigation.pagination&quot;</span>
+<span class="sd">             helper</span>
+<span class="sd">    :rtype: :py:func:`list`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">query_params</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">query_params</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">query_params</span> <span class="o">=</span> <span class="p">[</span><span class="n">param</span> <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">query_params</span> <span class="k">if</span> <span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;start&#39;</span><span class="p">]</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+    <span class="n">pages</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">start</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">pages</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;prev&#39;</span><span class="p">,</span>
+                      <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">,</span> <span class="n">_query</span><span class="o">=</span><span class="n">query_params</span> <span class="o">+</span> <span class="p">[(</span><span class="s1">&#39;start&#39;</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">start</span> <span class="o">-</span> <span class="n">rows</span><span class="p">,</span> <span class="mi">0</span><span class="p">))])})</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">pages</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;prev&#39;</span><span class="p">})</span>
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">count</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">rows</span><span class="p">)))):</span>
+        <span class="k">if</span> <span class="n">idx</span> <span class="o">==</span> <span class="p">(</span><span class="n">start</span> <span class="o">/</span> <span class="mi">30</span><span class="p">):</span>
+            <span class="n">pages</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;current&#39;</span><span class="p">,</span>
+                          <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)})</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pages</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;item&#39;</span><span class="p">,</span>
+                          <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>
+                          <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">,</span> <span class="n">_query</span><span class="o">=</span><span class="n">query_params</span> <span class="o">+</span> <span class="p">[(</span><span class="s1">&#39;start&#39;</span><span class="p">,</span> <span class="n">idx</span> <span class="o">*</span> <span class="n">rows</span><span class="p">)])})</span>
+    <span class="k">if</span> <span class="n">start</span> <span class="o">+</span> <span class="n">rows</span> <span class="o">&lt;</span> <span class="n">count</span><span class="p">:</span>
+        <span class="n">pages</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;next&#39;</span><span class="p">,</span>
+                      <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">,</span> <span class="n">_query</span><span class="o">=</span><span class="n">query_params</span> <span class="o">+</span> <span class="p">[(</span><span class="s1">&#39;start&#39;</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">start</span> <span class="o">+</span> <span class="n">rows</span><span class="p">,</span> <span class="n">count</span><span class="p">))])})</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">pages</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;next&#39;</span><span class="p">})</span>
+    <span class="k">return</span> <span class="n">pages</span></div>
+</pre></div>
+        </div>
+      </div>
+      <ul class="pagination text-center" role="navigation" aria-label="Pagination">
+        
+        
+      </ul>
+    </nav>
+  </body>
+</html>

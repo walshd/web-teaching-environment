@@ -1,0 +1,19 @@
+<py:extends href="wte:templates/layout/centred.kajiki">
+  <py:block name="title">Content Administration</py:block>
+  <py:block name="content">
+    <h1>Content Administration</h1>
+    <p>The following administrative functions are available:</p>
+    <ul class="no-symbol row">
+      <li class="column small-12 medium-6 end">
+        <h2>Rebuild content</h2>
+        <p>Regenerate the content for all modules, tutorials, exercises, and pages.
+          This can be necessary when importing old data or after upgrading the WTE
+          to take advantage of the latest features.</p>
+        <p>This process can take some time, depending on the amount of content</p>
+        <form action="${request.route_url('admin.content.regenerate')}" method="post" class="text-right">
+          <input type="submit" class="button alert" value="Regenerate"/>
+        </form>
+      </li>
+    </ul>
+  </py:block>
+</py:extends>

@@ -1,0 +1,21 @@
+<py:extends href="wte:templates/layout/centred.kajiki">
+  <py:block name="title">Take ${part.title}</py:block>
+  <py:block name="content">
+    <py:import href="wte:templates/helpers/menu.kajiki" alias="menu"/>
+    <py:import href="wte:templates/helpers/form.kajiki" alias="form"/>
+    <h1>Take ${part.title}</h1>
+    <form py:if="part.register_state(request.current_user) == 'plain_register'" action="${request.route_url('part.register', pid=part.id)}" method="post">
+      <p>This module's content is freely accessible to you.</p>
+      <input type="submit" value="Take this Module" class="button"/>
+    </form>
+    <form py:if="part.register_state(request.current_user) == 'password_register'" action="${request.route_url('part.register', pid=part.id)}" method="post">
+      <p>This module's content is password protected. Please provide the correct password to access its content.</p>
+      <div class="row collapse">
+        <div class="small-8 medium-6 large-4 column">${form.field('password', 'password', '')}</div>
+        <div class="small-4 medium-4 large-2 column end"><input type="submit" value="Take this Module" class="button postfix"/></div>
+      </div>
+    </form>
+    <p py:if="part.register_state(request.current_user) == 'invalid_email_domain'" class="callout alert">Unfortunately you cannot take this module as your e-mail address is not
+      in the list of authorised e-mail domains.</p>
+  </py:block>
+</py:extends>

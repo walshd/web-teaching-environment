@@ -1,0 +1,22 @@
+<py:extends href="wte:templates/layout/centred.kajiki">
+  <py:block name="title">Edit ${task.title} Action</py:block>
+  <py:block name="content">
+    <py:import href="wte:templates/helpers/menu.kajiki" alias="menu"/>
+    <py:import href="wte:templates/helpers/form.kajiki" alias="form"/>
+    <h1>Delete ${task.title} Action</h1>
+    <form action="${request.route_url('part.timed_task.delete', pid=part.id, tid=task.id)}" method="post" class="small-12 column end">
+      ${form.csrf_field()}
+      <div class="row">
+        <div class="column small-12 medium-8 large-6 end">
+          <p>Please confirm that you wish to delete the action &quot;${task.title}&quot;.</p>
+        </div>
+      </div>
+      <div class="row">
+        <div class="column small-12 medium-8 large-6 end text-right">
+          <a href="${request.route_url('part.timed_task', pid=part.id)}" class="button secondary">Don't Delete</a>
+          <input type="submit" value="Delete" class="button alert"/>
+        </div>
+      </div>
+      </form>
+  </py:block>
+</py:extends>

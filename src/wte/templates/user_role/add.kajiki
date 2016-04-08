@@ -1,0 +1,78 @@
+<py:extends href="wte:templates/layout/centred.kajiki">
+  <py:block name="title">${part.title} - Add User</py:block>
+  <py:block name="content">
+    <py:import href="wte:templates/helpers/form.kajiki" alias="form"/>
+    <py:import href="wte:templates/helpers/navigation.kajiki" alias="nav"/>
+    <h1>${part.title} - Add User</h1>
+    <form class="row collapse">
+      <div class="column small-8 large-6 medium-4">
+        ${form.field('text', 'q', '', value=request.params['q'] if 'q' in request.params else '')}
+      </div>
+      <div class="column small-4 large-2 medium-2 end">
+        <input type="submit" value="Search" class="button postfix"/>
+      </div>
+    </form>
+    <p py:if="total_users == 0 and ('q' not in request.params or not request.params['q'])">Please enter a name or e-mail address in the search box above.</p>
+    <p py:if="total_users == 0 and 'q' in request.params and request.params['q']">No users were found for your search term or any matching users are already registered for this module.</p>
+    <form action="${request.route_url('part.users.add', pid=part.id)}" method="post">
+      ${form.csrf_field()}
+      <input type="hidden" name="q" value="${request.params['q'] if 'q' in request.params else ''}"/>
+      <py:if test="total_users != 0">
+        <div class="row">
+          <div class="column small-12 large-8 medium-6 end">
+            <table class="small-12">
+              <thead>
+                <tr>
+                  <th><input id="change_all" type="checkbox"/></th>
+                  <th>Name</th>
+                  <th>E-Mail</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr py:for="user in users">
+                  <td><input id="user_id_${user.id}" name="user_id" type="checkbox" value="${user.id}"/></td>
+                  <td><label for="user_id_${user.id}">${user.display_name}</label></td>
+                  <td><label for="user_id_${user.id}">${user.email}</label></td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="4">
+                    ${nav.pagination(pages)}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+        <div class="row">
+          <div class="column small-12 large-8 medium-6 end">
+            ${form.field('select', 'role', 'Role', values=[('', '--- Select the Role ---'), ('owner', 'Owner'), ('tutor', 'Tutor'), ('student', 'Student')])}
+          </div>
+        </div>
+        <div class="row">
+          <div class="column small-12 large-8 medium-6 end text-right">
+            <a href="${request.route_url('part.users', pid=part.id)}" class="button secondary">Don't Add</a>
+            <input type="submit" value="Add" class="button"/>
+          </div>
+        </div>
+      </py:if><py:else>
+        <div class="row">
+          <div class="column small-12 large-8 medium-6 end text-right">
+            <a href="${request.route_url('part.users', pid=part.id)}" class="button secondary">Don't Add</a>
+          </div>
+        </div>
+      </py:else>
+    </form>
+  </py:block>
+  <py:block name="body_script">
+    <script>
+    $('#change_all').on('click', function() {
+        var checked = $(this).is(':checked');
+        $('input[name=user_id]').each(function() {
+            $(this).prop('checked', checked);
+        });
+    });
+    </script>
+  </py:block>
+</py:extends>

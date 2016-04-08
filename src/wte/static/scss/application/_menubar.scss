@@ -1,0 +1,46 @@
+/**
+ * Menu-bar styles
+ */
+.menubar {
+    text-align: left;
+
+    li {
+        &.separator {
+            width: 1rem;
+        }
+        > a {
+            padding: 0.2rem 0.2rem;
+            
+            &:link, &:visited {
+                color: $black;
+            }
+            &:hover {
+                color: $primary-color;
+            }
+            &.alert {
+                color: $white;
+                background: $alert-color;
+            }
+        }
+        &.divider {
+            border-bottom: $dropdownmenu-border;
+
+            &:last-child {
+                border-bottom: 0;
+            }
+        }
+    }
+    .is-dropdown-submenu {
+        a {
+            padding: 0.5rem 0.8rem;
+            
+            > span:first-child {
+                display: inline-block;
+                width: 1.5rem;
+            }
+            > span:last-child {
+                white-space: nowrap;
+            }
+        }
+}
+}

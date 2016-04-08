@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="../../../../static/css/application.min.css"/>
+    <link rel="stylesheet" href="../../../_static/default.css"/>
+    <link rel="stylesheet" href="../../../_static/override.css"/>
+    <link rel="stylesheet" href="../../../_static/pygments.css"/>
+    <title>wte.scripts.configuration</title>
+  </head>
+  <body>
+    <nav>
+      <ul class="breadcrumbs">
+        
+          <li><a href="../../index.html">Module code</a></li>
+        
+          <li><a href="../../wte.html">wte</a></li>
+        
+        <li>wte.scripts.configuration</li>
+      </ul>
+      <div class="row">
+        <div class="column small-12">
+          <h1>Source code for wte.scripts.configuration</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">u&quot;&quot;&quot;</span>
+<span class="sd">#################################################################</span>
+<span class="sd">:mod:`wte.scripts.configuration` -- Generate configuration script</span>
+<span class="sd">#################################################################</span>
+
+<span class="sd">The :mod:`~wte.scripts.configuration` module provides the functionality for</span>
+<span class="sd">generating a configuration file from the default template and generating new</span>
+<span class="sd">styles.</span>
+
+<span class="sd">.. moduleauthor:: Mark Hall &lt;mark.hall@work.room3b.eu&gt;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">sass</span>
+<span class="kn">import</span> <span class="nn">uuid</span>
+
+<span class="kn">from</span> <span class="nn">kajiki</span> <span class="kn">import</span> <span class="n">TextTemplate</span>
+<span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">path</span>
+<span class="kn">from</span> <span class="nn">pkg_resources</span> <span class="kn">import</span> <span class="n">resource_filename</span><span class="p">,</span> <span class="n">resource_exists</span><span class="p">,</span> <span class="n">resource_string</span>
+<span class="kn">from</span> <span class="nn">pygments</span> <span class="kn">import</span> <span class="n">formatters</span><span class="p">,</span> <span class="n">styles</span>
+<span class="kn">from</span> <span class="nn">pyramid.paster</span> <span class="kn">import</span> <span class="n">get_appsettings</span>
+
+<span class="kn">from</span> <span class="nn">wte.scripts.main</span> <span class="kn">import</span> <span class="n">get_user_parameter</span>
+
+
+<div class="viewcode-block" id="init"><a class="viewcode-back" href="../../../api/wte_scripts_configuration.html#wte.scripts.configuration.init">[docs]</a><span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="n">subparsers</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;Initialises the :class:`~argparse.ArgumentParser`, adding the</span>
+<span class="sd">    &quot;generate-config&quot; and &quot;generate-custom-styling&quot; commands.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">subparsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span><span class="s1">&#39;generate-config&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Generate the WTE configuration file&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--filename&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;production.ini&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Configuration file name&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--sqla-connection-string&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;SQLAlchemy database connection string&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">set_defaults</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="n">generate_config</span><span class="p">)</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">subparsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span><span class="s1">&#39;generate-custom-styling&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Generate custom CSS styling&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;configuration&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;production.ini&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Configuration file name&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">set_defaults</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="n">generate_custom_styling</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="generate_config"><a class="viewcode-back" href="../../../api/wte_scripts_configuration.html#wte.scripts.configuration.generate_config">[docs]</a><span class="k">def</span> <span class="nf">generate_config</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;Generates a configuration file based on the default_config.txt template.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tmpl</span> <span class="o">=</span> <span class="n">TextTemplate</span><span class="p">(</span><span class="n">resource_string</span><span class="p">(</span><span class="s1">&#39;wte&#39;</span><span class="p">,</span> <span class="s1">&#39;scripts/templates/default_config.txt&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;encrypt_key&#39;</span><span class="p">:</span> <span class="n">uuid</span><span class="o">.</span><span class="n">uuid1</span><span class="p">(),</span>
+              <span class="s1">&#39;validate_key&#39;</span><span class="p">:</span> <span class="n">uuid</span><span class="o">.</span><span class="n">uuid1</span><span class="p">()}</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">sqla_connection_string</span><span class="p">:</span>
+        <span class="n">params</span><span class="p">[</span><span class="s1">&#39;sqlalchemy_url&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">sqla_connection_string</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">params</span><span class="p">[</span><span class="s1">&#39;sqlalchemy_url&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_user_parameter</span><span class="p">(</span><span class="s1">&#39;SQL Alchemy Connection String&#39;</span><span class="p">,</span> <span class="s1">&#39;sqlite:///</span><span class="si">%(here)s</span><span class="s1">/wte_test.db&#39;</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out_f</span><span class="p">:</span>
+        <span class="n">out_f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">tmpl</span><span class="p">(</span><span class="n">params</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="generate_custom_styling"><a class="viewcode-back" href="../../../api/wte_scripts_configuration.html#wte.scripts.configuration.generate_custom_styling">[docs]</a><span class="k">def</span> <span class="nf">generate_custom_styling</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;Generates a custom CSS styling for the WTE application. Allows</span>
+<span class="sd">    customisation of general settings, Pygments style, and CodeMirror theme.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">settings</span> <span class="o">=</span> <span class="n">get_appsettings</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">configuration</span><span class="p">)</span>
+
+    <span class="c1"># Create the settings overide partial</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">resource_filename</span><span class="p">(</span><span class="s1">&#39;wte&#39;</span><span class="p">,</span> <span class="s1">&#39;static/scss/_settings.scss&#39;</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out_f</span><span class="p">:</span>
+        <span class="n">out_f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;/* Any changes made here will be automatically overwritten */</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;style.settings&#39;</span> <span class="ow">in</span> <span class="n">settings</span> <span class="ow">and</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;style.settings&#39;</span><span class="p">]):</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;style.settings&#39;</span><span class="p">])</span> <span class="k">as</span> <span class="n">in_f</span><span class="p">:</span>
+                <span class="n">out_f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">in_f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+
+    <span class="c1"># Create the Pygments partial</span>
+    <span class="n">pygments_style</span> <span class="o">=</span> <span class="s1">&#39;default&#39;</span>
+    <span class="k">if</span> <span class="s1">&#39;pygments.theme&#39;</span> <span class="ow">in</span> <span class="n">settings</span> <span class="ow">and</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;pygments.theme&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">styles</span><span class="o">.</span><span class="n">get_all_styles</span><span class="p">()):</span>
+        <span class="n">pygments_style</span> <span class="o">=</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;pygments.theme&#39;</span><span class="p">]</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">resource_filename</span><span class="p">(</span><span class="s1">&#39;wte&#39;</span><span class="p">,</span> <span class="s1">&#39;static/scss/application/_pygments.scss&#39;</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out_f</span><span class="p">:</span>
+        <span class="n">out_f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;/* Any changes made here will be automatically overwritten */</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">out_f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">formatters</span><span class="o">.</span><span class="n">HtmlFormatter</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="n">pygments_style</span><span class="p">)</span><span class="o">.</span><span class="n">get_style_defs</span><span class="p">())</span>
+
+    <span class="c1"># Create the CodeMirror theme partial</span>
+    <span class="n">codemirror_theme</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">if</span> <span class="s1">&#39;codemirror.theme&#39;</span> <span class="ow">in</span> <span class="n">settings</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">resource_exists</span><span class="p">(</span><span class="s1">&#39;wte&#39;</span><span class="p">,</span> <span class="s1">&#39;static/scss/codemirror/theme/</span><span class="si">%s</span><span class="s1">.css&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;codemirror.theme&#39;</span><span class="p">])):</span>
+            <span class="n">codemirror_theme</span> <span class="o">=</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;codemirror.theme&#39;</span><span class="p">]</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">resource_filename</span><span class="p">(</span><span class="s1">&#39;wte&#39;</span><span class="p">,</span> <span class="s1">&#39;static/scss/codemirror/_theme.scss&#39;</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out_f</span><span class="p">:</span>
+        <span class="n">out_f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;/* Any changes made here will be automatically overwritten */</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">codemirror_theme</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">resource_filename</span><span class="p">(</span><span class="s1">&#39;wte&#39;</span><span class="p">,</span> <span class="s1">&#39;static/scss/codemirror/theme/</span><span class="si">%s</span><span class="s1">.css&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">codemirror_theme</span><span class="p">)))</span> <span class="k">as</span> <span class="n">in_f</span><span class="p">:</span>
+                <span class="n">out_f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">in_f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+
+    <span class="c1"># Create the final overide partial</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">resource_filename</span><span class="p">(</span><span class="s1">&#39;wte&#39;</span><span class="p">,</span> <span class="s1">&#39;static/scss/_overrides.scss&#39;</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out_f</span><span class="p">:</span>
+        <span class="n">out_f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;/* Any changes made here will be automatically overwritten */</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;style.settings&#39;</span> <span class="ow">in</span> <span class="n">settings</span> <span class="ow">and</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;style.overrides&#39;</span><span class="p">]):</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;style.overrides&#39;</span><span class="p">])</span> <span class="k">as</span> <span class="n">in_f</span><span class="p">:</span>
+                <span class="n">out_f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">in_f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+
+    <span class="c1"># Generate application.min.css</span>
+    <span class="n">css</span> <span class="o">=</span> <span class="n">sass</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">resource_filename</span><span class="p">(</span><span class="s1">&#39;wte&#39;</span><span class="p">,</span> <span class="s1">&#39;static/scss/wte.scss&#39;</span><span class="p">),</span>
+                       <span class="n">output_style</span><span class="o">=</span><span class="s1">&#39;compressed&#39;</span><span class="p">,</span>
+                       <span class="n">custom_functions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;file-exists&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">fn</span><span class="p">:</span> <span class="bp">False</span><span class="p">})</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">resource_filename</span><span class="p">(</span><span class="s1">&#39;wte&#39;</span><span class="p">,</span> <span class="s1">&#39;static/css/application.min.css&#39;</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out_f</span><span class="p">:</span>
+        <span class="n">out_f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">css</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span></div>
+</pre></div>
+        </div>
+      </div>
+      <ul class="pagination text-center" role="navigation" aria-label="Pagination">
+        
+        
+      </ul>
+    </nav>
+  </body>
+</html>

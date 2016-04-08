@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="../../../static/css/application.min.css"/>
+    <link rel="stylesheet" href="../../_static/default.css"/>
+    <link rel="stylesheet" href="../../_static/override.css"/>
+    <link rel="stylesheet" href="../../_static/pygments.css"/>
+    <title>wte.views</title>
+  </head>
+  <body>
+    <nav>
+      <ul class="breadcrumbs">
+        
+          <li><a href="../index.html">Module code</a></li>
+        
+          <li><a href="../wte.html">wte</a></li>
+        
+        <li>wte.views</li>
+      </ul>
+      <div class="row">
+        <div class="column small-12">
+          <h1>Source code for wte.views</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">u&quot;&quot;&quot;</span>
+<span class="sd">#################################</span>
+<span class="sd">:mod:`wte.views` -- View handlers</span>
+<span class="sd">#################################</span>
+
+<span class="sd">The :mod:`~wte.views` package contains the view handlers that implement the</span>
+<span class="sd">majority of the Web Teaching Environment&#39;s functionality.</span>
+
+<span class="sd">Each module within :mod:`~wte.views` contains an ``init`` function that</span>
+<span class="sd">initialises the routes that are handled by that module.</span>
+
+<span class="sd">.. moduleauthor:: Mark Hall &lt;mark.hall@work.room3b.eu&gt;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">mimetypes</span> <span class="kn">import</span> <span class="n">guess_type</span>
+<span class="kn">from</span> <span class="nn">pkg_resources</span> <span class="kn">import</span> <span class="n">resource_string</span>
+<span class="kn">from</span> <span class="nn">pyramid.httpexceptions</span> <span class="kn">import</span> <span class="n">HTTPNotFound</span><span class="p">,</span> <span class="n">HTTPSeeOther</span>
+<span class="kn">from</span> <span class="nn">pyramid.view</span> <span class="kn">import</span> <span class="n">view_config</span>
+<span class="kn">from</span> <span class="nn">pyramid.response</span> <span class="kn">import</span> <span class="n">Response</span>
+
+<span class="kn">from</span> <span class="nn">wte.decorators</span> <span class="kn">import</span> <span class="n">current_user</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="n">part</span><span class="p">,</span> <span class="n">asset</span><span class="p">,</span> <span class="n">user_role</span><span class="p">,</span> <span class="n">timed_tasks</span><span class="p">,</span> <span class="n">admin</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="init"><a class="viewcode-back" href="../../api/wte_views.html#wte.views.init">[docs]</a><span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;Adds the following routes (route name, URL pattern, handler):</span>
+
+<span class="sd">    * ``root`` -- ``/`` -- :func:`~wte.views.root`</span>
+
+<span class="sd">    Then calls the ``init`` function on all modules within :mod:`~wte.views`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">add_route</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">add_route</span><span class="p">(</span><span class="s1">&#39;help&#39;</span><span class="p">,</span> <span class="s1">&#39;/help/*path&#39;</span><span class="p">)</span>
+
+    <span class="n">admin</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="n">user</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="n">part</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="n">asset</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="n">user_role</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="n">timed_tasks</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">config</span><span class="p">)</span></div>
+
+
+<span class="nd">@view_config</span><span class="p">(</span><span class="n">route_name</span><span class="o">=</span><span class="s1">&#39;root&#39;</span><span class="p">,</span> <span class="n">renderer</span><span class="o">=</span><span class="s1">&#39;wte:templates/root.kajiki&#39;</span><span class="p">)</span>
+<span class="nd">@current_user</span><span class="p">()</span>
+<div class="viewcode-block" id="root"><a class="viewcode-back" href="../../api/wte_views.html#wte.views.root">[docs]</a><span class="k">def</span> <span class="nf">root</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;Handles the ``/`` route.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">{}</span></div>
+
+
+<span class="nd">@view_config</span><span class="p">(</span><span class="n">route_name</span><span class="o">=</span><span class="s1">&#39;help&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="help_page"><a class="viewcode-back" href="../../api/wte_views.html#wte.views.help_page">[docs]</a><span class="k">def</span> <span class="nf">help_page</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Handles the ``/help`` route, displaying the appropriate help page.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">url</span> <span class="o">=</span> <span class="s1">&#39;templates/help/</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="s1">&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">&#39;path&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">url</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">):</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">index.html&#39;</span> <span class="o">%</span> <span class="n">url</span>
+    <span class="k">if</span> <span class="n">url</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.html&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="s1">&#39;user&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">url</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPSeeOther</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;help&#39;</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;index.html&#39;</span><span class="p">]))</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">mimetype</span> <span class="o">=</span> <span class="n">guess_type</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">mimetype</span><span class="p">:</span>
+            <span class="n">mimetype</span> <span class="o">=</span> <span class="n">mimetype</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mimetype</span> <span class="o">=</span> <span class="s1">&#39;unknown/unknown&#39;</span>
+        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">resource_string</span><span class="p">(</span><span class="s1">&#39;wte&#39;</span><span class="p">,</span> <span class="n">url</span><span class="p">),</span>
+                        <span class="n">content_type</span><span class="o">=</span><span class="n">mimetype</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPNotFound</span><span class="p">()</span></div>
+
+
+<span class="nd">@view_config</span><span class="p">(</span><span class="n">context</span><span class="o">=</span><span class="n">HTTPNotFound</span><span class="p">,</span> <span class="n">renderer</span><span class="o">=</span><span class="s1">&#39;wte:templates/errors/404.kajiki&#39;</span><span class="p">)</span>
+<span class="nd">@current_user</span><span class="p">()</span>
+<div class="viewcode-block" id="notfound_404"><a class="viewcode-back" href="../../api/wte_views.html#wte.views.notfound_404">[docs]</a><span class="k">def</span> <span class="nf">notfound_404</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;Handles 404 errors</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Not Found&#39;</span><span class="p">}]}</span></div>
+
+
+<span class="nd">@view_config</span><span class="p">(</span><span class="n">context</span><span class="o">=</span><span class="ne">Exception</span><span class="p">,</span> <span class="n">renderer</span><span class="o">=</span><span class="s1">&#39;wte:templates/errors/500.kajiki&#39;</span><span class="p">)</span>
+<span class="nd">@current_user</span><span class="p">()</span>
+<div class="viewcode-block" id="servererror_500"><a class="viewcode-back" href="../../api/wte_views.html#wte.views.servererror_500">[docs]</a><span class="k">def</span> <span class="nf">servererror_500</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;Handles 500 errors</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Internal Server Error&#39;</span><span class="p">}]}</span></div>
+</pre></div>
+        </div>
+      </div>
+      <ul class="pagination text-center" role="navigation" aria-label="Pagination">
+        
+        
+      </ul>
+    </nav>
+  </body>
+</html>

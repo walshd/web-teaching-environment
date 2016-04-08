@@ -1,0 +1,111 @@
+/**
+ * Sourcecode block and inline styling
+ */
+.rest {
+    tt.docutils.literal {
+        font-family: $font-family-monospace;
+        padding: 0px 0.2rem;
+        border: 1px solid #dfdfdf;
+        border-radius: 3px;
+    }
+    .source {
+        @import 'pygments.scss';
+    }
+    div.source {
+        &.panel {
+            margin: $global-margin;
+            padding-top: 0.3rem;
+            background: scale-color($light-gray, $lightness: 40%);
+            border: 1px solid $light-gray;
+        }
+        .title {
+            font-size: 0.7rem;
+            position: relative;
+
+            .main {
+                display: inline-block;
+                text-transform: uppercase;
+                color: $white;
+                background: $black;
+                padding: 0.1rem 0.3rem;
+                float: left;
+                position: relative;
+                left: -1rem;
+            }
+            .filename {
+                display: block;
+                background: $light-gray;
+                text-align: right;
+                padding: 0.1rem 0.5rem;
+                color: #666;
+            }
+            &:after {
+                content: ' ';
+                display: table;
+                clear: both;
+            }
+        }
+        pre {
+            line-height: 1.3rem;
+            font-size: 0.9rem;
+            padding:0.5rem 1rem 1rem 1rem;
+            font-family: $font-family-monospace;
+        }
+        &.HTML {
+            .title {
+                .main {
+                    color: $source-html-title-color;
+                    background-color: $source-html-title-background-color;
+                }
+            }
+        }
+        &.CSS {
+            .title {
+                .main {
+                    color: $source-css-title-color;
+                    background-color: $source-css-title-background-color;
+                }
+            }
+        }
+        &.JavaScript {
+            .title {
+                .main {
+                    color: $source-javascript-title-color;
+                    background-color: $source-javascript-title-background-color;
+                }
+            }
+        }
+        &.PHP {
+            .title {
+                .main {
+                    color: $source-php-title-color;
+                    background-color: $source-php-title-background-color;
+                }
+            }
+        }
+        &.Python {
+            .title {
+                .main {
+                    color: $source-python-title-color;
+                    background-color: $source-python-title-background-color;
+                }
+            }
+        }
+        &.BashSession {
+            .title {
+                .main {
+                    color: $source-bash-session-title-color;
+                    background-color: $source-bash-session-title-background-color;
+                }
+            }
+        }
+    }
+    span.source {
+        display: inline-block;
+        background-color: #efefef;
+        font-family: $font-family-monospace;
+        padding: 0px 0.2rem;
+        border: 1px solid #dfdfdf;
+        border-radius: 3px;
+    }
+}

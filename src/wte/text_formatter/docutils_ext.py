@@ -24,8 +24,10 @@ def init(settings):
     """Initialise and load the docutils extensions.
     """
     directives.register_directive('sourcecode', Pygments)
+    directives.register_directive('youtube', YouTube)
     roles.register_local_role('asset', asset_ref_role)
     roles.register_local_role('crossref', crossref_role)
+    roles.register_local_role('style', inline_css_role)
     for _, aliases, _, _ in get_all_lexers():
         for alias in aliases:
             roles.register_local_role('code-%s' % (alias), inline_pygments_role)
@@ -46,7 +48,7 @@ class HtmlTitleFormatter(HtmlFormatter):
         return self._wrap_code(source)
 
     def _wrap_code(self, source):
-        yield 0, '<div class="source panel %s">' % (self.language if self.language else '')
+        yield 0, '<div class="source panel %s">' % (self.language.replace(' ', '') if self.language else '')
         if self.language:
             yield 0, '<div class="title"><span class="main">%s</span>' % (self.language)
             if self.filename:
@@ -106,7 +108,8 @@ class Pygments(Directive):
     optional_arguments = 1
     final_argument_whitespace = True
     option_spec = {'filename': directives.unchanged,
-                   'startinline': flag_bool_option}
+                   'startinline': flag_bool_option,
+                   'linenos': int}
     has_content = True
 
     def run(self):
@@ -121,9 +124,29 @@ class Pygments(Directive):
                                        filename=self.options['filename'] if 'filename' in self.options else None,
                                        noclasses=False,
                                        style='native',
-                                       cssclass=u'source %s' % (lexer.name))
+                                       cssclass=u'source %s' % (lexer.name),
+                                       linenos='inline' if 'linenos' in self.options else False,
+                                       linenostart=self.options['linenos'] if 'linenos' in self.options else 1)
         parsed = highlight(u'\n'.join(self.content), lexer, formatter)
         return [nodes.raw('', parsed, format='html')]
+
+
+YOUTUBE_BASE_TEMPLATE = '<iframe width="560" height="315" ' + \
+    'src="%s" allowfullscreen="allowfullscreen"></iframe>'
+
+
+class YouTube(Directive):
+    """The :class:`~wte.text_formatter.docutils_ext.YouTube` directive enables
+    support for embeddeding YouTube videos in ReST. It takes a single parameter
+    that is the YouTube URL to embed::
+
+      .. youtube:: https://URL/TO/VIDEO
+
+    """
+    required_arguments = 1
+
+    def run(self):
+        return [nodes.raw('', YOUTUBE_BASE_TEMPLATE % (self.arguments[0]), format='html')]
 
 
 CROSSREF_PATTERN = re.compile(r'([0-9]+)|(?:(.*)<([0-9]+)>)')
@@ -137,7 +160,6 @@ def crossref_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
     Usage in ReST is \:crossref\:\`part_id\` or \:crossref\:\`link text
     <part_id>\`.
     """
-    from wte.models import (DBSession, Part)
     request = inliner.document.settings.pyramid_request
     result = []
     messages = []
@@ -167,13 +189,14 @@ def inline_pygments_role(name, rawtext, text, lineno, inliner, options={}, conte
     """The :func:`~wte.text_formatter.docutils_ext.inline_pygments_role`
     function provides a docutils role that handles inline code highlighting
     using Pygments. The name of the language to use for highlighting is taken
-    from the name of the role (which must be formatted ``code-language_name`.
+    from the name of the role (which must be formatted ``code-language_name``).
     """
     try:
         lexer = get_lexer_by_name(name[5:])
     except ValueError:
         lexer = TextLexer()
     formatter = HtmlFormatter(nowrap=True)
+    text = text.replace('\x00', '')
     parsed = highlight(text, lexer, formatter)
     return [nodes.raw('', '<span class="source">%s</span>' % (parsed), format='html')], []
 
@@ -182,7 +205,7 @@ ASSET_PATTERN = re.compile(r'((?:(parent):)?([a-zA-Z0-9_\-.]+)$)|((.+)(?:<(?:(pa
 
 
 def asset_ref_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
-    """The :func:`~wte.text_formatter.docutils_ext.asset_ref_role` functio
+    """The :func:`~wte.text_formatter.docutils_ext.asset_ref_role` function
     provides a docutils role that handles linking in :class:`~wte.models.Asset`
     into the text. If the :class:`~wte.models.Asset` is an image, then the
     image is loaded inline, otherwise a download link for all other types
@@ -199,28 +222,31 @@ def asset_ref_role(name, rawtext, text, lineno, inliner, options={}, content=[])
             groups = match.groups()
             if groups[0]:
                 title = None
-                parent = groups[1] == 'parent'
                 filename = groups[2]
             else:
                 title = groups[4]
-                parent = groups[5] == 'parent'
                 filename = groups[6]
-            part_id = settings.wte_part.parent_id if parent else settings.wte_part.id
-            asset = dbsession.query(Asset).join(Asset.parts).filter(and_(Part.id == part_id,
-                                                                         Asset.filename == filename)).first()
-            if asset:
+            part_ids = []
+            part = settings.wte_part
+            while part is not None:
+                part_ids.append(part.id)
+                part = part.parent
+            data = dbsession.query(Asset, Part).join(Asset.parts).filter(and_(Part.id.in_(part_ids),
+                                                                              Asset.filename == filename)).first()
+            if data:
+                asset, part = data
                 if asset.mimetype.startswith('image/'):
                     result.append(nodes.image(rawtext,
                                               uri=request.route_url('asset.view',
-                                                                    pid=part_id,
+                                                                    pid=part.id,
                                                                     filename=asset.filename),
-                                              alt=title))
+                                              alt=title if title else asset.filename))
                 else:
                     result.append(nodes.reference(rawtext,
                                                   title if title else asset.filename,
                                                   internal=False,
                                                   refuri=request.route_url('asset.view',
-                                                                           pid=part_id,
+                                                                           pid=part.id,
                                                                            filename=asset.filename,
                                                                            _query=[('download', 'true')])))
             else:
@@ -233,4 +259,22 @@ def asset_ref_role(name, rawtext, text, lineno, inliner, options={}, content=[])
         messages.append(inliner.reporter.error('Internal error: no part set',
                                                line=lineno))
 
+    return result, messages
+
+
+CSS_PATTERN = re.compile(r'(.+)<([a-zA-Z0-9_\-.:;#]+)>$')
+
+
+def inline_css_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
+    """The :func:`~wte.text_formatter.docutils_ext.inline_css_role` function
+    provides a docutils role that allows for the specification of arbitrary CSS
+    that is then assigned to a <span> element.
+    """
+    result = []
+    messages = []
+    match = re.match(CSS_PATTERN, text)
+    if match:
+        result.append(nodes.raw('', '<span style="%s">%s</span>' % (match.group(2), match.group(1)), format='html'))
+    else:
+        messages.append(inliner.reporter.error('No CSS definition found in "%s"' % (text)))
     return result, messages

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from sqlalchemy.util._collections import ordered_column_set
 u"""
 #####################################
 :mod:`wte.views.part` -- Part Backend
@@ -16,12 +17,10 @@ import json
 import re
 import transaction
 
-from genshi.template import TemplateLoader, loader
 from pyramid.httpexceptions import (HTTPSeeOther, HTTPNotFound, HTTPForbidden)
 from pyramid.response import Response
+from pyramid.renderers import render_to_response
 from pyramid.view import view_config
-from pywebtools.renderer import render
-from pywebtools import text
 from pkg_resources import resource_string
 from sqlalchemy import and_
 try:
@@ -31,18 +30,20 @@ except:
 from zipfile import ZipFile, ZIP_DEFLATED, ZIP_STORED, BadZipfile
 
 from wte.decorators import (current_user, require_logged_in, require_method)
-from wte.models import (DBSession, Part, UserPartRole, Asset, UserPartProgress)
+from wte.models import (DBSession, Part, UserPartRole, Asset, UserPartProgress, User)
 from wte.text_formatter import compile_rst
-from wte.util import (unauthorised_redirect, State)
-from wte import helpers
+from wte.util import (unauthorised_redirect, State, CSRFSchema, ordered_counted_set)
 
 
 def init(config):
     u"""Adds the part-specific backend routes (route name, URL pattern
     handler):
 
+    * ``part.list`` -- ``/parts`` -- :func:`~wte.views.part.list_parts`
     * ``part.new`` -- ``/parts/new`` --
       :func:`~wte.views.part.new`
+    * ``part.search`` -- ``/parts/search`` --
+      :func:`~wte.views.part.search`
     * ``part.import`` -- ``/parts/import`` --
       :func:`~wte.views.part.import_file`
     * ``part.view`` -- ``/parts/{pid}`` --
@@ -57,6 +58,8 @@ def init(config):
       :func:`~wte.views.part.preview`
     * ``part.register`` -- ``/parts/{pid}/register``
       -- :func:`~wte.views.part.register`
+    * ``part.register.settings`` -- ``/parts/{pid}/register/settings``
+      -- :func:`~wte.views.part.edit_register_settings`
     * ``part.deregister`` -- ``/parts/{pid}/deregister``
       -- :func:`~wte.views.part.deregister`
     * ``part.change_status`` -- ``/parts/{pid}/change_status``
@@ -65,18 +68,27 @@ def init(config):
       -- :func:`~wte.views.part.export`
     * ``part.download`` -- ``/parts/{pid}/download``
       -- :func:`~wte.views.part.download`
+    * ``part.reset-files`` -- ``/parts/{pid}/reset_files`` --
+      :func:`~wte.views.part.reset_files`
+    * ``part.progress.download`` -- ``/users/{uid}/progress/{pid}/download``
+      -- :func:`~wte.views.frontend.download_part_progress`
     """
+    config.add_route('part.list', '/parts')
     config.add_route('part.new', '/parts/new/{new_type}')
     config.add_route('part.import', '/parts/import')
+    config.add_route('part.search', '/parts/search')
     config.add_route('part.view', '/parts/{pid}')
     config.add_route('part.edit', '/parts/{pid}/edit')
     config.add_route('part.delete', '/parts/{pid}/delete')
     config.add_route('part.preview', '/parts/{pid}/rst_preview')
     config.add_route('part.register', '/parts/{pid}/register')
+    config.add_route('part.register.settings', '/parts/{pid}/register/settings')
     config.add_route('part.deregister', '/parts/{pid}/deregister')
     config.add_route('part.change_status', '/parts/{pid}/change_status')
     config.add_route('part.export', '/parts/{pid}/export')
     config.add_route('part.download', '/parts/{pid}/download')
+    config.add_route('part.reset-files', '/parts/{pid}/reset_files')
+    config.add_route('part.progress.download', '/parts/{pid}/progress/download')
 
 
 def get_user_part_progress(dbsession, user, part):
@@ -93,7 +105,7 @@ def get_user_part_progress(dbsession, user, part):
     :return: The :class:`~wte.models.UserPartProgress`
     :rtype: :class:`~wte.models.UserPartProgress`
     """
-    if part.type in [u'tutorial', u'task']:
+    if part.type == u'part':
         progress = dbsession.query(UserPartProgress).\
             filter(and_(UserPartProgress.user_id == user.id,
                         UserPartProgress.part_id == part.id)).first()
@@ -130,7 +142,8 @@ def get_user_part_progress(dbsession, user, part):
                                       mimetype=template.mimetype,
                                       order=template.order,
                                       data=template.data,
-                                      type=u'file')
+                                      type=u'file',
+                                      etag=template.etag)
                     dbsession.add(user_file)
                     progress.files.append(user_file)
             for template in templates:
@@ -144,8 +157,58 @@ def get_user_part_progress(dbsession, user, part):
     return progress
 
 
+@view_config(route_name='part.list', renderer='wte:templates/part/list.kajiki')
+@current_user()
+def list_parts(request):
+    u"""Handles the ``/parts`` URL, displaying modules. If no parameters are specified,
+    lists all available modules. If a "user_id" parameter is specified, lists all
+    modules for that user.
+    """
+    dbsession = DBSession()
+    if 'user_id' in request.params:
+        user = dbsession.query(User).filter(User.id == request.params['user_id']).first()
+        if user and user.allow('view', request.current_user):
+            if user.id == request.current_user.id:
+                title = 'My Modules'
+                missing = 'You have not registered for any modules.'
+            else:
+                title = '%s\'s Modules' % user.display_name
+                missing = '%s has not registered for any modules.' % user.display_name
+            parts = dbsession.query(Part).join(UserPartRole)
+            status = ['available', 'unavailable']
+            has_archived = dbsession.query(Part).\
+                join(UserPartRole).filter(and_(Part.type == u'module',
+                                               Part.status == 'archived',
+                                               UserPartRole.user_id == request.params['user_id'])).count() > 0
+            if has_archived and 'status' in request.params:
+                if request.params['status'] == 'all':
+                    status.append('archived')
+                elif request.params['status'] == 'archived':
+                    status = ['archived']
+            parts = parts.filter(and_(Part.type == u'module',
+                                      Part.status.in_(status),
+                                      UserPartRole.user_id == request.params['user_id'])).order_by(Part.title)
+            crumbs = [{'title': 'My Modules',
+                       'url': request.route_url('part.list',
+                                                _query={'user_id': request.params['user_id']}),
+                       'current': True}]
+        else:
+            raise HTTPNotFound()
+    else:
+        title = 'Available Modules'
+        parts = dbsession.query(Part).filter(and_(Part.type == u'module',
+                                                  Part.status == u'available')).order_by(Part.title).all()
+        missing = 'There are currently no modules available.'
+        crumbs = [{'title': 'Modules', 'url': request.route_url('part.list'), 'current': True}]
+        has_archived = False
+    return {'parts': parts,
+            'title': title,
+            'missing': missing,
+            'crumbs': crumbs,
+            'has_archived': has_archived}
+
+
 @view_config(route_name='part.view')
-@render({'text/html': 'part/view.html'})
 @current_user()
 @require_logged_in()
 def view_part(request):
@@ -163,17 +226,28 @@ def view_part(request):
             crumbs = create_part_crumbs(request,
                                         part,
                                         None)
-            return {'part': part,
-                    'crumbs': crumbs,
-                    'progress': progress,
-                    'include_footer': part.type not in [u'task', u'page']}
+            if part.type == 'page':
+                template_path = 'wte:templates/part/view/%s.kajiki' % part.parent.display_mode
+            else:
+                template_path = 'wte:templates/part/view/%s.kajiki' % part.type
+            labels = [child.label.title() if child.label else child.type.title() for child in part.children]
+            return render_to_response(template_path,
+                                      {'part': part,
+                                       'crumbs': crumbs,
+                                       'progress': progress,
+                                       'include_footer': part.type != 'page',
+                                       'labels': ordered_counted_set(labels)},
+                                       request=request)
         else:
-            unauthorised_redirect(request)
+            if part.type == 'module':
+                unauthorised_redirect(request)
+            else:
+                raise HTTPSeeOther(request.route_url('part.view', pid=part.parent_id))
     else:
         raise HTTPNotFound()
 
 
-class NewPartSchema(formencode.Schema):
+class NewPartSchema(CSRFSchema):
     u"""The :class:`~wte.views.backend.NewPartSchema` handles the validation
     of a new :class:`~wte.models.Part`.
     """
@@ -181,16 +255,19 @@ class NewPartSchema(formencode.Schema):
     u"""The part's title"""
     parent_id = formencode.validators.Int(if_missing=None)
     u"""The parent :class:`~wte.models.Part`"""
-    status = formencode.All(formencode.validators.UnicodeString(not_empty=True),
+    order = formencode.validators.Int(if_missing=None)
+    """The optional order index to create the new :class:`~wte.models.Part` at"""
+    status = formencode.All(formencode.validators.UnicodeString(if_empty=u'available', if_missing=u'available'),
                             formencode.validators.OneOf([u'unavailable',
                                                          u'available']))
     u"""The part's status"""
-    display_mode = formencode.All(formencode.validators.UnicodeString(not_empty=True),
-                                  formencode.validators.OneOf([u'default',
+    display_mode = formencode.All(formencode.validators.UnicodeString(if_empty=None, if_missing=None),
+                                  formencode.validators.OneOf([None,
                                                                u'three_pane_html',
-                                                               u'text_only',
-                                                               u'inherit']))
+                                                               u'text_only']))
     u"""The part's display mode"""
+    label = formencode.validators.UnicodeString(if_empty=None, if_missing=None)
+    """The part's label"""
 
 
 def create_part_crumbs(request, part, current=None):
@@ -211,8 +288,12 @@ def create_part_crumbs(request, part, current=None):
                        'url': request.route_url('part.view', pid=recurse_part.id)})
         recurse_part = recurse_part.parent
     if part:
-        crumbs.append({'title': 'Modules',
-                       'url': request.route_url('modules')})
+        if request.current_user and request.current_user.logged_in:
+            crumbs.append({'title': 'My Modules',
+                           'url': request.route_url('part.list', _query={'user_id': request.current_user.id})})
+        else:
+            crumbs.append({'title': 'Modules',
+                           'url': request.route_url('part.list')})
     crumbs.reverse()
     if current:
         if isinstance(current, list):
@@ -223,8 +304,7 @@ def create_part_crumbs(request, part, current=None):
     return crumbs
 
 
-@view_config(route_name='part.new')
-@render({'text/html': 'part/new.html'})
+@view_config(route_name='part.new', renderer='wte:templates/part/new.kajiki')
 @current_user()
 @require_logged_in()
 def new(request):
@@ -251,92 +331,88 @@ def new(request):
         elif parent:
             request.session.flash('You cannot create a new module here', queue='error')
             raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
-    elif request.matchdict['new_type'] == 'tutorial':
+    elif request.matchdict['new_type'] == 'part':
         if not parent:
-            request.session.flash('You cannot create a new tutorial without a parent', queue='error')
+            request.session.flash('You cannot create a new part without a parent', queue='error')
             raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
         elif parent.type != u'module':
-            request.session.flash('You can only add tutorials to a module', queue='error')
+            request.session.flash('You can only add parts to a module', queue='error')
             raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
     elif request.matchdict['new_type'] == 'page':
         if not parent:
-            request.session.flash('You cannot create a new tutorial without a parent', queue='error')
+            request.session.flash('You cannot create a new page without a parent', queue='error')
             raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
-        elif parent.type != u'tutorial':
-            request.session.flash('You can only add pages to a tutorial', queue='error')
-            raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
-    elif request.matchdict['new_type'] == 'exercise':
-        if not parent:
-            request.session.flash('You cannot create a new exercise without a parent', queue='error')
-            raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
-        elif parent.type != u'module':
-            request.session.flash('You can only add exercises to a module', queue='error')
-            raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
-    elif request.matchdict['new_type'] == 'task':
-        if not parent:
-            request.session.flash('You cannot create a new task without a parent', queue='error')
-            raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
-        elif parent.type != u'exercise':
-            request.session.flash('You can only add tasks to a task', queue='error')
+        elif parent.type != u'part':
+            request.session.flash('You can only add pages to a part', queue='error')
             raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
     else:
         request.session.flash('You cannot create a new part of that type', queue='error')
-        raise HTTPSeeOther(request.route_url('modules'))
+        raise HTTPSeeOther(request.route_url('part.list'))
     crumbs = create_part_crumbs(request,
                                 parent,
-                                {'title': 'Add %s' % (text.title(request.matchdict['new_type'])),
+                                {'title': 'Add %s' % (request.matchdict['new_type'].title()),
                                  'url': request.current_route_url()})
     if request.method == u'POST':
         try:
             params = NewPartSchema().to_python(request.params)
             dbsession = DBSession()
             with transaction.manager:
-                if parent:
-                    dbsession.add(parent)
-                    max_order = [p.order + 1 for p in parent.children]
+                if params['order'] is not None:
+                    max_order = params['order']
+                    if parent:
+                        dbsession.add(parent)
+                        for child in parent.children:
+                            if child.order >= max_order:
+                                dbsession.add(child)
+                                child.order = child.order + 1
                 else:
-                    max_order = []
-                max_order.append(0)
-                max_order = max(max_order)
+                    if parent:
+                        dbsession.add(parent)
+                        max_order = [p.order + 1 for p in parent.children]
+                    else:
+                        max_order = []
+                    max_order.append(0)
+                    max_order = max(max_order)
 
                 new_part = Part(title=params['title'],
                                 status=params['status'],
                                 type=request.matchdict['new_type'],
                                 display_mode=params['display_mode'],
+                                label=params['label'],
                                 parent=parent,
-                                order=max_order)
+                                order=max_order,
+                                content='')
                 if request.matchdict['new_type'] == 'module':
                     new_part.users.append(UserPartRole(user=request.current_user,
                                                        role=u'owner'))
                 dbsession.add(new_part)
             dbsession.add(new_part)
-            request.session.flash('Your new %s has been created' % (request.matchdict['new_type']), queue='info')
             raise HTTPSeeOther(request.route_url('part.edit', pid=new_part.id))
         except formencode.Invalid as e:
-            e.params = request.params
-            return {'e': e,
+            return {'errors': e.error_dict,
+                    'values': request.params,
                     'crumbs': crumbs}
     return {'crumbs': crumbs}
 
 
-class EditPartSchema(formencode.Schema):
+class EditPartSchema(CSRFSchema):
     u"""The :class:`~wte.views.part.EditPartSchema` handles the validation
     for editing :class:`~wte.models.Part`.
     """
     title = formencode.validators.UnicodeString(not_empty=True)
     u"""The part's title"""
-    status = formencode.All(formencode.validators.UnicodeString(not_empty=True),
+    status = formencode.All(formencode.validators.UnicodeString(if_empty=u'available', if_missing=u'available'),
                             formencode.validators.OneOf([u'unavailable',
-                                                         u'available',
-                                                         u'archived']))
+                                                         u'available']))
     u"""The part's status"""
-    display_mode = formencode.All(formencode.validators.UnicodeString(not_empty=True),
-                                  formencode.validators.OneOf([u'default',
+    display_mode = formencode.All(formencode.validators.UnicodeString(if_empty=None, if_missing=None),
+                                  formencode.validators.OneOf([None,
                                                                u'three_pane_html',
-                                                               u'text_only',
-                                                               u'inherit']))
+                                                               u'text_only']))
     u"""The part's display mode"""
-    content = formencode.validators.UnicodeString(not_empty=True)
+    label = formencode.validators.UnicodeString(if_empty=None, if_missing=None)
+    """The part's label"""
+    content = formencode.validators.UnicodeString(if_missing=u'')
     u"""The ReST content"""
     child_part_id = formencode.ForEach(formencode.validators.Int, if_missing=None)
     u"""The child :class:`~wte.models.Part` ids for re-ordering"""
@@ -344,8 +420,7 @@ class EditPartSchema(formencode.Schema):
     u"""The :class:`~wte.models.Template` ids for re-ordering"""
 
 
-@view_config(route_name='part.edit')
-@render({'text/html': 'part/edit.html'})
+@view_config(route_name='part.edit', renderer='wte:templates/part/edit.kajiki')
 @current_user()
 @require_logged_in()
 def edit(request):
@@ -371,9 +446,18 @@ def edit(request):
                         part.status = params['status']
                         part.display_mode = params['display_mode']
                         part.content = params['content']
-                        part.compiled_content = compile_rst(params['content'],
-                                                            request,
-                                                            part=part)
+                        try:
+                            part.compiled_content = compile_rst(params['content'],
+                                                                request,
+                                                                part=part)
+                        except Exception as e:
+                            msg = e.message.replace('<string>:', 'Invalid ReST: Line ').replace('(SEVERE/4) ', '')
+                            msg = msg[:msg.find('\n')]
+                            raise formencode.Invalid('Invalid ReST',
+                                                     params['content'],
+                                                     None,
+                                                     error_dict={'content': msg})
+                        part.label = params['label']
                         if params['child_part_id']:
                             for idx, cpid in enumerate(params['child_part_id']):
                                 child_part = dbsession.query(Part).filter(and_(Part.id == cpid,
@@ -386,24 +470,91 @@ def edit(request):
                                 if template:
                                     template.order = idx
                     dbsession.add(part)
-                    request.session.flash('The %s has been updated' % (part.type), queue='info')
                     raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
                 except formencode.Invalid as e:
-                    print(e)
-                    e.params = request.params
-                    return {'e': e,
+                    dbsession.add(part)
+                    return {'errors': e.error_dict,
+                            'values': request.params,
                             'part': part,
-                            'crumbs': crumbs}
+                            'crumbs': crumbs,
+                            'help': ['user', 'teacher', 'editor', 'index.html']}
             return {'part': part,
-                    'crumbs': crumbs}
+                    'crumbs': crumbs,
+                    'help': ['user', 'teacher', 'editor', 'index.html']}
         else:
             unauthorised_redirect(request)
     else:
         raise HTTPNotFound()
 
 
-@view_config(route_name='part.delete')
-@render({'text/html': 'part/delete.html'})
+class RegisterSettingsSchema(CSRFSchema):
+    u"""The :class:`~wte.views.part.RegisterSettingsSchema` handles the validation
+    for modifying the ``access_rights`` of a :class:`~wte.models.Part`.
+    """
+    require = formencode.ForEach(formencode.validators.OneOf(['password', 'email_domains']))
+    """Which access rights are required"""
+    password = formencode.validators.UnicodeString(if_missing=None)
+    """The password to use for access rights"""
+    email_domains = formencode.validators.UnicodeString(if_missing=None)
+    """The email domains that the user must belong to"""
+
+
+@view_config(route_name='part.register.settings', renderer='wte:templates/part/register_settings.kajiki')
+@current_user()
+@require_logged_in()
+def edit_register_settings(request):
+    u"""Handles the ``/parts/{pid}/register/settings`` URL,
+    providing the UI and backend for editing the settings for registering for
+    a "module" type :class:`~wte.models.Part`.
+
+    Requires that the user has "edit" rights on the :class:`~wte.models.Part`.
+    """
+    dbsession = DBSession()
+    part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
+    if part:
+        if part.allow('edit', request.current_user):
+            if part.type != 'module':
+                request.session.flash('Access rights can only be set on modules', queue='info')
+                raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
+            if part.access_rights:
+                rights = json.loads(part.access_rights)
+            else:
+                rights = {}
+            crumbs = create_part_crumbs(request,
+                                        part,
+                                        {'title': 'Access Settings',
+                                         'url': request.current_route_url()})
+            if request.method == u'POST':
+                try:
+                    params = RegisterSettingsSchema().to_python(request.params)
+                    with transaction.manager:
+                        rights = {}
+                        if params['require']:
+                            if 'password' in params['require'] and params['password']:
+                                rights['password'] = params['password']
+                            if 'email_domains' in params['require'] and params['email_domains']:
+                                rights['email_domains'] = [ed.strip() for ed in params['email_domains'].split(',')]
+                        part.access_rights = json.dumps(rights)
+                        dbsession.add(part)
+                    dbsession.add(part)
+                    raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
+                except formencode.Invalid as e:
+                    print(e)
+                    return {'errors': e.error_dict,
+                            'valuse': request.params,
+                            'part': part,
+                            'crumbs': crumbs,
+                            'rights': rights}
+            return {'part': part,
+                    'crumbs': crumbs,
+                    'rights': rights}
+        else:
+            unauthorised_redirect(request)
+    else:
+        raise HTTPNotFound()
+
+
+@view_config(route_name='part.delete', renderer='wte:templates/part/delete.kajiki')
 @current_user()
 @require_logged_in()
 def delete(request):
@@ -422,20 +573,26 @@ def delete(request):
                                          'url': request.route_url('part.delete',
                                                                   pid=part.id)})
             if request.method == u'POST':
-                part_type = part.type
-                parent = part.parent
-                with transaction.manager:
-                    dbsession.add(part)
-                    for progress in dbsession.query(UserPartProgress).filter(UserPartProgress.current_id == part.id):
-                        progress.current_id = None
-                    dbsession.delete(part)
-                request.session.flash('The %s has been deleted' % (part_type), queue='info')
-                if parent:
-                    dbsession.add(parent)
-                    raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
-                else:
-                    dbsession.add(request.current_user)
-                    raise HTTPSeeOther(request.route_url('user.modules', uid=request.current_user.id))
+                try:
+                    CSRFSchema().to_python(request.params, State(request=request))
+                    parent = part.parent
+                    with transaction.manager:
+                        dbsession.add(part)
+                        for progress in dbsession.query(UserPartProgress).\
+                                filter(UserPartProgress.current_id == part.id):
+                            progress.current_id = None
+                        dbsession.delete(part)
+                    if parent:
+                        dbsession.add(parent)
+                        raise HTTPSeeOther(request.route_url('part.view', pid=parent.id))
+                    else:
+                        dbsession.add(request.current_user)
+                        raise HTTPSeeOther(request.route_url('part.list',
+                                                             _query={'user_id': request.current_user.id}))
+                except formencode.Invalid as e:
+                    return {'errors': e.error_dict,
+                            'part': part,
+                            'crumbs': crumbs}
             return {'part': part,
                     'crumbs': crumbs}
         else:
@@ -444,13 +601,16 @@ def delete(request):
         raise HTTPNotFound()
 
 
-@view_config(route_name='part.preview')
-@render({'application/json': True})
+@view_config(route_name='part.preview', renderer='json')
 @current_user()
 @require_logged_in()
 def preview(request):
     u"""Handles the ``/parts/{pid}/rst_preview`` URL, generating an HTML preview of
     the submitted ReST. The ReST text to render has to be set as the ``content`` parameter.
+
+    In addition to rendering the ReST the in the same way that it is rendered when
+    saving a :class:`~wte.models.Part`, this will also insert a <span id="focus"></span>
+    at the current cursor position indicated by the string "§§§§§§§".
 
     Requires that the user has "edit" rights on the current :class:`~wte.models.Part`.
     """
@@ -459,9 +619,20 @@ def preview(request):
     if part:
         if part.allow('edit', request.current_user):
             if 'content' in request.params:
-                return {'content': compile_rst(request.params['content'],
-                                               request,
-                                               part=part)}
+                try :
+                    content = compile_rst(request.params['content'], request, part=part)
+                except Exception as e:
+                    content = ['<div class="callout alert"><p>']
+                    for line in e.message.split('\n'):
+                        if line:
+                            content.append(line)
+                            content.append('<br />')
+                        else:
+                            content.append('</p><p>')
+                    content.append('</p></div>')
+                    content = ''.join(content).replace('<br /></p>', '</p>').\
+                        replace('<string>:', 'Line ').replace('(SEVERE/4) ', '')
+                return {'content': content}
             else:
                 raise HTTPNotFound()
         else:
@@ -470,8 +641,8 @@ def preview(request):
         raise HTTPNotFound()
 
 
-@view_config(route_name='part.register')
-@render({'text/html': 'part/register.html'})
+# Todo: CSRF Protection
+@view_config(route_name='part.register', renderer='wte:templates/part/register.kajiki')
 @current_user()
 @require_logged_in()
 def register(request):
@@ -489,18 +660,47 @@ def register(request):
             raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
         if part.status != 'available':
             request.session.flash('You cannot register for this module as it is %s' % (part.status), queue='auth')
-            raise HTTPSeeOther(request.route_url('modules'))
+            raise HTTPSeeOther(request.route_url('part.list'))
         crumbs = create_part_crumbs(request,
                                     part,
                                     {'title': 'Register',
                                      'url': request.route_url('part.register',
                                                               pid=part.id)})
         if request.method == 'POST':
+            if part.access_rights:
+                rights = json.loads(part.access_rights)
+                if rights:
+                    if 'password' in rights and 'email_domains' in rights:
+                        if request.current_user.email[request.current_user.email.find('@') + 1:]\
+                                in rights['email_domains']:
+                            if 'password' not in request.params or request.params['password'] != rights['password']:
+                                e = formencode.Invalid('Please provide the correct password',
+                                                       None,
+                                                       None,
+                                                       error_dict={'password': 'Please provide the correct password'})
+                                e.params = request.params
+                                return {'part': part,
+                                        'crumbs': crumbs,
+                                        'e': e}
+                        else:
+                            request.session.flash('''Unfortunately you cannot take this module as your e-mail address is not
+in the list of authorised e-mail domains.''', queue='auth')
+                            raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
+                    elif 'password' in rights:
+                        if 'password' not in request.params or request.params['password'] != rights['password']:
+                            return {'part': part,
+                                    'crumbs': crumbs,
+                                    'invalid_password': True}
+                    elif 'email_domains' in rights:
+                        if request.current_user.email[request.current_user.email.find('@') + 1:] \
+                                not in rights['email_domains']:
+                            request.session.flash('Unfortunately you cannot take this module as your e-mail address ' +
+                                                  'is not in the list of authorised e-mail domains.''', queue='auth')
+                            raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
             with transaction.manager:
                 dbsession.add(UserPartRole(user=request.current_user,
                                            part=part,
                                            role=u'student'))
-            request.session.flash('You have registered for the module', queue='info')
             raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
         return {'part': part,
                 'crumbs': crumbs}
@@ -522,8 +722,8 @@ def get_all_parts(part):
     return parts
 
 
-@view_config(route_name='part.deregister')
-@render({'text/html': 'part/deregister.html'})
+# Todo: CSRF Protection
+@view_config(route_name='part.deregister', renderer='wte:templates/part/deregister.kajiki')
 @current_user()
 @require_logged_in()
 def deregister(request):
@@ -557,7 +757,6 @@ def deregister(request):
                                     UserPartProgress.user_id == request.current_user.id)).first()
                     if progress:
                         dbsession.delete(progress)
-            request.session.flash('You have de-registered from the module', queue='info')
             raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
         return {'part': part,
                 'crumbs': crumbs}
@@ -565,7 +764,7 @@ def deregister(request):
         raise HTTPNotFound()
 
 
-class ChangeStatusSchema(formencode.Schema):
+class ChangeStatusSchema(CSRFSchema):
     u"""The :class:`~wte.views.part.ChangeStatusSchema` handles the validation
     for editing :class:`~wte.models.Part`.
     """
@@ -578,8 +777,7 @@ class ChangeStatusSchema(formencode.Schema):
     u"""Return to this URL"""
 
 
-@view_config(route_name='part.change_status')
-@render({'text/html': 'part/change_status.html'})
+@view_config(route_name='part.change_status', renderer='wte:templates/part/change_status.kajiki')
 @current_user()
 @require_logged_in()
 def change_status(request):
@@ -603,14 +801,13 @@ def change_status(request):
                         dbsession.add(part)
                         part.status = params['status']
                     dbsession.add(part)
-                    request.session.flash('The %s is now %s' % (part.type, part.status), queue='info')
                     if params['return_to']:
                         raise HTTPSeeOther(params['return_to'])
                     else:
                         raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
                 except formencode.Invalid as e:
-                    e.params = request.params
-                    return {'e': e,
+                    return {'errors': e.error_dict,
+                            'valuse': request.params,
                             'part': part,
                             'crumbs': crumbs}
             return {'part': part,
@@ -654,7 +851,6 @@ def crossref_replace(match, id_mapping):
 
 
 @view_config(route_name='part.export')
-@require_method('POST')
 @current_user()
 @require_logged_in()
 def export(request):
@@ -671,6 +867,8 @@ def export(request):
     def part_as_dict(part, assets, id_mapping):
         data = {'id': len(id_mapping),
                 'type': part.type,
+                'display_mode': part.display_mode,
+                'label': part.label,
                 'title': part.title,
                 'status': part.status,
                 'order': part.order,
@@ -727,11 +925,10 @@ def export(request):
                                 headers=[('Content-Type', 'application/zip'),
                                          ('Content-Disposition', str('attachment; filename="%s.zip"' % (part.title)))])
 
-            @render({'text/html': 'part/export.html'})
-            def render_form(request):
-                return {'part': part,
-                        'crumbs': crumbs}
-            return render_form(request)
+            return render_to_response('wte:templates/part/export.kajiki',
+                                      {'part': part,
+                                       'crumbs': crumbs},
+                                      request=request)
         else:
             unauthorised_redirect(request)
     else:
@@ -793,18 +990,23 @@ class ImportPartConverter(formencode.FancyValidator):
             raise formencode.api.Invalid(self.message('invalidpart', state, part_type=data['type']), value, state)
         if state.parent:
             if state.parent.type == 'module':
-                if data['type'] not in ['tutorial', 'exercise']:
+                if data['type'] not in ['tutorial', 'exercise', 'part']:
                     raise formencode.api.Invalid(self.message('invalidpart',
                                                               state,
                                                               part_type=data['type']),
                                                  value,
                                                  state)
-            elif state.parent.type == 'tutorial':
+            elif state.parent.type == 'part':
                 if data['type'] != 'page':
                     raise formencode.api.Invalid(self.message('invalidpart', state, part_type=data['type']),
                                                  value,
                                                  state)
-            elif state.parent.type == 'exercise':
+            elif state.parent.type == 'tutorial':  # Handle old "page" Part imports
+                if data['type'] != 'page':
+                    raise formencode.api.Invalid(self.message('invalidpart', state, part_type=data['type']),
+                                                 value,
+                                                 state)
+            elif state.parent.type == 'exercise':  # Handle old "task" Part imports
                 if data['type'] != 'task':
                     raise formencode.api.Invalid(self.message('invalidpart', state, part_type=data['type']),
                                                  value,
@@ -815,7 +1017,7 @@ class ImportPartConverter(formencode.FancyValidator):
                                              state)
 
 
-class ImportPartSchema(formencode.Schema):
+class ImportPartSchema(CSRFSchema):
     u"""The :class:`~wte.views.part.ImportPartSchema` validates the request to import
     a :class:`~wte.models.Part` (and any children and :class:`~wte.models.Asset`).
 
@@ -824,12 +1026,13 @@ class ImportPartSchema(formencode.Schema):
     """
 
     parent_id = formencode.validators.Int(if_missing=None)
+    """The id of the parent :class:`~wte.models.Part` to import into."""
     file = formencode.compound.Pipe(formencode.validators.FieldStorageUploadConverter(not_empty=True),
                                     ImportPartConverter())
+    """The file to import."""
 
 
-@view_config(route_name='part.import')
-@render({'text/html': 'part/import.html'})
+@view_config(route_name='part.import', renderer='wte:templates/part/import.kajiki')
 @current_user()
 @require_logged_in()
 def import_file(request):
@@ -845,9 +1048,14 @@ def import_file(request):
     * `task` -- "edit" permission on the parent :class:`~wte.models.Part`
     """
     def recursive_import(data, zip_file, id_mapping):
-        part = Part(type=data['type'],
+        part_type = data['type']
+        if part_type == 'task':
+            part_type = 'page'
+        elif part_type in ['tutorial', 'exercise']:
+            part_type = 'part'
+        part = Part(type=part_type,
                     title=data['title'],
-                    status=u'available' if data['type'] in ['page', 'task'] else u'unavailable')
+                    status=u'available' if part_type == u'page' else u'unavailable')
         if 'id' in data:
             id_mapping[unicode(data['id'])] = part
         if 'order' in data:
@@ -857,6 +1065,15 @@ def import_file(request):
                 part.order = 0
         if 'content' in data:
             part.content = data['content']
+        if part_type == 'part' and 'display_mode' in data:
+            part.display_mode = data['display_mode']
+        elif part_type == 'part':
+            part.display_mode = 'three_pane_html'
+        if 'label' in data:
+            part.label = data['label']
+        else:
+            if data['type'] in ['tutorial', 'exercise', 'page', 'task']:
+                part.label = data['type'].title()
         if 'assets' in data:
             for tmpl in data['assets']:
                 if 'filename' in tmpl and 'mimetype' in tmpl and 'id' in tmpl and 'type' in tmpl:
@@ -925,7 +1142,6 @@ def import_file(request):
                     id_mapping[key] = value.id
                 fix_references(part, dbsession, id_mapping)
             dbsession.add(part)
-            request.session.flash('Your %s has been imported' % (part.type), queue='info')
             raise HTTPSeeOther(request.route_url('part.view', pid=part.id))
         except formencode.Invalid as e:
             e.params = request.params
@@ -934,6 +1150,7 @@ def import_file(request):
     return {'crumbs': crumbs}
 
 
+# Todo: Add a download launch page for non-JS users
 @view_config(route_name='part.download')
 @require_method('POST')
 @current_user()
@@ -947,37 +1164,54 @@ def download(request):
     another WTE instance, while downloading creates an HTML version for
     offline viewing.
     """
-    def download_part(base_path, part, depth, body_zip, template_loader):
-        template = template_loader.load('part/download.html')
-        doctree = template.generate(part=part,
-                                    depth=depth,
-                                    h=helpers)
-        body_zip.writestr('%s/index.html' % (base_path), doctree.render('xhtml').encode('utf-8'))
+    def download_part(base_path, part, body_zip, parents=None):
+        response = render_to_response('wte:templates/part/download.kajiki',
+                                      {'part': part,
+                                       'parents': parents},
+                                      request=request)
+        body_zip.writestr('%s/%s.html' % (base_path, part.id), response.body)
         for child in part.children:
-            download_part('%s/%s' % (base_path, child.id), child, depth + 1, body_zip, template_loader)
-        if part.type == 'tutorial' or part.type == 'task':
-            for template in part.templates:
-                body_zip.writestr('%s/workspace/%s' % (base_path, template.filename),
-                                  template.data if template.data else '')
-            for asset in part.assets:
-                body_zip.writestr('%s/workspace/assets/%s' % (base_path, asset.filename),
-                                  asset.data if asset.data else '')
+            if child.allow('view', request.current_user):
+                download_part(base_path, child, body_zip, parents + [part] if parents else [part])
+        for asset in part.assets:
+            body_zip.writestr('%s/%s/assets/%s' % (base_path, part.id, asset.filename),
+                              asset.data if asset.data else '')
+        for template in part.templates:
+            body_zip.writestr('%s/%s/%s' % (base_path, part.id, template.filename),
+                              template.data if template.data else '')
     dbsession = DBSession()
     part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
     if part:
         if part.allow('view', request.current_user):
-            template_loader = TemplateLoader(loader.package('wte', 'templates'))
             body = StringIO()
             body_zip = ZipFile(body, 'w')
-            body_zip.writestr('%s/_static/normalize.css' % (part.title),
-                              resource_string('wte', 'static/css/normalize.css'))
-            body_zip.writestr('%s/_static/foundation.min.css' % (part.title),
-                              resource_string('wte', 'static/css/foundation.min.css'))
-            body_zip.writestr('%s/_static/docutils.css' % (part.title),
-                              resource_string('wte', 'static/css/docutils.css').replace('#textbook ', ''))
-            body_zip.writestr('%s/_static/application.css' % (part.title),
-                              resource_string('wte', 'static/css/application.css'))
-            download_part(part.title, part, 0, body_zip, template_loader)
+            body_zip.writestr('%s/_static/application.min.css' % (part.title),
+                              resource_string('wte', 'static/css/application.min.css'))
+            body_zip.writestr('%s/_static/icons/foundation-icons.eot' % (part.title),
+                              resource_string('wte', 'static/css/icons/foundation-icons.eot'))
+            body_zip.writestr('%s/_static/icons/foundation-icons.svg' % (part.title),
+                              resource_string('wte', 'static/css/icons/foundation-icons.svg'))
+            body_zip.writestr('%s/_static/icons/foundation-icons.ttf' % (part.title),
+                              resource_string('wte', 'static/css/icons/foundation-icons.ttf'))
+            body_zip.writestr('%s/_static/icons/foundation-icons.woff' % (part.title),
+                              resource_string('wte', 'static/css/icons/foundation-icons.woff'))
+            body_zip.writestr('%s/_static/jquery.min.js' % (part.title),
+                              resource_string('wte', 'static/js/jquery.min.js'))
+            body_zip.writestr('%s/index.html' % (part.title),
+                              '''<!DOCTYPE html>
+<html>
+  <head>
+    <title>%(title)s</title>
+    <script>
+      window.location.href = '%(url)s';
+    </script>
+    <meta http-equiv="refresh" content="1; url=%(url)s">
+  </head>
+  <body>
+    <p>The main content can be found <a href="%(url)s">here</a></p>
+  </body>
+</html>''' % {'title': part.title, 'url': '%s.html' % part.id})
+            download_part(part.title, part, body_zip)
             body_zip.close()
             return Response(body=str(body.getvalue()),
                             headers=[('Content-Type', 'application/zip'),
@@ -986,3 +1220,112 @@ def download(request):
             unauthorised_redirect(request)
     else:
         raise HTTPNotFound()
+
+
+class ResetFilesSchema(CSRFSchema):
+    """Validator for resetting all the files in the user's :class:`~wte.models.UserPartProgress`
+    to their initial values."""
+
+    filename = formencode.validators.UnicodeString(if_empty=None, if_missing=None)
+    """The optional filename to reset."""
+
+
+@view_config(route_name='part.reset-files', renderer='wte:templates/part/reset_files.kajiki')
+@current_user()
+@require_logged_in()
+def reset_files(request):
+    u"""Handles the ``/parts/{pid}/reset_files`` URL, providing
+    the UI and backend for resetting all :class:`~wte.models.Assets` of a
+    :class:`~wte.models.Part` to the default for the current user.
+
+    Requires that the user has "view" rights on the current
+    :class:`~wte.models.Part`.
+    """
+    dbsession = DBSession()
+    part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
+    if part:
+        if part.allow('view', request.current_user):
+            crumbs = create_part_crumbs(request,
+                                        part,
+                                        {'title': 'Discard all Changes',
+                                         'url': request.current_route_url()})
+            if request.method == u'POST':
+                try:
+                    params = ResetFilesSchema().to_python(request.params, State(request=request))
+                    with transaction.manager:
+                        progress = get_user_part_progress(dbsession, request.current_user, part)
+                        for user_file in list(progress.files):
+                            if not params['filename'] or params['filename'] == user_file.filename:
+                                progress.files.remove(user_file)
+                                dbsession.delete(user_file)
+                    raise HTTPSeeOther(request.route_url('part.view',
+                                                         pid=request.matchdict['pid']))
+                except formencode.Invalid as e:
+                    return {'errors': e.error_dict,
+                            'part': part,
+                            'crumbs': crumbs}
+            return {'part': part,
+                    'crumbs': crumbs}
+        else:
+            unauthorised_redirect(request)
+    else:
+        raise HTTPNotFound()
+
+
+@view_config(route_name='part.progress.download')
+@current_user()
+@require_logged_in()
+def download_part_progress(request):
+    u"""Handles the ``/users/{uid}/progress/{pid}/download``
+    URL, sending back the complete set of data associated with the
+    :class:`~wte.models.UserPartProgress`.
+
+    Requires that the user has "view" rights on the
+    :class:`~wte.models.UserPartProgress`.
+    """
+    dbsession = DBSession()
+    part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
+    if part:
+        if part.allow('view', request.current_user):
+            progress = get_user_part_progress(dbsession, request.current_user, part)
+            basepath = progress.part.title
+            filename = progress.part.title
+            parent = progress.part.parent
+            while parent:
+                basepath = '%s/%s' % (parent.title, basepath)
+                filename = '%s - %s' % (parent.title, filename)
+                parent = parent.parent
+            basepath = '%s/' % (basepath)
+            filename = '%s.zip' % (filename)
+            body = StringIO()
+            zipfile = ZipFile(body, mode='w')
+            for user_file in progress.files:
+                zipfile.writestr('%s%s' % (basepath, user_file.filename), user_file.data)
+            for asset in progress.part.assets:
+                zipfile.writestr('%s/assets/%s' % (basepath, asset.filename), asset.data)
+            zipfile.close()
+            return Response(body=body.getvalue(),
+                            headerlist=[('Content-Type', 'application/zip'),
+                                        ('Content-Disposition', str('attachment; filename="%s"' % (filename)))])
+        else:
+            unauthorised_redirect(request)
+    else:
+        raise HTTPNotFound()
+
+
+@view_config(route_name='part.search', renderer='json')
+@current_user()
+@require_logged_in()
+def search(request):
+    """Handles the ``/parts/search`` URL, searching all
+    :class:`~wte.models.Part` for matches to the request parameter 'q'.
+    Returns all :class:`~wte.models.Part` that the current user is
+    allowed to view.
+    """
+    dbsession = DBSession()
+    parts = []
+    if 'q' in request.params and request.params['q']:
+        for part in dbsession.query(Part).filter(Part.title.like('%%%s%%' % request.params['q'])):
+            if part.allow('view', request.current_user):
+                parts.append({'id': part.id, 'value': part.title})
+    return parts

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="../../static/css/application.min.css"/>
+    <link rel="stylesheet" href="../_static/default.css"/>
+    <link rel="stylesheet" href="../_static/override.css"/>
+    <link rel="stylesheet" href="../_static/pygments.css"/>
+    <title><code class="docutils literal"><span class="pre">wte.views.timed_tasks</span></code> &#8211; Timed Tasks Backend</title>
+  </head>
+  <body>
+    <nav>
+      <ul class="breadcrumbs">
+        
+          <li><a href="index.html">API Documentation</a></li>
+        
+        <li><code class="docutils literal"><span class="pre">wte.views.timed_tasks</span></code> &#8211; Timed Tasks Backend</li>
+      </ul>
+      <div class="row">
+        <div class="column small-12">
+          <span class="target" id="module-wte.views.timed_tasks"></span><div class="section" id="wte-views-timed-tasks-timed-tasks-backend">
+<h1><a class="reference internal" href="#module-wte.views.timed_tasks" title="wte.views.timed_tasks"><code class="xref py py-mod docutils literal"><span class="pre">wte.views.timed_tasks</span></code></a> &#8211; Timed Tasks Backend<a class="headerlink" href="#wte-views-timed-tasks-timed-tasks-backend" title="Permalink to this headline">¶</a></h1>
+<p>The <code class="xref py py-mod docutils literal"><span class="pre">timed_task</span></code> module provides the functionality for
+creating, viewing, editing, and deleting <a class="reference internal" href="wte_models.html#wte.models.TimedTask" title="wte.models.TimedTask"><code class="xref py py-class docutils literal"><span class="pre">TimedTask</span></code></a>.</p>
+<p>Routes are defined in <a class="reference internal" href="#wte.views.timed_tasks.init" title="wte.views.timed_tasks.init"><code class="xref py py-func docutils literal"><span class="pre">init()</span></code></a>.</p>
+<dl class="class">
+<dt id="wte.views.timed_tasks.EditTimedTaskSchema">
+<em class="property">class </em><code class="descclassname">wte.views.timed_tasks.</code><code class="descname">EditTimedTaskSchema</code><span class="sig-paren">(</span><em>options=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/timed_tasks.html#EditTimedTaskSchema"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.timed_tasks.EditTimedTaskSchema" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>The <a class="reference internal" href="#wte.views.timed_tasks.EditTimedTaskSchema" title="wte.views.timed_tasks.EditTimedTaskSchema"><code class="xref py py-class docutils literal"><span class="pre">EditTimedTaskSchema</span></code></a> handles the</dt>
+<dd><p class="first">validation of changes to a <a class="reference internal" href="wte_models.html#wte.models.TimedTask" title="wte.models.TimedTask"><code class="xref py py-class docutils literal"><span class="pre">TimedTask</span></code></a>.</p>
+<p class="last">By default it only expects to validate date (YYYY-MM-DDD) and time
+(HH:MM) fields. An additional <code class="docutils literal"><span class="pre">options</span></code> field is added, if the
+<code class="docutils literal"><span class="pre">options</span></code> parameter is passed to the constructor. In this case the
+<a class="reference internal" href="#wte.views.timed_tasks.EditTimedTaskSchema" title="wte.views.timed_tasks.EditTimedTaskSchema"><code class="xref py py-class docutils literal"><span class="pre">EditTimedTaskSchema</span></code></a> expects the additional
+field-names in the submitted form to have names in the format
+&#8220;options.{field-name}&#8221;.</p>
+</dd>
+</dl>
+<p><strong>Messages</strong></p>
+<dl class="docutils">
+<dt><code class="docutils literal"><span class="pre">badDictType</span></code>:</dt>
+<dd>The input must be dict-like (not a <code class="docutils literal"><span class="pre">%(type)s</span></code>: <code class="docutils literal"><span class="pre">%(value)r</span></code>)</dd>
+<dt><code class="docutils literal"><span class="pre">badType</span></code>:</dt>
+<dd>The input must be a string (not a <code class="docutils literal"><span class="pre">%(type)s</span></code>: <code class="docutils literal"><span class="pre">%(value)r</span></code>)</dd>
+<dt><code class="docutils literal"><span class="pre">empty</span></code>:</dt>
+<dd>Please enter a value</dd>
+<dt><code class="docutils literal"><span class="pre">missingValue</span></code>:</dt>
+<dd>Missing value</dd>
+<dt><code class="docutils literal"><span class="pre">noneType</span></code>:</dt>
+<dd>The input must be a string (not None)</dd>
+<dt><code class="docutils literal"><span class="pre">notExpected</span></code>:</dt>
+<dd>The input field <code class="docutils literal"><span class="pre">%(name)s</span></code> was not expected.</dd>
+<dt><code class="docutils literal"><span class="pre">singleValueExpected</span></code>:</dt>
+<dd>Please provide only one value</dd>
+</dl>
+<dl class="attribute">
+<dt id="wte.views.timed_tasks.EditTimedTaskSchema.date">
+<code class="descname">date</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.timed_tasks.EditTimedTaskSchema.date" title="Permalink to this definition">¶</a></dt>
+<dd><p>The task&#8217;s updated date</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wte.views.timed_tasks.EditTimedTaskSchema.time">
+<code class="descname">time</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.timed_tasks.EditTimedTaskSchema.time" title="Permalink to this definition">¶</a></dt>
+<dd><p>The tasks&#8217;s updatet time</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="wte.views.timed_tasks.NewTimedTaskSchema">
+<em class="property">class </em><code class="descclassname">wte.views.timed_tasks.</code><code class="descname">NewTimedTaskSchema</code><span class="sig-paren">(</span><em>*args</em>, <em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/timed_tasks.html#NewTimedTaskSchema"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.timed_tasks.NewTimedTaskSchema" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>The <a class="reference internal" href="#wte.views.timed_tasks.NewTimedTaskSchema" title="wte.views.timed_tasks.NewTimedTaskSchema"><code class="xref py py-class docutils literal"><span class="pre">NewTimedTaskSchema</span></code></a> handles the</dt>
+<dd>validation of a new <a class="reference internal" href="wte_models.html#wte.models.TimedTask" title="wte.models.TimedTask"><code class="xref py py-class docutils literal"><span class="pre">TimedTask</span></code></a>.</dd>
+</dl>
+<p><strong>Messages</strong></p>
+<dl class="docutils">
+<dt><code class="docutils literal"><span class="pre">badDictType</span></code>:</dt>
+<dd>The input must be dict-like (not a <code class="docutils literal"><span class="pre">%(type)s</span></code>: <code class="docutils literal"><span class="pre">%(value)r</span></code>)</dd>
+<dt><code class="docutils literal"><span class="pre">badType</span></code>:</dt>
+<dd>The input must be a string (not a <code class="docutils literal"><span class="pre">%(type)s</span></code>: <code class="docutils literal"><span class="pre">%(value)r</span></code>)</dd>
+<dt><code class="docutils literal"><span class="pre">empty</span></code>:</dt>
+<dd>Please enter a value</dd>
+<dt><code class="docutils literal"><span class="pre">missingValue</span></code>:</dt>
+<dd>Missing value</dd>
+<dt><code class="docutils literal"><span class="pre">noneType</span></code>:</dt>
+<dd>The input must be a string (not None)</dd>
+<dt><code class="docutils literal"><span class="pre">notExpected</span></code>:</dt>
+<dd>The input field <code class="docutils literal"><span class="pre">%(name)s</span></code> was not expected.</dd>
+<dt><code class="docutils literal"><span class="pre">singleValueExpected</span></code>:</dt>
+<dd>Please provide only one value</dd>
+</dl>
+<dl class="attribute">
+<dt id="wte.views.timed_tasks.NewTimedTaskSchema.name">
+<code class="descname">name</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.timed_tasks.NewTimedTaskSchema.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>The new task&#8217;s name</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.timed_tasks.delete_part_task">
+<code class="descclassname">wte.views.timed_tasks.</code><code class="descname">delete_part_task</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/timed_tasks.html#delete_part_task"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.timed_tasks.delete_part_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles the <code class="docutils literal"><span class="pre">parts/{pid}/timed-tasks/{tid}/delete</span></code> URL, providing the UI
+and backend for deleting an existing <a class="reference internal" href="wte_models.html#wte.models.TimedTask" title="wte.models.TimedTask"><code class="xref py py-class docutils literal"><span class="pre">TimedTask</span></code></a> that
+belongs to a <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</p>
+<p>Requires that the user has &#8220;edit&#8221; rights on the
+<a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.timed_tasks.edit_part_task">
+<code class="descclassname">wte.views.timed_tasks.</code><code class="descname">edit_part_task</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/timed_tasks.html#edit_part_task"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.timed_tasks.edit_part_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles the <code class="docutils literal"><span class="pre">parts/{pid}/timed-tasks/{tid}/edit</span></code> URL, providing the UI
+and backend for editing an existing <a class="reference internal" href="wte_models.html#wte.models.TimedTask" title="wte.models.TimedTask"><code class="xref py py-class docutils literal"><span class="pre">TimedTask</span></code></a> that
+belongs to a <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</p>
+<p>Requires that the user has &#8220;edit&#8221; rights on the
+<a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.timed_tasks.init">
+<code class="descclassname">wte.views.timed_tasks.</code><code class="descname">init</code><span class="sig-paren">(</span><em>config</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/timed_tasks.html#init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.timed_tasks.init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds the timed-task-specific backend routes (route name, URL pattern
+handler):</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">parts.timed_tasks</span></code> &#8211; <code class="docutils literal"><span class="pre">/parts/{pid}/timed-tasks</span></code> &#8211;
+<a class="reference internal" href="#wte.views.timed_tasks.view_part_tasks" title="wte.views.timed_tasks.view_part_tasks"><code class="xref py py-func docutils literal"><span class="pre">view_part_tasks()</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">parts.timed_tasks.new</span></code> &#8211; <code class="docutils literal"><span class="pre">/parts/{pid}/timed-tasks/new</span></code> &#8211;
+<a class="reference internal" href="#wte.views.timed_tasks.new_part_task" title="wte.views.timed_tasks.new_part_task"><code class="xref py py-func docutils literal"><span class="pre">new_part_task()</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">parts.timed_tasks.edit</span></code> &#8211; <code class="docutils literal"><span class="pre">/parts/{pid}/timed-tasks/{tid}/edit</span></code> &#8211;
+<a class="reference internal" href="#wte.views.timed_tasks.edit_part_task" title="wte.views.timed_tasks.edit_part_task"><code class="xref py py-func docutils literal"><span class="pre">edit_part_task()</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">parts.timed_tasks.delete</span></code> &#8211; <code class="docutils literal"><span class="pre">/parts/{pid}/timed-tasks/{tid}/delete</span></code> &#8211;
+<a class="reference internal" href="#wte.views.timed_tasks.delete_part_task" title="wte.views.timed_tasks.delete_part_task"><code class="xref py py-func docutils literal"><span class="pre">delete_part_task()</span></code></a></li>
+</ul>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.timed_tasks.new_part_task">
+<code class="descclassname">wte.views.timed_tasks.</code><code class="descname">new_part_task</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/timed_tasks.html#new_part_task"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.timed_tasks.new_part_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles the <code class="docutils literal"><span class="pre">parts/{pid}/timed-tasks/new</span></code> URL, providing the UI and
+backend for creating a new <a class="reference internal" href="wte_models.html#wte.models.TimedTask" title="wte.models.TimedTask"><code class="xref py py-class docutils literal"><span class="pre">TimedTask</span></code></a>s for
+a given <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</p>
+<p>Requires that the user has &#8220;edit&#8221; rights on the
+<a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.timed_tasks.view_part_tasks">
+<code class="descclassname">wte.views.timed_tasks.</code><code class="descname">view_part_tasks</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/timed_tasks.html#view_part_tasks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.timed_tasks.view_part_tasks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles the <code class="docutils literal"><span class="pre">parts/{pid}/timed-tasks</span></code> URL, displaying the
+<a class="reference internal" href="wte_models.html#wte.models.TimedTask" title="wte.models.TimedTask"><code class="xref py py-class docutils literal"><span class="pre">TimedTask</span></code></a>s for the given <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</p>
+<p>Requires that the user has &#8220;edit&#8221; rights on the
+<a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</p>
+</dd></dl>
+
+</div>
+
+        </div>
+      </div>
+      <ul class="pagination text-center" role="navigation" aria-label="Pagination">
+        
+          <li class="pagination-previous"><a href="wte_views_part.html"><code class="docutils literal"><span class="pre">wte.views.part</span></code> &#8211; Part Backend</a></li>
+        
+        
+          <li class="pagination-next"><a href="wte_views_user.html"><code class="docutils literal"><span class="pre">wte.views.user</span></code> &#8211; User functionality view handlers</a></li>
+        
+      </ul>
+    </nav>
+  </body>
+</html>

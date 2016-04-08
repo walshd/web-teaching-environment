@@ -1,0 +1,272 @@
+<py:extends href="wte:templates/layout/full_width.kajiki">
+  <py:block name="title">${part.title} - Edit</py:block>
+  <py:block name="content">
+    <py:import href="wte:templates/helpers/menu.kajiki" alias="menu"/>
+    <py:import href="wte:templates/helpers/form.kajiki" alias="form"/>
+    <h1>${part.title} - Edit</h1>
+    <div class="row expanded">
+      <div class="column small-12 medium-3 large-2">
+        <ul id="actions" class="accordion" data-accordion="" data-allow-all-closed="true">
+          <li class="accordion-item" data-accordion-item="">
+            <a href="#" class="accordion-title">Assets</a>
+            <div class="accordion-content" data-tab-content="">
+              <form action="${request.route_url('asset.search', pid=part.id)}" class="row collapse search-form">
+                <div class="column small-8">
+                  <input type="text" name="q" placeholder="Search by filename"/>
+                </div>
+                <div class="column small-4">
+                  <input type="submit" value="Search" class="button postfix"/>
+                </div>
+              </form>
+              <ul class="no-symbol" data-rest-directive="asset">
+              </ul>
+            </div>
+          </li>
+          <li class="accordion-item" data-accordion-item="">
+            <a href="#" class="accordion-title">Cross-references</a>
+            <div class="accordion-content" data-tab-content="">
+              <form action="${request.route_url('part.search')}" class="row collapse search-form">
+                <div class="column small-8">
+                  <input type="text" name="q" placeholder="Search by title"/>
+                </div>
+                <div class="column small-4">
+                  <input type="submit" value="Search" class="button postfix"/>
+                </div>
+              </form>
+              <ul class="no-symbol" data-rest-directive="crossref">
+              </ul>
+            </div>
+          </li>
+        </ul>
+      </div>
+      <form id="part-form" action="${request.route_url('part.edit', pid=part.id)}" method="post" class="column small-12 medium-4 large-5 relative">
+        ${form.csrf_field()}
+        <div class="row">
+          <div class="column small-12">
+            ${form.field('text', 'title', 'Title', value=part.title)}
+          </div>
+        </div>
+        <py:if test="part.type != 'page'">
+          <div class="row">
+            <div class="column small-12">
+              ${form.field('select', 'status', 'Status', values=[('unavailable', 'Unavailable'), ('available', 'Available'), ('archived', 'Archived')] if part.type == 'module' else [('unavailable', 'Unavailable'), ('available', 'Available')], value=part.status)}
+            </div>
+          </div>
+        </py:if>
+        <py:if test="part.type != 'module'">
+          <div class="row">
+            <div class="column small-12">
+              ${form.field('text', 'label', 'Label (optional)', value=part.label if part.label else '')}
+            </div>
+          </div>
+        </py:if>
+        <py:if test="part.type == 'part'">
+          <div class="row">
+            <div class="column small-12">
+              ${form.field('select', 'display_mode', 'Page Display Mode', values=[('text_only', 'Text Only'), ('three_pane_html', 'Text, Editor &amp; HTML Viewer')], value=part.display_mode)}
+            </div>
+          </div>
+        </py:if>
+        <div id="editor" class="row">
+          <div class="column small-12 codemirror-border">
+            <nav class="menubar float-right">
+              <ul class="menu">
+                <li><a href="#" id="bold-button"><span class="fi-bold"> </span><span class="show-for-sr">Bold</span></a></li>
+                <li><a href="#" id="italic-button"><span class="fi-italic"> </span><span class="show-for-sr">Italic</span></a></li>
+                <li class="separator"> </li>
+                <li><a href="#" id="linewrap-button"><span class="fi-no-icon">&#x2936;</span><span class="show-for-sr">Automatic line-wrap</span></a></li>
+                <li class="separator"> </li>
+                <li><a href="#" id="save-button"><span class="fi-save"> </span><span class="show-for-sr">Save</span></a></li>
+                <li class="separator"> </li>
+                <li><a href="#" id="help-button"><span>?</span><span class="show-for-sr">Save</span></a></li>
+              </ul>
+            </nav>
+            ${form.field('textarea', 'content', 'Content', value=part.content, extra_attrs={'data-cm-mimetype': 'text/x-rst'})}
+          </div>
+        </div>
+        <div py:if="part.children" class="row">
+          <div class="small-12 column">
+            <label>Child order</label>
+            <ol id="children">
+              <li py:for="child in part.children" class="panel"><input type="hidden" name="child_part_id" value="${child.id}"/>${child.title}</li>
+            </ol>
+          </div>
+        </div>
+        <div py:if="part.templates" class="row">
+          <div class="small-12 column">
+            <label>Template order</label>
+            <ol id="templates">
+              <li py:for="template in part.templates" class="panel"><input type="hidden" name="template_id" value="${template.id}"/>${template.filename} (${template.mimetype})</li>
+            </ol>
+          </div>
+        </div>
+        <div class="row">
+          <div class="column small-12 text-right">
+            <a href="${request.route_url('part.view', pid=part.id)}" class="button secondary">Don't Update</a>
+            <input type="submit" value="Update" class="button"/>
+          </div>
+        </div>
+      </form>
+      <div id="textbook" class="column small-12 medium-5 large-5 rest textbook">
+      Loading content...
+      </div>
+    </div>
+  </py:block>
+  <py:block name="body_script">
+    <?py from wte.helpers.frontend import codemirror_scripts ?>
+    <script py:for="url in codemirror_scripts(request, ['text/x-rst'])" src="${url}"></script>
+    <script src="${request.static_url('wte:static/js/mathjax/MathJax.js', _query=[('config', 'default')])}"></script>
+    <script>
+    <![CDATA[
+    var textarea = $('textarea[name=content]');
+    var cm = codemirror_for_textarea(textarea);
+    
+    // Dynamic sizing / positioning of editor elements
+    var height = 0;
+    function resize_page() {
+        height = $(window).innerHeight();
+        position = $('#editor .CodeMirror').position().top;
+        $('#editor .CodeMirror').css('height', (height - 100) + 'px');
+        $('#textbook').css('height', (height - 100) + 'px').
+            css('margin-top', position + 'px');
+        $('#actions').css('margin-top', position + 'px');
+        $(window).scrollTop($('#editor').offset().top);
+        cm.refresh();
+    }
+    $(window).on('resize', resize_page);
+    resize_page();
+    
+    // Wrap current selection with bold/italic/code markers
+    function wrapText(wrapper) {
+    	var start = cm.getCursor('from');
+    	var end = cm.getCursor('to')
+    	var selection = cm.getSelection()
+    	cm.replaceRange(wrapper + selection + wrapper, start, end);
+    	if(start == end) {
+    		cm.setCursor({line: start.line, ch: start.ch + wrapper.length});
+    	} else {
+    		cm.setCursor({line: end.line, ch: end.ch + wrapper.length * 2});
+    	}
+    	cm.focus();
+    }
+    $('#bold-button').on('click', function(ev) {
+        ev.preventDefault();
+        wrapText('**');
+    });
+    $('#italic-button').on('click', function(ev) {
+        ev.preventDefault();
+        wrapText('*');
+    });
+    
+    // Turn on/off line-wrapping
+    function setLineWrap(linewrap) {
+    	cm.setOption('lineWrapping', linewrap);
+    	$('#linewrap-button').data('cm-linewrap', linewrap);
+    	localStorage.setItem('cm-linewrap', linewrap);
+    }
+    $('#linewrap-button').on('click', function(ev) {
+    	ev.preventDefault();
+    	if($(this).data('cm-linewrap')) {
+    		setLineWrap(false);
+    	} else {
+    		setLineWrap(true);
+    	}
+    });
+    if(typeof(Storage) !== "undefined") {
+    	setLineWrap(localStorage.getItem('cm-linewrap') == 'true');
+    }
+    
+    // Save edit text
+    function save() {
+    	cm.save();
+    	var form = $('#part-form');
+    	$.ajax(form.attr('action'), {
+    		method: 'post',
+    		data: form.serialize()
+    	}).then(function() {
+    		$('#save-button').css('color', '#00aa00');
+    		setTimeout(function() {
+    			$('#save-button').css('color', '');
+    		}, 3000);
+    	});
+    }
+    $('#save-button').on('click', function(ev) {
+    	ev.preventDefault();
+    	save();
+    });
+    
+    // Show help
+    $('#help-button').on('click', function(ev) {
+    	ev.preventDefault();
+    	$(document).helpViewer('toggle');
+    });
+    
+    // Keyboard shortcuts
+    $('#editor').on('keydown', function(ev) {
+        if(ev.key && ev.ctrlKey) {
+            if(ev.key.toLowerCase() == 'b') {
+                ev.preventDefault();
+                wrapText('**');
+            } else if(ev.key.toLowerCase() == 'i') {
+                ev.preventDefault();
+                wrapText('*');
+            } else if(ev.key.toLowerCase() == 'h') {
+                ev.preventDefault();
+                wrapText('``');
+            } else if(ev.key.toLowerCase() == 's') {
+            	ev.preventDefault();
+            	save();
+            }
+        }
+    });
+    
+    // Content rendering
+    function render_page() {
+        $.ajax('${request.route_url('part.preview', pid=part.id)}', {
+            data: {'content': cm.getValue()},
+            type: 'POST'
+        }).success(function(data) {
+            $('#textbook').html(data.content + '<div style="margin-bottom: ' + height + 'px">&nbsp;</div>');
+            //$('#textbook').scrollTop($('#textbook').scrollTop() + $('#focus').position().top - (height - 80) / 2);
+            MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+        });
+    }
+    render_page();
+    var code_change_timer = undefined;
+    cm.on('change', function() {
+        clearTimeout(code_change_timer);
+        code_change_timer = setTimeout(render_page, 1000);
+    });
+
+    // Make list element sortable
+    $('#children').sortable();
+    $('#templates').sortable();
+    
+    // Search form handler
+    $('.search-form').on('submit', function(ev) {
+        ev.preventDefault();
+        var form = $(this);
+        $.ajax(form.attr('action'), {
+            data: form.serialize(),
+            dataType: 'json'
+        }).then(function(data) {
+            var list = form.next();
+            list.empty();
+            if(data.length == 0) {
+                list.append('Nothing found');
+            } else {
+                for(var idx = 0; idx < data.length; idx++) {
+                    list.append('<li><a href="#" data-cm-insert="' + data[idx].id + '">' + data[idx].value + '</a></li>');
+                }
+            }
+        });
+    });
+    $('.search-form + ul').on('click', 'a', function(ev) {
+        ev.preventDefault();
+        var pos = cm.getCursor();
+        cm.replaceRange(':' + $(this).parent().parent().data('rest-directive') + ':`' + $(this).data('cm-insert') + '`', pos, pos);
+    });
+    ]]>
+    </script>
+  </py:block>
+</py:extends>

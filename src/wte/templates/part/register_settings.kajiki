@@ -1,0 +1,37 @@
+<py:extends href="wte:templates/layout/centred.kajiki">
+  <py:block name="title">${part.title} - Edit Access Settings</py:block>
+  <py:block name="content">
+    <py:import href="wte:templates/helpers/menu.kajiki" alias="menu"/>
+    <py:import href="wte:templates/helpers/form.kajiki" alias="form"/>
+    <h1>${part.title} - Edit Access Settings</h1>
+    <form action="${request.route_url('part.register.settings', pid=part.id)}" method="post">
+      ${form.csrf_field()}
+      <div class="row">
+        <div class="column small-12 medium-8 large-6 end">
+          ${form.field('checkbox', 'require', 'Password required', value='password', checked=True if 'password' in rights else False)}
+        </div>
+      </div>
+      <div class="row">
+        <div class="column small-12 medium-8 large-6 end">
+          ${form.field('text', 'password', 'Password', value=rights['password'] if 'password' in rights else '')}
+        </div>
+      </div>
+      <div class="row">
+        <div class="column small-12 medium-8 large-6 end">
+          ${form.field('checkbox', 'require', 'E-Mail domain limited', value='email_domains', checked=True if 'email_domains' in rights else False)}
+        </div>
+      </div>
+      <div class="row">
+        <div class="column small-12 medium-8 large-6 end">
+          ${form.field('text', 'email_domains', 'Allowed e-mail domains (comma-separated)', value=', '.join(rights['email_domains']) if 'email_domains' in rights else '')}
+        </div>
+      </div>
+      <div class="row">
+        <div class="column small-12 medium-8 large-6 end text-right">
+          <a href="${request.route_url('part.view', pid=part.id)}" class="button secondary">Don't Update</a>
+          <input type="submit" value="Update" class="button"/>
+        </div>
+      </div>
+    </form>
+  </py:block>
+</py:extends>

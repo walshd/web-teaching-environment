@@ -11,10 +11,24 @@ various functions.
 """
 from decorator import decorator
 from pyramid.httpexceptions import HTTPMethodNotAllowed
-from pywebtools.renderer import request_from_args
+from pyramid.request import Request
 
 from wte.models import (DBSession, User)
 from wte.util import unauthorised_redirect
+
+
+def request_from_args(*args):
+    """Returns the :class:`~pyramid.request.Request` from the function
+    parameters list ``args``.
+
+    :param args: The parameters passed to a function
+    :return: The request object
+    :r_type: :class:`~pyramid.request.Request`
+    """
+    for arg in args:
+        if isinstance(arg, Request):
+            return arg
+    raise Exception('No request found')
 
 
 def current_user():

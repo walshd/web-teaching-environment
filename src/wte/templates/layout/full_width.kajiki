@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><py:block name="title"></py:block></title>
+    <script src="${request.static_url('wte:static/js/modernizr.min.js')}"></script>
+    <link rel="stylesheet" href="${request.static_url('wte:static/css/application.min.css')}" />
+    <link rel="stylesheet" href="${request.static_url('wte:static/js/codemirror/addon/lint/lint.css')}" />
+    <py:block name="title_link"></py:block>
+    <py:block name="title_script"></py:block>
+  </head>
+  <body>
+    <py:include href="wte:templates/layout/_header.kajiki"/>
+    <py:include href="wte:templates/layout/_breadcrumbs.kajiki"/>
+    <py:include href="wte:templates/layout/_flash.kajiki"/>
+    <article class="row expanded">
+      <div class="column small-12">
+        <py:block name="content"/>
+      </div>
+    </article>
+    <py:include href="wte:templates/layout/_footer.kajiki"/>
+    <py:include href="wte:templates/layout/_help.kajiki"/>
+    <py:include href="wte:templates/layout/_scripts.kajiki"/>
+    <py:block name="body_preinit_script"></py:block>
+    <py:include href="wte:templates/layout/_init.kajiki"/>
+    <py:block name="body_script"></py:block>
+  </body>
+</html>

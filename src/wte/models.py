@@ -13,8 +13,9 @@ required :data:`~wte.models.DB_VERSION` to ensure that the application does
 not run on an outdated database schema.
 """
 import json
-import random
 import hashlib
+import random
+import re
 
 from datetime import datetime
 from sqlalchemy import (Column, Index, ForeignKey, Integer, Unicode,
@@ -26,10 +27,12 @@ from sqlalchemy.orm import (scoped_session, sessionmaker, relationship,
                             reconstructor, backref)
 from zope.sqlalchemy import ZopeTransactionExtension
 
+from wte.helpers.frontend import confirm_delete, MenuBuilder, confirm_action
+
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
 
-DB_VERSION = u'4215b2582d87'
+DB_VERSION = u'465d42577343'
 """The currently required database version."""
 
 
@@ -194,11 +197,15 @@ class User(Base):
         :return: ``True`` if the user has the permission, ``False`` otherwise
         :rtype: `bool`
         """
-        dbsession = DBSession()
-        direct_perm = dbsession.query(Permission.name).join(User, Permission.users).filter(User.id == self.id)
-        group_perm = dbsession.query(Permission.name).join(PermissionGroup, Permission.permission_groups).\
-            join(User, PermissionGroup.users).filter(User.id == self.id)
-        return permission in map(lambda p: p[0], direct_perm.union(group_perm))
+        if hasattr(self, '_permissions'):
+            return permission in self._permissions
+        else:
+            dbsession = DBSession()
+            direct_perm = dbsession.query(Permission.name).join(User, Permission.users).filter(User.id == self.id)
+            group_perm = dbsession.query(Permission.name).join(PermissionGroup, Permission.permission_groups).\
+                join(User, PermissionGroup.users).filter(User.id == self.id)
+            self._permissions = [p[0] for p in direct_perm.union(group_perm)]
+            return self.has_permission(permission)
 
     def allow(self, action, user):
         """Checks whether the given ``user`` is allowed to perform the given
@@ -345,17 +352,21 @@ class Part(Base):
     Instances of :class:`~wte.models.Part` have the following attributes:
 
     * ``id`` -- The unique database identifier
+    * ``access_rights`` -- JSON structure representing the access rights to
+      this :class:`~wte.models.Part`
     * ``assets`` -- List of :class:`~wte.models.Asset` that act as asset files
     * ``children`` -- List of :class:`~wte.models.Part` contained in this
       :class:`~wte.models.Part`
     * ``compiled_content`` -- The compiled HTML generated from the ReST ``content``
     * ``content`` -- The ReST content for the :class:`~wte.models.Part`
     * ``display_mode`` -- The display template mode to use for the :class:`~wte.models.Part`
+    * ``label`` -- The classification label to use for the :class:`~wte.models.Part`
     * ``order`` -- The ordering position of this :class:`~wte.models.Part`
     * ``parent_id`` -- The unique database identifier of the parent :class:`~wte.models.Part`
     * ``parent`` -- The parent :class:`~wte.models.Part`
     * ``progress`` -- The :class:`~wte.models.UserPartProgress` linked to this :class:`~wte.models.Part`
     * ``status`` -- The :class:`~wte.models.Part`'s availability status
+    * ``summary`` -- The shortened summary derived from the ``compiled_content``
     * ``tasks`` -- List of :class:`~wte.models.TimedTask` that are attached to this
       :class:`~wte.models.Part`
     * ``templates`` -- List of :class:`~wte.models.Asset` that act as template files
@@ -373,8 +384,10 @@ class Part(Base):
     status = Column(Unicode(255))
     type = Column(Unicode(255))
     display_mode = Column(Unicode(255))
+    label = Column(Unicode(255), index=True)
     content = Column(UnicodeText)
     compiled_content = Column(UnicodeText)
+    access_rights = Column(UnicodeText)
 
     children = relationship(u'Part',
                             backref=backref(u'parent', remote_side=[id]),
@@ -416,7 +429,7 @@ class Part(Base):
 
     def allow(self, action, user):
         """Checks whether the given ``user`` is allowed to perform the given
-        ``action``. Supports the following action: view.
+        ``action``. Supports the following actions: view, edit, delete, and users.
 
         :param action: The action to check for
         :type action: `unicode`
@@ -435,8 +448,12 @@ class Part(Base):
             elif root.has_role(['owner', 'tutor'], user):
                 return True
             elif root.has_role('student', user):
-                if self.status in [u'available', u'archived']:
-                    return True
+                if self.parent:
+                    if self.parent.allow(action, user) and self.status in [u'available', u'archived']:
+                        return True
+                else:
+                    if self.status in [u'available', u'archived']:
+                        return True
             elif self.type == u'module' and self.status == u'available':
                 return True
         elif action == u'edit':
@@ -486,6 +503,192 @@ class Part(Base):
         if self.parent:
             return self.parent.has_role(role, user)
         return False
+
+    def register_state(self, user):
+        if self.has_role(['student', 'owner'], user):
+            return 'already_registered'
+        if self.access_rights:
+            rights = json.loads(self.access_rights)
+            if rights:
+                if 'password' in rights and 'email_domains' in rights:
+                    if user.email[user.email.find('@') + 1:] in rights['email_domains']:
+                        return 'password_register'
+                    else:
+                        return 'invalid_email_domain'
+                elif 'password' in rights:
+                    return 'password_register'
+                elif 'email_domains' in rights:
+                    if user.email[user.email.find('@') + 1:] in rights['email_domains']:
+                        return 'plain_register'
+                    else:
+                        return 'invalid_email_domain'
+        return 'plain_register'
+
+    @property
+    def summary(self):
+        """Generates the text summary for this :class:`~wte.models.Part`.
+        The text summary is generated by finding the first tag in the ``compiled_content``
+        and then returning that.
+
+        :return: The content of the first tag in the ``compiled_content``
+        :r_type: :class:`unicode`
+        """
+        if self.compiled_content:
+            match = re.search(r'<([a-zA-Z+])>', self.compiled_content)
+            if match:
+                start = self.compiled_content.find('<%s>' % (match.group(1)))
+                end = self.compiled_content.find('</%s>' % (match.group(1))) + len(match.group(1)) + 3
+                return self.compiled_content[start:end]
+        return None
+
+    @property
+    def prev(self):
+        """Returns the previous :class:`~wte.models.Part` in the list of siblings.
+
+        :return: The previous :class:`~wte.models.Part` sibling
+        :r_type: :class:`~wte.models.Part`
+        """
+        prev = None
+        for child in self.parent.children:
+            if child.id == self.id:
+                return prev
+            prev = child
+
+    @property
+    def next(self):
+        """Returns the next :class:`~wte.models.Part` in the list of siblings.
+
+        :return: The next :class:`~wte.models.Part` sibling
+        :r_type: :class:`~wte.models.Part`
+        """
+        found = False
+        for child in self.parent.children:
+            if found:
+                return child
+            if child.id == self.id:
+                found = True
+        return None
+
+    def menu(self, request):
+        """Generates the menu for the :class:`~wte.models.Part`.
+        """
+        builder = MenuBuilder()
+        builder.group('Status', 'fi-lock' if self.status == 'available' else 'fi-unlock')
+        if self.allow('edit', request.current_user):
+            # Status Change Items
+            if self.type != 'page':
+                if self.status == 'available':
+                    builder.menu('Make unavailable',
+                                 request.route_url('part.change_status',
+                                                   pid=self.id,
+                                                   _query=[('status', 'unavailable'),
+                                                           ('return_to', request.current_route_url()),
+                                                           ('csrf_token', request.session.get_csrf_token())]),
+                                 icon='fi-lock',
+                                 highlight=True,
+                                 attrs={'class': 'post-link'})
+                else:
+                    builder.menu('Make available',
+                                 request.route_url('part.change_status',
+                                                   pid=self.id,
+                                                   _query=[('status', 'available'),
+                                                           ('return_to', request.current_route_url()),
+                                                           ('csrf_token', request.session.get_csrf_token())]),
+                                 icon='fi-unlock',
+                                 highlight=True,
+                                 attrs={'class': 'post-link'})
+            # Archive Menu Item
+            if self.type == 'module' and self.status != 'archived':
+                builder.menu('Archive',
+                             request.route_url('part.change_status',
+                                               pid=self.id,
+                                               _query=[('status', 'archived'),
+                                                       ('return_to', request.current_route_url()),
+                                                       ('csrf_token', request.session.get_csrf_token())]),
+                             attrs={'class': 'post-link'})
+            builder.group('Edit', 'fi-pencil')
+            # Edit Menu Item
+            builder.menu('Edit',
+                         request.route_url('part.edit', pid=self.id),
+                         icon='fi-pencil',
+                         highlight=True)
+            # Edit Timed Actions Menu
+            if self.type == 'module':
+                builder.menu('Edit Timed Actions',
+                             request.route_url('part.timed_task', pid=self.id),
+                             icon='fi-clock')
+            builder.group('Users')
+            if self.type == 'module':
+                # User Menu Item
+                builder.menu('Users',
+                             request.route_url('part.users', pid=self.id),
+                             icon='fi-torsos-all')
+                # Access Settings Menu Item
+                if self.status != 'archived':
+                    builder.menu('Edit Access Settings',
+                                 request.route_url('part.register.settings', pid=self.id),
+                                 icon='fi-key')
+            builder.group('add', 'fi-plus')
+            if self.type == 'module':
+                # Add Part Menu Item
+                builder.menu('Add Part',
+                             request.route_url('part.new', new_type='part', _query=[('parent_id', self.id)]),
+                             icon = 'fi-plus',
+                             highlight=True)
+            if self.type == 'part':
+                builder.menu('Add Page',
+                             request.route_url('part.new', new_type='page', _query=[('parent_id', self.id)]),
+                             icon='fi-plus',
+                             highlight=True)
+                builder.menu('Add Template',
+                             request.route_url('asset.new', pid=self.id, new_type='template'),
+                             highlight=True)
+            if self.type == 'page':
+                # Add page bfore / after Menu Item
+                builder.menu('Add Page before',
+                             request.route_url('part.new',
+                                               new_type='page',
+                                               _query=[('parent_id', self.parent.id),
+                                                       ('order', self.order)]),
+                             highlight=True)
+                builder.menu('Add Page after',
+                             request.route_url('part.new',
+                                               new_type='page',
+                                               _query=[('parent_id', self.parent.id),
+                                                       ('order', self.order + 1)]),
+                             highlight=True)
+            # Add Asset Menu Item
+            builder.menu('Add Asset',
+                         request.route_url('asset.new', pid=self.id, new_type='asset'))
+        builder.group('Import / Export')
+        if self.allow('edit', request.current_user):
+            if self.type in ['module', 'part']:
+                # Import Menu Item
+                builder.menu('Import',
+                             request.route_url('part.import', _query=[('parent_id', self.id)]))
+            # Export Menu Item
+            builder.menu('Export',
+                         request.route_url('part.export',
+                                           pid=self.id,
+                                           _query=[('csrf_token', request.session.get_csrf_token())]),
+                         attrs={'class': 'post-link'})
+        if self.allow('view', request.current_user):
+            # Download Menu Item
+            builder.menu('Download',
+                         request.route_url('part.download', pid=self.id),
+                         attrs={'class': 'post-link'})
+        if self.allow('delete', request.current_user):
+            builder.group('Delete')
+            # Delete Menu Item
+            builder.menu('Delete',
+                         request.route_url('part.delete',
+                                           pid=self.id,
+                                           _query=[('csrf_token', request.session.get_csrf_token())]),
+                         icon='fi-trash',
+                         attrs={'class': 'alert post-link',
+                                'data-wte-confirm': confirm_delete(self.type, self.title, True)})
+        return builder.generate()
+
 
 Index('parts_parent_id_ix', Part.parent_id)
 
@@ -568,6 +771,60 @@ class Asset(Base):
     mimetype = Column(Unicode(255))
     order = Column(Integer)
     data = Column(LargeBinary)
+    etag = Column(Unicode(255))
+
+    def menu(self, request, part=None):
+        """Generate the menu for this :class:`~wte.models.Asset`. Will distinguish between
+        assets, templates, and files.
+        """
+        builder = MenuBuilder()
+        if self.type in ['asset', 'template'] and part is not None:
+            if part.allow('edit', request.current_user):
+                builder.group('Edit',
+                              icon='fi-pencil')
+                builder.menu('Edit',
+                             request.route_url('asset.edit', pid=part.id, aid=self.id),
+                             icon='fi-pencil',
+                             highlight=True)
+                builder.group('Delete')
+                builder.menu('Delete',
+                             request.route_url('asset.delete',
+                                               pid=part.id,
+                                               aid=self.id,
+                                               _query=[('csrf_token', request.session.get_csrf_token())]),
+                             icon='fi-trash',
+                             attrs={'class': 'alert post-link',
+                                    'data-wte-confirm': confirm_delete('asset', self.filename, False)})
+        elif self.type == 'file':
+            builder.group('Save',
+                          icon='fi-save')
+            builder.menu('Save',
+                         '#',
+                         icon='fi-save',
+                         highlight=True,
+                         attrs={'class': 'save'})
+            builder.menu('Download',
+                         request.route_url('file.view',
+                                           pid=part.id,
+                                           filename=self.filename,
+                                           _query=[('download', 'true')]))
+            builder.group('Delete')
+            builder.menu('Discard Changes',
+                         request.route_url('part.reset-files',
+                                           pid=part.id,
+                                           _query={'filename': self.filename,
+                                                   'csrf_token': request.session.get_csrf_token()}),
+                         attrs={'class': 'alert post-link',
+                                'data-wte-confirm': confirm_action('Discard Changes',
+                                                                   'Please confirm that you wish to discard the ' +
+                                                                   'changes you made to the file ' +
+                                                                   '"%s" and reset it ' % (self.filename) +
+                                                                   'to its initial content.',
+                                                                   "Don't Discard",
+                                                                   {'label': 'Discard',
+                                                                    'class_': 'alert'})})
+        return builder.generate()
+
 
 Index(u'assets_filename_ix', Asset.filename)
 Index(u'assets_type_ix', Asset.type)
@@ -659,3 +916,26 @@ class TimedTask(Base):
         return self.timestamp - datetime.now()
 
     delta = property(_get_delta)
+
+    def menu(self, request, part):
+        """Generate the menu for this :class:`~wte.models.TimedTask`.
+        """
+        builder = MenuBuilder()
+        builder.group('Edit',
+                      icon='fi-pencil')
+        builder.menu('Edit',
+                     request.route_url('part.timed_task.edit', pid=part.id, tid=self.id),
+                     icon='fi-pencil',
+                     highlight=True)
+        builder.group('Delete')
+        builder.menu('Delete',
+                     request.route_url('part.timed_task.delete',
+                                       pid=part.id,
+                                       tid=self.id,
+                                       _query={'csrf_token': request.session.get_csrf_token()}),
+                     icon='fi-trash',
+                     attrs={'class': 'alert post-link',
+                            'data-wte-confirm': confirm_delete('timed action',
+                                                               self.title,
+                                                               False)})
+        return builder.generate()

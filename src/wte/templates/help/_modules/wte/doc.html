@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="../../../static/css/application.min.css"/>
+    <link rel="stylesheet" href="../../_static/default.css"/>
+    <link rel="stylesheet" href="../../_static/override.css"/>
+    <link rel="stylesheet" href="../../_static/pygments.css"/>
+    <title>wte.doc</title>
+  </head>
+  <body>
+    <nav>
+      <ul class="breadcrumbs">
+        
+          <li><a href="../index.html">Module code</a></li>
+        
+          <li><a href="../wte.html">wte</a></li>
+        
+        <li>wte.doc</li>
+      </ul>
+      <div class="row">
+        <div class="column small-12">
+          <h1>Source code for wte.doc</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">u&quot;&quot;&quot;</span>
+<span class="sd">##################################</span>
+<span class="sd">:mod:`wte.doc` -- Docutils Helpers</span>
+<span class="sd">##################################</span>
+
+<span class="sd">The :mod:`~wte.doc` module contains helper functions for the docutils ReST</span>
+<span class="sd">processing.</span>
+
+<span class="sd">.. moduleauthor:: Mark Hall &lt;mark.hall@mail.room3b.eu&gt;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">docutils</span> <span class="kn">import</span> <span class="n">nodes</span>
+
+
+<div class="viewcode-block" id="button_role"><a class="viewcode-back" href="../../api/wte_doc.html#wte.doc.button_role">[docs]</a><span class="k">def</span> <span class="nf">button_role</span><span class="p">(</span><span class="n">role</span><span class="p">,</span> <span class="n">rawtext</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">inliner</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;Handles adding the necessary inline styling to indicate buttons in the</span>
+<span class="sd">    documentation.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">role</span> <span class="o">==</span> <span class="s1">&#39;primary_btn&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">nodes</span><span class="o">.</span><span class="n">inline</span><span class="p">(</span><span class="n">rawtext</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">classes</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;button&#39;</span><span class="p">])],</span> <span class="p">[]</span>
+    <span class="k">elif</span> <span class="n">role</span> <span class="o">==</span> <span class="s1">&#39;secondary_btn&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">nodes</span><span class="o">.</span><span class="n">inline</span><span class="p">(</span><span class="n">rawtext</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">classes</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;button&#39;</span><span class="p">,</span> <span class="s1">&#39;secondary&#39;</span><span class="p">])],</span> <span class="p">[]</span>
+    <span class="k">elif</span> <span class="n">role</span> <span class="o">==</span> <span class="s1">&#39;alert_btn&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">nodes</span><span class="o">.</span><span class="n">inline</span><span class="p">(</span><span class="n">rawtext</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">classes</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;button&#39;</span><span class="p">,</span> <span class="s1">&#39;alert&#39;</span><span class="p">])],</span> <span class="p">[]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[],</span> <span class="p">[]</span></div>
+
+
+<div class="viewcode-block" id="link_role"><a class="viewcode-back" href="../../api/wte_doc.html#wte.doc.link_role">[docs]</a><span class="k">def</span> <span class="nf">link_role</span><span class="p">(</span><span class="n">role</span><span class="p">,</span> <span class="n">rawtext</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">inliner</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;Handles adding the necessary inline styling to indicate links in the</span>
+<span class="sd">    documentation.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">role</span> <span class="o">==</span> <span class="s1">&#39;text_link&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">nodes</span><span class="o">.</span><span class="n">inline</span><span class="p">(</span><span class="n">rawtext</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">classes</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;text-link&#39;</span><span class="p">])],</span> <span class="p">[]</span>
+    <span class="k">elif</span> <span class="n">role</span> <span class="o">==</span> <span class="s1">&#39;topbar_link&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">nodes</span><span class="o">.</span><span class="n">inline</span><span class="p">(</span><span class="n">rawtext</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">classes</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;topbar-link&#39;</span><span class="p">])],</span> <span class="p">[]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[],</span> <span class="p">[]</span></div>
+
+
+<div class="viewcode-block" id="setup"><a class="viewcode-back" href="../../api/wte_doc.html#wte.doc.setup">[docs]</a><span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="n">app</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;Adds the new docutils roles to the docutils app</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">add_role</span><span class="p">(</span><span class="s1">&#39;primary_btn&#39;</span><span class="p">,</span> <span class="n">button_role</span><span class="p">)</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">add_role</span><span class="p">(</span><span class="s1">&#39;secondary_btn&#39;</span><span class="p">,</span> <span class="n">button_role</span><span class="p">)</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">add_role</span><span class="p">(</span><span class="s1">&#39;alert_btn&#39;</span><span class="p">,</span> <span class="n">button_role</span><span class="p">)</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">add_role</span><span class="p">(</span><span class="s1">&#39;text_link&#39;</span><span class="p">,</span> <span class="n">link_role</span><span class="p">)</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">add_role</span><span class="p">(</span><span class="s1">&#39;topbar_link&#39;</span><span class="p">,</span> <span class="n">link_role</span><span class="p">)</span></div>
+</pre></div>
+        </div>
+      </div>
+      <ul class="pagination text-center" role="navigation" aria-label="Pagination">
+        
+        
+      </ul>
+    </nav>
+  </body>
+</html>

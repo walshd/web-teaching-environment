@@ -1,0 +1,70 @@
+<div>
+  <!-- Generic pagination function to generate pagination controls -->
+  <py:def function="pagination(pages)">
+    <nav>
+      <ul class="pagination" role="navigation" aria-label="Pagination">
+        <py:for each="page in pages">
+          <py:switch test="page['type']">
+            <py:case value="'prev'">
+              <py:if test="'url' in page">
+                <li class="pagination-previous"><a href="${page['url']}">Previous <span class="show-for-sr">page</span></a></li>
+              </py:if><py:else>
+                <li class="pagination-previous disabled">Previous <span class="show-for-sr">page</span></li>
+              </py:else>
+            </py:case>
+            <py:case value="'next'">
+              <py:if test="'url' in page">
+                <li class="pagination-next"><a href="${page['url']}">Next <span class="show-for-sr">page</span></a></li>
+              </py:if><py:else>
+                <li class="pagination-next disabled">Next <span class="show-for-sr">page</span></li>
+              </py:else>
+            </py:case>
+            <py:case value="'current'">
+              <li class="current">${page['label']}</li>
+            </py:case>
+            <py:case value="'item'">
+              <py:if test="'url' in page">
+                <li><a href="${page['url']}">${page['label']}</a></li>
+              </py:if><py:else>
+                <li>${page['label']}</li>
+              </py:else>
+            </py:case>
+          </py:switch>
+        </py:for>
+      </ul>
+    </nav>
+  </py:def>
+  
+  <!-- Generates the HTML for the page navigation controls -->
+  <py:def function="page_pagination(part)">
+    <?py import json ?>
+    <?py progress = len([p for p in part.parent.children if p.order <= part.order])
+minimum = 100 * max(0, progress - 1) / len(part.parent.children)
+maximum = min(100, 100 * progress / len(part.parent.children))
+    ?>
+    <nav class="part-pagination" data-progress="${json.dumps({'min': minimum, 'max': maximum})}">
+      <form role="navigation" aria-label="Pagination" class="row collapse" action="${request.route_url('part.view', pid='PID')}">
+        <div class="column small-2 medium-2 text-center">
+          <py:if test="part.prev">
+            <a href="${request.route_url('part.view', pid=part.prev.id)}" class="large-font"><span class="fi-previous"> </span><span class="show-for-sr">Previous Page</span></a>
+          </py:if><py:else>
+            <span class="large-font gray"><span class="fi-previous"> </span><span class="show-for-sr">No Previous Page</span></span>
+          </py:else>
+        </div>
+        <div class="column small-8 medium-8">
+          <select><option py:for="page in part.parent.children" value="${page.id}" py:attrs="{'selected': 'selected' if page.id == part.id else None}">${page.title}</option></select>
+          <div class="progress" role="progressbar" tabindex="0" aria-valuenow="${minimum}" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-meter" style="width: ${minimum}%"> </div>
+          </div>
+        </div>
+        <div class="column small-2 medium-2 text-center">
+          <py:if test="part.next">
+            <a href="${request.route_url('part.view', pid=part.next.id)}" class="large-font"><span class="fi-next"> </span><span class="show-for-sr">Next Page</span></a>
+          </py:if><py:else>
+            <span class="large-font gray"><span class="fi-next"> </span><span class="show-for-sr">No Next Page</span></span>
+          </py:else>
+        </div>
+      </form>
+    </nav>
+  </py:def>
+</div>

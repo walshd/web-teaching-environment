@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-u"""
+"""
 ###############################################################
 :mod:`wte.helpers.frontend` -- Helpers for the frontend display
 ###############################################################
@@ -11,16 +11,15 @@ render the frontend page displays.
 """
 import inflect
 import json
-import re
+import math
 
-from genshi.builder import tag, Markup
-
+from wte.util import get_config_setting
 
 inflector = inflect.engine()
 
 
 def html_id(text):
-    u"""Turns a given text into a valid HTML id attribute value. Removes
+    """Turns a given text into a valid HTML id attribute value. Removes
     spaces and full-stops.
 
     :param text: The text to convert
@@ -59,7 +58,7 @@ CODEMIRROR_MODES = {'text/html': ['javascript',
 
 
 def codemirror_scripts(request, mimetypes):
-    u"""Generates the ``<script>`` tags necessary to load the CodeMirror mode
+    """Generates the ``<script>`` tags necessary to load the CodeMirror mode
     JS files for the given list of ``mimetypes``.
 
     :param request: The request to use for generating URLs
@@ -81,7 +80,7 @@ def codemirror_scripts(request, mimetypes):
         script = request.static_url('wte:static/js/codemirror/mode/%s/%s.js' % mode)
         if script not in scripts:
             scripts.append(script)
-    return tag([tag.script(src=s) for s in scripts])
+    return scripts
 
 
 CODEMIRROR_OPTIONS = {'text/html': {'matchTags': True},
@@ -96,79 +95,28 @@ CODEMIRROR_OPTIONS = {'text/html': {'matchTags': True},
                                                  'lint': True}}
 
 
-def codemirror_options(mimetype):
-    u"""Generates a JSON representation of CodeMirror options that are valid
+def codemirror_options(request, mimetype, include_mode=False):
+    """Generates a JSON representation of CodeMirror options that are valid
     for the given ``mimetype``.
-
-    :param mimetype: The mimetype to generate CodeMirror options for
-    :type mimetype: `unicode`
-    :return: The JSON representation of options
-    """
-    if mimetype in CODEMIRROR_OPTIONS:
-        return json.dumps(CODEMIRROR_OPTIONS[mimetype])
-    else:
-        return json.dumps({})
-
-
-def page_pagination(request, part):
-    u"""Generates the pagination UI for the individual page display of a
-    :class:`~wte.models.Part`.
 
     :param request: The current request
     :type request: :class:`~pyramid.request.Request`
-    :param part: The current parte to display pagination for
-    :type part: :class:`~wte.models.Part`
-    :return: The resulting HTML markup
+    :param mimetype: The mimetype to generate CodeMirror options for
+    :type mimetype: `unicode`
+    :param include_mode: Whether to include the ``mode`` setting in the options
+    :type include_mode: `bool`
+    :return: The JSON representation of options
     """
-    prev_page = None
-    next_page = None
-    state = 0
-    for child in part.parent.children:
-        if state == 0 and child != part:
-            prev_page = child
-        elif state == 0 and child == part:
-            state = 1
-        elif state == 1:
-            next_page = child
-            break
-    items = []
-    if prev_page:
-        items.append(tag.li(tag.a(Markup('&laquo; Previous page'),
-                                  href=request.route_url('part.view',
-                                                         pid=prev_page.id))))
-    else:
-        items.append(tag.li(Markup('&laquo; Previous page'),
-                            class_='disabled'))
-    if next_page:
-        items.append(tag.li(tag.a(Markup('Next page &raquo;'),
-                                  href=request.route_url('part.view',
-                                                         pid=next_page.id))))
-    else:
-        items.append(tag.li(Markup('Previous page &raquo;'),
-                            class_='disabled'))
-    return tag.ul(items,
-                  class_='pagination')
-
-
-def primary_filename(progress):
-    u"""Returns the filename of the first :class:`~wte.models.File` from the
-    :class:`~wte.models.UserPartProgress` that has the mimetype "text/html".
-
-    :param progress: The :class:`~wte.models.UserPartProgress` to get the files
-                     from
-    :type progress: :class:`~wte.models.UserPartProgress`
-    :return: The filename as a string or the empty string
-    :rtype: :func:`unicode`
-    """
-    files = [f for f in progress.files if f.mimetype == 'text/html']
-    if files:
-        return files[0].filename
-    else:
-        return ''
+    options = {'theme': get_config_setting(request, 'codemirror.theme', default='default')}
+    if include_mode:
+        options['mode'] = mimetype
+    if mimetype in CODEMIRROR_OPTIONS:
+        options.update(CODEMIRROR_OPTIONS[mimetype])
+    return json.dumps(options)
 
 
 def confirm_action(title, message, cancel, ok):
-    u"""Generates a confirmation JSON object for use with the jQuery.postLink() plugin.
+    """Generates a confirmation JSON object for use with the jQuery.postLink() plugin.
 
     :param title: The title of the confirmation dialog box
     :type title: ``unicode``
@@ -188,7 +136,7 @@ def confirm_action(title, message, cancel, ok):
 
 
 def confirm_delete(obj_type, title, has_parts=False):
-    u"""Generates the confirmation JSON object for use with the jQuery.postLink() plugin.
+    """Generates the confirmation JSON object for use with the jQuery.postLink() plugin.
 
     :param obj_type: The type of object that is being deleted
     :type obj_type: ``unicode``
@@ -211,138 +159,173 @@ def confirm_delete(obj_type, title, has_parts=False):
                            'class_': 'alert'})
 
 
-def part_summary(part):
-    u"""Generates summary text for a :class:`~wte.models.Part` by extracting the first HTML element
-    from the ``compiled_content``. Due to the use of ReST, this should in most cases be the first
-    paragraph.
-
-    :param part: The :class:`~wte.models.Part` to generate the summary for
-    :type part: :class:`~wte.models.Part`
-    :return: The first HTML element
-    :rtype: :class:`~genshi.builder.Markup`
+class MenuBuilder(object):
+    """The :class:`~wte.helpers.frontend.MenuBuilder` helps with creating the ``list``
+    structure used for creating the icon-menubar. Call :func:`~wte.helpers.frontend.MenuBuilder.group`
+    to start a new group of menu items. Call :func:`~wte.helpers.frontend.MenuBuilder.item`
+    to add a menu item to the current group. :func:`~wte.helpers.frontend.MenuBuilder.generate`
+    then generates the final structure for use in the menubar.
     """
-    content = part.compiled_content
-    if content:
-        m = re.search(r'<([a-zA-Z+])>', content)
-        if m:
-            start = content.find('<%s>' % (m.group(1)))
-            end = content.find('</%s>' % (m.group(1))) + len(m.group(1)) + 3
-            return Markup(content[start:end])
-    return None
 
+    def __init__(self):
+        self._groups = []
+        self._group = None
 
-def menubar(menu, drop_down_menu_left=True, class_=None):
-    u"""Generates a menu bar for a nested set of menu groups and menu items. Each menu group is specified as
-    a ``dict`` with the following keys:
+    def group(self, label, icon=None):
+        """Add a new group to the lost of groups in this :class:`~wte.helpers.frontend.MenuBuilder`.
 
-    * *group*: the name of the group
-    * *items*: a list of menu item ``dict``
+        :param label: The menu group's label
+        :type label: `unicode`
+        :param icon: The optional icon for this group. An icon must be provided in order to
+                     enable highlighting of menu items
+        :type icon: `unicode`
+        """
+        if self._group and self._group['items']:
+            self._groups.append(self._group)
+        self._group = {'label': label,
+                       'items': []}
+        if icon:
+            self._group['icon'] = icon
 
-    Each menu item is specified as a ``dict``, which has the following keys:
+    def menu(self, label, href, icon=None, highlight=False, attrs=None):
+        """Add a new menu item to the current group. Will create a new group with an empty
+        label if :func:`~wte.helpers.frontend.MenuBuilder.group` has not been called
 
-    * *visible*: whether the element is displayed (``True``/``False``)
-    * *label*: the label text to show
-    * *href*: the href for the menu link
-    * *class*: the CSS class to specify on the menu link [optional]
-    * *icon*: a foundation icon to show for the menu link [optional]
-    * *confirm*: confirmation text to show before the link is followed [optional]
-    * *highlight*: whether to also show the item at the top-level of the menubar (``True``/``False``) [optional]
-
-    Menu items that are marked as 'highlight: ``True`` and have an 'icon' set, will be shown at the top level of
-    the menubar. All other items are shown in a drop-down menu.
-
-    :param menu: The list of menu groups and items
-    :type menu: ``list``
-    :param drop_down_menu_left: Whether the drop-down menus should be left (True) or right-aligned (False)
-    :type drop_down_menu_left: ``bool``
-    :param class_: Additional CSS classes to add to the main menubar element
-    :type class_: ``unicode``
-    :return: The generated HTML elements
-    :rtype: :class:`~genshi.builder.tag`"""
-    full_menu = []
-    highlight = []
-    for group in menu:
-        if(len(full_menu) > 0):
-            full_menu.append(tag.li(class_='divider'))
-        for item in group['items']:
-            if item['visible']:
-                full_menu.append(tag.li(tag.a(item['label'],
-                                              href=item['href'],
-                                              class_=item['class'] if 'class' in item else None,
-                                              data_wte_confirm=item['confirm'] if 'confirm' in item else None,
-                                              target=item['target'] if 'target' in item else None)))
-                if 'highlight' in item and item['highlight'] and 'icon' in item:
-                    item['group'] = group['group']
-                    highlight.append(item)
-    groups = []
-    group = None
-    for item in highlight:
-        if group != item['group']:
-            groups.append([])
-            group = item['group']
-        groups[len(groups) - 1].append(item)
-    items = []
-    for group in groups:
-        if len(group) == 1:
-            item = group[0]
-            items.append(tag.li(tag.a(tag.span(class_=item['icon']), title=group[0]['label'],
-                                      href=item['href'],
-                                      class_=item['class'] if 'class' in item else None,
-                                      data_wte_confirm=item['confirm'] if 'confirm' in item else None,
-                                      target=item['target'] if 'target' in item else None)))
+        :param label: The menu item's label
+        :type label: `unicode`
+        :param href: The URL that the menu item loads
+        :type href: `unicode`
+        :param icon: The optional icon for this menu item
+        :type icon: `unicode`
+        :param highlight: Whether to highlight the menu item by displaying it at the top level
+        :type highlight: `boolean`
+        :param attrs: Additional attributes to set for the menu item link
+        :type attrs: :class:`dict`
+        """
+        if not self._group:
+            self._group = {'label': '',
+                           'items': []}
+        if attrs:
+            attrs['href'] = href
         else:
-            sub_menu = []
-            for item in group:
-                sub_menu.append(tag.li(tag.a(item['label'],
-                                             href=item['href'],
-                                             class_=item['class'] if 'class' in item else None,
-                                             data_wte_confirm=item['confirm'] if 'confirm' in item else None,
-                                             target=item['target'] if 'target' in item else None)))
-            items.append(tag.li(tag.div(tag.a(tag.span(class_=group[0]['icon']), href='#'),
-                                        tag.ul(sub_menu),
-                                        class_='menu',
-                                        data_wte_menu_position='left' if drop_down_menu_left else 'right')))
-    items.append(tag.li(tag.div(tag.a(tag.span(class_='fi-list'), href='#', title='All actions'),
-                                tag.ul(full_menu),
-                                class_='menu',
-                                data_wte_menu_position='left' if drop_down_menu_left else 'right')))
-    return tag.ul(items, class_='menubar %s' % (class_) if class_ else 'menubar')
+            attrs = {'href': href}
+        item = {'visible': True,
+                'label': label,
+                'attrs': attrs}
+        if icon:
+            item['icon'] = icon
+        if highlight:
+            item['highlight'] = True
+        self._group['items'].append(item)
+
+    def generate(self):
+        """Generate the final menu structure.
+
+        :return: The list of menu groups with their menu items
+        :r_type: ``list`` of menu groups
+        """
+        if self._group and self._group['items']:
+            self._groups.append(self._group)
+            self._group = None
+        return self._groups
 
 
 def readable_timedelta(delta):
-    u"""Converts a :class:`datetime.timedelta` into a human-readable string.
+    """Converts a :class:`datetime.timedelta` into a human-readable string.
 
     :param delta: The time-delta to convert
     :type delta: :class:`datetime.timedelta`
     :return: The human-readable string representation of the ``delta``
     :rtype: :func:`unicode`
     """
+    def number_unit(number, unit, fraction=None):
+        """Formats a string "number unit", where the unit is appropriately
+        pluralised. Optionally the parameter ``fraction`` can be inserted
+        between the two.
+
+        :param number: The number to return
+        :type number: :func:`int`
+        :param unit: The unit to return with the number (singular)
+        :type unit: :func:`unicode`
+        :param fraction: The fraction to insert between number and unit
+        :type fraction: :func:`unicode`
+        :return: The string "number unit" or "number fraction unit"
+        :rtype: :func:`unicode`
+        """
+        if fraction is not None:
+            return '%i %s %s' % (number, fraction, inflector.plural(unit, number))
+        else:
+            return '%i %s' % (number, inflector.plural(unit, number))
+
+    def time_string(days, hours, minutes, seconds):
+        """Converts the ``days``, ``hours``, ``minutes``, and ``seconds`` into
+        a human-readable format.
+
+        :param days: The number of days to the timestamp
+        :type days: :func:`int`
+        :param hours: The number of hours to the timestamp
+        :type hours: :func:`int`
+        :param minutes: The number of minutes to the timestamp
+        :type minutes: :func:`int`
+        :param seconds: The number of seconds to the timestamp
+        :type seconds: :func:`int`
+        :return: The human-readable representation
+        :rtype: :func:`unicode`
+        """
+        if days > 60:
+            return 'about %s' % number_unit(math.ceil(days / 30.0), 'month')
+        elif days > 14:
+            return 'about %s' % number_unit(math.ceil(days / 7.0), 'week')
+        elif days > 5:
+            if hours > 16:
+                return 'a bit less than %s' % number_unit(days + 1, 'day')
+            elif hours > 8:
+                return 'about %s' % number_unit(days, 'day', fraction='and a half')
+            else:
+                return 'about %s' % number_unit(days, 'day')
+        elif days > 0:
+            if hours > 0:
+                return '%s and %s' % (number_unit(days, 'day'), number_unit(hours, 'hour'))
+            else:
+                return number_unit(days, 'day')
+        elif hours > 6:
+            if minutes > 50:
+                return 'a bit less than %s' % number_unit(hours + 1, 'hour')
+            elif minutes > 20:
+                return number_unit(hours, 'hour', fraction='and a half')
+            else:
+                return number_unit(hours, 'hour')
+        elif hours > 0:
+            if minutes > 0:
+                if seconds > 0:
+                    return '%s and %s' % (number_unit(hours, 'hour'), number_unit(minutes + 1, 'minute'))
+                else:
+                    return '%s and %s' % (number_unit(hours, 'hour'), number_unit(minutes, 'minute'))
+            else:
+                return number_unit(hours, 'hour')
+        elif minutes > 0:
+            if seconds > 0:
+                return number_unit(minutes + 1, 'minute')
+            else:
+                return number_unit(minutes, 'minute')
+        elif seconds > 30:
+            return 'less than a minute'
+        elif seconds > 15:
+            return 'less than 30 seconds'
+        else:
+            return number_unit(seconds, 'second')
+
     if delta.days < 0:
         delta = abs(delta)
-        if delta.days > 60:
-            return 'about %i %s ago' % (delta.days / 30, inflector.plural('month', delta.days / 30))
-        elif delta.days > 14:
-            return 'about %i %s ago' % (delta.days / 7, inflector.plural('week', delta.days / 7))
-        elif delta.days > 0:
-            return '%i %s ago' % (delta.days, inflector.plural('day', delta.days))
-        elif delta.seconds > 3600:
-            return '%i %s ago' % (delta.seconds / 3600, inflector.plural('hour', delta.seconds / 3600))
-        elif delta.seconds > 60:
-            return '%i %s ago' % (delta.seconds / 60, inflector.plural('minute', delta.seconds / 60))
-        else:
-            return '%i %s ago' % (delta.seconds, inflector.plural('second', delta.seconds))
-    elif delta.days > 60:
-        return 'in about %i %s' % (delta.days / 30, inflector.plural('month', delta.days / 30))
-    elif delta.days > 14:
-        return 'in about %i %s' % (delta.days / 7, inflector.plural('week', delta.days / 7))
-    elif delta.days > 0:
-        return 'in %i %s' % (delta.days, inflector.plural('day', delta.days))
-    elif delta.seconds > 3600:
-        return 'in %i %s' % (delta.seconds / 3600, inflector.plural('hour', delta.seconds / 3600))
-    elif delta.seconds > 60:
-        return 'in %i %s' % (delta.seconds / 60, inflector.plural('minute', delta.seconds / 60))
+        return '%s ago' % time_string(delta.days,
+                                      int(math.floor(delta.seconds / 3600)),
+                                      int(math.floor((delta.seconds % 3600) / 60)),
+                                      int(math.floor((delta.seconds % 3600) % 60)))
     else:
-        return 'in %i %s' % (delta.seconds, inflector.plural('second', delta.seconds))
+        return 'in %s' % time_string(delta.days,
+                                     int(math.floor(delta.seconds / 3600)),
+                                     int(math.floor((delta.seconds % 3600) / 60)),
+                                     int(math.floor((delta.seconds % 3600) % 60)))
 
 
 DISPLAY_MODES = {'default': {'module': '_module.html',
@@ -355,7 +338,7 @@ DISPLAY_MODES = {'default': {'module': '_module.html',
 
 
 def template_for_part(part):
-    u"""Returns the correct partial template path for a given
+    """Returns the correct partial template path for a given
     :class:`~wte.models.Part`. If there is no partial template for the given
     :class:`~wte.models.Part`, then ``None`` is returned.
 
@@ -373,3 +356,44 @@ def template_for_part(part):
     elif part_type in DISPLAY_MODES['default']:
         return 'default/%s' % (DISPLAY_MODES['default'][part_type])
     return None
+
+
+def natural_list(items, separator=', ', final_separator=' & '):
+    """Returns a string representation of the ``items`` list. For an empty list
+    or a single item the value is returned. For a list of two items, the items
+    are joined together using the ``final_separator``. For a list of more than
+    two items, the all but the last item are joined using ``separator`` and the
+    last item is joined using ``final_separator``.
+    
+    :param items: The list of items to join
+    :type items: :func:`list`
+    :param separator: The separator to use when more than 2 items are joined.
+                      Defaults to ', '.
+    :type separator: :func:`unicode`
+    :param final_separator: The separator to use for the last two items in the list.
+                            Defaults to ' & '.
+    :type separator: :func:`unicode`
+    :return: A string representation of the list
+    :r_type: :func:`unicode`
+    """
+    if len(items) == 0:
+        return ''
+    if len(items) == 1:
+        return items[0]
+    elif len(items) == 2:
+        return final_separator.join(items)
+    else:
+        return '%s %s %s' % (separator.join(items[:-1]), final_separator, items[-1])
+
+
+def set_list(items):
+    """Returns a string representation of the unique items in the ``items``. The
+    ``items`` must be a :func:`list` of :func:`tuple` ``(item, count)`` as returned
+    by :func:`~wte.util.ordered_counted_set`.
+    
+    :param items: The list of items to transform into a string
+    :type istems: :func:`list` of :func:`tuple`
+    :return: A string containing all unique items
+    :r_type: :func:`unicode`
+    """
+    return natural_list([inflector.plural(category, count) for (category, count) in items])

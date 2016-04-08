@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="../../static/css/application.min.css"/>
+    <link rel="stylesheet" href="../_static/default.css"/>
+    <link rel="stylesheet" href="../_static/override.css"/>
+    <link rel="stylesheet" href="../_static/pygments.css"/>
+    <title><code class="docutils literal"><span class="pre">wte.views.user_role</span></code> &#8211; Backend for Users in Parts</title>
+  </head>
+  <body>
+    <nav>
+      <ul class="breadcrumbs">
+        
+          <li><a href="index.html">API Documentation</a></li>
+        
+        <li><code class="docutils literal"><span class="pre">wte.views.user_role</span></code> &#8211; Backend for Users in Parts</li>
+      </ul>
+      <div class="row">
+        <div class="column small-12">
+          <span class="target" id="module-wte.views.user_role"></span><div class="section" id="wte-views-user-role-backend-for-users-in-parts">
+<h1><a class="reference internal" href="#module-wte.views.user_role" title="wte.views.user_role"><code class="xref py py-mod docutils literal"><span class="pre">wte.views.user_role</span></code></a> &#8211; Backend for Users in Parts<a class="headerlink" href="#wte-views-user-role-backend-for-users-in-parts" title="Permalink to this headline">¶</a></h1>
+<p>The <a class="reference internal" href="#module-wte.views.user_role" title="wte.views.user_role"><code class="xref py py-mod docutils literal"><span class="pre">user_role</span></code></a> module provides the backend functionality for dealing with
+<a class="reference internal" href="wte_models.html#wte.models.User" title="wte.models.User"><code class="xref py py-class docutils literal"><span class="pre">User</span></code></a> that have are linked to a <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a> via the
+<a class="reference internal" href="wte_models.html#wte.models.UserPartRole" title="wte.models.UserPartRole"><code class="xref py py-class docutils literal"><span class="pre">UserPartRole</span></code></a>.</p>
+<p>Routes are defined in <a class="reference internal" href="#wte.views.user_role.init" title="wte.views.user_role.init"><code class="xref py py-func docutils literal"><span class="pre">init()</span></code></a>.</p>
+<dl class="class">
+<dt id="wte.views.user_role.ActionSchema">
+<em class="property">class </em><code class="descclassname">wte.views.user_role.</code><code class="descname">ActionSchema</code><span class="sig-paren">(</span><em>*args</em>, <em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/user_role.html#ActionSchema"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.user_role.ActionSchema" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>The <a class="reference internal" href="#wte.views.user_role.ActionSchema" title="wte.views.user_role.ActionSchema"><code class="xref py py-class docutils literal"><span class="pre">ActionSchema</span></code></a> handles the</dt>
+<dd>validation of a actions applied in <a class="reference internal" href="#wte.views.user_role.action" title="wte.views.user_role.action"><code class="xref py py-func docutils literal"><span class="pre">action()</span></code></a> and
+<a class="reference internal" href="#wte.views.user_role.update" title="wte.views.user_role.update"><code class="xref py py-func docutils literal"><span class="pre">update()</span></code></a>.</dd>
+</dl>
+<p><strong>Messages</strong></p>
+<dl class="docutils">
+<dt><code class="docutils literal"><span class="pre">badDictType</span></code>:</dt>
+<dd>The input must be dict-like (not a <code class="docutils literal"><span class="pre">%(type)s</span></code>: <code class="docutils literal"><span class="pre">%(value)r</span></code>)</dd>
+<dt><code class="docutils literal"><span class="pre">badType</span></code>:</dt>
+<dd>The input must be a string (not a <code class="docutils literal"><span class="pre">%(type)s</span></code>: <code class="docutils literal"><span class="pre">%(value)r</span></code>)</dd>
+<dt><code class="docutils literal"><span class="pre">empty</span></code>:</dt>
+<dd>Please enter a value</dd>
+<dt><code class="docutils literal"><span class="pre">missingValue</span></code>:</dt>
+<dd>Missing value</dd>
+<dt><code class="docutils literal"><span class="pre">noneType</span></code>:</dt>
+<dd>The input must be a string (not None)</dd>
+<dt><code class="docutils literal"><span class="pre">notExpected</span></code>:</dt>
+<dd>The input field <code class="docutils literal"><span class="pre">%(name)s</span></code> was not expected.</dd>
+<dt><code class="docutils literal"><span class="pre">singleValueExpected</span></code>:</dt>
+<dd>Please provide only one value</dd>
+</dl>
+<dl class="attribute">
+<dt id="wte.views.user_role.ActionSchema.action">
+<code class="descname">action</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.user_role.ActionSchema.action" title="Permalink to this definition">¶</a></dt>
+<dd><p>The action to apply</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wte.views.user_role.ActionSchema.role_id">
+<code class="descname">role_id</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.user_role.ActionSchema.role_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>The list of <a class="reference internal" href="wte_models.html#wte.models.UserPartRole" title="wte.models.UserPartRole"><code class="xref py py-class docutils literal"><span class="pre">UserPartRole</span></code></a> to apply the action to</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="wte.views.user_role.AddUserSchema">
+<em class="property">class </em><code class="descclassname">wte.views.user_role.</code><code class="descname">AddUserSchema</code><span class="sig-paren">(</span><em>*args</em>, <em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/user_role.html#AddUserSchema"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.user_role.AddUserSchema" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>The <a class="reference internal" href="#wte.views.user_role.AddUserSchema" title="wte.views.user_role.AddUserSchema"><code class="xref py py-class docutils literal"><span class="pre">AddUserSchema</span></code></a> handles the</dt>
+<dd>validation of a adding a <a class="reference internal" href="wte_models.html#wte.models.User" title="wte.models.User"><code class="xref py py-class docutils literal"><span class="pre">User</span></code></a> to a
+<a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>..</dd>
+</dl>
+<p><strong>Messages</strong></p>
+<dl class="docutils">
+<dt><code class="docutils literal"><span class="pre">badDictType</span></code>:</dt>
+<dd>The input must be dict-like (not a <code class="docutils literal"><span class="pre">%(type)s</span></code>: <code class="docutils literal"><span class="pre">%(value)r</span></code>)</dd>
+<dt><code class="docutils literal"><span class="pre">badType</span></code>:</dt>
+<dd>The input must be a string (not a <code class="docutils literal"><span class="pre">%(type)s</span></code>: <code class="docutils literal"><span class="pre">%(value)r</span></code>)</dd>
+<dt><code class="docutils literal"><span class="pre">empty</span></code>:</dt>
+<dd>Please enter a value</dd>
+<dt><code class="docutils literal"><span class="pre">missingValue</span></code>:</dt>
+<dd>Missing value</dd>
+<dt><code class="docutils literal"><span class="pre">noneType</span></code>:</dt>
+<dd>The input must be a string (not None)</dd>
+<dt><code class="docutils literal"><span class="pre">notExpected</span></code>:</dt>
+<dd>The input field <code class="docutils literal"><span class="pre">%(name)s</span></code> was not expected.</dd>
+<dt><code class="docutils literal"><span class="pre">singleValueExpected</span></code>:</dt>
+<dd>Please provide only one value</dd>
+</dl>
+<dl class="attribute">
+<dt id="wte.views.user_role.AddUserSchema.q">
+<code class="descname">q</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.user_role.AddUserSchema.q" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the query in case there are validation errors</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wte.views.user_role.AddUserSchema.role">
+<code class="descname">role</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.user_role.AddUserSchema.role" title="Permalink to this definition">¶</a></dt>
+<dd><p>The new role for the <a class="reference internal" href="wte_models.html#wte.models.User" title="wte.models.User"><code class="xref py py-class docutils literal"><span class="pre">User</span></code></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wte.views.user_role.AddUserSchema.start">
+<code class="descname">start</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.user_role.AddUserSchema.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the pagination in case there are validation errors</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wte.views.user_role.AddUserSchema.user_id">
+<code class="descname">user_id</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.user_role.AddUserSchema.user_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>The id of the <a class="reference internal" href="wte_models.html#wte.models.User" title="wte.models.User"><code class="xref py py-class docutils literal"><span class="pre">User</span></code></a> to add</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="wte.views.user_role.ChangeRoleSchema">
+<em class="property">class </em><code class="descclassname">wte.views.user_role.</code><code class="descname">ChangeRoleSchema</code><span class="sig-paren">(</span><em>*args</em>, <em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/user_role.html#ChangeRoleSchema"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.user_role.ChangeRoleSchema" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>The <a class="reference internal" href="#wte.views.user_role.ChangeRoleSchema" title="wte.views.user_role.ChangeRoleSchema"><code class="xref py py-class docutils literal"><span class="pre">ChangeRoleSchema</span></code></a> handles the</dt>
+<dd>validation of a &#8220;change_role&#8221; action applied in <a class="reference internal" href="#wte.views.user_role.update" title="wte.views.user_role.update"><code class="xref py py-func docutils literal"><span class="pre">update()</span></code></a>.</dd>
+</dl>
+<p><strong>Messages</strong></p>
+<dl class="docutils">
+<dt><code class="docutils literal"><span class="pre">badDictType</span></code>:</dt>
+<dd>The input must be dict-like (not a <code class="docutils literal"><span class="pre">%(type)s</span></code>: <code class="docutils literal"><span class="pre">%(value)r</span></code>)</dd>
+<dt><code class="docutils literal"><span class="pre">badType</span></code>:</dt>
+<dd>The input must be a string (not a <code class="docutils literal"><span class="pre">%(type)s</span></code>: <code class="docutils literal"><span class="pre">%(value)r</span></code>)</dd>
+<dt><code class="docutils literal"><span class="pre">empty</span></code>:</dt>
+<dd>Please enter a value</dd>
+<dt><code class="docutils literal"><span class="pre">missingValue</span></code>:</dt>
+<dd>Missing value</dd>
+<dt><code class="docutils literal"><span class="pre">noneType</span></code>:</dt>
+<dd>The input must be a string (not None)</dd>
+<dt><code class="docutils literal"><span class="pre">notExpected</span></code>:</dt>
+<dd>The input field <code class="docutils literal"><span class="pre">%(name)s</span></code> was not expected.</dd>
+<dt><code class="docutils literal"><span class="pre">singleValueExpected</span></code>:</dt>
+<dd>Please provide only one value</dd>
+</dl>
+<dl class="attribute">
+<dt id="wte.views.user_role.ChangeRoleSchema.action">
+<code class="descname">action</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.user_role.ChangeRoleSchema.action" title="Permalink to this definition">¶</a></dt>
+<dd><p>The action to apply</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wte.views.user_role.ChangeRoleSchema.q">
+<code class="descname">q</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.user_role.ChangeRoleSchema.q" title="Permalink to this definition">¶</a></dt>
+<dd><p>Optional query parameter for the redirect</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wte.views.user_role.ChangeRoleSchema.role">
+<code class="descname">role</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.user_role.ChangeRoleSchema.role" title="Permalink to this definition">¶</a></dt>
+<dd><p>The new role</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wte.views.user_role.ChangeRoleSchema.role_id">
+<code class="descname">role_id</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.user_role.ChangeRoleSchema.role_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>The list of <a class="reference internal" href="wte_models.html#wte.models.UserPartRole" title="wte.models.UserPartRole"><code class="xref py py-class docutils literal"><span class="pre">UserPartRole</span></code></a> to apply the action to</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wte.views.user_role.ChangeRoleSchema.start">
+<code class="descname">start</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.user_role.ChangeRoleSchema.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Optional start parameter for the redirect</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.user_role.action">
+<code class="descclassname">wte.views.user_role.</code><code class="descname">action</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/user_role.html#action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.user_role.action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles the <code class="docutils literal"><span class="pre">parts/{pid}/users/action</span></code> URL, loads the interface for changing
+<a class="reference internal" href="wte_models.html#wte.models.User" title="wte.models.User"><code class="xref py py-class docutils literal"><span class="pre">User</span></code></a> registered for a <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</p>
+<p>Requires that the user has &#8220;users&#8221; rights on the
+<a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.user_role.add">
+<code class="descclassname">wte.views.user_role.</code><code class="descname">add</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/user_role.html#add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.user_role.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles the <code class="docutils literal"><span class="pre">parts/{pid}/users/add</span></code> URL, providing the functionality for adding a
+<a class="reference internal" href="wte_models.html#wte.models.User" title="wte.models.User"><code class="xref py py-class docutils literal"><span class="pre">User</span></code></a> to a <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</p>
+<p>Requires that the user has &#8220;users&#8221; rights on the
+<a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.user_role.init">
+<code class="descclassname">wte.views.user_role.</code><code class="descname">init</code><span class="sig-paren">(</span><em>config</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/user_role.html#init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.user_role.init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds the user-part-role-specific backend routes (route name, URL pattern
+handler):</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">part.users</span></code> &#8211; <code class="docutils literal"><span class="pre">/parts/{pid}/users</span></code> &#8211; <a class="reference internal" href="#wte.views.user_role.users" title="wte.views.user_role.users"><code class="xref py py-func docutils literal"><span class="pre">users()</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">part.users.action</span></code> &#8211; <code class="docutils literal"><span class="pre">/parts/{pid}/users/action</span></code> &#8211; <a class="reference internal" href="#wte.views.user_role.action" title="wte.views.user_role.action"><code class="xref py py-func docutils literal"><span class="pre">action()</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">part.users.update</span></code> &#8211; <code class="docutils literal"><span class="pre">/parts/{pid}/users/update</span></code> &#8211; <a class="reference internal" href="#wte.views.user_role.update" title="wte.views.user_role.update"><code class="xref py py-func docutils literal"><span class="pre">update()</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">part.users.add</span></code> &#8211; <code class="docutils literal"><span class="pre">/parts/{pid}/users/add</span></code> &#8211; <a class="reference internal" href="#wte.views.user_role.add" title="wte.views.user_role.add"><code class="xref py py-func docutils literal"><span class="pre">add()</span></code></a></li>
+</ul>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.user_role.update">
+<code class="descclassname">wte.views.user_role.</code><code class="descname">update</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/user_role.html#update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.user_role.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles the <code class="docutils literal"><span class="pre">parts/{pid}/users</span></code> URL, applying the changes select when the
+user views <a class="reference internal" href="#wte.views.user_role.action" title="wte.views.user_role.action"><code class="xref py py-func docutils literal"><span class="pre">action()</span></code></a>.</p>
+<p>Requires that the user has &#8220;users&#8221; rights on the
+<a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.user_role.users">
+<code class="descclassname">wte.views.user_role.</code><code class="descname">users</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/user_role.html#users"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.user_role.users" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles the <code class="docutils literal"><span class="pre">parts/{pid}/users</span></code> URL, displaying the
+<a class="reference internal" href="wte_models.html#wte.models.User" title="wte.models.User"><code class="xref py py-class docutils literal"><span class="pre">User</span></code></a> registered for a <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</p>
+<p>Requires that the user has &#8220;users&#8221; rights on the
+<a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>.</p>
+</dd></dl>
+
+</div>
+
+        </div>
+      </div>
+      <ul class="pagination text-center" role="navigation" aria-label="Pagination">
+        
+          <li class="pagination-previous"><a href="wte_views_user.html"><code class="docutils literal"><span class="pre">wte.views.user</span></code> &#8211; User functionality view handlers</a></li>
+        
+        
+      </ul>
+    </nav>
+  </body>
+</html>

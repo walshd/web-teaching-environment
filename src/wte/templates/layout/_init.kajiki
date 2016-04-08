@@ -1,0 +1,8 @@
+<script>
+$(document).foundation();
+$('.post-link').postLink();
+if(!Modernizr.inputtypes.date) {
+    $('input[type=date]').fdatepicker();
+}
+$(document).helpViewer();
+</script>

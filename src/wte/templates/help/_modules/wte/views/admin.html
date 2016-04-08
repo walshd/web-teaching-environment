@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="../../../../static/css/application.min.css"/>
+    <link rel="stylesheet" href="../../../_static/default.css"/>
+    <link rel="stylesheet" href="../../../_static/override.css"/>
+    <link rel="stylesheet" href="../../../_static/pygments.css"/>
+    <title>wte.views.admin</title>
+  </head>
+  <body>
+    <nav>
+      <ul class="breadcrumbs">
+        
+          <li><a href="../../index.html">Module code</a></li>
+        
+          <li><a href="../../wte.html">wte</a></li>
+        
+          <li><a href="../views.html">wte.views</a></li>
+        
+        <li>wte.views.admin</li>
+      </ul>
+      <div class="row">
+        <div class="column small-12">
+          <h1>Source code for wte.views.admin</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">#############################################</span>
+<span class="sd">:mod:`wte.views.admin` -- Admin view handlers</span>
+<span class="sd">#############################################</span>
+
+<span class="sd">The :mod:`~wte.views.admin` handles the requests relating to general</span>
+<span class="sd">administrative functionality.</span>
+
+<span class="sd">Routes are defined in :func:`~wte.views.admin.init`.</span>
+
+<span class="sd">.. moduleauthor:: Mark Hall &lt;mark.hall@work.room3b.eu&gt;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">transaction</span>
+
+<span class="kn">from</span> <span class="nn">pyramid.httpexceptions</span> <span class="kn">import</span> <span class="n">HTTPSeeOther</span>
+<span class="kn">from</span> <span class="nn">pyramid.view</span> <span class="kn">import</span> <span class="n">view_config</span>
+
+<span class="kn">from</span> <span class="nn">wte.decorators</span> <span class="kn">import</span> <span class="p">(</span><span class="n">current_user</span><span class="p">,</span> <span class="n">require_logged_in</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">wte.models</span> <span class="kn">import</span> <span class="p">(</span><span class="n">DBSession</span><span class="p">,</span> <span class="n">Part</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">wte.text_formatter</span> <span class="kn">import</span> <span class="n">compile_rst</span>
+<span class="kn">from</span> <span class="nn">wte.util</span> <span class="kn">import</span> <span class="n">unauthorised_redirect</span>
+
+
+<div class="viewcode-block" id="init"><a class="viewcode-back" href="../../../api/wte_views_admin.html#wte.views.admin.init">[docs]</a><span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adds the admin-specific routes (route name, URL pattern</span>
+<span class="sd">    handler):</span>
+
+<span class="sd">    * ``admin`` -- ``/admin`` -- :func:`~wte.views.admin.admin`</span>
+<span class="sd">    * ``admin.content`` -- ``/admin/content`` --</span>
+<span class="sd">      :func:`~wte.views.admin.content_admin`</span>
+<span class="sd">    * ``admin.content.regenerate`` -- ``/admin/content/regenerate``</span>
+<span class="sd">      -- :func:`~wte.views.admin.content_regenerate`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">add_route</span><span class="p">(</span><span class="s1">&#39;admin&#39;</span><span class="p">,</span> <span class="s1">&#39;/admin&#39;</span><span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">add_route</span><span class="p">(</span><span class="s1">&#39;admin.content&#39;</span><span class="p">,</span> <span class="s1">&#39;/admin/content&#39;</span><span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">add_route</span><span class="p">(</span><span class="s1">&#39;admin.content.regenerate&#39;</span><span class="p">,</span> <span class="s1">&#39;/admin/content/regenerate&#39;</span><span class="p">)</span></div>
+
+
+<span class="nd">@view_config</span><span class="p">(</span><span class="n">route_name</span><span class="o">=</span><span class="s1">&#39;admin&#39;</span><span class="p">,</span> <span class="n">renderer</span><span class="o">=</span><span class="s1">&#39;wte:templates/admin/index.kajiki&#39;</span><span class="p">)</span>
+<span class="nd">@current_user</span><span class="p">()</span>
+<span class="nd">@require_logged_in</span><span class="p">()</span>
+<div class="viewcode-block" id="admin"><a class="viewcode-back" href="../../../api/wte_views_admin.html#wte.views.admin.admin">[docs]</a><span class="k">def</span> <span class="nf">admin</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Handles the ``/admin`` URL, displaying all available administrative</span>
+<span class="sd">    functions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="o">.</span><span class="n">has_permission</span><span class="p">(</span><span class="s1">&#39;admin&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Administration&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">current_route_url</span><span class="p">(),</span>
+                            <span class="s1">&#39;current&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">}]}</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">)</span></div>
+
+
+<span class="nd">@view_config</span><span class="p">(</span><span class="n">route_name</span><span class="o">=</span><span class="s1">&#39;admin.content&#39;</span><span class="p">,</span> <span class="n">renderer</span><span class="o">=</span><span class="s2">&quot;wte:templates/admin/content.kajiki&quot;</span><span class="p">)</span>
+<span class="nd">@current_user</span><span class="p">()</span>
+<span class="nd">@require_logged_in</span><span class="p">()</span>
+<div class="viewcode-block" id="content_admin"><a class="viewcode-back" href="../../../api/wte_views_admin.html#wte.views.admin.content_admin">[docs]</a><span class="k">def</span> <span class="nf">content_admin</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Handles the ``/admin/content`` URL, displaying all available administrative</span>
+<span class="sd">    functions related to the content administrations.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="o">.</span><span class="n">has_permission</span><span class="p">(</span><span class="s1">&#39;admin&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Administration&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;admin&#39;</span><span class="p">)},</span>
+                           <span class="p">{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Content&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">current_route_url</span><span class="p">(),</span>
+                            <span class="s1">&#39;current&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">}]}</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">)</span></div>
+
+
+<span class="nd">@view_config</span><span class="p">(</span><span class="n">route_name</span><span class="o">=</span><span class="s1">&#39;admin.content.regenerate&#39;</span><span class="p">)</span>
+<span class="nd">@current_user</span><span class="p">()</span>
+<span class="nd">@require_logged_in</span><span class="p">()</span>
+<div class="viewcode-block" id="content_regenerate"><a class="viewcode-back" href="../../../api/wte_views_admin.html#wte.views.admin.content_regenerate">[docs]</a><span class="k">def</span> <span class="nf">content_regenerate</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Handles the ``/admin/content/regenerate`` URL, regenerating the</span>
+<span class="sd">    ``compiled_content`` attribute for all :class:`~wte.models.Part`\ s.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="o">.</span><span class="n">has_permission</span><span class="p">(</span><span class="s1">&#39;admin&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
+            <span class="n">dbsession</span> <span class="o">=</span> <span class="n">DBSession</span><span class="p">()</span>
+            <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">manager</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Part</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">content</span><span class="p">:</span>
+                        <span class="n">part</span><span class="o">.</span><span class="n">compiled_content</span> <span class="o">=</span> <span class="n">compile_rst</span><span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">content</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">part</span><span class="p">)</span>
+            <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">flash</span><span class="p">(</span><span class="s1">&#39;All contents have been regenerated.&#39;</span><span class="p">,</span> <span class="n">queue</span><span class="o">=</span><span class="s1">&#39;info&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">HTTPSeeOther</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;admin.content&#39;</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">)</span></div>
+</pre></div>
+        </div>
+      </div>
+      <ul class="pagination text-center" role="navigation" aria-label="Pagination">
+        
+        
+      </ul>
+    </nav>
+  </body>
+</html>

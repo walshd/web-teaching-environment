@@ -18,12 +18,11 @@ import transaction
 
 from pyramid.httpexceptions import (HTTPSeeOther, HTTPNotFound)
 from pyramid.view import view_config
-from pywebtools.renderer import render
 from sqlalchemy import and_, or_
 
 from wte.decorators import (current_user, require_logged_in)
 from wte.models import (DBSession, Part, UserPartRole, User, UserPartProgress)
-from wte.util import (unauthorised_redirect)
+from wte.util import (unauthorised_redirect, CSRFSchema, State)
 from wte.views.part import (create_part_crumbs, get_all_parts)
 
 
@@ -42,8 +41,7 @@ def init(config):
     config.add_route('part.users.add', '/parts/{pid}/users/add')
 
 
-@view_config(route_name='part.users')
-@render({'text/html': 'user_role/list.html'})
+@view_config(route_name='part.users', renderer='wte:templates/user_role/list.kajiki')
 @current_user()
 @require_logged_in()
 def users(request):
@@ -87,24 +85,31 @@ def users(request):
                 users = query.offset(start).limit(30)
             else:
                 users = query
-            if total_users:
-                pages = [{'title': 'Show all',
-                          'url': request.route_url('part.users',
-                                                   pid=part.id,
-                                                   _query=query_params + [('start', '-1')]),
-                          'class': 'current' if start < 0 else None}]
+            pages = []
+            if start == 0:
+                pages.append({'type': 'prev'})
             else:
-                pages = []
-            if start < 0:
-                pages.append({'title': 'Show page:',
-                              'url': '#',
-                              'class': 'unavailable'})
-            for idx in range(0, int(math.ceil(total_users / 30.0))):
-                pages.append({'title': unicode(idx + 1),
+                pages.append({'type': 'prev',
                               'url': request.route_url('part.users',
                                                        pid=part.id,
-                                                       _query=query_params + [('start', idx * 30)]),
-                              'class': 'current' if idx == (start / 30) else None})
+                                                       _query=query_params + [('start', max(start - 30, 0))])})
+            for idx in range(0, int(math.ceil(total_users / 30.0))):
+                if idx * 30 == start:
+                    pages.append({'type': 'current',
+                                  'label': idx + 1})
+                else:
+                    pages.append({'type': 'item',
+                                  'label': idx + 1,
+                                  'url': request.route_url('part.users',
+                                                           pid=part.id,
+                                                           _query=query_params + [('start', idx * 30)])})
+            if start + 30 >= total_users:
+                pages.append({'type': 'next'})
+            else:
+                pages.append({'type': 'next',
+                              'url': request.route_url('part.users',
+                                                       pid=part.id,
+                                                       _query=query_params + [('start', start + 30)])})
             current_page = max(0, start / 30)
             return {'part': part,
                     'users': users,
@@ -118,7 +123,7 @@ def users(request):
         raise HTTPNotFound()
 
 
-class ActionSchema(formencode.Schema):
+class ActionSchema(CSRFSchema):
     u"""The :class:`~wte.views.user_role.ActionSchema` handles the
     validation of a actions applied in :func:`~wte.views.user_role.action` and
     :func:`~wte.views.user_role.update`.
@@ -134,8 +139,7 @@ class ActionSchema(formencode.Schema):
     allow_extra_fields = True
 
 
-@view_config(route_name='part.users.action')
-@render({'text/html': 'user_role/action.html'})
+@view_config(route_name='part.users.action', renderer='wte:templates/user_role/action.kajiki')
 @current_user()
 @require_logged_in()
 def action(request):
@@ -177,7 +181,7 @@ def action(request):
         raise HTTPNotFound()
 
 
-class ChangeRoleSchema(formencode.Schema):
+class ChangeRoleSchema(CSRFSchema):
     u"""The :class:`~wte.views.user_role.ChangeRoleSchema` handles the
     validation of a "change_role" action applied in :func:`~wte.views.user_role.update`.
     """
@@ -198,8 +202,7 @@ class ChangeRoleSchema(formencode.Schema):
     u"""Optional start parameter for the redirect"""
 
 
-@view_config(route_name='part.users.update')
-@render({'text/html': 'user_role/action.html'})
+@view_config(route_name='part.users.update', renderer='wte:templates/user_role/action.kajiki')
 @current_user()
 @require_logged_in()
 def update(request):
@@ -219,29 +222,28 @@ def update(request):
                 if param in request.params and request.params[param]:
                     query_params.append((param, request.params[param]))
             try:
+                crumbs = create_part_crumbs(request,
+                                            part,
+                                            [{'title': 'Users',
+                                              'url': request.route_url('part.users', pid=part.id)},
+                                             {'title': 'Update',
+                                              'url': request.current_route_url()}])
+                users = []
+                params = {}
                 params = ActionSchema().to_python(request.params)
-            except formencode.api.Invalid:
-                request.session.flash('Please select the action you wish to apply ' +
-                                      'and the users you wish to apply it to', queue='error')
-                raise HTTPSeeOther(request.route_url('part.users', pid=part.id, _query=query_params))
-            crumbs = create_part_crumbs(request,
-                                        part,
-                                        [{'title': 'Users',
-                                         'url': request.route_url('part.users', pid=part.id)},
-                                         {'title': 'Update',
-                                          'url': request.current_route_url()}])
-            users = dbsession.query(UserPartRole).filter(UserPartRole.id.in_(params['role_id'])).all()
-            try:
+                users = dbsession.query(UserPartRole).filter(UserPartRole.id.in_(params['role_id'])).all()
                 if params['action'] == 'change_role':
-                    params = ChangeRoleSchema().to_python(request.params)
+                    params = ChangeRoleSchema().to_python(request.params, State(request=request))
                     with transaction.manager:
                         for role in users:
                             dbsession.add(role)
                             role.role = params['role']
-                    request.session.flash("The users' roles have been updated", queue='info')
                     raise HTTPSeeOther(request.route_url('part.users', pid=request.matchdict['pid'],
                                                          _query=query_params))
                 elif params['action'] == 'remove':
+                    schema = CSRFSchema()
+                    schema.allow_extra_fields = True
+                    schema.to_python(request.params, State(request=request))
                     with transaction.manager:
                         dbsession.add(part)
                         parts = get_all_parts(part)
@@ -254,20 +256,21 @@ def update(request):
                                 if progress:
                                     dbsession.delete(progress)
                             dbsession.delete(role)
-                    request.session.flash('The users have been removed', queue='info')
                     raise HTTPSeeOther(request.route_url('part.users', pid=request.matchdict['pid'],
                                                          _query=query_params))
                 elif params['action'] == 'block':
+                    schema = CSRFSchema()
+                    schema.allow_extra_fields = True
+                    schema.to_python(request.params, State(request=request))
                     with transaction.manager:
                         for role in users:
                             dbsession.add(role)
                             role.role = u'block'
-                    request.session.flash('The users have been blocked', queue='info')
                     raise HTTPSeeOther(request.route_url('part.users', pid=request.matchdict['pid'],
                                                          _query=query_params))
             except formencode.api.Invalid as e:
-                e.params = request.params
-                return {'e': e,
+                return {'errors': e.error_dict,
+                        'values': request.params,
                         'part': part,
                         'params': params,
                         'query_params': query_params,
@@ -284,7 +287,7 @@ def update(request):
         raise HTTPNotFound()
 
 
-class AddUserSchema(formencode.Schema):
+class AddUserSchema(CSRFSchema):
     u"""The :class:`~wte.views.user_role.AddUserSchema` handles the
     validation of a adding a :class:`~wte.models.User` to a
     :class:`~wte.models.Part`..
@@ -301,8 +304,7 @@ class AddUserSchema(formencode.Schema):
     u"""Save the pagination in case there are validation errors"""
 
 
-@view_config(route_name='part.users.add')
-@render({'text/html': 'user_role/add.html'})
+@view_config(route_name='part.users.add', renderer='wte:templates/user_role/add.kajiki')
 @current_user()
 @require_logged_in()
 def add(request):
@@ -327,7 +329,8 @@ def add(request):
                 users = dbsession.query(User).outerjoin(UserPartRole).\
                     filter(or_(User.display_name.contains(request.params['q']),
                                User.email.contains(request.params['q']))).\
-                    filter(UserPartRole.id == None)
+                    filter(User.id.notin_(dbsession.query(User.id).join(UserPartRole).
+                                          join(Part).filter(Part.id == part.id)))
             start = 0
             if 'start' in request.params:
                 try:
@@ -339,10 +342,40 @@ def add(request):
                 users = users.offset(start).limit(20).all()
             else:
                 total_users = 0
-            pages = [i for i in range(0, int(math.ceil(total_users / 20.0)))]
+            pages = []
+            if start == 0:
+                pages.append({'type': 'prev'})
+            else:
+                pages.append({'type': 'prev',
+                              'url': request.route_url('part.users',
+                                                       pid=part.id,
+                                                       _query=[('q', request.params['q']
+                                                                if 'q' in request.params else ''),
+                                                               ('start', max(start - 30, 0))])})
+            for idx in range(0, int(math.ceil(total_users / 30.0))):
+                if idx * 30 == start:
+                    pages.append({'type': 'current',
+                                  'label': idx + 1})
+                else:
+                    pages.append({'type': 'item',
+                                  'label': idx + 1,
+                                  'url': request.route_url('part.users',
+                                                           pid=part.id,
+                                                           _query=[('q', request.params['q']
+                                                                    if 'q' in request.params else ''),
+                                                                   ('start', idx * 30)])})
+            if start + 30 >= total_users:
+                pages.append({'type': 'next'})
+            else:
+                pages.append({'type': 'next',
+                              'url': request.route_url('part.users',
+                                                       pid=part.id,
+                                                       _query=[('q', request.params['q']
+                                                                if 'q' in request.params else ''),
+                                                               ('start', start + 30)])})
             if request.method == 'POST':
                 try:
-                    params = AddUserSchema().to_python(request.params)
+                    params = AddUserSchema().to_python(request.params, State(request=request))
                     with transaction.manager:
                         dbsession.add(part)
                         for user_id in params['user_id']:
@@ -352,11 +385,11 @@ def add(request):
                                 dbsession.add(UserPartRole(user_id=user_id,
                                                            part_id=part.id,
                                                            role=params['role']))
-                    request.session.flash('The users have been added to the module', queue='info')
                     raise HTTPSeeOther(request.route_url('part.users', pid=request.matchdict['pid']))
                 except formencode.api.Invalid as e:
                     e.params = request.params
-                    return {'e': e,
+                    return {'errors': e.error_dict,
+                            'values': request.params,
                             'part': part,
                             'users': users,
                             'total_users': total_users,

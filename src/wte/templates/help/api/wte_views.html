@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="../../static/css/application.min.css"/>
+    <link rel="stylesheet" href="../_static/default.css"/>
+    <link rel="stylesheet" href="../_static/override.css"/>
+    <link rel="stylesheet" href="../_static/pygments.css"/>
+    <title><code class="docutils literal"><span class="pre">wte.views</span></code> &#8211; View handlers</title>
+  </head>
+  <body>
+    <nav>
+      <ul class="breadcrumbs">
+        
+          <li><a href="index.html">API Documentation</a></li>
+        
+        <li><code class="docutils literal"><span class="pre">wte.views</span></code> &#8211; View handlers</li>
+      </ul>
+      <div class="row">
+        <div class="column small-12">
+          <span class="target" id="module-wte.views"></span><div class="section" id="wte-views-view-handlers">
+<h1><a class="reference internal" href="#module-wte.views" title="wte.views"><code class="xref py py-mod docutils literal"><span class="pre">wte.views</span></code></a> &#8211; View handlers<a class="headerlink" href="#wte-views-view-handlers" title="Permalink to this headline">¶</a></h1>
+<p>The <a class="reference internal" href="#module-wte.views" title="wte.views"><code class="xref py py-mod docutils literal"><span class="pre">views</span></code></a> package contains the view handlers that implement the
+majority of the Web Teaching Environment&#8217;s functionality.</p>
+<p>Each module within <a class="reference internal" href="#module-wte.views" title="wte.views"><code class="xref py py-mod docutils literal"><span class="pre">views</span></code></a> contains an <code class="docutils literal"><span class="pre">init</span></code> function that
+initialises the routes that are handled by that module.</p>
+<dl class="function">
+<dt id="wte.views.help_page">
+<code class="descclassname">wte.views.</code><code class="descname">help_page</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views.html#help_page"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.help_page" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles the <code class="docutils literal"><span class="pre">/help</span></code> route, displaying the appropriate help page.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.init">
+<code class="descclassname">wte.views.</code><code class="descname">init</code><span class="sig-paren">(</span><em>config</em>, <em>settings</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views.html#init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds the following routes (route name, URL pattern, handler):</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">root</span></code> &#8211; <code class="docutils literal"><span class="pre">/</span></code> &#8211; <a class="reference internal" href="#wte.views.root" title="wte.views.root"><code class="xref py py-func docutils literal"><span class="pre">root()</span></code></a></li>
+</ul>
+<p>Then calls the <code class="docutils literal"><span class="pre">init</span></code> function on all modules within <a class="reference internal" href="#module-wte.views" title="wte.views"><code class="xref py py-mod docutils literal"><span class="pre">views</span></code></a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.notfound_404">
+<code class="descclassname">wte.views.</code><code class="descname">notfound_404</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views.html#notfound_404"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.notfound_404" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles 404 errors</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.root">
+<code class="descclassname">wte.views.</code><code class="descname">root</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views.html#root"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.root" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles the <code class="docutils literal"><span class="pre">/</span></code> route.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.servererror_500">
+<code class="descclassname">wte.views.</code><code class="descname">servererror_500</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views.html#servererror_500"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.servererror_500" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles 500 errors</p>
+</dd></dl>
+
+</div>
+
+        </div>
+      </div>
+      <ul class="pagination text-center" role="navigation" aria-label="Pagination">
+        
+          <li class="pagination-previous"><a href="wte_util.html"><code class="docutils literal"><span class="pre">wte.util</span></code> &#8211; Utility functions</a></li>
+        
+        
+          <li class="pagination-next"><a href="wte_views_admin.html"><code class="docutils literal"><span class="pre">wte.views.admin</span></code> &#8211; Admin view handlers</a></li>
+        
+      </ul>
+    </nav>
+  </body>
+</html>

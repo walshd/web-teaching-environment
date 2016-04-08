@@ -1,0 +1,28 @@
+<py:extends href="wte:templates/layout/centred.kajiki">
+  <py:block name="title">Discard all Changes</py:block>
+  <py:block name="content">
+    <py:import href="wte:templates/helpers/form.kajiki" alias="form"/>
+    <h1>Discard all Changes</h1>
+    <form action="${request.route_url('part.reset-files', pid=part.id)}" method="post">
+      ${form.csrf_field()}
+      <div class="row">
+        <div class="column small-12 medium-8 large-6 end">
+          <py:if test="'filename' in request.params"><input type="hidden" name="filename" value="${request.params['filename']}"/>
+            <p>Please confirm that you wish to discard all changes
+               you made to the file &quot;${request.params['filename']}&quot; and reset it to its initial
+               content.</p>
+          </py:if><py:else>
+            <p>Please confirm that you wish to discard all the
+               changes you made to the files and reset them to their initial content.</p>
+          </py:else>
+        </div>
+      </div>
+      <div class="row">
+        <div class="column small-12 medium-8 large-6 end text-right">
+          <a href="${request.route_url('part.view', pid=part.id)}" class="button secondary">Don't Discard</a>
+          <input type="submit" value="Discard" class="button alert"/>
+        </div>
+      </div>
+    </form>
+  </py:block>
+</py:extends>

@@ -1,0 +1,4 @@
+<div id="help-viewer">
+  <a href="#"><span class="fi-x"> </span><span class="show-for-sr">Close</span></a>
+  <iframe src="${request.route_url('help', path=help if defined('help') else [])}"> </iframe>
+</div>

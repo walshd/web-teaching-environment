@@ -1,0 +1,64 @@
+/* Load the initial settings */
+@import 'foundation/foundation';
+@import 'application/settings';
+@import 'settings';
+
+/* Load Foundation */
+@include foundation-global-styles;
+@include foundation-grid;
+@include foundation-typography;
+@include foundation-button;
+@include foundation-forms;
+@include foundation-visibility-classes;
+@include foundation-float-classes;
+@include foundation-accordion;
+@include foundation-accordion-menu;
+@include foundation-badge;
+@include foundation-breadcrumbs;
+@include foundation-button-group;
+@include foundation-callout;
+@include foundation-close-button;
+@include foundation-drilldown-menu;
+@include foundation-dropdown;
+@include foundation-dropdown-menu;
+@include foundation-flex-video;
+@include foundation-label;
+@include foundation-media-object;
+@include foundation-menu;
+@include foundation-off-canvas;
+@include foundation-orbit;
+@include foundation-pagination;
+@include foundation-progress-bar;
+@include foundation-slider;
+@include foundation-sticky;
+@include foundation-reveal;
+@include foundation-switch;
+@include foundation-table;
+@include foundation-tabs;
+@include foundation-thumbnail;
+@include foundation-title-bar;
+@include foundation-tooltip;
+@include foundation-top-bar;
+
+/* Load the actual SCSS files */
+@import 'foundation/icons/foundation-icons.scss';
+@import 'foundation/ext/datepicker.scss';
+@import 'application/foundation-overrides.scss';
+@import 'codemirror/codemirror.scss';
+@import 'codemirror/theme.scss';
+@import 'application/codemirror-overrides.scss';
+@import 'application/generic.scss';
+@import 'application/jquery-ui.scss';
+@import 'application/images.scss';
+@import 'application/menubar.scss';
+@import 'application/busy.scss';
+@import 'application/textbook.scss';
+@import 'application/pagination.scss';
+@import 'application/editor.scss';
+@import 'application/html-viewer.scss';
+@import 'application/footer.scss';
+@import 'application/docutils.scss';
+@import 'application/dragndrop.scss';
+@import 'application/help.scss';
+/** Load the override SCSS file */
+@import 'overrides.scss';

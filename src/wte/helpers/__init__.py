@@ -11,13 +11,11 @@ consulte the following documentation: :mod:`pywebtools.text`,
 
 .. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
+import asset
 
-from genshi.builder import Markup  # NOQA
-from pywebtools import text  # NOQA
-
-from . import form, frontend  # NOQA
-from wte.util import VERSION
+from . import frontend  # NOQA
 
 
 def version():
-    return VERSION
+    """Return the current version number."""
+    return asset.version('WebTeachingEnvironment')

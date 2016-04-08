@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="../../../static/css/application.min.css"/>
+    <link rel="stylesheet" href="../../_static/default.css"/>
+    <link rel="stylesheet" href="../../_static/override.css"/>
+    <link rel="stylesheet" href="../../_static/pygments.css"/>
+    <title>wte.decorators</title>
+  </head>
+  <body>
+    <nav>
+      <ul class="breadcrumbs">
+        
+          <li><a href="../index.html">Module code</a></li>
+        
+          <li><a href="../wte.html">wte</a></li>
+        
+        <li>wte.decorators</li>
+      </ul>
+      <div class="row">
+        <div class="column small-12">
+          <h1>Source code for wte.decorators</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">u&quot;&quot;&quot;</span>
+<span class="sd">#######################################</span>
+<span class="sd">:mod:`wte.decorators` -- Decoratorators</span>
+<span class="sd">#######################################</span>
+
+<span class="sd">The :mod:`~wte.decorators` module contains function decorators for use with</span>
+<span class="sd">various functions.</span>
+
+<span class="sd">.. moduleauthor:: Mark Hall &lt;mark.hall@work.room3b.eu&gt;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">decorator</span> <span class="kn">import</span> <span class="n">decorator</span>
+<span class="kn">from</span> <span class="nn">pyramid.httpexceptions</span> <span class="kn">import</span> <span class="n">HTTPMethodNotAllowed</span>
+<span class="kn">from</span> <span class="nn">pyramid.request</span> <span class="kn">import</span> <span class="n">Request</span>
+
+<span class="kn">from</span> <span class="nn">wte.models</span> <span class="kn">import</span> <span class="p">(</span><span class="n">DBSession</span><span class="p">,</span> <span class="n">User</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">wte.util</span> <span class="kn">import</span> <span class="n">unauthorised_redirect</span>
+
+
+<div class="viewcode-block" id="request_from_args"><a class="viewcode-back" href="../../api/wte_decorators.html#wte.decorators.request_from_args">[docs]</a><span class="k">def</span> <span class="nf">request_from_args</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the :class:`~pyramid.request.Request` from the function</span>
+<span class="sd">    parameters list ``args``.</span>
+
+<span class="sd">    :param args: The parameters passed to a function</span>
+<span class="sd">    :return: The request object</span>
+<span class="sd">    :r_type: :class:`~pyramid.request.Request`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">Request</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">arg</span>
+    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;No request found&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="current_user"><a class="viewcode-back" href="../../api/wte_decorators.html#wte.decorators.current_user">[docs]</a><span class="k">def</span> <span class="nf">current_user</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Inserts the currently logged in :class:`~wte.models.User` into the</span>
+<span class="sd">    `request` parameter under the attribute ``current_user``. If there is no</span>
+<span class="sd">    logged in user, then an anonymous :class:`~wte.models.User` is created.</span>
+
+<span class="sd">    Used in view functions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">request</span> <span class="o">=</span> <span class="n">request_from_args</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;uid&#39;</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="p">:</span>
+            <span class="n">dbsession</span> <span class="o">=</span> <span class="n">DBSession</span><span class="p">()</span>
+            <span class="n">user</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">User</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="s1">&#39;uid&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">user</span><span class="p">:</span>
+                <span class="n">user</span><span class="o">.</span><span class="n">logged_in</span> <span class="o">=</span> <span class="bp">True</span>
+                <span class="n">request</span><span class="o">.</span><span class="n">current_user</span> <span class="o">=</span> <span class="n">user</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">request</span><span class="o">.</span><span class="n">current_user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="s1">&#39;anonymous@example.com&#39;</span><span class="p">,</span> <span class="s1">&#39;Anonymous&#39;</span><span class="p">)</span>
+                <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="o">.</span><span class="n">logged_in</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">request</span><span class="o">.</span><span class="n">current_user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="s1">&#39;anonymous@example.com&#39;</span><span class="p">,</span> <span class="s1">&#39;Anonymous&#39;</span><span class="p">)</span>
+            <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="o">.</span><span class="n">logged_in</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">decorator</span><span class="p">(</span><span class="n">wrapper</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="require_logged_in"><a class="viewcode-back" href="../../api/wte_decorators.html#wte.decorators.require_logged_in">[docs]</a><span class="k">def</span> <span class="nf">require_logged_in</span><span class="p">():</span>
+    <span class="sd">u&quot;&quot;&quot;Checks that the current user is logged in, otherwise redirects to the login</span>
+<span class="sd">    page. Requires that the :func:`~wte.decorators.current_user` decorator is run</span>
+<span class="sd">    first.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">request</span> <span class="o">=</span> <span class="n">request_from_args</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="o">.</span><span class="n">logged_in</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">,</span>
+                                  <span class="n">message</span><span class="o">=</span><span class="s1">u&#39;You must log-in or register to access this area&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">decorator</span><span class="p">(</span><span class="n">wrapper</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="require_method"><a class="viewcode-back" href="../../api/wte_decorators.html#wte.decorators.require_method">[docs]</a><span class="k">def</span> <span class="nf">require_method</span><span class="p">(</span><span class="n">methods</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;Checks that the current request method is in the list of ``methods``</span>
+<span class="sd">    that are allowed for the given request.</span>
+
+<span class="sd">    :param methods: The list of valid request methods</span>
+<span class="sd">    :type methods: `list` of `unicode`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">methods</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">methods</span> <span class="o">=</span> <span class="p">[</span><span class="n">methods</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">request</span> <span class="o">=</span> <span class="n">request_from_args</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="ow">in</span> <span class="n">methods</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTTPMethodNotAllowed</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">decorator</span><span class="p">(</span><span class="n">wrapper</span><span class="p">)</span></div>
+</pre></div>
+        </div>
+      </div>
+      <ul class="pagination text-center" role="navigation" aria-label="Pagination">
+        
+        
+      </ul>
+    </nav>
+  </body>
+</html>

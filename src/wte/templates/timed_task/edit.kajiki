@@ -1,0 +1,36 @@
+<py:extends href="wte:templates/layout/centred.kajiki">
+  <py:block name="title">Delete ${task.title} Action</py:block>
+  <py:block name="content">
+    <py:import href="wte:templates/helpers/menu.kajiki" alias="menu"/>
+    <py:import href="wte:templates/helpers/form.kajiki" alias="form"/>
+    <h1>Edit ${task.title} Action</h1>
+    <form action="${request.route_url('part.timed_task.edit', pid=part.id, tid=task.id)}" method="post" class="small-12 column end">
+      ${form.csrf_field()}
+      <datalist id="timeslots">
+        <py:for each="idx in range(0, 24)">
+          <option value="${'%02i' % (idx)}:00"></option>
+          <option value="${'%02i' % (idx)}:30"></option>
+        </py:for>
+      </datalist>
+      <div class="row">
+        <div class="column small-8 medium-5 large-4">
+          ${form.field('date', 'date', 'Date', value=task.timestamp.strftime('%Y-%m-%d') if task.timestamp else '', extra_attrs={'data-date-format': 'yyyy-mm-dd', 'placeholder': 'yyyy-mm-dd'})}
+        </div>
+        <div class="column small-4 medium-3 large-2 end">
+          ${form.field('time', 'time', 'Time', value=task.timestamp.strftime('%H:%M') if task.timestamp else '', extra_attrs={'list': 'timeslots', 'placeholder': 'hh:mm'})}
+        </div>
+      </div> 
+      <div class="row">
+        <div class="column small-12 medium-8 large-6 end">
+          ${form.field('select', 'options.target_status', 'Change Status To', value=task.options['target_status'] if 'target_status' in task.options else '', values=[('unavailable', 'Unavailable'), ('available', 'Available'), ('archive', 'Archive')] if part.type == 'module' else [('unavailable', 'Unavailable'), ('available', 'Available')])}
+        </div>
+      </div>
+      <div class="row">
+        <div class="column small-12 medium-8 large-6 end text-right">
+          <a href="${request.route_url('part.timed_task', pid=part.id)}" class="button secondary">Don't Update</a>
+          <input type="submit" value="Update" class="button"/>
+        </div>
+      </div>
+      </form>
+  </py:block>
+</py:extends>

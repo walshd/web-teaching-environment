@@ -4,6 +4,23 @@
 
 [app:main]
 
+# ********************
+# Application settings
+# ********************
+
+# Pygments theme to use
+pygments.theme = default
+# Codemirror theme to use
+codemirror.theme = default
+# SCSS file containing settings to override any defaults
+style.settings = 
+# SCSS file containing override SCSS rules to append to the generated CSS file
+style.overrides = 
+
+# Limit registration to e-mail addresses in these domains
+# If empty allows registration from any domain
+registration.domains = 
+
 # *************************************
 # SQLAlchemy database connection string
 # *************************************

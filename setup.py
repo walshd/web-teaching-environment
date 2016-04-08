@@ -7,7 +7,7 @@ README = open(os.path.join(here, 'README.rst')).read()
 CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 
 requires = [
-    'pyramid',
+    'pyramid>1.6',
     'pyramid_beaker',
     'SQLAlchemy',
     'transaction',
@@ -15,19 +15,19 @@ requires = [
     'pyramid_debugtoolbar',
     'zope.sqlalchemy',
     'waitress',
-    'PyWebTools',
-    'Genshi',
     'mimeparse',
     'decorator',
     'docutils',
     'pygments',
     'formencode',
     'alembic',
-    'inflect'
+    'inflect',
+    'libsass>0.9,<0.10',
+    'asset'
     ]
 
 setup(name='WebTeachingEnvironment',
-      version='0.99',
+      version='1.2.0',
       description='The Web Teaching Environment',
       long_description=README + '\n\n' + CHANGES,
       classifiers=[

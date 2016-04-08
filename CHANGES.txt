@@ -1,4 +1,77 @@
-0.0
+DEV
 ---
 
--  Initial version
+- *NEW*: Added functionality to add pages / tasks before or after the
+  current page / task
+- *NEW*: Automatically center the part preview on the current cursor
+  location
+- *NEW*: Implement outline list numbering (#28)
+- *NEW*: In the three-pane HTML editor layout, use AJAX to load tutorial
+  pages
+- *NEW*: Enable line-numbers in code blocks (#63)
+- *NEW*: Keyboard shortcuts in the part editor (#61)
+- *NEW*: Enable/disable line-wrapping in the part editor (#42)
+- *NEW*: New UI for adding assets and parts in the part editor (#38)
+- *NEW*: Parts can now be labelled
+- *UPDATE*: Use Kajiki as the rendering engine (#49)
+- *UPDATE*: Improve caching of permission lookups (#49)
+- *UPDATE*: The :asset: directive now automatically searches in all parent parts
+- *UPDATE*: Simplified part structure: module, part, page
+- *UPDATE*: Show an error message if the part content is broken (#62)
+
+1.1.1
+-----
+
+- *SECURITY*: Fixed an error that was allowing logged-in users to see
+  any page in any tutorial
+- *BUGFIX*: Double newlines are now preserved in code blocks (#55)
+- *BUGFIX*: Correctly align the editor preview with the top of the editor (#53)
+
+1.1.0
+-----
+
+- *NEW*: New "registration.domains" configuration setting that enables
+  limiting registration to e-mail addresses that are within one or more
+  domains (#24)
+- *NEW*: Access to modules can now be restricted by password or e-mail
+  domains (#23)
+- *NEW*: Asset upload now supports drag and drop
+- *UPDATE*: Improved rendering of blockquote elements (#32)
+- *UPDATE*: For logged-in users the "My Modules" replaces "Modules" (#45)
+- *UPDATE*: Improved the part editor to adapt to the browser window size (#27)
+- *UPDATE*: Enable ETag handling for all assets (#47)
+- *UPDATE*: Enable timed archiving (#50)
+- *UPDATE*: Fixed a number of accessibility issues, particularly relating to
+  the font icons.
+- *UPDATE*: Allow assets in modules (#51)
+- *UPDATE*: Make the filename for new assets optional to simplify creating
+  assets (#40)
+- *BUGFIX*: Fixed the calculation of the time-remaining string (#37)
+- *BUGFIX*: Fixed deep-linking into modules the user is not registered for (#44)
+- *BUGFIX*: Fixed a bug with non-text files in the three-pane display mode. 
+
+1.0.3
+-----
+
+- *UPDATE*: Added an explicit save button on the tabbed editor (#48)
+- *UPDATE*: Increased the autosave time to 10 seconds in the tabbed editor
+
+1.0.2
+-----
+
+- *BUGFIX*: Fixed a problem with manually adding users to a module if they
+  were already taking another module (#34)
+- *BUGFIX*: Fixed a bug in the module download functionality (#36)
+- *BUGFIX*: Fixed an information disclosure issue around non-accessible content
+  being included in the download
+- *BUGFIX*: Fixed an issue with null-characters in inline ReST roles (#35)
+   
+1.0.1
+-----
+
+- *BUGFIX*: Migrations were not being included in the distribution archive.
+
+1.0.0
+-----
+
+- Initial version
