@@ -385,6 +385,13 @@
                                 <span class="n">parent</span><span class="p">,</span>
                                 <span class="p">{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Add </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">&#39;new_type&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">title</span><span class="p">()),</span>
                                  <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">current_route_url</span><span class="p">()})</span>
+    <span class="n">help_path</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">&#39;new_type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;module&#39;</span><span class="p">:</span>
+        <span class="n">help_path</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;module&#39;</span><span class="p">,</span> <span class="s1">&#39;new.html&#39;</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">&#39;new_type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;part&#39;</span><span class="p">:</span>
+        <span class="n">help_path</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;part&#39;</span><span class="p">,</span> <span class="s1">&#39;index.html&#39;</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">&#39;new_type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;page&#39;</span><span class="p">:</span>
+        <span class="n">help_path</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;page&#39;</span><span class="p">,</span> <span class="s1">&#39;index.html&#39;</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">u&#39;POST&#39;</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">params</span> <span class="o">=</span> <span class="n">NewPartSchema</span><span class="p">()</span><span class="o">.</span><span class="n">to_python</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">)</span>
@@ -424,8 +431,10 @@
         <span class="k">except</span> <span class="n">formencode</span><span class="o">.</span><span class="n">Invalid</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;errors&#39;</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">error_dict</span><span class="p">,</span>
                     <span class="s1">&#39;values&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">,</span>
-                    <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">}</span>
-    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">}</span></div>
+                    <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
+                    <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="n">help_path</span><span class="p">}</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
+            <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="n">help_path</span><span class="p">}</span></div>
 
 
 <div class="viewcode-block" id="EditPartSchema"><a class="viewcode-back" href="../../../api/wte_views_part.html#wte.views.part.EditPartSchema">[docs]</a><span class="k">class</span> <span class="nc">EditPartSchema</span><span class="p">(</span><span class="n">CSRFSchema</span><span class="p">):</span>
@@ -470,6 +479,13 @@
                                         <span class="n">part</span><span class="p">,</span>
                                         <span class="p">{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Edit&#39;</span><span class="p">,</span>
                                          <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">current_route_url</span><span class="p">()})</span>
+            <span class="n">help_path</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;module&#39;</span><span class="p">:</span>
+                <span class="n">help_path</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;module&#39;</span><span class="p">,</span> <span class="s1">&#39;edit.html&#39;</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">part</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;part&#39;</span><span class="p">:</span>
+                <span class="n">help_path</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;part&#39;</span><span class="p">,</span> <span class="s1">&#39;index.html&#39;</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">part</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;page&#39;</span><span class="p">:</span>
+                <span class="n">help_path</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;page&#39;</span><span class="p">,</span> <span class="s1">&#39;index.html&#39;</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">u&#39;POST&#39;</span><span class="p">:</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="n">params</span> <span class="o">=</span> <span class="n">EditPartSchema</span><span class="p">()</span><span class="o">.</span><span class="n">to_python</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">)</span>
@@ -510,10 +526,10 @@
                             <span class="s1">&#39;values&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">,</span>
                             <span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
                             <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
-                            <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;editor&#39;</span><span class="p">,</span> <span class="s1">&#39;index.html&#39;</span><span class="p">]}</span>
+                            <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="n">help_path</span><span class="p">}</span>
             <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
                     <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
-                    <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;editor&#39;</span><span class="p">,</span> <span class="s1">&#39;index.html&#39;</span><span class="p">]}</span>
+                    <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="n">help_path</span><span class="p">}</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
@@ -577,10 +593,12 @@
                             <span class="s1">&#39;valuse&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">,</span>
                             <span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
                             <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
-                            <span class="s1">&#39;rights&#39;</span><span class="p">:</span> <span class="n">rights</span><span class="p">}</span>
+                            <span class="s1">&#39;rights&#39;</span><span class="p">:</span> <span class="n">rights</span><span class="p">,</span>
+                            <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;module&#39;</span><span class="p">,</span> <span class="s1">&#39;access_settings.html&#39;</span><span class="p">]}</span>
             <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
                     <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
-                    <span class="s1">&#39;rights&#39;</span><span class="p">:</span> <span class="n">rights</span><span class="p">}</span>
+                    <span class="s1">&#39;rights&#39;</span><span class="p">:</span> <span class="n">rights</span><span class="p">,</span>
+                    <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;module&#39;</span><span class="p">,</span> <span class="s1">&#39;access_settings.html&#39;</span><span class="p">]}</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
@@ -625,9 +643,11 @@
                 <span class="k">except</span> <span class="n">formencode</span><span class="o">.</span><span class="n">Invalid</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                     <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;errors&#39;</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">error_dict</span><span class="p">,</span>
                             <span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
-                            <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">}</span>
+                            <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
+                            <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;module&#39;</span><span class="p">,</span> <span class="s1">&#39;delete.html&#39;</span><span class="p">]}</span>
             <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
-                    <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">}</span>
+                    <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
+                    <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;module&#39;</span><span class="p">,</span> <span class="s1">&#39;delete.html&#39;</span><span class="p">]}</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>

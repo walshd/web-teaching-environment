@@ -9,6 +9,8 @@ processing.
 
 .. moduleauthor:: Mark Hall <mark.hall@mail.room3b.eu>
 """
+import re
+
 from docutils import nodes
 
 
@@ -25,6 +27,9 @@ def button_role(role, rawtext, text, node_id, inliner):
         return [], []
 
 
+DROPDOWN_PATTERN = re.compile(r'(.+)(?:<(.+)>)')
+
+
 def link_role(role, rawtext, text, node_id, inliner):
     u"""Handles adding the necessary inline styling to indicate links in the
     documentation."""
@@ -33,7 +38,11 @@ def link_role(role, rawtext, text, node_id, inliner):
     elif role == 'topbar_link':
         return [nodes.inline(rawtext, text, classes=['topbar-link'])], []
     elif role == 'dropdown_link':
-        return [nodes.inline(rawtext, text, classes=['dropdown-link'])], []
+        match = re.match(DROPDOWN_PATTERN, text)
+        if match:
+            return [nodes.inline(rawtext, ' ' + match.group(1), classes=['dropdown-link', match.group(2)])], []
+        else:
+            return [nodes.inline(rawtext, text, classes=['dropdown-link'])], []
     else:
         return [], []
 

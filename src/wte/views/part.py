@@ -360,6 +360,13 @@ def new(request):
                                 parent,
                                 {'title': 'Add %s' % (request.matchdict['new_type'].title()),
                                  'url': request.current_route_url()})
+    help_path = []
+    if request.matchdict['new_type'] == 'module':
+        help_path = ['user', 'teacher', 'module', 'new.html']
+    elif request.matchdict['new_type'] == 'part':
+        help_path = ['user', 'teacher', 'part', 'index.html']
+    elif request.matchdict['new_type'] == 'page':
+        help_path = ['user', 'teacher', 'page', 'index.html']
     if request.method == u'POST':
         try:
             params = NewPartSchema().to_python(request.params)
@@ -399,8 +406,10 @@ def new(request):
         except formencode.Invalid as e:
             return {'errors': e.error_dict,
                     'values': request.params,
-                    'crumbs': crumbs}
-    return {'crumbs': crumbs}
+                    'crumbs': crumbs,
+                    'help': help_path}
+    return {'crumbs': crumbs,
+            'help': help_path}
 
 
 class EditPartSchema(CSRFSchema):
@@ -445,6 +454,13 @@ def edit(request):
                                         part,
                                         {'title': 'Edit',
                                          'url': request.current_route_url()})
+            help_path = []
+            if part.type == 'module':
+                help_path = ['user', 'teacher', 'module', 'edit.html']
+            elif part.type == 'part':
+                help_path = ['user', 'teacher', 'part', 'index.html']
+            elif part.type == 'page':
+                help_path = ['user', 'teacher', 'page', 'index.html']
             if request.method == u'POST':
                 try:
                     params = EditPartSchema().to_python(request.params)
@@ -485,10 +501,10 @@ def edit(request):
                             'values': request.params,
                             'part': part,
                             'crumbs': crumbs,
-                            'help': ['user', 'teacher', 'editor', 'index.html']}
+                            'help': help_path}
             return {'part': part,
                     'crumbs': crumbs,
-                    'help': ['user', 'teacher', 'editor', 'index.html']}
+                    'help': help_path}
         else:
             unauthorised_redirect(request)
     else:
@@ -552,10 +568,12 @@ def edit_register_settings(request):
                             'valuse': request.params,
                             'part': part,
                             'crumbs': crumbs,
-                            'rights': rights}
+                            'rights': rights,
+                            'help': ['user', 'teacher', 'module', 'access_settings.html']}
             return {'part': part,
                     'crumbs': crumbs,
-                    'rights': rights}
+                    'rights': rights,
+                    'help': ['user', 'teacher', 'module', 'access_settings.html']}
         else:
             unauthorised_redirect(request)
     else:
@@ -600,9 +618,11 @@ def delete(request):
                 except formencode.Invalid as e:
                     return {'errors': e.error_dict,
                             'part': part,
-                            'crumbs': crumbs}
+                            'crumbs': crumbs,
+                            'help': ['user', 'teacher', 'module', 'delete.html']}
             return {'part': part,
-                    'crumbs': crumbs}
+                    'crumbs': crumbs,
+                    'help': ['user', 'teacher', 'module', 'delete.html']}
         else:
             unauthorised_redirect(request)
     else:

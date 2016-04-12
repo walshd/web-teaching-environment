@@ -116,7 +116,8 @@ def users(request):
                     'pages': pages,
                     'current_page': current_page,
                     'total_users': total_users,
-                    'crumbs': crumbs}
+                    'crumbs': crumbs,
+                    'help': ['user', 'teacher', 'module', 'users.html']}
         else:
             unauthorised_redirect(request)
     else:
@@ -174,7 +175,8 @@ def action(request):
                     'params': params,
                     'query_params': query_params,
                     'users': users,
-                    'crumbs': crumbs}
+                    'crumbs': crumbs,
+                    'help': ['user', 'teacher', 'module', 'users.html']}
         else:
             unauthorised_redirect(request)
     else:
@@ -275,12 +277,14 @@ def update(request):
                         'params': params,
                         'query_params': query_params,
                         'users': users,
-                        'crumbs': crumbs}
+                        'crumbs': crumbs,
+                        'help': ['user', 'teacher', 'module', 'users.html']}
             return {'part': part,
                     'params': params,
                     'query_params': query_params,
                     'users': users,
-                    'crumbs': crumbs}
+                    'crumbs': crumbs,
+                    'help': ['user', 'teacher', 'module', 'users.html']}
         else:
             unauthorised_redirect(request)
     else:
@@ -395,13 +399,15 @@ def add(request):
                             'total_users': total_users,
                             'start': start,
                             'pages': pages,
-                            'crumbs': crumbs}
+                            'crumbs': crumbs,
+                            'help': ['user', 'teacher', 'module', 'users.html']}
             return {'part': part,
                     'users': users,
                     'total_users': total_users,
                     'start': start,
                     'pages': pages,
-                    'crumbs': crumbs}
+                    'crumbs': crumbs,
+                    'help': ['user', 'teacher', 'module', 'users.html']}
         else:
             unauthorised_redirect(request)
     else:

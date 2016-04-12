@@ -5,7 +5,7 @@
     <link rel="stylesheet" href="../../../_static/default.css"/>
     <link rel="stylesheet" href="../../../_static/override.css"/>
     <link rel="stylesheet" href="../../../_static/pygments.css"/>
-    <title>Users</title>
+    <title>User Management</title>
   </head>
   <body class="help">
     <nav>
@@ -18,12 +18,91 @@
         
           <li><a href="index.html">Module</a></li>
         
-        <li>Users</li>
+        <li>User Management</li>
       </ul>
       <div class="row">
         <div class="column small-12">
-          <div class="section" id="users">
-<h1>Users<a class="headerlink" href="#users" title="Permalink to this headline">¶</a></h1>
+          <div class="section" id="user-management">
+<h1>User Management<a class="headerlink" href="#user-management" title="Permalink to this headline">¶</a></h1>
+<p>As the module&#8217;s owner you can manage the users that are taking your module.
+For each user their name, e-mail address, and role within the module are
+shown to you. The role defines what they can see and do within the module:</p>
+<dl class="docutils">
+<dt><strong>Owner</strong></dt>
+<dd>Any user with the <em>owner</em> role can access all content (regardless of
+<a class="reference internal" href="../status.html"><em>status</em></a>), <a class="reference internal" href="edit.html"><em>edit all content</em></a>,
+<a class="reference internal" href="delete.html"><em>delete the module</em></a>, <a class="reference internal" href="access_settings.html"><em>set the access settings</em></a>,
+and edit the module&#8217;s users.</dd>
+<dt><strong>Tutor</strong></dt>
+<dd>Users with the <em>tutor</em> role can access all content (regardless of
+<a class="reference internal" href="../status.html"><em>status</em></a>). However, they cannot change any of the content,
+access settings, or users.</dd>
+<dt><strong>Student</strong></dt>
+<dd>Users with the <em>student</em> role can only access content that is available
+(see <a class="reference internal" href="../status.html"><em>Changing the Status</em></a>).</dd>
+</dl>
+<div class="section" id="searching-filtering">
+<h2>Searching &amp; filtering<a class="headerlink" href="#searching-filtering" title="Permalink to this headline">¶</a></h2>
+<p>By default all users who are registered on the module are displayed. To search
+for a specific user who , type all or part of their name or e-mail address into
+the text box that contains the text &#8220;Search by name of e-mail&#8221; and then click
+on the <span class="button">Search</span> button.</p>
+<p>Alternatively you can also filter the list of users by their type. To do so,
+select the filter criterion from the drop-down list in the top-right corner.
+Then click on the <span class="button">Filter</span> button. In addition to filtering by
+role, you can also show those users that have been blocked (&#8220;Blocked Users&#8221;)
+and those that are not blocked (&#8220;Active users&#8221;).</p>
+<p>You can also combine filtering and searching, either by searching and then filtering
+or by filtering and then searching.</p>
+<p>To see all users again remove any search terms and set the filter to &#8220;All users&#8221;.
+Then click on either the <span class="button">Search</span> or <span class="button">Filter</span> buttons.</p>
+</div>
+<div class="section" id="adding-users">
+<h2>Adding users<a class="headerlink" href="#adding-users" title="Permalink to this headline">¶</a></h2>
+<p>You can manually add users by clicking on the <span class="button">Add one or more users</span>
+button in the bottom left-corner.</p>
+<p>This will take you to a new page, where you can search by name or e-mail address
+for the user you wish to add. If the user is already registered for the module,
+then they will not appear in the list of search results.</p>
+<p>To add a user, select the checkbox to the left of the name of the user you wish to
+add. You can select multiple users and then all of them will be added. Next, select
+the role that you wish to give the user. finally click on the <span class="button">Add</span>
+button to actually add the users to the module.</p>
+</div>
+<div class="section" id="removing-users">
+<h2>Removing users<a class="headerlink" href="#removing-users" title="Permalink to this headline">¶</a></h2>
+<p>To remove a user, select the checkbox next to their name and then in the bottom-right
+corner select &#8220;Remove&#8221; as the action to apply to the user. Then click on the
+<span class="button">Apply</span> button. You can remove multiple users at the same time by
+selecting multiple users&#8217; checkboxes.</p>
+<p>The action will de-register the users and delete all their work that is linked to
+the module. You will thus be asked to confirm that you wish to remove the users.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">A removed user can register for the module again, if they pass the
+<a class="reference internal" href="access_settings.html"><em>Module Access Settings</em></a>. To permanently block access use the <a class="reference internal" href="#blocking-users">Blocking users</a>.</p>
+</div>
+</div>
+<div class="section" id="blocking-users">
+<h2>Blocking users<a class="headerlink" href="#blocking-users" title="Permalink to this headline">¶</a></h2>
+<p>If you want to stop a user accessing the module, then you need to block them (as
+users who are just removed can re-register). To do so, select the checkbox next
+to their name and then in the bottom-right corner select &#8220;block&#8221; as the action
+to apply to the user. Then click on the <span class="button">Apply</span> button. You can block
+multiple users at the same time by selecting multiple users&#8217; checkboxes.</p>
+<p>This action will not affect any of the users&#8217; work linked to the module, you can
+thus always unblock them by changing their role back &#8220;Student&#8221;.</p>
+</div>
+<div class="section" id="changing-a-user-s-role">
+<h2>Changing a user&#8217;s role<a class="headerlink" href="#changing-a-user-s-role" title="Permalink to this headline">¶</a></h2>
+<p>To change a user&#8217;s role, select the checkbox next to the name of the user you wish
+to modify. Then select &#8220;Change Role&#8221; as the action to apply to the user. Then click
+on the <span class="button">Apply</span> button. You can change multiple users&#8217; status by
+selecting multiple users&#8217; checkboxes.</p>
+<p>After clicking on <span class="button">Apply</span>, you are shown the list of users that will
+have their status changed. Then select the new role for those users and click on
+<span class="button">Apply Changes</span> to actually change the users&#8217; roles.</p>
+</div>
 </div>
 
         </div>

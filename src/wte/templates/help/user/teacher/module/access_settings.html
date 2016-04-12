@@ -24,6 +24,38 @@
         <div class="column small-12">
           <div class="section" id="module-access-settings">
 <h1>Module Access Settings<a class="headerlink" href="#module-access-settings" title="Permalink to this headline">¶</a></h1>
+<p>By default any module that is available to learners (see <a class="reference internal" href="../status.html"><em>Changing the Status</em></a>) can be taken
+by any learner. However, sometimes you may want to restrict access to a module. To do so,
+move your mouse over the module&#8217;s <span class="fi-list"></span> icon and then select the
+<span class="dropdown-link fi-key"> Edit Access Settings</span> menu item.</p>
+<p>Access to modules in the WTE can be restricted based on two criteria: password and e-mail
+domain.</p>
+<div class="section" id="password-access">
+<h2>Password access<a class="headerlink" href="#password-access" title="Permalink to this headline">¶</a></h2>
+<p>To limit access to the module to those learners who know the right password, first select
+the &#8220;Password required&#8221; checkbox. Then type the password you wish to use into the &#8220;Password&#8221;
+text box. Click on the <span class="button">Update</span> button to make the access restriction active.</p>
+<p>After you have set a password, when a learner goes to the module page and wishes to take
+the module, they need to enter the same password and will only be granted access if the
+passwords match. Learners who are already taking the module are not affected by this and
+will continue to have access. Also you can always add learners via the <a class="reference internal" href="users.html"><em>user management</em></a>
+interface.</p>
+</div>
+<div class="section" id="e-mail-domain-access">
+<h2>E-Mail domain access<a class="headerlink" href="#e-mail-domain-access" title="Permalink to this headline">¶</a></h2>
+<p>You can also restrict access to those learners who have registered with e-mail addresses
+that belong to one or more domains that you specify (the domain is the part after the &#64; sign).</p>
+<p>To limit access by e-mail domain select the &#8220;E-mail domain limited&#8221; checkbox and then enter
+the e-mail domain(s) that are allowed access into the &#8220;Allowed e-mail domains&#8221; text box.
+You can specify multiple e-mail domains, separated by commas. If you specify multiple
+domains, then a learner is granted acccess to the module if their e-mail domain matches
+any one of the listed domains.</p>
+</div>
+<div class="section" id="multiple-access-criteria">
+<h2>Multiple access criteria<a class="headerlink" href="#multiple-access-criteria" title="Permalink to this headline">¶</a></h2>
+<p>If you select more than one of the access criteria, then for the learner to be granted
+access to the module, they must fulfill <strong>all</strong> criteria.</p>
+</div>
 </div>
 
         </div>
@@ -33,7 +65,7 @@
           <li class="pagination-previous"><a href="delete.html">Delete a Module</a></li>
         
         
-          <li class="pagination-next"><a href="users.html">Users</a></li>
+          <li class="pagination-next"><a href="users.html">User Management</a></li>
         
       </ul>
     </nav>

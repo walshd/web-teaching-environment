@@ -141,7 +141,8 @@
                     <span class="s1">&#39;pages&#39;</span><span class="p">:</span> <span class="n">pages</span><span class="p">,</span>
                     <span class="s1">&#39;current_page&#39;</span><span class="p">:</span> <span class="n">current_page</span><span class="p">,</span>
                     <span class="s1">&#39;total_users&#39;</span><span class="p">:</span> <span class="n">total_users</span><span class="p">,</span>
-                    <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">}</span>
+                    <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
+                    <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;module&#39;</span><span class="p">,</span> <span class="s1">&#39;users.html&#39;</span><span class="p">]}</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
@@ -199,7 +200,8 @@
                     <span class="s1">&#39;params&#39;</span><span class="p">:</span> <span class="n">params</span><span class="p">,</span>
                     <span class="s1">&#39;query_params&#39;</span><span class="p">:</span> <span class="n">query_params</span><span class="p">,</span>
                     <span class="s1">&#39;users&#39;</span><span class="p">:</span> <span class="n">users</span><span class="p">,</span>
-                    <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">}</span>
+                    <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
+                    <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;module&#39;</span><span class="p">,</span> <span class="s1">&#39;users.html&#39;</span><span class="p">]}</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
@@ -300,12 +302,14 @@
                         <span class="s1">&#39;params&#39;</span><span class="p">:</span> <span class="n">params</span><span class="p">,</span>
                         <span class="s1">&#39;query_params&#39;</span><span class="p">:</span> <span class="n">query_params</span><span class="p">,</span>
                         <span class="s1">&#39;users&#39;</span><span class="p">:</span> <span class="n">users</span><span class="p">,</span>
-                        <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">}</span>
+                        <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
+                        <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;module&#39;</span><span class="p">,</span> <span class="s1">&#39;users.html&#39;</span><span class="p">]}</span>
             <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
                     <span class="s1">&#39;params&#39;</span><span class="p">:</span> <span class="n">params</span><span class="p">,</span>
                     <span class="s1">&#39;query_params&#39;</span><span class="p">:</span> <span class="n">query_params</span><span class="p">,</span>
                     <span class="s1">&#39;users&#39;</span><span class="p">:</span> <span class="n">users</span><span class="p">,</span>
-                    <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">}</span>
+                    <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
+                    <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;module&#39;</span><span class="p">,</span> <span class="s1">&#39;users.html&#39;</span><span class="p">]}</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
@@ -420,13 +424,15 @@
                             <span class="s1">&#39;total_users&#39;</span><span class="p">:</span> <span class="n">total_users</span><span class="p">,</span>
                             <span class="s1">&#39;start&#39;</span><span class="p">:</span> <span class="n">start</span><span class="p">,</span>
                             <span class="s1">&#39;pages&#39;</span><span class="p">:</span> <span class="n">pages</span><span class="p">,</span>
-                            <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">}</span>
+                            <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
+                            <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;module&#39;</span><span class="p">,</span> <span class="s1">&#39;users.html&#39;</span><span class="p">]}</span>
             <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
                     <span class="s1">&#39;users&#39;</span><span class="p">:</span> <span class="n">users</span><span class="p">,</span>
                     <span class="s1">&#39;total_users&#39;</span><span class="p">:</span> <span class="n">total_users</span><span class="p">,</span>
                     <span class="s1">&#39;start&#39;</span><span class="p">:</span> <span class="n">start</span><span class="p">,</span>
                     <span class="s1">&#39;pages&#39;</span><span class="p">:</span> <span class="n">pages</span><span class="p">,</span>
-                    <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">}</span>
+                    <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
+                    <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;module&#39;</span><span class="p">,</span> <span class="s1">&#39;users.html&#39;</span><span class="p">]}</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
