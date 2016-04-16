@@ -22,6 +22,41 @@
         <div class="column small-12">
           <div class="section" id="timed-actions">
 <h1>Timed Actions<a class="headerlink" href="#timed-actions" title="Permalink to this headline">¶</a></h1>
+<p>Timed actions allow you to specify that a specific change is made to your content
+at a specific time. How frequently the system checks for timed actions to be run
+depends on how the administrator configured the system. You should in general not
+expect accuracy below 1 minute.</p>
+<p>Timed actions are only available for modules and parts.</p>
+<div class="section" id="add-a-new-timed-action">
+<h2>Add a new timed action<a class="headerlink" href="#add-a-new-timed-action" title="Permalink to this headline">¶</a></h2>
+<p>To add a new timed action, select the action you wish to add and click on the
+<span class="button">Add Action</span> button. Currently only the following timed action is available:</p>
+<ul class="simple">
+<li><strong>Change Status</strong> - This action allows you to automatically change the <a class="reference internal" href="status.html"><em>status</em></a>
+of the module or part at a given time.</li>
+</ul>
+<p>After clicking on the <span class="button">Add Action</span> button, you will automatically be taken
+to the editing page for your new timed action.</p>
+</div>
+<div class="section" id="edit-a-timed-action">
+<h2>Edit a timed action<a class="headerlink" href="#edit-a-timed-action" title="Permalink to this headline">¶</a></h2>
+<p>To edit a timed action, move your mouse over the <span class="fi-list"></span> icon of the timed action and
+click on the <span class="dropdown-link fi-pencil"> Edit</span> item.</p>
+<p>On the edit page you can specify the date and time that the action is to be run at and any
+parameters to use when running the action. If you select a date and time that is in the past,
+then the action will essentially be run immediately.</p>
+<div class="section" id="change-status">
+<h3>Change Status<a class="headerlink" href="#change-status" title="Permalink to this headline">¶</a></h3>
+<p>For the <em>Change Status</em> action there is only on parameter and that is the <a class="reference internal" href="status.html"><em>status</em></a>
+that you wish to set for the module or part at the given date and time.</p>
+</div>
+</div>
+<div class="section" id="delete-a-timed-action">
+<h2>Delete a timed action<a class="headerlink" href="#delete-a-timed-action" title="Permalink to this headline">¶</a></h2>
+<p>To delete a timed action, move your mouse over the <span class="fi-list"></span> icon of the timed action and
+click on the <span class="dropdown-link fi-trash"> Delete</span> item. As this action cannot be undone you will
+be asked to confirm it.</p>
+</div>
 </div>
 
         </div>

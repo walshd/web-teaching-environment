@@ -66,7 +66,8 @@ def view_part_tasks(request):
             return {'part': part,
                     'crumbs': crumbs,
                     'available_tasks': available_tasks,
-                    'include_footer': True}
+                    'include_footer': True,
+                    'help': ['user', 'teacher', 'timed_actions.html']}
         else:
             unauthorised_redirect(request)
     else:
@@ -123,11 +124,13 @@ def new_part_task(request):
                             'part': part,
                             'crumbs': crumbs,
                             'available_tasks': available_tasks,
-                            'include_footer': True}
+                            'include_footer': True,
+                    'help': ['user', 'teacher', 'timed_actions.html']}
             return {'part': part,
                     'crumbs': crumbs,
                     'available_tasks': available_tasks,
-                    'include_footer': True}
+                    'include_footer': True,
+                    'help': ['user', 'teacher', 'timed_actions.html']}
         else:
             unauthorised_redirect(request)
     else:
@@ -205,11 +208,13 @@ def edit_part_task(request):
                             'part': part,
                             'task': task,
                             'crumbs': crumbs,
-                            'include_footer': True}
+                            'include_footer': True,
+                    'help': ['user', 'teacher', 'timed_actions.html']}
             return {'part': part,
                     'task': task,
                     'crumbs': crumbs,
-                    'include_footer': True}
+                    'include_footer': True,
+                    'help': ['user', 'teacher', 'timed_actions.html']}
         else:
             unauthorised_redirect(request)
     else:
@@ -251,11 +256,13 @@ def delete_part_task(request):
                             'part': part,
                             'task': task,
                             'crumbs': crumbs,
-                            'include_footer': True}
+                            'include_footer': True,
+                    'help': ['user', 'teacher', 'timed_actions.html']}
             return {'part': part,
                     'task': task,
                     'crumbs': crumbs,
-                    'include_footer': True}
+                    'include_footer': True,
+                    'help': ['user', 'teacher', 'timed_actions.html']}
         else:
             unauthorised_redirect(request)
     else:

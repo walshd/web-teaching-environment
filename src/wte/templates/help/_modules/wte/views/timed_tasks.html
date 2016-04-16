@@ -91,7 +91,8 @@
             <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
                     <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
                     <span class="s1">&#39;available_tasks&#39;</span><span class="p">:</span> <span class="n">available_tasks</span><span class="p">,</span>
-                    <span class="s1">&#39;include_footer&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">}</span>
+                    <span class="s1">&#39;include_footer&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+                    <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;timed_actions.html&#39;</span><span class="p">]}</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
@@ -148,11 +149,13 @@
                             <span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
                             <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
                             <span class="s1">&#39;available_tasks&#39;</span><span class="p">:</span> <span class="n">available_tasks</span><span class="p">,</span>
-                            <span class="s1">&#39;include_footer&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">}</span>
+                            <span class="s1">&#39;include_footer&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+                    <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;timed_actions.html&#39;</span><span class="p">]}</span>
             <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
                     <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
                     <span class="s1">&#39;available_tasks&#39;</span><span class="p">:</span> <span class="n">available_tasks</span><span class="p">,</span>
-                    <span class="s1">&#39;include_footer&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">}</span>
+                    <span class="s1">&#39;include_footer&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+                    <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;timed_actions.html&#39;</span><span class="p">]}</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
@@ -230,11 +233,13 @@
                             <span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
                             <span class="s1">&#39;task&#39;</span><span class="p">:</span> <span class="n">task</span><span class="p">,</span>
                             <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
-                            <span class="s1">&#39;include_footer&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">}</span>
+                            <span class="s1">&#39;include_footer&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+                    <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;timed_actions.html&#39;</span><span class="p">]}</span>
             <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
                     <span class="s1">&#39;task&#39;</span><span class="p">:</span> <span class="n">task</span><span class="p">,</span>
                     <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
-                    <span class="s1">&#39;include_footer&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">}</span>
+                    <span class="s1">&#39;include_footer&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+                    <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;timed_actions.html&#39;</span><span class="p">]}</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
@@ -276,11 +281,13 @@
                             <span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
                             <span class="s1">&#39;task&#39;</span><span class="p">:</span> <span class="n">task</span><span class="p">,</span>
                             <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
-                            <span class="s1">&#39;include_footer&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">}</span>
+                            <span class="s1">&#39;include_footer&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+                    <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;timed_actions.html&#39;</span><span class="p">]}</span>
             <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
                     <span class="s1">&#39;task&#39;</span><span class="p">:</span> <span class="n">task</span><span class="p">,</span>
                     <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
-                    <span class="s1">&#39;include_footer&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">}</span>
+                    <span class="s1">&#39;include_footer&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+                    <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;timed_actions.html&#39;</span><span class="p">]}</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
