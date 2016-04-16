@@ -187,8 +187,10 @@ def edit_part_task(request):
                 try:
                     options = []
                     if task.name == 'change_status':
-                        options.append(('target_status', formencode.validators.OneOf(['available',
-                                                                                      'unavailable'])))
+                        status = ['available', 'unavailable']
+                        if part.type == 'module':
+                            status.append('archived')
+                        options.append(('target_status', formencode.validators.OneOf(status)))
                     params = EditTimedTaskSchema(options).to_python(request.params, State(request=request))
                     dbsession = DBSession()
                     with transaction.manager:
