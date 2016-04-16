@@ -968,7 +968,8 @@
 
             <span class="k">return</span> <span class="n">render_to_response</span><span class="p">(</span><span class="s1">&#39;wte:templates/part/export.kajiki&#39;</span><span class="p">,</span>
                                       <span class="p">{</span><span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
-                                       <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">},</span>
+                                       <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
+                                       <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;import_export.html&#39;</span><span class="p">]},</span>
                                       <span class="n">request</span><span class="o">=</span><span class="n">request</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
@@ -1187,8 +1188,10 @@
         <span class="k">except</span> <span class="n">formencode</span><span class="o">.</span><span class="n">Invalid</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">e</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span>
             <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;e&#39;</span><span class="p">:</span> <span class="n">e</span><span class="p">,</span>
-                    <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">}</span>
-    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">}</span></div>
+                    <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
+                    <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;import_export.html&#39;</span><span class="p">]}</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
+            <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;import_export.html&#39;</span><span class="p">]}</span></div>
 
 
 <span class="c1"># Todo: Add a download launch page for non-JS users</span>
