@@ -943,7 +943,8 @@ def export(request):
 
             return render_to_response('wte:templates/part/export.kajiki',
                                       {'part': part,
-                                       'crumbs': crumbs},
+                                       'crumbs': crumbs,
+                                       'help': ['user', 'teacher', 'import_export.html']},
                                       request=request)
         else:
             unauthorised_redirect(request)
@@ -1162,8 +1163,10 @@ def import_file(request):
         except formencode.Invalid as e:
             e.params = request.params
             return {'e': e,
-                    'crumbs': crumbs}
-    return {'crumbs': crumbs}
+                    'crumbs': crumbs,
+                    'help': ['user', 'teacher', 'import_export.html']}
+    return {'crumbs': crumbs,
+            'help': ['user', 'teacher', 'import_export.html']}
 
 
 # Todo: Add a download launch page for non-JS users
