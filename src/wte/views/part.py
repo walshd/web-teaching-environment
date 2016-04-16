@@ -360,13 +360,7 @@ def new(request):
                                 parent,
                                 {'title': 'Add %s' % (request.matchdict['new_type'].title()),
                                  'url': request.current_route_url()})
-    help_path = []
-    if request.matchdict['new_type'] == 'module':
-        help_path = ['user', 'teacher', 'module', 'new.html']
-    elif request.matchdict['new_type'] == 'part':
-        help_path = ['user', 'teacher', 'part', 'index.html']
-    elif request.matchdict['new_type'] == 'page':
-        help_path = ['user', 'teacher', 'page', 'index.html']
+    help_path = ['user', 'teacher', request.matchdict['new_type'], 'new.html']
     if request.method == u'POST':
         try:
             params = NewPartSchema().to_python(request.params)
@@ -454,13 +448,7 @@ def edit(request):
                                         part,
                                         {'title': 'Edit',
                                          'url': request.current_route_url()})
-            help_path = []
-            if part.type == 'module':
-                help_path = ['user', 'teacher', 'module', 'edit.html']
-            elif part.type == 'part':
-                help_path = ['user', 'teacher', 'part', 'index.html']
-            elif part.type == 'page':
-                help_path = ['user', 'teacher', 'page', 'index.html']
+            help_path = ['user', 'teacher', part.type, 'edit.html']
             if request.method == u'POST':
                 try:
                     params = EditPartSchema().to_python(request.params)
@@ -619,10 +607,10 @@ def delete(request):
                     return {'errors': e.error_dict,
                             'part': part,
                             'crumbs': crumbs,
-                            'help': ['user', 'teacher', 'module', 'delete.html']}
+                            'help': ['user', 'teacher', part.type, 'delete.html']}
             return {'part': part,
                     'crumbs': crumbs,
-                    'help': ['user', 'teacher', 'module', 'delete.html']}
+                    'help': ['user', 'teacher', part.type, 'delete.html']}
         else:
             unauthorised_redirect(request)
     else:

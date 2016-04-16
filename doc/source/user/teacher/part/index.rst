@@ -1,2 +1,44 @@
 Part
 ====
+
+Each part groups together a number of pages into a logical unit, whether this is a lecture, tutorial, exercises, or anything else.
+The Web Teaching Environment places no limits on what you use a part for.
+
+The following actions are available on parts via the :icon:`fi-list` menu icon, both on
+the part overview page and also for each part on the list of your parts in a module:
+
++------------------------+----------------------+-------------------------+
+| Icon                   | Label                | Action                  |
++========================+======================+=========================+
+| :icon:`fi-unlock`      | Make available       | :doc:`../status`        |
++------------------------+----------------------+-------------------------+
+| :icon:`fi-lock`        | Make unavailable     | :doc:`../status`        |
++------------------------+----------------------+-------------------------+
+| :icon:`fi-pencil`      | Edit                 | :doc:`edit`             |
++------------------------+----------------------+-------------------------+
+| :icon:`fi-clock`       | Edit Timed Actions   | :doc:`../timed_actions` |
++------------------------+----------------------+-------------------------+
+| :icon:`fi-plus`        | Add Page             | :doc:`../part/index`    |
++------------------------+----------------------+-------------------------+
+|                        | Add Template         | :doc:`../asset/new`     |
++------------------------+----------------------+-------------------------+
+|                        | Add Asset            | :doc:`../asset/new`     |
++------------------------+----------------------+-------------------------+
+|                        | Import               | :doc:`../import_export` |
++------------------------+----------------------+-------------------------+
+|                        | Export               | :doc:`../import_export` |
++------------------------+----------------------+-------------------------+
+|                        | Download             | :doc:`../download`      |
++------------------------+----------------------+-------------------------+
+| :icon:`fi-trash`       | Delete               | :doc:`delete`           |
++------------------------+----------------------+-------------------------+
+
+You can find further detail here:
+
+.. toctree::
+   :maxdepth: 2
+
+   new
+   edit
+   delete
+

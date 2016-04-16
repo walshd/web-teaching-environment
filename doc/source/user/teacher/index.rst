@@ -16,8 +16,8 @@ want the learner to be able to access.
 The basic workflow for creating teaching materials is as follows:
 
 #. :doc:`Create a new module <module/new>`
-#. :doc:`Add parts to the new module <part/index>`
-#. :doc:`Add pages to the new part <page/index>`
+#. :doc:`Add parts to the new module <part/new>`
+#. :doc:`Add pages to the new part <page/new>`
 #. :doc:`Change the status of the module and part to make them available <status>`
 
 You can find further detail here:

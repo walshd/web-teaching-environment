@@ -3,10 +3,11 @@ Editing a Module
 
 To edit a module's settings and summary, move your mouse over the module's :icon:`list`
 icon and then select the :dropdown_link:`Edit<fi-pencil>` item. The module editor consists
-of three parts. The centre column allows you to edit the module's attributes and its summary: 
+of three parts. The centre column allows you to edit the module's attributes and its summary
+(:doc:`see here for details <../editor/index>`): 
 
 **Title**
-  The title of the new module. This is what will be shown in the list of modules.
+  The title of the module. This is what will be shown in the list of modules.
 
 **Status**
   Whether the module is accessible to learners or not. You can always change this at a later point (see :doc:`../status`).
