@@ -27,11 +27,11 @@ To edit a timed action, move your mouse over the :icon:`fi-list` icon of the tim
 click on the :dropdown_link:`Edit<fi-pencil>` item.
 
 On the edit page you can specify the date and time that the action is to be run at and any
-parameters to use when running the action. If you select a date and time that is in the past,
-then the action will essentially be run immediately.
+parameters to use when running the action (see below). If you select a date and time that is
+in the past, then the action will essentially be run immediately.
 
-Change Status
-+++++++++++++
+Change Status action
+++++++++++++++++++++
 
 For the *Change Status* action there is only on parameter and that is the :doc:`status<status>`
 that you wish to set for the module or part at the given date and time. 
