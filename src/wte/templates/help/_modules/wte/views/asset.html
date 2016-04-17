@@ -155,9 +155,11 @@
                     <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;errors&#39;</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">error_dict</span><span class="p">,</span>
                             <span class="s1">&#39;values&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">,</span>
                             <span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
-                            <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">}</span>
+                            <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
+                            <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;asset&#39;</span><span class="p">,</span> <span class="s1">&#39;new.html&#39;</span><span class="p">]}</span>
             <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
-                    <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">}</span>
+                    <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
+                    <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;asset&#39;</span><span class="p">,</span> <span class="s1">&#39;new.html&#39;</span><span class="p">]}</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
@@ -239,10 +241,12 @@
                             <span class="s1">&#39;values&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">,</span>
                             <span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
                             <span class="s1">&#39;asset&#39;</span><span class="p">:</span> <span class="n">asset</span><span class="p">,</span>
-                            <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">}</span>
+                            <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
+                            <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;asset&#39;</span><span class="p">,</span> <span class="s1">&#39;edit.html&#39;</span><span class="p">]}</span>
             <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
                     <span class="s1">&#39;asset&#39;</span><span class="p">:</span> <span class="n">asset</span><span class="p">,</span>
-                    <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">}</span>
+                    <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
+                    <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;asset&#39;</span><span class="p">,</span> <span class="s1">&#39;edit.html&#39;</span><span class="p">]}</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
@@ -283,10 +287,12 @@
                     <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;errors&#39;</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">error_dict</span><span class="p">,</span>
                             <span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
                             <span class="s1">&#39;asset&#39;</span><span class="p">:</span> <span class="n">asset</span><span class="p">,</span>
-                            <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">}</span>
+                            <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
+                            <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;asset&#39;</span><span class="p">,</span> <span class="s1">&#39;delete.html&#39;</span><span class="p">]}</span>
             <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
                     <span class="s1">&#39;asset&#39;</span><span class="p">:</span> <span class="n">asset</span><span class="p">,</span>
-                    <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">}</span>
+                    <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
+                    <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;asset&#39;</span><span class="p">,</span> <span class="s1">&#39;delete.html&#39;</span><span class="p">]}</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>

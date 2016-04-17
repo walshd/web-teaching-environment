@@ -130,9 +130,11 @@ def new(request):
                     return {'errors': e.error_dict,
                             'values': request.params,
                             'part': part,
-                            'crumbs': crumbs}
+                            'crumbs': crumbs,
+                            'help': ['user', 'teacher', 'asset', 'new.html']}
             return {'part': part,
-                    'crumbs': crumbs}
+                    'crumbs': crumbs,
+                    'help': ['user', 'teacher', 'asset', 'new.html']}
         else:
             unauthorised_redirect(request)
     else:
@@ -214,10 +216,12 @@ def edit(request):
                             'values': request.params,
                             'part': part,
                             'asset': asset,
-                            'crumbs': crumbs}
+                            'crumbs': crumbs,
+                            'help': ['user', 'teacher', 'asset', 'edit.html']}
             return {'part': part,
                     'asset': asset,
-                    'crumbs': crumbs}
+                    'crumbs': crumbs,
+                    'help': ['user', 'teacher', 'asset', 'edit.html']}
         else:
             unauthorised_redirect(request)
     else:
@@ -258,10 +262,12 @@ def delete(request):
                     return {'errors': e.error_dict,
                             'part': part,
                             'asset': asset,
-                            'crumbs': crumbs}
+                            'crumbs': crumbs,
+                            'help': ['user', 'teacher', 'asset', 'delete.html']}
             return {'part': part,
                     'asset': asset,
-                    'crumbs': crumbs}
+                    'crumbs': crumbs,
+                    'help': ['user', 'teacher', 'asset', 'delete.html']}
         else:
             unauthorised_redirect(request)
     else:
