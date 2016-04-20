@@ -14,3 +14,14 @@ h5:hover .headerlink,
 h6:hover .headerlink {
     display: inline;
 }
+.rest-render-sample {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    color: #666666;
+}
+div.highlight {
+    border: 1px solid #dddddd;
+    background: #efefef;
+    padding: 0.3rem 0.5rem;
+    margin-bottom: 0.5rem;
+}
