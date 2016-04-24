@@ -24,6 +24,69 @@
         <div class="column small-12">
           <div class="section" id="highlighting-sourcecode">
 <h1>Highlighting Sourcecode<a class="headerlink" href="#highlighting-sourcecode" title="Permalink to this headline">¶</a></h1>
+<p>The WTE comes with sophisticated source-code highlighting as part of the
+content editor (using the <a class="reference external" href="http://pygments.org/">pygments</a> library). Creating a highlighted source-code
+block is very simple. You start a block of code with the <code class="docutils literal"><span class="pre">..</span> <span class="pre">sourcecode::</span></code>
+directive. After the <code class="docutils literal"><span class="pre">::</span></code> you must provide a blank space and then the type of
+source-code that your block will contain. After the directive, you <strong>must</strong>
+have one empty line and then the source-code must be indented by at least two
+spaces.</p>
+<p>For example the following ReST will create syntax highlighting for HTML:</p>
+<div class="highlight-rest"><div class="highlight"><pre><span></span><span class="p">..</span> <span class="ow">sourcecode</span><span class="p">::</span> <span class="k">html</span>
+
+  <span class="p">&lt;</span><span class="nt">html</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">head</span><span class="p">&gt;</span>
+      <span class="p">&lt;</span><span class="nt">title</span><span class="p">&gt;</span>Testing<span class="p">&lt;/</span><span class="nt">title</span><span class="p">&gt;</span>
+    <span class="p">&lt;/</span><span class="nt">head</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">body</span><span class="p">&gt;</span>
+      <span class="p">&lt;</span><span class="nt">h1</span><span class="p">&gt;</span>Body<span class="p">&lt;/</span><span class="nt">h1</span><span class="p">&gt;</span>
+    <span class="p">&lt;/</span><span class="nt">body</span><span class="p">&gt;</span>
+  <span class="p">&lt;/</span><span class="nt">html</span><span class="p">&gt;</span>
+</pre></div>
+</div>
+<p>which will be displayed as:</p>
+<div class="highlight-html"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">html</span><span class="p">&gt;</span>
+  <span class="p">&lt;</span><span class="nt">head</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">title</span><span class="p">&gt;</span>Testing<span class="p">&lt;/</span><span class="nt">title</span><span class="p">&gt;</span>
+  <span class="p">&lt;/</span><span class="nt">head</span><span class="p">&gt;</span>
+  <span class="p">&lt;</span><span class="nt">body</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">h1</span><span class="p">&gt;</span>Body<span class="p">&lt;/</span><span class="nt">h1</span><span class="p">&gt;</span>
+  <span class="p">&lt;/</span><span class="nt">body</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">html</span><span class="p">&gt;</span>
+</pre></div>
+</div>
+<p>You can find the full list of available languages for syntax highlighting
+<a class="reference external" href="http://pygments.org/docs/lexers/">here</a>.</p>
+<div class="section" id="options">
+<h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
+<p>You can pass options to the source-code directive in order to modify how
+the source-code is highlighted. Options must follow directly after the
+<code class="docutils literal"><span class="pre">..</span> <span class="pre">sourcecode::</span></code> directive and must be separated from the highlighted
+source-code by an empty line.</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">:filename:</span> <span class="pre">XXX</span></code> - Displays a file-name in the top-right corner of the
+source-code block. Replace the <code class="docutils literal"><span class="pre">XXX</span></code> with the actual file-name to show</li>
+<li><code class="docutils literal"><span class="pre">:linenos:</span> <span class="pre">X</span></code> - Displays line-numbers. Replace the <code class="docutils literal"><span class="pre">X</span></code> with the
+number you want to start enumerating at</li>
+</ul>
+<p>The following example shows the same HTML being highlighted, but with the
+inclusion of a filename (&#8220;index.html&#8221;) and with line numbers starting at
+1.</p>
+<div class="highlight-rest"><div class="highlight"><pre><span></span><span class="p">..</span> <span class="ow">sourcecode</span><span class="p">::</span> html
+  <span class="nc">:filename:</span> <span class="nf">index.html</span>
+  <span class="nc">:linenos:</span> <span class="nf">1</span>
+
+  &lt;html&gt;
+    &lt;head&gt;
+      &lt;title&gt;Testing&lt;/title&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+      &lt;h1&gt;Body&lt;/h1&gt;
+    &lt;/body&gt;
+  &lt;/html&gt;
+</pre></div>
+</div>
+</div>
 </div>
 
         </div>
