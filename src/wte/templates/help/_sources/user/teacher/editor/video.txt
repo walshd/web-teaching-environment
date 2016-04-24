@@ -6,6 +6,8 @@ URL from the video's YouTube page into the ``.. youtube:: URL`` directive.
 
 The following ReST:
 
-.. youtube:: http://youtu.be/XXXXX
+.. sourcecode:: rest
+
+  .. youtube:: http://youtu.be/XXXXX
 
 will automatically embed the YouTube video at that point ni the content.
