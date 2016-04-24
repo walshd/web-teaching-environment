@@ -542,28 +542,41 @@ class Part(Base):
         return None
 
     @property
+    def available_children(self):
+        """Returns the list of child :class:`~wte.models.Part` for which the ``status``
+        attribute is set to "available".
+        
+        :return: The available child :class:`~wte.models.Part`
+        :rtype: :func:`list`
+        """
+        if not hasattr(self, '_available_children'):
+            self._available_children = [p for p in self.children if p.status == 'available']
+        return self._available_children
+
+    @property
     def prev(self):
         """Returns the previous :class:`~wte.models.Part` in the list of siblings.
 
         :return: The previous :class:`~wte.models.Part` sibling
-        :r_type: :class:`~wte.models.Part`
+        :rtype: :class:`~wte.models.Part`
         """
         prev = None
         for child in self.parent.children:
             if child.id == self.id:
                 return prev
-            prev = child
+            if child.status == 'available':
+                prev = child
 
     @property
     def next(self):
         """Returns the next :class:`~wte.models.Part` in the list of siblings.
 
         :return: The next :class:`~wte.models.Part` sibling
-        :r_type: :class:`~wte.models.Part`
+        :rtype: :class:`~wte.models.Part`
         """
         found = False
         for child in self.parent.children:
-            if found:
+            if found and child.status == 'available':
                 return child
             if child.id == self.id:
                 found = True
@@ -576,27 +589,26 @@ class Part(Base):
         builder.group('Status', 'fi-lock' if self.status == 'available' else 'fi-unlock')
         if self.allow('edit', request.current_user):
             # Status Change Items
-            if self.type != 'page':
-                if self.status == 'available':
-                    builder.menu('Make unavailable',
-                                 request.route_url('part.change_status',
-                                                   pid=self.id,
-                                                   _query=[('status', 'unavailable'),
-                                                           ('return_to', request.current_route_url()),
-                                                           ('csrf_token', request.session.get_csrf_token())]),
-                                 icon='fi-lock',
-                                 highlight=True,
-                                 attrs={'class': 'post-link'})
-                else:
-                    builder.menu('Make available',
-                                 request.route_url('part.change_status',
-                                                   pid=self.id,
-                                                   _query=[('status', 'available'),
-                                                           ('return_to', request.current_route_url()),
-                                                           ('csrf_token', request.session.get_csrf_token())]),
-                                 icon='fi-unlock',
-                                 highlight=True,
-                                 attrs={'class': 'post-link'})
+            if self.status == 'available':
+                builder.menu('Make unavailable',
+                             request.route_url('part.change_status',
+                                               pid=self.id,
+                                               _query=[('status', 'unavailable'),
+                                                       ('return_to', request.current_route_url()),
+                                                       ('csrf_token', request.session.get_csrf_token())]),
+                             icon='fi-lock',
+                             highlight=True,
+                             attrs={'class': 'post-link'})
+            else:
+                builder.menu('Make available',
+                             request.route_url('part.change_status',
+                                               pid=self.id,
+                                               _query=[('status', 'available'),
+                                                       ('return_to', request.current_route_url()),
+                                                       ('csrf_token', request.session.get_csrf_token())]),
+                             icon='fi-unlock',
+                             highlight=True,
+                             attrs={'class': 'post-link'})
             # Archive Menu Item
             if self.type == 'module' and self.status != 'archived':
                 builder.menu('Archive',
@@ -613,10 +625,9 @@ class Part(Base):
                          icon='fi-pencil',
                          highlight=True)
             # Edit Timed Actions Menu
-            if self.type == 'module':
-                builder.menu('Edit Timed Actions',
-                             request.route_url('part.timed_task', pid=self.id),
-                             icon='fi-clock')
+            builder.menu('Edit Timed Actions',
+                         request.route_url('part.timed_task', pid=self.id),
+                         icon='fi-clock')
             builder.group('Users')
             if self.type == 'module':
                 # User Menu Item

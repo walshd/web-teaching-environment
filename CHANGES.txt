@@ -19,6 +19,8 @@ DEV
 - *UPDATE*: The :asset: directive now automatically searches in all parent parts
 - *UPDATE*: Simplified part structure: module, part, page
 - *UPDATE*: Show an error message if the part content is broken (#62)
+- *UPDATE*: Pages now also have an available/not-available status (#58)
+- *UPDATE*: Timed actions are now available for pages (#58) 
 
 1.1.1
 -----

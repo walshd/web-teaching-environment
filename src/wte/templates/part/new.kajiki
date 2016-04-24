@@ -13,13 +13,11 @@
           ${form.field('text', 'title', 'Title')}
         </div>
       </div>
-      <py:if test="request.matchdict['new_type'] != 'page'">
-        <div class="row">
-          <div class="column small-12 medium-8 large-6 end">
-            ${form.field('select', 'status', 'Status', values=[('unavailable', 'Unavailable'), ('available', 'Available'), ('archived', 'Archived')] if request.matchdict['new_type'] == 'module' else [('unavailable', 'Unavailable'), ('available', 'Available')])}
-          </div>
+      <div class="row">
+        <div class="column small-12 medium-8 large-6 end">
+          ${form.field('select', 'status', 'Status', value='available' if request.matchdict['new_type'] == 'page' else 'unavailable', values=[('unavailable', 'Unavailable'), ('available', 'Available'), ('archived', 'Archived')] if request.matchdict['new_type'] == 'module' else [('unavailable', 'Unavailable'), ('available', 'Available')])}
         </div>
-      </py:if>
+      </div>
       <py:if test="request.matchdict['new_type'] != 'module'">
         <div class="row">
           <div class="column small-12 medium-8 large-6 end">

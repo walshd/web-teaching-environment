@@ -1,20 +1,22 @@
 Changing the Status
 ===================
 
-A module or part's status define which users can access that module or part's content. In
+A module or part's status define which users can access that module, part, or page's content. In
 the WTE the following three status are available:
 
 **Available**
-  The module or part is available and can be accessed by any user who is registered for the
-  module itself or the module the part belongs to. A module that is **available** will also
+  The module, part, or page is available and can be accessed by any user who is registered for the
+  module itself or the module the part/page belongs to. A module that is **available** will also
   be listed on the :doc:`list of available modules<../learner/modules>`. A part that is
-  available will be listed on the :doc:`module's page<module/index>`.
+  available will be listed on the :doc:`module's page<module/index>`. A page that is available
+  will be in the page navigation.
 
 **Unavailable**
-  The module or part is not available. Only the module's owner and any users that have the
+  The module, part, or page is not available. Only the module's owner and any users that have the
   "tutor" role see and can access the module or part. For all other users an unavailable
-  module will not be listed on the :doc:`list of available modules<../learner/modules>`
-  and an unavailable part will not be listed on the :doc:`module's page<module/index>`.
+  module will not be listed on the :doc:`list of available modules<../learner/modules>`,
+  an unavailable part will not be listed on the :doc:`module's page<module/index>`,
+  and an unavailable page will not be part of the page navigation.
 
 **Archived**
   The module has been archived and is not open for further registration. All users who have

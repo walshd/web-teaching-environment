@@ -38,9 +38,9 @@
   <!-- Generates the HTML for the page navigation controls -->
   <py:def function="page_pagination(part)">
     <?py import json ?>
-    <?py progress = len([p for p in part.parent.children if p.order <= part.order])
-minimum = 100 * max(0, progress - 1) / len(part.parent.children)
-maximum = min(100, 100 * progress / len(part.parent.children))
+    <?py progress = len([p for p in part.parent.available_children if p.order <= part.order])
+minimum = 100 * max(0, progress - 1) / len(part.parent.available_children)
+maximum = min(100, 100 * progress / len(part.parent.available_children))
     ?>
     <nav class="part-pagination" data-progress="${json.dumps({'min': minimum, 'max': maximum})}">
       <form role="navigation" aria-label="Pagination" class="row collapse" action="${request.route_url('part.view', pid='PID')}">
@@ -52,7 +52,7 @@ maximum = min(100, 100 * progress / len(part.parent.children))
           </py:else>
         </div>
         <div class="column small-8 medium-8">
-          <select><option py:for="page in part.parent.children" value="${page.id}" py:attrs="{'selected': 'selected' if page.id == part.id else None}">${page.title}</option></select>
+          <select><option py:for="page in part.parent.available_children" value="${page.id}" py:attrs="{'selected': 'selected' if page.id == part.id else None}">${page.title}</option></select>
           <div class="progress" role="progressbar" tabindex="0" aria-valuenow="${minimum}" aria-valuemin="0" aria-valuemax="100">
             <div class="progress-meter" style="width: ${minimum}%"> </div>
           </div>
