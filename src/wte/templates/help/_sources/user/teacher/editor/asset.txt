@@ -59,3 +59,11 @@ search box empty and click on the :primary_btn:`Search` button to see all assets
 A list of all assets matching your search terms or of all assets will be shown below
 the search box. Click on the asset's name to have it inserted into your content at the
 current cursor position.
+
+Creating assets in the content editor
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can also create assets and immediately insert the into the content of a module, part,
+or page. To do so simply drag the file you wish to add as an asset into the editor window.
+This will automatically create a new asset and then insert the necessary ``:asset:`XX``` to
+link the new asset.
