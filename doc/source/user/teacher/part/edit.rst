@@ -6,10 +6,10 @@ To edit a part, go to the part's overview page, then move your mouse over the :i
 part's attributes and its summary (:doc:`see here for details <../editor/index>`):
 
 **Title**
-  The title of the new part. This is what will be shown in the list of parts displayed for the module.
+  The title of the part. This is what will be shown in the list of parts displayed for the module.
 
 **Status**
-  The initial status of the new part. You can always :doc:`change this later<../status>`.
+  The status of the part. You can always :doc:`change this later<../status>`.
 
 **Label**
   The label allows you to assign an arbitrary classification to each part. The label will be used in the module's list of

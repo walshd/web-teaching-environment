@@ -565,28 +565,41 @@
         <span class="k">return</span> <span class="bp">None</span>
 
     <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">available_children</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the list of child :class:`~wte.models.Part` for which the ``status``</span>
+<span class="sd">        attribute is set to &quot;available&quot;.</span>
+<span class="sd">        </span>
+<span class="sd">        :return: The available child :class:`~wte.models.Part`</span>
+<span class="sd">        :rtype: :func:`list`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_available_children&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_available_children</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;available&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_available_children</span>
+
+    <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">prev</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns the previous :class:`~wte.models.Part` in the list of siblings.</span>
 
 <span class="sd">        :return: The previous :class:`~wte.models.Part` sibling</span>
-<span class="sd">        :r_type: :class:`~wte.models.Part`</span>
+<span class="sd">        :rtype: :class:`~wte.models.Part`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">prev</span> <span class="o">=</span> <span class="bp">None</span>
         <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">child</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">prev</span>
-            <span class="n">prev</span> <span class="o">=</span> <span class="n">child</span>
+            <span class="k">if</span> <span class="n">child</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;available&#39;</span><span class="p">:</span>
+                <span class="n">prev</span> <span class="o">=</span> <span class="n">child</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">next</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns the next :class:`~wte.models.Part` in the list of siblings.</span>
 
 <span class="sd">        :return: The next :class:`~wte.models.Part` sibling</span>
-<span class="sd">        :r_type: :class:`~wte.models.Part`</span>
+<span class="sd">        :rtype: :class:`~wte.models.Part`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">found</span> <span class="o">=</span> <span class="bp">False</span>
         <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">found</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">found</span> <span class="ow">and</span> <span class="n">child</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;available&#39;</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">child</span>
             <span class="k">if</span> <span class="n">child</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">:</span>
                 <span class="n">found</span> <span class="o">=</span> <span class="bp">True</span>
@@ -599,27 +612,26 @@
         <span class="n">builder</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;Status&#39;</span><span class="p">,</span> <span class="s1">&#39;fi-lock&#39;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;available&#39;</span> <span class="k">else</span> <span class="s1">&#39;fi-unlock&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">allow</span><span class="p">(</span><span class="s1">&#39;edit&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="p">):</span>
             <span class="c1"># Status Change Items</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="s1">&#39;page&#39;</span><span class="p">:</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;available&#39;</span><span class="p">:</span>
-                    <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Make unavailable&#39;</span><span class="p">,</span>
-                                 <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.change_status&#39;</span><span class="p">,</span>
-                                                   <span class="n">pid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
-                                                   <span class="n">_query</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;unavailable&#39;</span><span class="p">),</span>
-                                                           <span class="p">(</span><span class="s1">&#39;return_to&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_route_url</span><span class="p">()),</span>
-                                                           <span class="p">(</span><span class="s1">&#39;csrf_token&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get_csrf_token</span><span class="p">())]),</span>
-                                 <span class="n">icon</span><span class="o">=</span><span class="s1">&#39;fi-lock&#39;</span><span class="p">,</span>
-                                 <span class="n">highlight</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-                                 <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;post-link&#39;</span><span class="p">})</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Make available&#39;</span><span class="p">,</span>
-                                 <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.change_status&#39;</span><span class="p">,</span>
-                                                   <span class="n">pid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
-                                                   <span class="n">_query</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;available&#39;</span><span class="p">),</span>
-                                                           <span class="p">(</span><span class="s1">&#39;return_to&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_route_url</span><span class="p">()),</span>
-                                                           <span class="p">(</span><span class="s1">&#39;csrf_token&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get_csrf_token</span><span class="p">())]),</span>
-                                 <span class="n">icon</span><span class="o">=</span><span class="s1">&#39;fi-unlock&#39;</span><span class="p">,</span>
-                                 <span class="n">highlight</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-                                 <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;post-link&#39;</span><span class="p">})</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;available&#39;</span><span class="p">:</span>
+                <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Make unavailable&#39;</span><span class="p">,</span>
+                             <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.change_status&#39;</span><span class="p">,</span>
+                                               <span class="n">pid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                               <span class="n">_query</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;unavailable&#39;</span><span class="p">),</span>
+                                                       <span class="p">(</span><span class="s1">&#39;return_to&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_route_url</span><span class="p">()),</span>
+                                                       <span class="p">(</span><span class="s1">&#39;csrf_token&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get_csrf_token</span><span class="p">())]),</span>
+                             <span class="n">icon</span><span class="o">=</span><span class="s1">&#39;fi-lock&#39;</span><span class="p">,</span>
+                             <span class="n">highlight</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                             <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;post-link&#39;</span><span class="p">})</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Make available&#39;</span><span class="p">,</span>
+                             <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.change_status&#39;</span><span class="p">,</span>
+                                               <span class="n">pid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                               <span class="n">_query</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;available&#39;</span><span class="p">),</span>
+                                                       <span class="p">(</span><span class="s1">&#39;return_to&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_route_url</span><span class="p">()),</span>
+                                                       <span class="p">(</span><span class="s1">&#39;csrf_token&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get_csrf_token</span><span class="p">())]),</span>
+                             <span class="n">icon</span><span class="o">=</span><span class="s1">&#39;fi-unlock&#39;</span><span class="p">,</span>
+                             <span class="n">highlight</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                             <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;post-link&#39;</span><span class="p">})</span>
             <span class="c1"># Archive Menu Item</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;module&#39;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">!=</span> <span class="s1">&#39;archived&#39;</span><span class="p">:</span>
                 <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Archive&#39;</span><span class="p">,</span>
@@ -636,10 +648,9 @@
                          <span class="n">icon</span><span class="o">=</span><span class="s1">&#39;fi-pencil&#39;</span><span class="p">,</span>
                          <span class="n">highlight</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
             <span class="c1"># Edit Timed Actions Menu</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;module&#39;</span><span class="p">:</span>
-                <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Edit Timed Actions&#39;</span><span class="p">,</span>
-                             <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.timed_task&#39;</span><span class="p">,</span> <span class="n">pid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
-                             <span class="n">icon</span><span class="o">=</span><span class="s1">&#39;fi-clock&#39;</span><span class="p">)</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Edit Timed Actions&#39;</span><span class="p">,</span>
+                         <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.timed_task&#39;</span><span class="p">,</span> <span class="n">pid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+                         <span class="n">icon</span><span class="o">=</span><span class="s1">&#39;fi-clock&#39;</span><span class="p">)</span>
             <span class="n">builder</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;Users&#39;</span><span class="p">)</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;module&#39;</span><span class="p">:</span>
                 <span class="c1"># User Menu Item</span>

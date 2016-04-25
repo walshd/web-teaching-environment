@@ -124,8 +124,16 @@ def new(request):
                                           if params['data'] is not None else None)
                         dbsession.add(new_asset)
                         part.all_assets.append(new_asset)
-                    dbsession.add(part)
-                    raise HTTPSeeOther(request.route_url('part.view', pid=part.id))
+                    if request.is_xhr:
+                        request.override_renderer = 'json'
+                        dbsession.add(new_asset)
+                        dbsession.add(part)
+                        return {'part': {'id': part.id},
+                                'asset': {'id': new_asset.id,
+                                          'filename': new_asset.filename}}
+                    else:
+                        dbsession.add(part)
+                        raise HTTPSeeOther(request.route_url('part.view', pid=part.id))
                 except formencode.Invalid as e:
                     return {'errors': e.error_dict,
                             'values': request.params,

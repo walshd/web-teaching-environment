@@ -13,3 +13,11 @@ asset click on the :primary_btn:`Add` button.
 
 If you dragged a file into the browser window, then this will be uploaded immediately
 and the new asset created without any further interaction.
+
+Creating assets in the content editor
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can also create assets and immediately insert the into the content of a module, part,
+or page. To do so :doc:`open the content editor<../editor/index>` and then simply drag
+the file you wish to add as an asset into the editor window. This will automatically
+create a new asset and then insert the necessary ``:asset:`XX``` to link the new asset.

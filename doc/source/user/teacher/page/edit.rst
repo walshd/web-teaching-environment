@@ -8,6 +8,9 @@ page's attributes and its summary (:doc:`see here for details <../editor/index>`
 **Title**
   The title of the new page. This is what will be shown in the list of pages on the part's overview page.
 
+**Status**
+  The status of the page. You can always :doc:`change this later<../status>`.
+
 **Label**
   The label allows you to assign an arbitrary classification to each page. The label will be used in the module's list of
   parts to create the title for that list.
