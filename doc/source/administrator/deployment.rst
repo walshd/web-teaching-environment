@@ -2,9 +2,9 @@
 Deployment
 **********
 
-In-production deployment has been tested using `Apache2`_ and `mod_wsgi`_.
-For other deployment scenarios, please consult the `pyramid deployment`_
-documentation.
+In-production deployment has been tested using `Apache2`_ with `mod_wsgi`_
+and using `supervisord`_. For other deployment scenarios, please consult
+the `pyramid deployment`_ documentation.
 
 Deploying with supervisord
 ==========================
