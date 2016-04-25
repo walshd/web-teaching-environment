@@ -20,9 +20,39 @@
         <div class="column small-12">
           <div class="section" id="deployment">
 <h1>Deployment<a class="headerlink" href="#deployment" title="Permalink to this headline">¶</a></h1>
-<p>In-production deployment has been tested using <a class="reference external" href="http://httpd.apache.org/">Apache2</a> and <a class="reference external" href="http://code.google.com/p/modwsgi/">mod_wsgi</a>.
-For other deployment scenarios, please consult the <a class="reference external" href="http://docs.pylonsproject.org/projects/pyramid_cookbook/en/latest/deployment/index.html">pyramid deployment</a>
-documentation.</p>
+<p>In-production deployment has been tested using <a class="reference external" href="http://httpd.apache.org/">Apache2</a> with <a class="reference external" href="http://code.google.com/p/modwsgi/">mod_wsgi</a>
+and using <a class="reference external" href="http://supervisord.org/">supervisord</a>. For other deployment scenarios, please consult
+the <a class="reference external" href="http://docs.pylonsproject.org/projects/pyramid_cookbook/en/latest/deployment/index.html">pyramid deployment</a> documentation.</p>
+<div class="section" id="deploying-with-supervisord">
+<h2>Deploying with supervisord<a class="headerlink" href="#deploying-with-supervisord" title="Permalink to this headline">¶</a></h2>
+<p>To deploy via <a class="reference external" href="http://supervisord.org/">supervisord</a> create the a new file &#8220;wte.conf&#8221; in the
+supervisord configuration directory:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>[program:wte]
+directory = /path/to/the/virtualenv
+user = www-data
+command = /path/to/the/virtualenv/bin/pserve /path/to/the/config.ini http_port=XX%(process_num)02d
+stopasgroup = true
+numprocs = Y
+process_name = %(program_name)s-%(process_num)01d
+</pre></div>
+</div>
+<p>Replace the <code class="docutils literal"><span class="pre">XX</span></code> in the <code class="docutils literal"><span class="pre">command</span></code> section with the port-number that
+the instance will be available on. If you replace <code class="docutils literal"><span class="pre">XX</span></code> with <code class="docutils literal"><span class="pre">50</span></code> then
+the first instance will be listening on port 5000.</p>
+<p>The configuration above allows for multiple parallel instances of the WTE,
+the number of which are configured via the <code class="docutils literal"><span class="pre">numprocs</span></code> setting. Replace
+<code class="docutils literal"><span class="pre">Y</span></code> with the number of parallel instances you wish to run. If <code class="docutils literal"><span class="pre">Y</span></code> is
+set to a number greater than 1 and <code class="docutils literal"><span class="pre">X</span></code> is set to <code class="docutils literal"><span class="pre">50</span></code>, then further
+parallel instances will be listening on port 5001, 5002, 5003, ...</p>
+<p>To start the instances run:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>supervisorctl start wte:*
+</pre></div>
+</div>
+<p>To stop the instances run:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>supervisorctl stop wte:*
+</pre></div>
+</div>
+</div>
 <div class="section" id="deploying-with-apache2-mod-wsgi">
 <h2>Deploying with Apache2 &amp; mod_wsgi<a class="headerlink" href="#deploying-with-apache2-mod-wsgi" title="Permalink to this headline">¶</a></h2>
 <p>To deploy the Experiment Support System via <a class="reference external" href="http://httpd.apache.org/">Apache2</a> and <a class="reference external" href="http://code.google.com/p/modwsgi/">mod_wsgi</a> add the

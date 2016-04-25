@@ -2,9 +2,43 @@
 Deployment
 **********
 
-In-production deployment has been tested using `Apache2`_ and `mod_wsgi`_.
-For other deployment scenarios, please consult the `pyramid deployment`_
-documentation.
+In-production deployment has been tested using `Apache2`_ with `mod_wsgi`_
+and using `supervisord`_. For other deployment scenarios, please consult
+the `pyramid deployment`_ documentation.
+
+Deploying with supervisord
+==========================
+
+To deploy via `supervisord`_ create the a new file "wte.conf" in the
+supervisord configuration directory::
+
+  [program:wte]
+  directory = /path/to/the/virtualenv
+  user = www-data
+  command = /path/to/the/virtualenv/bin/pserve /path/to/the/config.ini http_port=XX%(process_num)02d
+  stopasgroup = true
+  numprocs = Y
+  process_name = %(program_name)s-%(process_num)01d
+
+Replace the ``XX`` in the ``command`` section with the port-number that
+the instance will be available on. If you replace ``XX`` with ``50`` then
+the first instance will be listening on port 5000.
+
+The configuration above allows for multiple parallel instances of the WTE,
+the number of which are configured via the ``numprocs`` setting. Replace
+``Y`` with the number of parallel instances you wish to run. If ``Y`` is
+set to a number greater than 1 and ``X`` is set to ``50``, then further
+parallel instances will be listening on port 5001, 5002, 5003, ...
+
+To start the instances run::
+
+  supervisorctl start wte:*
+
+To stop the instances run::
+
+  supervisorctl stop wte:*
+
+.. _supervisord: http://supervisord.org/
 
 Deploying with Apache2 & mod_wsgi
 =================================
