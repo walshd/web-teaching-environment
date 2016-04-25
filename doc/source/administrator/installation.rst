@@ -2,6 +2,9 @@
 Installation
 ************
 
+The Web Teaching Environment will run on Python 2.7, Python 3.4, and
+Python 3.5 (recommended).
+
 Core System
 ===========
 
@@ -15,15 +18,14 @@ It is recommended that you install the Web Teaching Environment into a
 `virtual environment`_.
 
 To enable the Web Teaching Environment to work, you must then install either
-`pycryptopp`_ or `PyCrypto`_ packages to enable the use of session cookies. To
-install `pycryptopp`_ run::
+`pycryptopp`_ (Python 2.7 only) or `PyCrypto`_ package (Python 2.7 and 3.*)
+to enable the use of session cookies. To install `pycryptopp`_ run::
 
   pip install pycryptopp
 
-To install `PyCrypto`_, download it from https://www.dlitz.net/software/pycrypto/
-and then install using the following command::
+To install `PyCrypto`_ run::
 
-  pip install pycrypto-X.Y.tar.gz
+  pip install pycrypto
 
 Database Access
 ===============
