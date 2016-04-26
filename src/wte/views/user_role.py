@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-u"""
+"""
 ########################################################
 :mod:`wte.views.user_role` -- Backend for Users in Parts
 ########################################################
@@ -27,7 +27,7 @@ from wte.views.part import (create_part_crumbs, get_all_parts)
 
 
 def init(config):
-    u"""Adds the user-part-role-specific backend routes (route name, URL pattern
+    """Adds the user-part-role-specific backend routes (route name, URL pattern
     handler):
 
     * ``part.users`` -- ``/parts/{pid}/users`` -- :func:`~wte.views.user_role.users`
@@ -45,7 +45,7 @@ def init(config):
 @current_user()
 @require_logged_in()
 def users(request):
-    u"""Handles the ``parts/{pid}/users`` URL, displaying the
+    """Handles the ``parts/{pid}/users`` URL, displaying the
     :class:`~wte.models.User` registered for a :class:`~wte.models.Part`.
 
     Requires that the user has "users" rights on the
@@ -68,12 +68,12 @@ def users(request):
             query_params = []
             if 'role' in request.params:
                 if request.params['role'] == 'active':
-                    query = query.filter(UserPartRole.role != u'block')
+                    query = query.filter(UserPartRole.role != 'block')
                 elif request.params['role']:
                     query = query.filter(UserPartRole.role == request.params['role'])
                     query_params.append(('role', request.params['role']))
             else:
-                query = query.filter(UserPartRole.role != u'block')
+                query = query.filter(UserPartRole.role != 'block')
             if 'q' in request.params and request.params['q']:
                 query = query.filter(or_(User.display_name.contains(request.params['q']),
                                          User.email.contains(request.params['q'])))
@@ -125,18 +125,18 @@ def users(request):
 
 
 class ActionSchema(CSRFSchema):
-    u"""The :class:`~wte.views.user_role.ActionSchema` handles the
+    """The :class:`~wte.views.user_role.ActionSchema` handles the
     validation of a actions applied in :func:`~wte.views.user_role.action` and
     :func:`~wte.views.user_role.update`.
     """
     action = formencode.All(formencode.validators.UnicodeString(not_empty=True),
                             formencode.validators.OneOf(['block', 'remove', 'change_role']))
-    u"""The action to apply"""
+    """The action to apply"""
     role_id = formencode.ForEach(formencode.validators.Int(not_empty=True),
                                  convert_to_list=True,
                                  if_missing=formencode.api.NoDefault,
                                  not_empty=True)
-    u"""The list of :class:`~wte.models.UserPartRole` to apply the action to"""
+    """The list of :class:`~wte.models.UserPartRole` to apply the action to"""
     allow_extra_fields = True
 
 
@@ -144,7 +144,7 @@ class ActionSchema(CSRFSchema):
 @current_user()
 @require_logged_in()
 def action(request):
-    u"""Handles the ``parts/{pid}/users/action`` URL, loads the interface for changing
+    """Handles the ``parts/{pid}/users/action`` URL, loads the interface for changing
     :class:`~wte.models.User` registered for a :class:`~wte.models.Part`.
 
     Requires that the user has "users" rights on the
@@ -184,31 +184,31 @@ def action(request):
 
 
 class ChangeRoleSchema(CSRFSchema):
-    u"""The :class:`~wte.views.user_role.ChangeRoleSchema` handles the
+    """The :class:`~wte.views.user_role.ChangeRoleSchema` handles the
     validation of a "change_role" action applied in :func:`~wte.views.user_role.update`.
     """
     action = formencode.All(formencode.validators.UnicodeString(not_empty=True),
                             formencode.validators.OneOf(['change_role']))
-    u"""The action to apply"""
+    """The action to apply"""
     role_id = formencode.ForEach(formencode.validators.Int(not_empty=True),
                                  convert_to_list=True,
                                  if_missing=formencode.api.NoDefault,
                                  not_empty=True)
-    u"""The list of :class:`~wte.models.UserPartRole` to apply the action to"""
+    """The list of :class:`~wte.models.UserPartRole` to apply the action to"""
     role = formencode.All(formencode.validators.UnicodeString(not_empty=True),
                           formencode.validators.OneOf(['owner', 'tutor', 'student']))
-    u"""The new role"""
+    """The new role"""
     q = formencode.validators.UnicodeString(if_empty=None, if_missing=None)
-    u"""Optional query parameter for the redirect"""
+    """Optional query parameter for the redirect"""
     start = formencode.validators.UnicodeString(if_empty=None, if_missing=None)
-    u"""Optional start parameter for the redirect"""
+    """Optional start parameter for the redirect"""
 
 
 @view_config(route_name='part.users.update', renderer='wte:templates/user_role/action.kajiki')
 @current_user()
 @require_logged_in()
 def update(request):
-    u"""Handles the ``parts/{pid}/users`` URL, applying the changes select when the
+    """Handles the ``parts/{pid}/users`` URL, applying the changes select when the
     user views :func:`~wte.views.user_role.action`.
 
     Requires that the user has "users" rights on the
@@ -267,7 +267,7 @@ def update(request):
                     with transaction.manager:
                         for role in users:
                             dbsession.add(role)
-                            role.role = u'block'
+                            role.role = 'block'
                     raise HTTPSeeOther(request.route_url('part.users', pid=request.matchdict['pid'],
                                                          _query=query_params))
             except formencode.api.Invalid as e:
@@ -292,27 +292,27 @@ def update(request):
 
 
 class AddUserSchema(CSRFSchema):
-    u"""The :class:`~wte.views.user_role.AddUserSchema` handles the
+    """The :class:`~wte.views.user_role.AddUserSchema` handles the
     validation of a adding a :class:`~wte.models.User` to a
     :class:`~wte.models.Part`..
     """
     user_id = formencode.ForEach(formencode.validators.Int(not_empty=True),
                                  convert_to_list=True)
-    u"""The id of the :class:`~wte.models.User` to add"""
+    """The id of the :class:`~wte.models.User` to add"""
     role = formencode.All(formencode.validators.UnicodeString(not_empty=True),
                           formencode.validators.OneOf(['owner', 'tutor', 'student']))
-    u"""The new role for the :class:`~wte.models.User`"""
+    """The new role for the :class:`~wte.models.User`"""
     q = formencode.validators.UnicodeString(not_empty=False)
-    u"""Save the query in case there are validation errors"""
+    """Save the query in case there are validation errors"""
     start = formencode.validators.Int(not_empty=False, if_missing=0)
-    u"""Save the pagination in case there are validation errors"""
+    """Save the pagination in case there are validation errors"""
 
 
 @view_config(route_name='part.users.add', renderer='wte:templates/user_role/add.kajiki')
 @current_user()
 @require_logged_in()
 def add(request):
-    u"""Handles the ``parts/{pid}/users/add`` URL, providing the functionality for adding a
+    """Handles the ``parts/{pid}/users/add`` URL, providing the functionality for adding a
     :class:`~wte.models.User` to a :class:`~wte.models.Part`.
 
     Requires that the user has "users" rights on the

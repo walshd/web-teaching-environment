@@ -28,7 +28,7 @@ from wte.util import (unauthorised_redirect, CSRFSchema, State)
 
 
 def init(config):
-    u"""Adds the asset-specific routes (route name, URL pattern
+    """Adds the asset-specific routes (route name, URL pattern
     handler):
 
     * ``asset.new`` -- ``/parts/{pid}/assets/new/{new_type}`` --
@@ -56,33 +56,33 @@ def init(config):
 
 
 class NewAssetSchema(CSRFSchema):
-    u"""The :class:`~wte.views.asset.NewAssetSchema` handles the
+    """The :class:`~wte.views.asset.NewAssetSchema` handles the
     validation of a new :class:`~wte.models.Asset`.
     """
     filename = formencode.validators.UnicodeString(if_empty=None, if_missing=None)
-    u"""The asset's filename"""
+    """The asset's filename"""
     data = formencode.validators.FieldStorageUploadConverter(not_empty=False, if_missing=None)
-    u"""The asset's data"""
+    """The asset's data"""
 
 
 @view_config(route_name='asset.new', renderer='wte:templates/asset/new.kajiki')
 @current_user()
 @require_logged_in()
 def new(request):
-    u"""Handles the ``/parts/{pid}/assets/new/{new_type}`` URL, providing the UI and
+    """Handles the ``/parts/{pid}/assets/new/{new_type}`` URL, providing the UI and
     backend for creating a new :class:`~wte.models.Asset`.
 
     Requires that the user has "edit" rights on the current :class:`~wte.models.Part`.
     """
     dbsession = DBSession()
-    part = dbsession.query(Part).filter(Part.id == request.matchdict[u'pid']).first()
+    part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
     if part:
         if part.allow('edit', request.current_user):
             crumbs = create_part_crumbs(request,
                                         part,
                                         {'title': 'Add %s' % (request.matchdict['new_type'].title()),
                                          'url': request.current_route_url()})
-            if request.method == u'POST':
+            if request.method == 'POST':
                 try:
                     schema = NewAssetSchema()
                     if request.matchdict['new_type'] == 'asset':
@@ -150,42 +150,42 @@ def new(request):
 
 
 class EditAssetSchema(CSRFSchema):
-    u"""The :class:`~wte.views.asset.EditAssetSchema` handles the
+    """The :class:`~wte.views.asset.EditAssetSchema` handles the
     validation of updates to an :class:`~wte.models.Asset`.
     """
     filename = formencode.validators.UnicodeString(not_empty=True)
-    u"""The asset's filename"""
+    """The asset's filename"""
     mimetype = formencode.validators.UnicodeString(not_empty=True)
-    u"""The asset's mimetype"""
+    """The asset's mimetype"""
     mimetype_other = formencode.validators.UnicodeString(not_empty=True)
-    u"""The asset's alternative mimetype"""
+    """The asset's alternative mimetype"""
     data = formencode.validators.FieldStorageUploadConverter(if_missing=None)
-    u"""The asset's file content"""
+    """The asset's file content"""
     content = formencode.validators.UnicodeString(if_missing=None)
-    u"""The asset's content"""
+    """The asset's content"""
 
 
 @view_config(route_name='asset.edit', renderer='wte:templates/asset/edit.kajiki')
 @current_user()
 @require_logged_in()
 def edit(request):
-    u"""Handles the ``/parts/{pid}/assets/{aid}/edit`` URL, providing
+    """Handles the ``/parts/{pid}/assets/{aid}/edit`` URL, providing
     the UI and backend for editing :class:`~wte.models.Asset`.
 
     Requires that the user has "edit" rights on the current :class:`~wte.models.Part`.
     """
     dbsession = DBSession()
-    part = dbsession.query(Part).filter(Part.id == request.matchdict[u'pid']).first()
+    part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
     asset = dbsession.query(Asset).join(Part.all_assets).\
-        filter(and_(Asset.id == request.matchdict[u'aid'],
-                    Part.id == request.matchdict[u'pid'])).first()
+        filter(and_(Asset.id == request.matchdict['aid'],
+                    Part.id == request.matchdict['pid'])).first()
     if part and asset:
         if part.allow('edit', request.current_user):
             crumbs = create_part_crumbs(request,
                                         part,
                                         {'title': 'Edit %s' % (asset.type.title()),
                                          'url': request.current_route_url()})
-            if request.method == u'POST':
+            if request.method == 'POST':
                 try:
                     params = EditAssetSchema().to_python(request.params, State(request=request))
                     dbsession = DBSession()
@@ -240,23 +240,23 @@ def edit(request):
 @current_user()
 @require_logged_in()
 def delete(request):
-    u"""Handles the ``/parts/{pid}/assets/{aid}/delete`` URL,
+    """Handles the ``/parts/{pid}/assets/{aid}/delete`` URL,
     providing the UI and backend for deleting :class:`~wte.models.Asset`.
 
     Requires that the user has "edit" rights on the current :class:`~wte.models.Part`.
     """
     dbsession = DBSession()
-    part = dbsession.query(Part).filter(Part.id == request.matchdict[u'pid']).first()
+    part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
     asset = dbsession.query(Asset).join(Part.all_assets).\
-        filter(and_(Asset.id == request.matchdict[u'aid'],
-                    Part.id == request.matchdict[u'pid'])).first()
+        filter(and_(Asset.id == request.matchdict['aid'],
+                    Part.id == request.matchdict['pid'])).first()
     if part and asset:
         if part.allow('edit', request.current_user):
             crumbs = create_part_crumbs(request,
                                         part,
                                         {'title': 'Delete Asset',
                                          'url': request.current_route_url()})
-            if request.method == u'POST':
+            if request.method == 'POST':
                 try:
                     CSRFSchema().to_python(request.params, State(request=request))
                     dbsession = DBSession()
@@ -286,7 +286,7 @@ def delete(request):
 @current_user()
 @require_logged_in()
 def view_file(request):
-    u"""Handles the ``parts/{ptid}/pages/{pid}/users/{uid}/files/name/{filename}``
+    """Handles the ``parts/{ptid}/pages/{pid}/users/{uid}/files/name/{filename}``
     URL, sending back the correct :class:`~wte.models.Asset`.
 
     Requires that the user has "view" rights on the :class:`~wte.models.Part`.
@@ -294,7 +294,7 @@ def view_file(request):
     :class:`~wte.models.User`.
     """
     dbsession = DBSession()
-    part = dbsession.query(Part).filter(Part.id == request.matchdict[u'pid']).first()
+    part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
     if part:
         if part.allow('view', request.current_user):
             progress = get_user_part_progress(dbsession, request.current_user, part)
@@ -321,7 +321,7 @@ def view_file(request):
 @current_user()
 @require_logged_in()
 def save_file(request):
-    u"""Handles the ``/parts/{pid}/files/id/{fid}/save``
+    """Handles the ``/parts/{pid}/files/id/{fid}/save``
     URL, updating the :class:`~wte.models.Asset`'s content.
 
     Requires that the user has "view" rights on the :class:`~wte.models.Part`.
@@ -329,7 +329,7 @@ def save_file(request):
     current :class:`~wte.models.User`.
     """
     dbsession = DBSession()
-    part = dbsession.query(Part).filter(Part.id == request.matchdict[u'pid']).first()
+    part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
     if part:
         if part.allow('view', request.current_user):
             progress = get_user_part_progress(dbsession, request.current_user, part)
@@ -354,17 +354,17 @@ def save_file(request):
 @current_user()
 @require_logged_in()
 def view_asset(request):
-    u"""Handles the ``/parts/{pid}/files/name/assets/{filename}``
+    """Handles the ``/parts/{pid}/files/name/assets/{filename}``
     URL, sending back the correct :class:`~wte.models.Asset`.
 
     Requires that the user has "view" rights on the :class:`~wte.models.Part`.
     """
     dbsession = DBSession()
-    part = dbsession.query(Part).filter(Part.id == request.matchdict[u'pid']).first()
-    if part.type == u'page':
+    part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
+    if part.type == 'page':
         part = part.parent
     asset = dbsession.query(Asset).join(Part.assets).\
-        filter(and_(Asset.filename == request.matchdict[u'filename'],
+        filter(and_(Asset.filename == request.matchdict['filename'],
                     Part.id == part.id)).first()
     if part and asset:
         if part.allow('view', request.current_user):
@@ -396,7 +396,7 @@ def search(request):
     :class:`~wte.models.Part` to see any results.
     """
     dbsession = DBSession()
-    part = dbsession.query(Part).filter(Part.id == request.matchdict[u'pid']).first()
+    part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
     if part:
         if part.allow('view', request.current_user):
             assets = []

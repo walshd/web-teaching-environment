@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-u"""
+"""
 #################################################################
 :mod:`wte.scripts.configuration` -- Generate configuration script
 #################################################################
@@ -23,7 +23,7 @@ from wte.scripts.main import get_user_parameter
 
 
 def init(subparsers):
-    u"""Initialises the :class:`~argparse.ArgumentParser`, adding the
+    """Initialises the :class:`~argparse.ArgumentParser`, adding the
     "generate-config" and "generate-custom-styling" commands.
     """
     parser = subparsers.add_parser('generate-config', help='Generate the WTE configuration file')
@@ -36,7 +36,7 @@ def init(subparsers):
 
 
 def generate_config(args):
-    u"""Generates a configuration file based on the default_config.txt template.
+    """Generates a configuration file based on the default_config.txt template.
     """
     tmpl = TextTemplate(resource_string('wte', 'scripts/templates/default_config.txt').decode('utf-8'))
     params = {'encrypt_key': uuid.uuid1(),
@@ -51,7 +51,7 @@ def generate_config(args):
 
 
 def generate_custom_styling(args):
-    u"""Generates a custom CSS styling for the WTE application. Allows
+    """Generates a custom CSS styling for the WTE application. Allows
     customisation of general settings, Pygments style, and CodeMirror theme.
     """
     settings = get_appsettings(args.configuration)

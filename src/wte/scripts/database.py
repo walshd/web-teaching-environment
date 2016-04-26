@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-u"""
+"""
 ################################################
 :mod:`wte.scripts.database` -- Database  scripts
 ################################################
@@ -20,7 +20,7 @@ from wte.models import (Base, DBSession, User, Permission, PermissionGroup,
 
 
 def init(subparsers):
-    u"""Initialises the :class:`~argparse.ArgumentParser`, adding the
+    """Initialises the :class:`~argparse.ArgumentParser`, adding the
     "initialise-database" command.
     """
     parser = subparsers.add_parser('initialise-database', help='Initialise the database')
@@ -36,7 +36,7 @@ def init(subparsers):
 
 
 def initialise_database(args):
-    u"""Initialises the database schema and adds the default
+    """Initialises the database schema and adds the default
     :class:`~wte.models.Permission`, :class:`~wte.models.PermissionGroup`, and
     :class:`~wte.models.User` to the database.
     """
@@ -50,35 +50,35 @@ def initialise_database(args):
     DBSession.configure(bind=engine)
     dbsession = DBSession()
     with transaction.manager:
-        admin_user = User(email=u'admin@example.com', display_name=u'Admin', password=u'password')
+        admin_user = User(email='admin@example.com', display_name='Admin', password='password')
         dbsession.add(admin_user)
 
-        admin_permission = Permission(name=u'admin', title=u'Administration Access')
+        admin_permission = Permission(name='admin', title='Administration Access')
 
-        group = PermissionGroup(title=u'User Administration')
+        group = PermissionGroup(title='User Administration')
         dbsession.add(group)
         group.permissions.append(admin_permission)
-        group.permissions.append(Permission(name=u'admin.users.view', title=u'View all users'))
-        group.permissions.append(Permission(name=u'admin.users.edit', title=u'Edit all users'))
-        group.permissions.append(Permission(name=u'admin.users.delete', title=u'Delete all users'))
-        group.permissions.append(Permission(name=u'admin.users.permissions', title=u'Edit user permissions'))
+        group.permissions.append(Permission(name='admin.users.view', title='View all users'))
+        group.permissions.append(Permission(name='admin.users.edit', title='Edit all users'))
+        group.permissions.append(Permission(name='admin.users.delete', title='Delete all users'))
+        group.permissions.append(Permission(name='admin.users.permissions', title='Edit user permissions'))
         admin_user.permission_groups.append(group)
 
-        group = PermissionGroup(title=u'Content Administration')
+        group = PermissionGroup(title='Content Administration')
         dbsession.add(group)
         group.permissions.append(admin_permission)
-        create_module_perm = Permission(name=u'modules.create', title=u'Create a new module')
+        create_module_perm = Permission(name='modules.create', title='Create a new module')
         group.permissions.append(create_module_perm)
-        group.permissions.append(Permission(name=u'admin.modules.view', title=u'View all modules'))
-        group.permissions.append(Permission(name=u'admin.modules.edit', title=u'Edit all modules'))
-        group.permissions.append(Permission(name=u'admin.modules.delete', title=u'Delete all modules'))
+        group.permissions.append(Permission(name='admin.modules.view', title='View all modules'))
+        group.permissions.append(Permission(name='admin.modules.edit', title='Edit all modules'))
+        group.permissions.append(Permission(name='admin.modules.delete', title='Delete all modules'))
         admin_user.permission_groups.append(group)
 
-        group = PermissionGroup(title=u'Teacher')
+        group = PermissionGroup(title='Teacher')
         dbsession.add(group)
         group.permissions.append(create_module_perm)
 
-        group = PermissionGroup(title=u'Student')
+        group = PermissionGroup(title='Student')
         dbsession.add(group)
 
 

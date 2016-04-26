@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-u"""
+"""
 #########################
 :mod:`wte.text_formatter`
 #########################
@@ -28,7 +28,7 @@ def init(settings):
 
 
 def compile_rst(text, request, part=None):
-    u"""Compiles the given ReStructuredText into HTML. Returns only the actual
+    """Compiles the given ReStructuredText into HTML. Returns only the actual
     content of the generated HTML document, without headers or footers.
 
     :param text: The ReST to compile
@@ -39,5 +39,5 @@ def compile_rst(text, request, part=None):
     settings = deepcopy(SETTINGS)
     settings['pyramid_request'] = request
     settings['wte_part'] = part
-    parts = core.publish_parts(source=text, writer_name=u'html', settings_overrides=settings)
+    parts = core.publish_parts(source=text, writer_name='html', settings_overrides=settings)
     return parts['body']

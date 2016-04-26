@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-u"""
+"""
 ##################################
 :mod:`wte.doc` -- Docutils Helpers
 ##################################
@@ -15,7 +15,7 @@ from docutils import nodes
 
 
 def button_role(role, rawtext, text, node_id, inliner):
-    u"""Handles adding the necessary inline styling to indicate buttons in the
+    """Handles adding the necessary inline styling to indicate buttons in the
     documentation."""
     if role == 'primary_btn':
         return [nodes.inline(rawtext, text, classes=['button'])], []
@@ -31,7 +31,7 @@ DROPDOWN_PATTERN = re.compile(r'(.+)(?:<(.+)>)')
 
 
 def link_role(role, rawtext, text, node_id, inliner):
-    u"""Handles adding the necessary inline styling to indicate links in the
+    """Handles adding the necessary inline styling to indicate links in the
     documentation."""
     if role == 'text_link':
         return [nodes.inline(rawtext, text, classes=['text-link'])], []
@@ -52,7 +52,7 @@ def icon_role(role, rawtext, text, node_id, inliner):
 
 
 def setup(app):
-    u"""Adds the new docutils roles to the docutils app
+    """Adds the new docutils roles to the docutils app
     """
     app.add_role('primary_btn', button_role)
     app.add_role('secondary_btn', button_role)

@@ -426,7 +426,7 @@ def confirm(request):
     user = dbsession.query(User).filter(and_(User.id == request.matchdict['uid'],
                                              User.validation_token == request.matchdict['token'])).first()
     if user:
-        status = u'success'
+        status = 'success'
         with transaction.manager:
             dbsession.add(user)
             process_confirmation(request, user)
@@ -435,11 +435,11 @@ def confirm(request):
         user = dbsession.query(User).filter(and_(User.id == request.matchdict['uid'],
                                                  User.validation_token is None)).first()
         if user:
-            status = u'confirmed'
+            status = 'confirmed'
         else:
-            status = u'fail'
+            status = 'fail'
     if request.current_user.has_permission('admin.users.view'):
-        if status == u'fail':
+        if status == 'fail':
             request.session.flash('Failed to validate the given user', queue='error')
         else:
             request.session.flash('The user has been validated and an e-mail with access details sent', queue='info')

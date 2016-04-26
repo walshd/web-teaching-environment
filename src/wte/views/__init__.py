@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-u"""
+"""
 #################################
 :mod:`wte.views` -- View handlers
 #################################
@@ -23,7 +23,7 @@ from . import (user, part, asset, user_role, timed_tasks, admin)
 
 
 def init(config, settings):
-    u"""Adds the following routes (route name, URL pattern, handler):
+    """Adds the following routes (route name, URL pattern, handler):
 
     * ``root`` -- ``/`` -- :func:`~wte.views.root`
 
@@ -43,7 +43,7 @@ def init(config, settings):
 @view_config(route_name='root', renderer='wte:templates/root.kajiki')
 @current_user()
 def root(request):
-    u"""Handles the ``/`` route.
+    """Handles the ``/`` route.
     """
     return {}
 
@@ -70,7 +70,7 @@ def help_page(request):
 @view_config(context=HTTPNotFound, renderer='wte:templates/errors/404.kajiki')
 @current_user()
 def notfound_404(request):
-    u"""Handles 404 errors
+    """Handles 404 errors
     """
     return {'crumbs': [{'title': 'Not Found'}]}
 
@@ -78,6 +78,6 @@ def notfound_404(request):
 @view_config(context=Exception, renderer='wte:templates/errors/500.kajiki')
 @current_user()
 def servererror_500(request):
-    u"""Handles 500 errors
+    """Handles 500 errors
     """
     return {'crumbs': [{'title': 'Internal Server Error'}]}

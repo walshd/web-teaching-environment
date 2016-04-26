@@ -60,7 +60,7 @@ class HtmlTitleFormatter(HtmlFormatter):
 
 
 def flag_bool_option(value):
-    u"""Options conversion function for ReST
+    """Options conversion function for ReST
     :class:`~docutils.parser.rst.Directive` that returns ``True`` if the
     value is set and has any value except "false".
     """
@@ -124,10 +124,10 @@ class Pygments(Directive):
                                        filename=self.options['filename'] if 'filename' in self.options else None,
                                        noclasses=False,
                                        style='native',
-                                       cssclass=u'source %s' % (lexer.name),
+                                       cssclass='source %s' % (lexer.name),
                                        linenos='inline' if 'linenos' in self.options else False,
                                        linenostart=self.options['linenos'] if 'linenos' in self.options else 1)
-        parsed = highlight(u'\n'.join(self.content), lexer, formatter)
+        parsed = highlight('\n'.join(self.content), lexer, formatter)
         return [nodes.raw('', parsed, format='html')]
 
 

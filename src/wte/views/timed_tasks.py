@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-u"""
+"""
 ###################################################
 :mod:`wte.views.timed_tasks` -- Timed Tasks Backend
 ###################################################
@@ -26,7 +26,7 @@ from wte.views.part import create_part_crumbs
 
 
 def init(config):
-    u"""Adds the timed-task-specific backend routes (route name, URL pattern
+    """Adds the timed-task-specific backend routes (route name, URL pattern
     handler):
 
     * ``parts.timed_tasks`` -- ``/parts/{pid}/timed-tasks`` --
@@ -48,7 +48,7 @@ def init(config):
 @current_user()
 @require_logged_in()
 def view_part_tasks(request):
-    u"""Handles the ``parts/{pid}/timed-tasks`` URL, displaying the
+    """Handles the ``parts/{pid}/timed-tasks`` URL, displaying the
     :class:`~wte.models.TimedTask`\ s for the given :class:`~wte.models.Part`.
 
     Requires that the user has "edit" rights on the
@@ -75,19 +75,19 @@ def view_part_tasks(request):
 
 
 class NewTimedTaskSchema(CSRFSchema):
-    u"""The :class:`~wte.views.timed_tasks.NewTimedTaskSchema` handles the
+    """The :class:`~wte.views.timed_tasks.NewTimedTaskSchema` handles the
     validation of a new :class:`~wte.models.TimedTask`.
     """
     name = formencode.All(formencode.validators.UnicodeString(not_empty=True),
-                          formencode.validators.OneOf([u'change_status']))
-    u"""The new task's name"""
+                          formencode.validators.OneOf(['change_status']))
+    """The new task's name"""
 
 
 @view_config(route_name='part.timed_task.new', renderer='wte:templates/timed_task/new.kajiki')
 @current_user()
 @require_logged_in()
 def new_part_task(request):
-    u"""Handles the ``parts/{pid}/timed-tasks/new`` URL, providing the UI and
+    """Handles the ``parts/{pid}/timed-tasks/new`` URL, providing the UI and
     backend for creating a new :class:`~wte.models.TimedTask`\ s for
     a given :class:`~wte.models.Part`.
 
@@ -138,7 +138,7 @@ def new_part_task(request):
 
 
 class EditTimedTaskSchema(CSRFSchema):
-    u"""The :class:`~wte.views.timed_tasks.EditTimedTaskSchema` handles the
+    """The :class:`~wte.views.timed_tasks.EditTimedTaskSchema` handles the
     validation of changes to a :class:`~wte.models.TimedTask`.
 
     By default it only expects to validate date (YYYY-MM-DDD) and time
@@ -150,14 +150,14 @@ class EditTimedTaskSchema(CSRFSchema):
     """
 
     date = DateValidator(not_empty=True)
-    u"""The task's updated date"""
+    """The task's updated date"""
     time = TimeValidator(not_empty=True)
-    u"""The tasks's updatet time"""
+    """The tasks's updatet time"""
 
     pre_validators = [formencode.variabledecode.NestedVariables()]
 
     def __init__(self, options=None, **kwargs):
-        u""":param options: Any additional option validators to apply.
+        """:param options: Any additional option validators to apply.
         :type options: ``list`` of ``tuple`` (field-name, validator)"""
         formencode.Schema.__init__(self, **kwargs)
         if options:
@@ -168,7 +168,7 @@ class EditTimedTaskSchema(CSRFSchema):
 @current_user()
 @require_logged_in()
 def edit_part_task(request):
-    u"""Handles the ``parts/{pid}/timed-tasks/{tid}/edit`` URL, providing the UI
+    """Handles the ``parts/{pid}/timed-tasks/{tid}/edit`` URL, providing the UI
     and backend for editing an existing :class:`~wte.models.TimedTask` that
     belongs to a :class:`~wte.models.Part`.
 
@@ -227,7 +227,7 @@ def edit_part_task(request):
 @current_user()
 @require_logged_in()
 def delete_part_task(request):
-    u"""Handles the ``parts/{pid}/timed-tasks/{tid}/delete`` URL, providing the UI
+    """Handles the ``parts/{pid}/timed-tasks/{tid}/delete`` URL, providing the UI
     and backend for deleting an existing :class:`~wte.models.TimedTask` that
     belongs to a :class:`~wte.models.Part`.
 

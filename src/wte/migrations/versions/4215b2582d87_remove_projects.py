@@ -49,8 +49,8 @@ def upgrade():
 def downgrade():
     bind = op.get_bind()
     metadata.bind = bind
-    pc_pk = bind.execute(p.insert().values(name=u'projects.create',
-                                           title=u'Create a new project')).inserted_primary_key[0]
+    pc_pk = bind.execute(p.insert().values(name='projects.create',
+                                           title='Create a new project')).inserted_primary_key[0]
     ca_g = bind.execute(pg.select().where(pg.c.title == 'Content Administration')).first()
     bind.execute(pg_p.insert().values(permission_group_id=ca_g[0], permission_id=pc_pk))
     s_g = bind.execute(pg.select().where(pg.c.title == 'Student')).first()

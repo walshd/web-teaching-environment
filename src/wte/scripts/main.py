@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-u"""
+"""
 ######################################################
 :mod:`wte.scripts.main` -- Administration application
 ######################################################
@@ -13,7 +13,7 @@ from argparse import ArgumentParser
 
 
 def get_user_parameter(prompt, default=''):
-    u"""The :func:`~wte.scripts.main.get_user_parameter` function provides a
+    """The :func:`~wte.scripts.main.get_user_parameter` function provides a
     generic helper function that prompts the user for a value.
 
     :param prompt: The prompt to display to the user
@@ -28,7 +28,7 @@ def get_user_parameter(prompt, default=''):
         prompt = '%s [%s]: ' % (prompt, default)
     else:
         prompt = '%s: ' % (prompt)
-    response = raw_input(prompt)
+    response = input(prompt)
     if response.strip() == '':
         return default
     else:
@@ -36,7 +36,7 @@ def get_user_parameter(prompt, default=''):
 
 
 def main():
-    u"""The :func:`~wte.scripts.main.main` function handles the creation of
+    """The :func:`~wte.scripts.main.main` function handles the creation of
     the :class:`~argparse.ArgumentParser` that processes the administrative
     application's command-line parameters. It calls the ``init()`` functions
     on the modules that implement the actual functionality to build up the
@@ -54,4 +54,7 @@ def main():
 
     args = parser.parse_args()
 
-    args.func(args)
+    if hasattr(args, 'func'):
+        args.func(args)
+    else:
+        parser.print_usage()

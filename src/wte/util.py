@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-u"""
+"""
 ####################################
 :mod:`wte.util` -- Utility functions
 ####################################
@@ -22,13 +22,13 @@ from email.utils import formatdate
 
 
 class State(object):
-    u"""The :class:`~wte.util.State` provides a blank state object for use
+    """The :class:`~wte.util.State` provides a blank state object for use
     with Formencode validation. Any parameters passed to the constructor are
     automatically set as attributes of the :class:`~wte.util.State`.
     """
 
     def __init__(self, **kwargs):
-        u"""Any parameters passed to the constructor are automatically set as
+        """Any parameters passed to the constructor are automatically set as
         attributes of the :class:`~wte.util.State`.
         """
         self.__dict__.update(kwargs)
@@ -64,7 +64,7 @@ class CSRFSchema(formencode.Schema):
 
 
 class DynamicSchema(formencode.Schema):
-    u"""The :class:`~wte.util.DynamicSchema` provides a dynamic
+    """The :class:`~wte.util.DynamicSchema` provides a dynamic
     :class:`~formencode.schema.Schema` for which the validation fields are
     defined from the ``list`` of (field-name,
     :class:`~formencode.api.FancyValidator`) pairs passed to the
@@ -80,7 +80,7 @@ class DynamicSchema(formencode.Schema):
 
 
 class DateValidator(formencode.FancyValidator):
-    u"""The :class:`~wte.util.DateValidator` provides date validation and
+    """The :class:`~wte.util.DateValidator` provides date validation and
     conversion from the formats "YYYY-MM-DD" or "DD/MM/YYYY" to a python
     :class:`datetime.date`.
     """
@@ -88,7 +88,7 @@ class DateValidator(formencode.FancyValidator):
     messages = {'invalid_format': 'Please enter a date either as YYYY-MM-DD or DD/MM/YYYY'}
 
     def _convert_to_python(self, value, state):
-        u"""Try to convert from either "YYYY-MM-DD" or "DD-MM-YYYY" to a
+        """Try to convert from either "YYYY-MM-DD" or "DD-MM-YYYY" to a
         :class:`datetime.date`. Raises :class:`~formencode.api.Invalid` if the
         conversion fails.
 
@@ -107,14 +107,14 @@ class DateValidator(formencode.FancyValidator):
 
 
 class TimeValidator(formencode.FancyValidator):
-    u"""The :class:`~wte.util.DateValidator` provides time validation and
+    """The :class:`~wte.util.DateValidator` provides time validation and
     conversion from the format "HH:MM" to a python :class:`datetime.time`.
     """
 
     messages = {'invalid_format': 'Please enter a time as HH:MM'}
 
     def _convert_to_python(self, value, state):
-        u"""Try to convert from "HH:MM" to a :class:`datetime.time`. Raises
+        """Try to convert from "HH:MM" to a :class:`datetime.time`. Raises
         :class:`~formencode.api.Invalid` if the conversion fails.
 
         :param value: The `unicode` value to convert
@@ -162,7 +162,7 @@ def unauthorised_redirect(request, redirect_to=None, message=None):
 
 
 def send_email(request, recipient, sender, subject, text):  # pragma: no cover
-    u"""Sends an e-mail based on the settings in the configuration file. If
+    """Sends an e-mail based on the settings in the configuration file. If
     the configuration does not have e-mail settings or if there is an
     exception sending the e-mail, then it will log an error.
 
@@ -194,7 +194,7 @@ def send_email(request, recipient, sender, subject, text):  # pragma: no cover
             smtp.sendmail(sender, recipient, email.as_string())
             smtp.quit()
         except Exception as e:
-            logging.getLogger("wte").error(unicode(e))
+            logging.getLogger("wte").error(str(e))
             print(text)  # TODO: Remove
     else:
         logging.getLogger("wte").error('Could not send e-mail as "email.smtp_host" setting not specified')
@@ -202,7 +202,7 @@ def send_email(request, recipient, sender, subject, text):  # pragma: no cover
 
 
 def convert_type(value, target_type, default=None):
-    u"""Attempts to convert the ``value`` to the given ``target_type``. Will
+    """Attempts to convert the ``value`` to the given ``target_type``. Will
     return ``default`` if the conversion fails.
 
     Supported ``target_type`` values are:
@@ -241,7 +241,7 @@ CACHED_SETTINGS = {}
 
 
 def get_config_setting(request, key, target_type=None, default=None):
-    u"""Gets a configuration setting from the application configuration.
+    """Gets a configuration setting from the application configuration.
     Settings are cached for faster access.
 
     :param request: The request used to access the configuration settings
@@ -325,10 +325,10 @@ def paginate(request, query, start, rows, query_params=None):
     for idx in range(0, int(math.ceil(count / float(rows)))):
         if idx == (start / 30):
             pages.append({'type': 'current',
-                          'label': unicode(idx + 1)})
+                          'label': str(idx + 1)})
         else:
             pages.append({'type': 'item',
-                          'label': unicode(idx + 1),
+                          'label': str(idx + 1),
                           'url': request.route_url('users', _query=query_params + [('start', idx * rows)])})
     if start + rows < count:
         pages.append({'type': 'next',
@@ -358,4 +358,4 @@ def ordered_counted_set(items):
         else:
             categories.append(item)
             counts.append(1)
-    return zip(categories, counts)
+    return list(zip(categories, counts))

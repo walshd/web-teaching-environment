@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-u"""
+"""
 ###########################################################
 :mod:`wte.scripts.timed_tasks` -- Script to run timed tasks
 ###########################################################
@@ -22,7 +22,7 @@ from wte.models import (DBSession, Base, TimedTask, Part)
 
 
 def init(subparsers):
-    u"""Initialises the :class:`~argparse.ArgumentParser`, adding the
+    """Initialises the :class:`~argparse.ArgumentParser`, adding the
     "run-timed-tasks" command that runs :func:`~wte.scripts.timed_tasks.run_timed_tasks`.
     """
     parser = subparsers.add_parser('run-timed-tasks', help='Run all timed tasks that are due')
@@ -31,7 +31,7 @@ def init(subparsers):
 
 
 def run_timed_tasks(args):
-    u"""Runs all timed tasks where the timestamp is in the past and the status is "ready".
+    """Runs all timed tasks where the timestamp is in the past and the status is "ready".
 
     All :class:`~wte.models.TimedTask` that are to be run are given a unique "run-{random-number}"
     ``status`` to uniquely identify them for this run. Individual task runners are then
@@ -49,11 +49,11 @@ def run_timed_tasks(args):
     Base.metadata.bind = engine
     dbsession = DBSession()
     tasks = dbsession.query(TimedTask).filter(and_(TimedTask.timestamp <= func.now(),
-                                                   TimedTask.status == u'ready'))
+                                                   TimedTask.status == 'ready'))
     rnd = randint(0, 1000000)
     with transaction.manager:
-        tasks.update({TimedTask.status: u'running-%i' % (rnd)}, synchronize_session=False)
-    tasks = dbsession.query(TimedTask).filter(TimedTask.status == u'running-%i' % (rnd))
+        tasks.update({TimedTask.status: 'running-%i' % (rnd)}, synchronize_session=False)
+    tasks = dbsession.query(TimedTask).filter(TimedTask.status == 'running-%i' % (rnd))
     task_count = tasks.count()
     if task_count > 0:
         logging.getLogger('wte').info('Running %i tasks' % (task_count))
@@ -72,11 +72,11 @@ def run_timed_tasks(args):
         else:
             logging.getLogger('wte').info('All tasks completed')
         with transaction.manager:
-            tasks.update({TimedTask.status: u'failed'})
+            tasks.update({TimedTask.status: 'failed'})
 
 
 def run_change_status(task_id):
-    u"""Run the status change task for the :class:`~wte.models.TimedTask` with the
+    """Run the status change task for the :class:`~wte.models.TimedTask` with the
     id ``task_id``. It changes the :class:`~wte.models.TimedTask`\ s status to the
     value of the "target_status" key in the :attr:`~wte.models.TimedTask.options`.
     """

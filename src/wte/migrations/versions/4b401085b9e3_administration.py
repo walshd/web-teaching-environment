@@ -40,25 +40,25 @@ pg_p = sa.Table('permission_groups_permissions', metadata,
 def upgrade():
     bind = op.get_bind()
     metadata.bind = bind
-    aa_pk = bind.execute(p.insert().values(name=u'admin', title=u'Administration Access')).inserted_primary_key[0]
-    user_admin_group = bind.execute(pg.select().where(pg.c.title == u'User Admin')).first()
+    aa_pk = bind.execute(p.insert().values(name='admin', title='Administration Access')).inserted_primary_key[0]
+    user_admin_group = bind.execute(pg.select().where(pg.c.title == 'User Admin')).first()
     bind.execute(pg_p.insert().values(permission_group_id=user_admin_group.id, permission_id=aa_pk))
-    content_admin_group = bind.execute(pg.select().where(pg.c.title == u'Content Admin')).first()
+    content_admin_group = bind.execute(pg.select().where(pg.c.title == 'Content Admin')).first()
     bind.execute(pg_p.insert().values(permission_group_id=content_admin_group.id, permission_id=aa_pk))
-    bind.execute(pg.update().values(title=u'User Administration').where(pg.c.id == user_admin_group.id))
-    bind.execute(pg.update().values(title=u'Content Administration').where(pg.c.id == content_admin_group.id))
+    bind.execute(pg.update().values(title='User Administration').where(pg.c.id == user_admin_group.id))
+    bind.execute(pg.update().values(title='Content Administration').where(pg.c.id == content_admin_group.id))
 
 
 def downgrade():
     bind = op.get_bind()
     metadata.bind = bind
-    admin_permission = bind.execute(p.select().where(p.c.name == u'admin')).first()
-    user_admin_group = bind.execute(pg.select().where(pg.c.title == u'User Administration')).first()
-    content_admin_group = bind.execute(pg.select().where(pg.c.title == u'Content Administration')).first()
+    admin_permission = bind.execute(p.select().where(p.c.name == 'admin')).first()
+    user_admin_group = bind.execute(pg.select().where(pg.c.title == 'User Administration')).first()
+    content_admin_group = bind.execute(pg.select().where(pg.c.title == 'Content Administration')).first()
     bind.execute(pg_p.delete().where(sa.and_(pg_p.c.permission_group_id == user_admin_group.id,
                                              pg_p.c.permission_id == admin_permission.id)))
     bind.execute(pg_p.delete().where(sa.and_(pg_p.c.permission_group_id == content_admin_group.id,
                                              pg_p.c.permission_id == admin_permission.id)))
-    bind.execute(p.delete().where(p.c.name == u'admin'))
-    bind.execute(pg.update().values(title=u'User Admin').where(pg.c.id == user_admin_group.id))
-    bind.execute(pg.update().values(title=u'Content Admin').where(pg.c.id == content_admin_group.id))
+    bind.execute(p.delete().where(p.c.name == 'admin'))
+    bind.execute(pg.update().values(title='User Admin').where(pg.c.id == user_admin_group.id))
+    bind.execute(pg.update().values(title='Content Admin').where(pg.c.id == content_admin_group.id))

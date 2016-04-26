@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-u"""
+"""
 #######################################
 :mod:`wte.decorators` -- Decoratorators
 #######################################
@@ -57,7 +57,7 @@ def current_user():
 
 
 def require_logged_in():
-    u"""Checks that the current user is logged in, otherwise redirects to the login
+    """Checks that the current user is logged in, otherwise redirects to the login
     page. Requires that the :func:`~wte.decorators.current_user` decorator is run
     first.
     """
@@ -67,12 +67,12 @@ def require_logged_in():
             return f(*args, **kwargs)
         else:
             unauthorised_redirect(request,
-                                  message=u'You must log-in or register to access this area')
+                                  message='You must log-in or register to access this area')
     return decorator(wrapper)
 
 
 def require_method(methods):
-    u"""Checks that the current request method is in the list of ``methods``
+    """Checks that the current request method is in the list of ``methods``
     that are allowed for the given request.
 
     :param methods: The list of valid request methods
