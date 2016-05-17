@@ -28,6 +28,7 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import (scoped_session, sessionmaker, relationship,
                             reconstructor, backref)
+from uuid import uuid4
 from zope.sqlalchemy import ZopeTransactionExtension
 
 from wte.helpers.frontend import confirm_delete, MenuBuilder, confirm_action
@@ -35,7 +36,7 @@ from wte.helpers.frontend import confirm_delete, MenuBuilder, confirm_action
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
 
-DB_VERSION = '465d42577343'
+DB_VERSION = '48be198eb5fb'
 """The currently required database version."""
 
 
@@ -75,6 +76,36 @@ def check_database_version():
                 raise DBUpgradeException(result[0], DB_VERSION)
     except OperationalError:
         raise DBUpgradeException('no version-information found', DB_VERSION)
+
+
+class TimeToken(Base):
+    """The :class:`~wte.models.TimeToken` represents a validation token that has
+    a timeout period.
+
+    Instances of the :class:`~wte.models.TimeTokne` have the following attributes:
+
+    * ``id`` -- The unique database identifier
+    * ``action`` -- The action the :class:`~wte.models.TimeToken` is associated with
+    * ``token`` -- The random token
+    * ``timeout`` -- The timeout timestamp until which the :class:`~wte.models.TimeToken` is valid
+    * ``data`` -- Any payload data 
+    """
+    __tablename__ = 'time_tokens'
+
+    id = Column(Integer, primary_key=True)
+    action = Column(Unicode(255))
+    token = Column(Unicode(255))
+    timeout = Column(DateTime())
+    data = Column(UnicodeText())
+
+    def __init__(self, action, timeout, data):
+        self.action = action
+        self.token = uuid4().hex
+        self.timeout = timeout
+        self.data = json.dumps(data)
+
+
+Index('time_tokens_full_ix', TimeToken.action, TimeToken.token, TimeToken.timeout)
 
 
 class User(Base):

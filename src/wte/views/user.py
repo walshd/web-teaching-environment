@@ -11,9 +11,11 @@ Routes are defined in :func:`~wte.views.user.init`.
 .. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
 import formencode
+import json
 import transaction
 import uuid
 
+from datetime import datetime, timedelta
 from pyramid.httpexceptions import (HTTPSeeOther, HTTPNotFound)
 from pyramid.view import view_config
 from sqlalchemy import and_, or_
@@ -21,7 +23,7 @@ from sqlalchemy import and_, or_
 from wte.decorators import (current_user, require_logged_in)
 from wte.util import (unauthorised_redirect, State, send_email, get_config_setting,
                       paginate, CSRFSchema)
-from wte.models import (DBSession, User, Permission, PermissionGroup)
+from wte.models import (DBSession, User, Permission, PermissionGroup, TimeToken)
 
 
 def init(config):
@@ -35,6 +37,8 @@ def init(config):
       :func:`~wte.views.user.register`
     * ``user.forgotten_password`` -- ``/users/forgotten-password`` --
       :func:`~wte.views.user.forgotten_password`
+    * ``user.reset_password`` -- ``/users/reset-password/{token}`` --
+      :func:`~wte.views.user.reset_password`
     * ``user.view`` -- ``/users/{uid}`` -- :func:`~wte.views.user.view`
     * ``user.confirm`` -- ``/users/{uid}/confirm/{token}`` --
       :func:`~wte.views.user.confirm`
@@ -50,6 +54,7 @@ def init(config):
     config.add_route('user.logout', '/users/logout')
     config.add_route('user.register', '/users/register')
     config.add_route('user.forgotten_password', '/users/forgotten-password')
+    config.add_route('user.reset_password', '/users/reset-password/{token}')
     config.add_route('user.view', '/users/{uid}')
     config.add_route('user.confirm', '/users/{uid}/confirm/{token}')
     config.add_route('user.edit', '/users/{uid}/edit')
@@ -395,22 +400,27 @@ def process_confirmation(request, user):
     :type user: :class:`~wte.models.User`
     """
     user.validation_token = None
-    new_password = user.random_password()
+    dbsession = DBSession()
+    with transaction.manager:
+        token = TimeToken('reset_password',
+                          datetime.now() + timedelta(seconds=1200),
+                          {'email': user.email})
+        dbsession.add(token)
+    dbsession.add(token)
     send_email(request,
                user.email,
                get_config_setting(request, 'email.sender',
                                   default='no-reply@example.com'),
-               'Log in to the Web Teaching Environment',
+               'Registration for the Web Teaching Environment Complete',
                '''Hello %s,
 
-Thank you for confirming your registration with the Web Teaching Environment.
-You can now log in using the following credentials:
+Thank you for completing the registration process. To log in, please
+click on the following link and set a new password:
 
-Username: %s
-Password: %s
+%s
 
 Best Regards,
-Web Teaching Environment''' % (user.display_name, user.email, new_password))
+Web Teaching Environment''' % (user.display_name, request.route_url('user.reset_password', token=token.token)))
 
 
 @view_config(route_name='user.confirm', renderer="wte:templates/users/confirm.kajiki")
@@ -493,22 +503,31 @@ Web Teaching Environment''' % (user.display_name, request.route_url('user.confir
                                                                     uid=user.id,
                                                                     token=user.validation_token)))
     else:
-        new_password = user.random_password()
+        dbsession = DBSession()
+        with transaction.manager:
+            token = TimeToken('reset_password',
+                              datetime.now() + timedelta(seconds=1200),
+                              {'email': user.email})
+            dbsession.add(token)
+        dbsession.add(token)
         send_email(request,
                    user.email,
                    get_config_setting(request, 'email.sender',
                                       default='no-reply@example.com'),
-                   'Log in to the Web Teaching Environment',
+                   'Reset your password for the Web Teaching Environment',
                    '''Hello %s,
 
-Thank you for confirming your registration with the Web Teaching Environment.
-You can now log in using the following credentials:
+You have asked to have your password reset. To complete the reset password
+click on the following link or copy it into your browser:
 
-Username: %s
-Password: %s
+%s
+
+If you did not ask for your password to be reset, then please check that
+nobody else has access to your e-mail account and might be trying to
+access your Web Teaching Environment account.
 
 Best Regards,
-Web Teaching Environment''' % (user.display_name, user.email, new_password))
+Web Teaching Environment''' % (user.display_name, request.route_url('user.reset_password', token=token.token)))
 
 
 @view_config(route_name='user.forgotten_password', renderer='wte:templates/users/forgotten_password.kajiki')
@@ -517,8 +536,8 @@ def forgotten_password(request):
     """Handles the "/users/forgotten-password" URL, showing the form where
     the user can provide their e-mail address. If the
     :class:`~wte.models.User` has a ``validation_token``, then an e-mail with a
-    new validation token is sent, otherwise an e-mail with a new, random
-    password is sent.
+    new validation token is sent, otherwise an e-mail with a password reset token
+    is sent.
     """
     if request.method == 'POST':
         dbsession = DBSession()
@@ -534,14 +553,14 @@ def forgotten_password(request):
                     request.session.flash('A new confirmation e-mail has been sent to the' +
                                           ' specified e-mail address.', queue='info')
                 else:
-                    request.session.flash('A new password has been sent to the specified e-mail address.',
+                    request.session.flash('A password reset link has been sent to your e-mail address.',
                                           queue='info')
                 if request.current_user.has_permission('admin.users.view'):
                     raise HTTPSeeOther(request.route_url('users'))
                 else:
                     raise HTTPSeeOther(request.route_url('root'))
             else:
-                request.session.flash('A new password has been sent to the specified e-mail address.',
+                request.session.flash('A password reset link has been sent to your e-mail address.',
                                       queue='info')
             if request.current_user.has_permission('admin.users.view'):
                 raise HTTPSeeOther(request.route_url('users'))
@@ -560,6 +579,87 @@ def forgotten_password(request):
                        {'title': 'Forgotten Password',
                         'url': request.route_url('user.forgotten_password'), 'current': True}],
             'help': ['user', 'user', 'forgotten_password.html']}
+
+
+class ResetPasswordSchema(CSRFSchema):
+    """The :class:`~wte.user.views.ResetPasswordSchema` handles the validation of
+    password reset requests."""
+    password = formencode.validators.UnicodeString(not_empty=True)
+    """New password"""
+    password_confirm = formencode.validators.UnicodeString(not_empty=True)
+    """Updated password"""
+
+    chained_validators = [formencode.validators.FieldsMatch('password',
+                                                            'password_confirm')]
+
+
+@view_config(route_name='user.reset_password', renderer='wte:templates/users/reset_password.kajiki')
+@current_user()
+def reset_password(request):
+    dbsession = DBSession()
+    token = dbsession.query(TimeToken).filter(and_(TimeToken.action == 'reset_password',
+                                                   TimeToken.token == request.matchdict['token'],
+                                                   TimeToken.timeout >= datetime.now())).first()
+    if token:
+        data = json.loads(token.data)
+        user = dbsession.query(User).filter(User.email == data['email']).first()
+    else:
+        user = None
+    if token and user:
+        if request.method == 'POST':
+            try:
+                params = ResetPasswordSchema().to_python(request.POST)
+                with transaction.manager:
+                    dbsession.add(user)
+                    user.new_password(params['password'])
+                    dbsession.delete(token)
+                dbsession.add(user)
+                request.current_user = user
+                request.current_user.logged_in = True
+                request.session['uid'] = user.id
+                request.session.new_csrf_token()
+                send_email(request,
+                           user.email,
+                           get_config_setting(request, 'email.sender',
+                                              default='no-reply@example.com'),
+                   'Password for the Web Teaching Environment reset',
+                   '''Hello %s,
+
+You have just reset your password for the Web Teaching Environment.
+
+If you have not done so, then please contact your administrator as soon as
+possible as somebody else may have gained access to your account.
+
+Best Regards,
+Web Teaching Environment''' % user.display_name)
+                raise HTTPSeeOther(request.route_url('part.list',
+                                                     _query={'user_id': user.id}))
+            except formencode.Invalid as e:
+                return {'errors': e.error_dict,
+                        'values': request.POST,
+                        'allow_reset': True,
+                        'crumbs': [{'title': 'Login',
+                                    'url': request.route_url('user.login')},
+                                   {'title': 'Reset Password',
+                                    'url': request.route_url('user.reset_password',
+                                                             token=request.matchdict['token']), 'current': True}],
+                        'help': ['user', 'user', 'forgotten_password.html']}
+        else:
+            return {'allow_reset': True,
+                    'crumbs': [{'title': 'Login',
+                                'url': request.route_url('user.login')},
+                               {'title': 'Reset Password',
+                                'url': request.route_url('user.reset_password',
+                                                         token=request.matchdict['token']), 'current': True}],
+                    'help': ['user', 'user', 'forgotten_password.html']}
+    else:
+        return {'allow_reset': False,
+                'crumbs': [{'title': 'Login',
+                            'url': request.route_url('user.login')},
+                           {'title': 'Reset Password',
+                            'url': request.route_url('user.reset_password',
+                                                     token=request.matchdict['token']), 'current': True}],
+                'help': ['user', 'user', 'forgotten_password.html']}
 
 
 @view_config(route_name='user.view', renderer='wte:templates/users/view.kajiki')
