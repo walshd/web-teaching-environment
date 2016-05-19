@@ -4,7 +4,7 @@
     <script src="${request.static_url('wte:static/js/mathjax/MathJax.js', _query=[('config', 'default')])}"></script>
   </py:block>
   <py:block name="content">
-    <py:import href="wte:templates/helpers/menu.kajiki" alias="menu"/>
+    <py:import href="pywebtools:kajiki/menu.kajiki" alias="menu"/>
     <py:import href="wte:templates/helpers/navigation.kajiki" alias="nav"/>
     <div id="textbook" class="rest textbook">
       <div class="fixed-pagination">

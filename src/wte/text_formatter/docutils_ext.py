@@ -15,9 +15,10 @@ from docutils.parsers.rst import directives, roles, Directive
 from pygments import highlight
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import get_lexer_by_name, TextLexer, get_all_lexers
+from pywebtools.sqlalchemy import DBSession
 from sqlalchemy import and_
 
-from wte.models import (DBSession, Asset, Part)
+from wte.models import (Asset, Part)
 
 
 def init(settings):

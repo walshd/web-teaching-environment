@@ -1,8 +1,8 @@
 <py:extends href="wte:templates/layout/centred.kajiki">
   <py:block name="title">Add ${request.matchdict['new_type'].title()}</py:block>
   <py:block name="content">
-    <py:import href="wte:templates/helpers/menu.kajiki" alias="menu"/>
-    <py:import href="wte:templates/helpers/form.kajiki" alias="form"/>
+    <py:import href="pywebtools:kajiki/menu.kajiki" alias="menu"/>
+    <py:import href="pywebtools:kajiki/form.kajiki" alias="form"/>
     <h1>Add ${request.matchdict['new_type'].title()}</h1>
     <form action="${request.route_url('part.new', new_type=request.matchdict['new_type'])}" method="post">
       ${form.csrf_field()}

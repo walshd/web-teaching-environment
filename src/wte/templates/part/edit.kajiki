@@ -1,8 +1,8 @@
 <py:extends href="wte:templates/layout/full_width.kajiki">
   <py:block name="title">${part.title} - Edit</py:block>
   <py:block name="content">
-    <py:import href="wte:templates/helpers/menu.kajiki" alias="menu"/>
-    <py:import href="wte:templates/helpers/form.kajiki" alias="form"/>
+    <py:import href="pywebtools:kajiki/menu.kajiki" alias="menu"/>
+    <py:import href="pywebtools:kajiki/form.kajiki" alias="form"/>
     <h1>${part.title} - Edit</h1>
     <div class="row expanded">
       <div class="column small-12 medium-3 large-2">

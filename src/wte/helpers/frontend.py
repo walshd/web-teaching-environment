@@ -13,7 +13,7 @@ import inflect
 import json
 import math
 
-from wte.util import get_config_setting
+from pywebtools.pyramid.util import (get_config_setting, MenuBuilder)
 
 inflector = inflect.engine()
 
@@ -159,77 +159,6 @@ def confirm_delete(obj_type, title, has_parts=False):
                            'class_': 'alert'})
 
 
-class MenuBuilder(object):
-    """The :class:`~wte.helpers.frontend.MenuBuilder` helps with creating the ``list``
-    structure used for creating the icon-menubar. Call :func:`~wte.helpers.frontend.MenuBuilder.group`
-    to start a new group of menu items. Call :func:`~wte.helpers.frontend.MenuBuilder.item`
-    to add a menu item to the current group. :func:`~wte.helpers.frontend.MenuBuilder.generate`
-    then generates the final structure for use in the menubar.
-    """
-
-    def __init__(self):
-        self._groups = []
-        self._group = None
-
-    def group(self, label, icon=None):
-        """Add a new group to the lost of groups in this :class:`~wte.helpers.frontend.MenuBuilder`.
-
-        :param label: The menu group's label
-        :type label: `unicode`
-        :param icon: The optional icon for this group. An icon must be provided in order to
-                     enable highlighting of menu items
-        :type icon: `unicode`
-        """
-        if self._group and self._group['items']:
-            self._groups.append(self._group)
-        self._group = {'label': label,
-                       'items': []}
-        if icon:
-            self._group['icon'] = icon
-
-    def menu(self, label, href, icon=None, highlight=False, attrs=None):
-        """Add a new menu item to the current group. Will create a new group with an empty
-        label if :func:`~wte.helpers.frontend.MenuBuilder.group` has not been called
-
-        :param label: The menu item's label
-        :type label: `unicode`
-        :param href: The URL that the menu item loads
-        :type href: `unicode`
-        :param icon: The optional icon for this menu item
-        :type icon: `unicode`
-        :param highlight: Whether to highlight the menu item by displaying it at the top level
-        :type highlight: `boolean`
-        :param attrs: Additional attributes to set for the menu item link
-        :type attrs: :class:`dict`
-        """
-        if not self._group:
-            self._group = {'label': '',
-                           'items': []}
-        if attrs:
-            attrs['href'] = href
-        else:
-            attrs = {'href': href}
-        item = {'visible': True,
-                'label': label,
-                'attrs': attrs}
-        if icon:
-            item['icon'] = icon
-        if highlight:
-            item['highlight'] = True
-        self._group['items'].append(item)
-
-    def generate(self):
-        """Generate the final menu structure.
-
-        :return: The list of menu groups with their menu items
-        :r_type: ``list`` of menu groups
-        """
-        if self._group and self._group['items']:
-            self._groups.append(self._group)
-            self._group = None
-        return self._groups
-
-
 def readable_timedelta(delta):
     """Converts a :class:`datetime.timedelta` into a human-readable string.
 
@@ -364,7 +293,7 @@ def natural_list(items, separator=', ', final_separator=' & '):
     are joined together using the ``final_separator``. For a list of more than
     two items, the all but the last item are joined using ``separator`` and the
     last item is joined using ``final_separator``.
-    
+
     :param items: The list of items to join
     :type items: :func:`list`
     :param separator: The separator to use when more than 2 items are joined.
@@ -374,7 +303,7 @@ def natural_list(items, separator=', ', final_separator=' & '):
                             Defaults to ' & '.
     :type separator: :func:`unicode`
     :return: A string representation of the list
-    :r_type: :func:`unicode`
+    :return_type: :func:`unicode`
     """
     if len(items) == 0:
         return ''
@@ -390,10 +319,52 @@ def set_list(items):
     """Returns a string representation of the unique items in the ``items``. The
     ``items`` must be a :func:`list` of :func:`tuple` ``(item, count)`` as returned
     by :func:`~wte.util.ordered_counted_set`.
-    
+
     :param items: The list of items to transform into a string
     :type istems: :func:`list` of :func:`tuple`
     :return: A string containing all unique items
-    :r_type: :func:`unicode`
+    :return_type: :func:`unicode`
     """
     return natural_list([inflector.plural(category, count) for (category, count) in items])
+
+
+def user_admin_menubar(request, user):
+    """Generates the menu bar for the users administration list."""
+    builder = MenuBuilder()
+    if user.allow('edit', request.current_user):
+        if user.status == 'active':
+            builder.group('Edit', 'fi-pencil')
+            builder.menu('Edit',
+                         request.route_url('user.edit', uid=user.id),
+                         icon='fi-pencil',
+                         highlight=True)
+            builder.group('Access', 'fi-key')
+            builder.menu('Edit Permissions',
+                         request.route_url('user.permissions', uid=user.id),
+                         icon='fi-key',
+                         highlight=True)
+            builder.menu('Reset Password',
+                         request.route_url('user.forgotten_password',
+                                           _query=[('email', user.email),
+                                                   ('csrf_token', request.session.get_csrf_token()),
+                                                   ('return_to', request.current_route_url())]),
+                         attrs={'class': 'post-link'})
+        else:
+            builder.group('Access', 'fi-key')
+            builder.menu('Validate user',
+                         request.route_url('users.action', _query=[('user_id', user.id),
+                                                                   ('action', 'validate'),
+                                                                   ('csrf_token', request.session.get_csrf_token())]),
+                         icon='fi-check',
+                         highlight=True,
+                         attrs={'class': 'post-link'})
+    if user.allow('delete', request.current_user):
+        builder.group('Delete', 'fi-trash')
+        builder.menu('Delete',
+                     request.route_url('user.delete',
+                                       uid=user.id,
+                                       _query={'csrf_token': request.session.get_csrf_token()}),
+                     icon='fi-trash',
+                     attrs={'class': 'alert post-link',
+                            'data-wte-confirm': confirm_delete('user', user.display_name, False)})
+    return builder.generate()

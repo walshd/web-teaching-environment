@@ -1,8 +1,8 @@
 <py:extends href="wte:templates/layout/centred.kajiki">
   <py:block name="title">Users</py:block>
   <py:block name="content">
-    <py:import href="wte:templates/helpers/form.kajiki" alias="form"/>
-    <py:import href="wte:templates/helpers/menu.kajiki" alias="menu"/>
+    <py:import href="pywebtools:kajiki/form.kajiki" alias="form"/>
+    <py:import href="pywebtools:kajiki/menu.kajiki" alias="menu"/>
     <py:import href="wte:templates/helpers/navigation.kajiki" alias="nav"/>
     <?py from wte.helpers.frontend import confirm_delete ?>
     <h1>Users</h1>

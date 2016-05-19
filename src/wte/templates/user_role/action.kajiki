@@ -1,7 +1,7 @@
 <py:extends href="wte:templates/layout/centred.kajiki">
   <py:block name="title">${part.title} - Update Users</py:block>
   <py:block name="content">
-    <py:import href="wte:templates/helpers/form.kajiki" alias="form"/>
+    <py:import href="pywebtools:kajiki/form.kajiki" alias="form"/>
     <h1>${part.title} - Update Users</h1>
     <form action="${request.route_url('part.users.update', pid=part.id)}" method="post">
       ${form.csrf_field()}

@@ -13,15 +13,14 @@ Revises: 9ca3f8c12ed
 Create Date: 2015-05-17 14:53:55.468524
 
 """
+from alembic import op
+import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '4b401085b9e3'
 down_revision = '9ca3f8c12ed'
 branch_labels = None
 depends_on = None
-
-from alembic import op
-import sqlalchemy as sa
 
 metadata = sa.MetaData()
 

@@ -17,11 +17,13 @@ import transaction
 from datetime import datetime
 from pyramid.httpexceptions import (HTTPSeeOther, HTTPNotFound)
 from pyramid.view import view_config
+from pywebtools.formencode import (State, CSRFSchema, DateValidator, TimeValidator, DynamicSchema)
+from pywebtools.pyramid.auth import current_user
+from pywebtools.sqlalchemy import DBSession
 
-from wte.decorators import (current_user, require_logged_in)
-from wte.models import (DBSession, Part, TimedTask)
-from wte.util import (unauthorised_redirect, DateValidator, TimeValidator, DynamicSchema,
-                      CSRFSchema, State)
+from wte.decorators import (require_logged_in)
+from wte.models import (Part, TimedTask)
+from wte.util import (unauthorised_redirect)
 from wte.views.part import create_part_crumbs
 
 
@@ -125,7 +127,7 @@ def new_part_task(request):
                             'crumbs': crumbs,
                             'available_tasks': available_tasks,
                             'include_footer': True,
-                    'help': ['user', 'teacher', 'timed_actions.html']}
+                            'help': ['user', 'teacher', 'timed_actions.html']}
             return {'part': part,
                     'crumbs': crumbs,
                     'available_tasks': available_tasks,
@@ -211,7 +213,7 @@ def edit_part_task(request):
                             'task': task,
                             'crumbs': crumbs,
                             'include_footer': True,
-                    'help': ['user', 'teacher', 'timed_actions.html']}
+                            'help': ['user', 'teacher', 'timed_actions.html']}
             return {'part': part,
                     'task': task,
                     'crumbs': crumbs,
@@ -259,7 +261,7 @@ def delete_part_task(request):
                             'task': task,
                             'crumbs': crumbs,
                             'include_footer': True,
-                    'help': ['user', 'teacher', 'timed_actions.html']}
+                            'help': ['user', 'teacher', 'timed_actions.html']}
             return {'part': part,
                     'task': task,
                     'crumbs': crumbs,

@@ -12,15 +12,14 @@ Revision ID: 465d42577343
 Revises: 510cc5b21636
 Create Date: 2016-03-20 17:20:59.676226
 """
+from alembic import op
+import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '465d42577343'
 down_revision = '510cc5b21636'
 branch_labels = None
 depends_on = None
-
-from alembic import op
-import sqlalchemy as sa
 
 metadata = sa.MetaData()
 
@@ -29,6 +28,7 @@ parts = sa.Table('parts', metadata,
                  sa.Column('type', sa.Unicode(255)),
                  sa.Column('display_mode', sa.Unicode(255)),
                  sa.Column('label', sa.Unicode(255)))
+
 
 def upgrade():
     bind = op.get_bind()

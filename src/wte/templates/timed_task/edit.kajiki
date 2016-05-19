@@ -1,8 +1,8 @@
 <py:extends href="wte:templates/layout/centred.kajiki">
   <py:block name="title">Edit ${task.title} Action</py:block>
   <py:block name="content">
-    <py:import href="wte:templates/helpers/menu.kajiki" alias="menu"/>
-    <py:import href="wte:templates/helpers/form.kajiki" alias="form"/>
+    <py:import href="pywebtools:kajiki/menu.kajiki" alias="menu"/>
+    <py:import href="pywebtools:kajiki/form.kajiki" alias="form"/>
     <h1>Edit ${task.title} Action</h1>
     <form action="${request.route_url('part.timed_task.edit', pid=part.id, tid=task.id)}" method="post" class="small-12 column end">
       ${form.csrf_field()}

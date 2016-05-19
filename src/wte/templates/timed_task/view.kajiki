@@ -1,8 +1,8 @@
 <py:extends href="wte:templates/layout/centred.kajiki">
   <py:block name="title">Timed Actions for ${part.title}</py:block>
   <py:block name="content">
-    <py:import href="wte:templates/helpers/menu.kajiki" alias="menu"/>
-    <py:import href="wte:templates/helpers/form.kajiki" alias="form"/>
+    <py:import href="pywebtools:kajiki/menu.kajiki" alias="menu"/>
+    <py:import href="pywebtools:kajiki/form.kajiki" alias="form"/>
     <?py from wte.helpers.frontend import readable_timedelta ?>
     <h1>Timed Actions for ${part.title}</h1>
     <form action="${request.route_url('part.timed_task.new', pid=part.id)}" method="post">

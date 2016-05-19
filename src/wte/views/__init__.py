@@ -14,11 +14,11 @@ initialises the routes that are handled by that module.
 """
 from mimetypes import guess_type
 from pkg_resources import resource_string
-from pyramid.httpexceptions import HTTPNotFound, HTTPSeeOther
+from pyramid.httpexceptions import HTTPNotFound
 from pyramid.view import view_config
 from pyramid.response import Response
+from pywebtools.pyramid.auth import current_user
 
-from wte.decorators import current_user
 from . import (user, part, asset, user_role, timed_tasks, admin)
 
 

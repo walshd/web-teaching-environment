@@ -11,15 +11,14 @@ Revises: 36a393fca848
 Create Date: 2015-06-02 11:28:17.116785
 
 """
+from alembic import op
+import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '4215b2582d87'
 down_revision = '36a393fca848'
 branch_labels = None
 depends_on = None
-
-from alembic import op
-import sqlalchemy as sa
 
 metadata = sa.MetaData()
 p = sa.Table('permissions', metadata,

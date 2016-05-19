@@ -1,7 +1,7 @@
 <py:extends href="wte:templates/layout/centred.kajiki">
   <py:block name="title">Register</py:block>
   <py:block name="content">
-    <py:import href="wte:templates/helpers/form.kajiki" alias="form"/>
+    <py:import href="pywebtools:kajiki/form.kajiki" alias="form"/>
     <h1>Register</h1>
     <form action="${request.route_url('user.register')}" method="post">
       ${form.csrf_field()}

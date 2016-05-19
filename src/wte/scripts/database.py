@@ -13,10 +13,11 @@ import transaction
 
 from alembic import config, command
 from pyramid.paster import (get_appsettings, setup_logging)
+from pywebtools.sqlalchemy import (Base, DBSession)
+from pywebtools.pyramid.auth.models import (User, Permission, PermissionGroup)
 from sqlalchemy import engine_from_config
 
-from wte.models import (Base, DBSession, User, Permission, PermissionGroup,
-                        DB_VERSION)
+from wte.models import DB_VERSION
 
 
 def init(subparsers):

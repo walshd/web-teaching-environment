@@ -1,7 +1,7 @@
 <py:extends href="wte:templates/layout/centred.kajiki">
   <py:block name="title">${user.display_name} - Edit</py:block>
   <py:block name="content">
-    <py:import href="wte:templates/helpers/form.kajiki" alias="form"/>
+    <py:import href="pywebtools:kajiki/form.kajiki" alias="form"/>
     <h1>${user.display_name} - Edit</h1>
     <form action="${request.route_url('user.edit', uid=user.id)}" method="post">
       ${form.csrf_field()}

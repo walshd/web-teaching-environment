@@ -22,15 +22,19 @@ from pyramid.httpexceptions import (HTTPSeeOther, HTTPNotFound, HTTPForbidden)
 from pyramid.response import Response
 from pyramid.renderers import render_to_response
 from pyramid.view import view_config
+from pywebtools.formencode import State, CSRFSchema
+from pywebtools.pyramid.auth import current_user
+from pywebtools.sqlalchemy import DBSession
 from pkg_resources import resource_string
 from sqlalchemy import and_
-BytesIO = nimport('io:BytesIO')
 from zipfile import ZipFile, ZIP_DEFLATED, ZIP_STORED, BadZipfile
 
-from wte.decorators import (current_user, require_logged_in, require_method)
-from wte.models import (DBSession, Part, UserPartRole, Asset, UserPartProgress, User)
+from wte.decorators import (require_logged_in, require_method)
+from wte.models import (Part, UserPartRole, Asset, UserPartProgress, User)
 from wte.text_formatter import compile_rst
-from wte.util import (unauthorised_redirect, State, CSRFSchema, ordered_counted_set)
+from wte.util import (unauthorised_redirect, ordered_counted_set)
+
+BytesIO = nimport('io:BytesIO')
 
 
 def init(config):
@@ -244,7 +248,7 @@ def view_part(request):
                                        'include_footer': part.type != 'page',
                                        'labels': ordered_counted_set(labels),
                                        'help': help_path},
-                                       request=request)
+                                      request=request)
         else:
             if part.type == 'module':
                 unauthorised_redirect(request)
@@ -634,7 +638,7 @@ def preview(request):
     if part:
         if part.allow('edit', request.current_user):
             if 'content' in request.params:
-                try :
+                try:
                     content = compile_rst(request.params['content'], request, part=part)
                 except Exception as e:
                     content = ['<div class="callout alert"><p>']

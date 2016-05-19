@@ -10,10 +10,11 @@ the ``WSGIApplication``.
 .. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
 from pyramid.config import Configurator
+from pywebtools.sqlalchemy import Base, DBSession, check_database_version
 from sqlalchemy import engine_from_config
 
 from wte import views, text_formatter
-from wte.models import (DBSession, Base, check_database_version)
+from wte.models import (DB_VERSION)
 
 
 def main(global_config, **settings):
@@ -24,7 +25,7 @@ def main(global_config, **settings):
     engine = engine_from_config(settings, 'sqlalchemy.')
     DBSession.configure(bind=engine)
     Base.metadata.bind = engine
-    check_database_version()
+    check_database_version(DB_VERSION)
     # Init configuration
     config = Configurator(settings=settings)
     config.include('kajiki.integration.pyramid')

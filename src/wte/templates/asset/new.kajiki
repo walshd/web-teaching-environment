@@ -1,7 +1,7 @@
 <py:extends href="wte:templates/layout/centred.kajiki">
   <py:block name="title">${part.title} - Add ${request.matchdict['new_type'].title()}</py:block>
   <py:block name="content">
-    <py:import href="wte:templates/helpers/form.kajiki" alias="form"/>
+    <py:import href="pywebtools:kajiki/form.kajiki" alias="form"/>
     <div class="drag-n-drop-overlay"><span class="fi-upload"> </span><div class="progress" role="progressbar" tabindex="0" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"><span class="progress-meter" style="width: 0;"></span></div></div>
     <h1>${part.title} - Add ${request.matchdict['new_type'].title()}</h1>
     <form action="${request.route_url('asset.new', pid=part.id, new_type=request.matchdict['new_type'])}" method="post" enctype="multipart/form-data">

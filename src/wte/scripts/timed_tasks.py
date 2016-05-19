@@ -15,10 +15,11 @@ import transaction
 
 from pyramid.paster import (get_appsettings, setup_logging)
 from random import randint
+from pywebtools.sqlalchemy import DBSession
 from sqlalchemy import (engine_from_config, and_, func)
 from threading import Thread
 
-from wte.models import (DBSession, Base, TimedTask, Part)
+from wte.models import (Base, TimedTask, Part)
 
 
 def init(subparsers):

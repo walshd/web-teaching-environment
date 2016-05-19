@@ -11,16 +11,15 @@ Revises: 4215b2582d87
 Create Date: 2015-12-08 08:19:52.675176
 
 """
+from alembic import op
+import hashlib
+import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '10626db822ba'
 down_revision = '4215b2582d87'
 branch_labels = None
 depends_on = None
-
-from alembic import op
-import hashlib
-import sqlalchemy as sa
 
 metadata = sa.MetaData()
 a = sa.Table('assets', metadata,

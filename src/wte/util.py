@@ -10,123 +10,14 @@ functions.
 .. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
 import asset
-import formencode
 import logging
 import math
 import smtplib
 
-from datetime import datetime
-from pyramid.httpexceptions import HTTPSeeOther
 from email.mime.text import MIMEText
 from email.utils import formatdate
-
-
-class State(object):
-    """The :class:`~wte.util.State` provides a blank state object for use
-    with Formencode validation. Any parameters passed to the constructor are
-    automatically set as attributes of the :class:`~wte.util.State`.
-    """
-
-    def __init__(self, **kwargs):
-        """Any parameters passed to the constructor are automatically set as
-        attributes of the :class:`~wte.util.State`.
-        """
-        self.__dict__.update(kwargs)
-
-
-class CSRFValidator(formencode.FancyValidator):
-    """Validator that checks a value against the Cross-Site Request Forgery
-    token stored in the user's session."""
-
-    messages = {'invalid_csrf_token': 'The CSRF token is invalid. This might indicate a malicious attack.',
-                'missing': 'No CSRF token was provided. This might indicate a malicious attack.',
-                'empty': 'An empty CSRF token was provided. This might indicate a malicious attack.'}
-
-    def _validate_python(self, value, state):
-        """If a :pyramid:class:`request.Request` is set in the ``state``, then
-        checks whether the ``value`` matches the CSRF token stored in the request.
-        """
-        if hasattr(state, 'request'):
-            if state.request.session.get_csrf_token() != value:
-                raise formencode.Invalid(self.message('invalid_csrf_token', state),
-                                         value,
-                                         state)
-
-
-class CSRFSchema(formencode.Schema):
-    """The class:`wte.util.CSRFSchema` is a base :class:`formencode.Schema`
-    that includes Cross-Site Request Forgery detection.
-
-    It should be used as the base class for all specific request schemas.
-    """
-
-    csrf_token = CSRFValidator(strip=True, not_empty=True)
-
-
-class DynamicSchema(formencode.Schema):
-    """The :class:`~wte.util.DynamicSchema` provides a dynamic
-    :class:`~formencode.schema.Schema` for which the validation fields are
-    defined from the ``list`` of (field-name,
-    :class:`~formencode.api.FancyValidator`) pairs passed to the
-    constructor.
-    """
-    accept_iterator = True
-
-    def __init__(self, fields=None, **kwargs):
-        formencode.Schema.__init__(self, **kwargs)
-        if fields:
-            for (name, validator) in fields:
-                self.add_field(name, validator)
-
-
-class DateValidator(formencode.FancyValidator):
-    """The :class:`~wte.util.DateValidator` provides date validation and
-    conversion from the formats "YYYY-MM-DD" or "DD/MM/YYYY" to a python
-    :class:`datetime.date`.
-    """
-
-    messages = {'invalid_format': 'Please enter a date either as YYYY-MM-DD or DD/MM/YYYY'}
-
-    def _convert_to_python(self, value, state):
-        """Try to convert from either "YYYY-MM-DD" or "DD-MM-YYYY" to a
-        :class:`datetime.date`. Raises :class:`~formencode.api.Invalid` if the
-        conversion fails.
-
-        :param value: The `unicode` value to convert
-        :param type: `unicode`
-        :return: The converted date
-        :return_type: :class:`datetime.date`.
-        """
-        try:
-            return datetime.strptime(value, '%Y-%m-%d').date()
-        except:
-            try:
-                return datetime.strptime(value, '%d/%m/%Y').date()
-            except:
-                raise formencode.api.Invalid(self.message('invalid_format', state), value, state)
-
-
-class TimeValidator(formencode.FancyValidator):
-    """The :class:`~wte.util.DateValidator` provides time validation and
-    conversion from the format "HH:MM" to a python :class:`datetime.time`.
-    """
-
-    messages = {'invalid_format': 'Please enter a time as HH:MM'}
-
-    def _convert_to_python(self, value, state):
-        """Try to convert from "HH:MM" to a :class:`datetime.time`. Raises
-        :class:`~formencode.api.Invalid` if the conversion fails.
-
-        :param value: The `unicode` value to convert
-        :param type: `unicode`
-        :return: The converted time
-        :return_type: :class:`datetime.time`
-        """
-        try:
-            return datetime.strptime(value, '%H:%M').time()
-        except Exception as e:
-            print(e)
-            raise formencode.api.Invalid(self.message('invalid_format', state), value, state)
+from pyramid.httpexceptions import HTTPSeeOther
+from pywebtools.pyramid.util import get_config_setting
 
 
 def unauthorised_redirect(request, redirect_to=None, message=None):
@@ -199,73 +90,6 @@ def send_email(request, recipient, sender, subject, text):  # pragma: no cover
     else:
         logging.getLogger("wte").error('Could not send e-mail as "email.smtp_host" setting not specified')
         print(text)  # TODO: Remove
-
-
-def convert_type(value, target_type, default=None):
-    """Attempts to convert the ``value`` to the given ``target_type``. Will
-    return ``default`` if the conversion fails.
-
-    Supported ``target_type`` values are:
-
-    * `int` -- Convert to an integer value
-    * `boolean` -- Convert to a boolean value (``True`` if the value is the
-      ``unicode`` string "true" in any capitalisation
-    * `list` -- Convert to a list, splitting on line-breaks and commas
-
-    :param value: The value to convert
-    :type value: `unicode`
-    :param target_type: The target type to convert to
-    :type target_type: `unicode`
-    :param default: The default value if the conversion fails
-    :return: The converted value
-    """
-    if target_type == 'int':
-        try:
-            return int(value)
-        except ValueError:
-            return default
-    elif target_type == 'boolean':
-        if value and value.lower() == 'true':
-            return True
-        else:
-            return False
-    elif target_type == 'list':
-        return [v.strip() for line in value.split('\n') for v in line.split(',')]
-    if value:
-        return value
-    else:
-        return default
-
-
-CACHED_SETTINGS = {}
-
-
-def get_config_setting(request, key, target_type=None, default=None):
-    """Gets a configuration setting from the application configuration.
-    Settings are cached for faster access.
-
-    :param request: The request used to access the configuration settings
-    :type request: :class:`~pyramid.request.Request`
-    :param key: The configuration key
-    :type key: `unicode`
-    :param target_type: If specified, will convert the configuration setting
-                        to the given type using :func:`~wte.util.convert_type`
-    :type default: The default value to return if there is no setting with the
-                   given key
-    :return: The configuration setting value or ``default``
-    """
-    global CACHED_SETTINGS
-    if key in CACHED_SETTINGS:
-        return CACHED_SETTINGS[key]
-    else:
-        if key in request.registry.settings:
-            if target_type:
-                CACHED_SETTINGS[key] = convert_type(request.registry.settings[key], target_type, default=default)
-            else:
-                CACHED_SETTINGS[key] = request.registry.settings[key]
-        else:
-            CACHED_SETTINGS[key] = default
-        return get_config_setting(request, key, target_type=target_type, default=default)
 
 
 def version():
@@ -343,7 +167,7 @@ def ordered_counted_set(items):
     Each unique item is listed once with the number of times it appears in
     the ``items`` The unique items are ordered in the same order in which
     they appear in the ``items``.
-    
+
     :param items: The list of items to create the ordered, counted set for
     :type items: :func:`list`
     :return: A list of unique items with their frequency counts

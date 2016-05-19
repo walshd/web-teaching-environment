@@ -4,8 +4,8 @@
     <script src="${request.static_url('wte:static/js/mathjax/MathJax.js', _query=[('config', 'default')])}"></script>
   </py:block>
   <py:block name="content">
-    <py:import href="wte:templates/helpers/menu.kajiki" alias="menu"/>
-    <py:import href="wte:templates/helpers/form.kajiki" alias="form"/>
+    <py:import href="pywebtools:kajiki/menu.kajiki" alias="menu"/>
+    <py:import href="pywebtools:kajiki/form.kajiki" alias="form"/>
     <?py from wte.helpers.frontend import set_list ?>
     <div class="float-right">${menu.menubar(part.menu(request))}</div>
     <h1>${part.title} <small py:if="part.status != 'available'" class="label">${part.status.title()}</small></h1>

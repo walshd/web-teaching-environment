@@ -1,7 +1,7 @@
 <py:extends href="wte:templates/layout/centred.kajiki">
   <py:block name="title">${part.title} - Add User</py:block>
   <py:block name="content">
-    <py:import href="wte:templates/helpers/form.kajiki" alias="form"/>
+    <py:import href="pywebtools:kajiki/form.kajiki" alias="form"/>
     <py:import href="wte:templates/helpers/navigation.kajiki" alias="nav"/>
     <h1>${part.title} - Add User</h1>
     <form class="row collapse">

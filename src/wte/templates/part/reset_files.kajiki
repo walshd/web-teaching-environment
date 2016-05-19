@@ -1,7 +1,7 @@
 <py:extends href="wte:templates/layout/centred.kajiki">
   <py:block name="title">Discard all Changes</py:block>
   <py:block name="content">
-    <py:import href="wte:templates/helpers/form.kajiki" alias="form"/>
+    <py:import href="pywebtools:kajiki/form.kajiki" alias="form"/>
     <h1>Discard all Changes</h1>
     <form action="${request.route_url('part.reset-files', pid=part.id)}" method="post">
       ${form.csrf_field()}

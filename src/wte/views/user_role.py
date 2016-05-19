@@ -19,10 +19,13 @@ import transaction
 from pyramid.httpexceptions import (HTTPSeeOther, HTTPNotFound)
 from pyramid.view import view_config
 from sqlalchemy import and_, or_
+from pywebtools.formencode import State, CSRFSchema
+from pywebtools.pyramid.auth import current_user
+from pywebtools.sqlalchemy import DBSession
 
-from wte.decorators import (current_user, require_logged_in)
-from wte.models import (DBSession, Part, UserPartRole, User, UserPartProgress)
-from wte.util import (unauthorised_redirect, CSRFSchema, State)
+from wte.decorators import (require_logged_in)
+from wte.models import (Part, UserPartRole, User, UserPartProgress)
+from wte.util import (unauthorised_redirect)
 from wte.views.part import (create_part_crumbs, get_all_parts)
 
 

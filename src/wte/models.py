@@ -6,351 +6,22 @@
 
 The :mod:`~wte.models` module contains the database models that are used to
 abstract the actual database.
-
-Additionally it provides the :func:`~wte.models.check_database_version`
-function, which compares the current Alembic version of the database to the
-required :data:`~wte.models.DB_VERSION` to ensure that the application does
-not run on an outdated database schema.
 """
 from __future__ import (unicode_literals)  # Python 2.7 compatibility
-from nine import (str, chr)  # Python 2.7 compatibility
 
 import json
-import hashlib
-import random
 import re
 
 from datetime import datetime
+from pywebtools.pyramid.auth.models import Base, User
 from sqlalchemy import (Column, Index, ForeignKey, Integer, Unicode,
                         UnicodeText, Table, LargeBinary, DateTime)
-from sqlalchemy.engine.reflection import Inspector
-from sqlalchemy.exc import OperationalError
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import (scoped_session, sessionmaker, relationship,
-                            reconstructor, backref)
-from uuid import uuid4
-from zope.sqlalchemy import ZopeTransactionExtension
+from sqlalchemy.orm import (relationship, backref)
 
 from wte.helpers.frontend import confirm_delete, MenuBuilder, confirm_action
 
-DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
-Base = declarative_base()
-
-DB_VERSION = '48be198eb5fb'
+DB_VERSION = '58f6e5c75e86'
 """The currently required database version."""
-
-
-class DBUpgradeException(Exception):
-    """The :class:`~wte.models.DBUpgradeException` is used to indicate that
-    the database requires an upgrade before the Web Teaching Environment system
-    can be used.
-    """
-    def __init__(self, current, required):
-        self.current = current
-        self.required = required
-
-    def __repr__(self):
-        return "DBUpgradeException('%s', '%s'" % (self.current, self.required)
-
-    def __str__(self):
-        return "A database upgrade is required.\n\n" + \
-            "You are currently running version '%s', but version '%s' is " % (self.current, self.required) + \
-            " required. Please run WTE update-database config.ini upgrade to upgrade the database " + \
-            "and then start the application again."
-
-
-def check_database_version():
-    """Checks that the current version of the database matches the version specified
-    by :data:`~wte.models.DB_VERSION`.
-    """
-    dbsession = DBSession()
-    try:
-        inspector = Inspector.from_engine(dbsession.bind)
-        if 'alembic_version' in inspector.get_table_names():
-            result = dbsession.query('version_num').\
-                from_statement('SELECT version_num FROM alembic_version WHERE version_num = :version_num').\
-                params(version_num=DB_VERSION).first()
-            if not result:
-                result = dbsession.query('version_num').\
-                    from_statement('SELECT version_num FROM alembic_version').first()
-                raise DBUpgradeException(result[0], DB_VERSION)
-    except OperationalError:
-        raise DBUpgradeException('no version-information found', DB_VERSION)
-
-
-class TimeToken(Base):
-    """The :class:`~wte.models.TimeToken` represents a validation token that has
-    a timeout period.
-
-    Instances of the :class:`~wte.models.TimeTokne` have the following attributes:
-
-    * ``id`` -- The unique database identifier
-    * ``action`` -- The action the :class:`~wte.models.TimeToken` is associated with
-    * ``token`` -- The random token
-    * ``timeout`` -- The timeout timestamp until which the :class:`~wte.models.TimeToken` is valid
-    * ``data`` -- Any payload data 
-    """
-    __tablename__ = 'time_tokens'
-
-    id = Column(Integer, primary_key=True)
-    action = Column(Unicode(255))
-    token = Column(Unicode(255))
-    timeout = Column(DateTime())
-    data = Column(UnicodeText())
-
-    def __init__(self, action, timeout, data):
-        self.action = action
-        self.token = uuid4().hex
-        self.timeout = timeout
-        self.data = json.dumps(data)
-
-
-Index('time_tokens_full_ix', TimeToken.action, TimeToken.token, TimeToken.timeout)
-
-
-class User(Base):
-    """The :class:`~wte.models.User` represents a users in the WTE. Which
-    functionality they can access is determined purely through the individual
-    :class:`~wte.models.User`'s :class:`~wte.models.Permission`.
-
-    Instances of the :class:`~wte.models.User` have the following attributes:
-
-    * ``id`` -- The unique database identifier
-    * ``display_name`` -- The name to display
-    * ``email`` -- The e-mail address used for login and communication
-    * ``login_limit`` -- Login limitation counter to stop brute-force login
-      attacks
-    * ``parts`` -- The :class:`~wte.models.UserPartProgress` belonging to this
-      :class:`~wte.modes.User`
-    * ``password`` -- The hashed password
-    * ``permissions`` -- The :class:`~wte.models.User`'s list of
-      :class:`~wte.models.Permission`.
-    * ``permission_groups`` -- The :class:`~wte.models.User`'s list of
-      :class:`~wte.models.PermissionGroup`.
-    * ``salt`` -- The password hash salt
-    * ``validation_token`` -- The validation token for new users
-    """
-    __tablename__ = 'users'
-
-    id = Column(Integer, primary_key=True)
-    email = Column(Unicode(255), unique=True)
-    salt = Column(Unicode(255))
-    password = Column(Unicode(255))
-    display_name = Column(Unicode(64))
-    login_limit = Column(Integer)
-    validation_token = Column(Unicode(255))
-
-    permissions = relationship('Permission', backref='users', secondary='users_permissions')
-    permission_groups = relationship('PermissionGroup', backref='users', secondary='users_permission_groups')
-    parts = relationship('UserPartProgress', cascade='all')
-
-    def __init__(self, email, display_name, password=None):
-        """Constructs a new :class:`~wte.models.User` with the given email
-        address, display name, and optionally password.
-
-        :param email: The e-mail address to use
-        :type email: `unicode`
-        :param display_name: The name to display
-        :type display_name: `unicode`
-        :param password: The optional password to set
-        :type password: `unicode`
-        """
-        self.email = email
-        self.display_name = display_name
-        if password:
-            self.new_password(password)
-        else:
-            self.new_salt()
-            self.password = ''
-        self.login_limit = 0
-        self.preferences_ = {}
-
-    @reconstructor
-    def init(self):
-        self.preferences_ = {}
-
-    def new_salt(self):
-        """Generates a new :data:`~wte.models.User.salt``. Will use
-        ``os.urandom`` if available and the standard pseudo-random if not.
-        """
-        try:
-            rng = random.SystemRandom()
-            self.salt = ''.join(chr(rng.randint(32, 127)) for _ in range(32))
-        except:
-            self.salt = ''.join(chr(random.randint(32, 127)) for _ in range(32))
-
-    def new_password(self, password):
-        """Sets the given ``password`` as the :class:`~wte.models.User`'s new
-        password. Calls :func:`~wte.models.User.new_salt` to generate a new
-        salt for the password.
-
-        :param password: The new cleartext password
-        :type password: `unicode`
-        """
-        self.new_salt()
-        self.password = str(hashlib.sha512(('%s$$%s' % (self.salt, password)).encode('utf-8')).hexdigest())
-
-    def random_password(self):
-        """Generates a random password, 12 characters in length consisting of
-        lower-case characters, upper-case characters, and numbers.
-
-        :return: The new password
-        :rtype: `unicode`
-        """
-        password = []
-        for _ in range(0, 12):
-            choice = random.randint(0, 2)
-            if choice == 0:
-                password.append(chr(random.randint(48, 57)))
-            elif choice == 1:
-                password.append(chr(random.randint(65, 90)))
-            elif choice == 2:
-                password.append(chr(random.randint(97, 122)))
-        password = ''.join(password)
-        self.new_password(password)
-        return password
-
-    def password_matches(self, password):
-        """Checks whether the given password matches the hashed, stored
-        password.
-
-        :param password: The password to check
-        :type password: `unicode`
-        :return: ``True`` if the passwords match, ``False`` otherwise
-        :rtype: `bool`
-        """
-        password = str(hashlib.sha512(('%s$$%s' % (self.salt, password)).encode('utf-8')).hexdigest())
-        return password == self.password
-
-    def has_permission(self, permission):
-        """Checks whether the user has been granted the given ``permission``,
-        either directly or via a :class:`~wte.models.PermissionGroup`.
-
-        :param permission: The permission to check for
-        :type permission: `unicode`
-        :return: ``True`` if the user has the permission, ``False`` otherwise
-        :rtype: `bool`
-        """
-        if hasattr(self, '_permissions'):
-            return permission in self._permissions
-        else:
-            dbsession = DBSession()
-            direct_perm = dbsession.query(Permission.name).join(User, Permission.users).filter(User.id == self.id)
-            group_perm = dbsession.query(Permission.name).join(PermissionGroup, Permission.permission_groups).\
-                join(User, PermissionGroup.users).filter(User.id == self.id)
-            self._permissions = [p[0] for p in direct_perm.union(group_perm)]
-            return self.has_permission(permission)
-
-    def allow(self, action, user):
-        """Checks whether the given ``user`` is allowed to perform the given
-        ``action``. Supports the following actions: view, edit, delete.
-
-        :param action: The action to check for
-        :type action: `unicode`
-        :param user: The user to check
-        :type user: :class:`~wte.models.User`
-        :return: ``True`` if the ``user`` may perform the action, ``False``
-                 otherwise
-        :rtype: `bool`
-        """
-        if self.id == user.id:
-            return True
-        elif action == 'view':
-            return True  # TODO: Add support for showing / hiding profile
-        elif action == 'edit':
-            return user.has_permission('admin.users.edit')
-        elif action == 'delete':
-            return user.has_permission('admin.users.delete')
-        return False
-
-Index('users_email_ix', User.email)
-
-
-users_permissions = Table('users_permissions', Base.metadata,
-                          Column('user_id',
-                                 ForeignKey('users.id',
-                                            name='users_permissions_users_fk'),
-                                 primary_key=True),
-                          Column('permission_id',
-                                 ForeignKey('permissions.id',
-                                            name='users_permissions_permissions_fk'),
-                                 primary_key=True))
-""":class:`sqlalchemy.Table` to link :class:`~wte.models.User` and
-:class:`~wte.models.Permission`.
-"""
-
-
-class Permission(Base):
-    """The :class:`~wte.models.Permission` class represents a single
-    permission that can be granted to a :class:`~wte.models.User` or to a
-    :class:`~wte.models.PermissionGroup`.
-
-    Instances of :class:`~wte.models.Permission` have the following attributes:
-
-    * ``id`` -- The unique database identifier
-    * ``name`` -- The unique name used for permission checking
-    * ``permission_groups`` -- List of :class:`~wte.models.PermissionGroup`
-      that contain this :class:`~wte.models.Permission`
-    * ``title`` -- The title displayed for this :class:`~wte.models.Permission`
-    * ``users`` -- List of :class:`~wte.models.User` that have this
-      :class:`~wte.models.Permission`
-    """
-
-    __tablename__ = 'permissions'
-
-    id = Column(Integer, primary_key=True)
-    name = Column(Unicode(255), unique=True)
-    title = Column(Unicode(255))
-
-Index('permissions_name_ix', Permission.name)
-
-
-class PermissionGroup(Base):
-    """The :class:`~wte.models.PermissionGroup` groups together one or more
-    :class:`~wte.models.Permission` for easier administration.
-
-    Instances of :class:`~wte.models.PermissionGroup` have the following
-    attributes:
-
-    * ``id`` -- The unique database identifier
-    * ``permissions`` -- The list of grouped :class:`~wte.models.Permission`
-    * ``title`` -- The title displayed for this
-      :class:`~wte.models.PermissionGroup`
-    * ``users`` -- List of :class:`~wte.models.User` that have this
-      :class:`~wte.models.PermissionGroup`
-    """
-    __tablename__ = 'permission_groups'
-
-    id = Column(Integer, primary_key=True)
-    title = Column(Unicode(255))
-
-    permissions = relationship('Permission', backref='permission_groups', secondary='permission_groups_permissions')
-
-
-groups_permissions = Table('permission_groups_permissions', Base.metadata,
-                           Column('permission_group_id',
-                                  ForeignKey(PermissionGroup.id,
-                                             name='permission_groups_permissions_groups_fk'),
-                                  primary_key=True),
-                           Column('permission_id',
-                                  ForeignKey(Permission.id,
-                                             name='permission_groups_permissions_permissions_fk'),
-                                  primary_key=True))
-""":class:`sqlalchemy.Table` to link :class:`~wte.models.PermissionGroup` and
-:class:`~wte.models.Permission`.
-"""
-
-
-users_groups = Table('users_permission_groups', Base.metadata,
-                     Column('user_id', ForeignKey(User.id,
-                                                  name='users_permission_groups_users_fk'),
-                            primary_key=True),
-                     Column('permission_group_id', ForeignKey(PermissionGroup.id,
-                                                              name='users_permission_groups_groups_fk'),
-                            primary_key=True))
-""":class:`sqlalchemy.Table` to link :class:`~wte.models.User` and
-:class:`~wte.models.PermissionGroup`.
-"""
 
 
 class UserPartRole(Base):
@@ -370,7 +41,7 @@ class UserPartRole(Base):
     __tablename__ = 'users_parts'
 
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey(User.id, name='users_parts_user_id_fk'))
+    user_id = Column(Integer, ForeignKey('users.id', name='users_parts_user_id_fk'))
     part_id = Column(Integer, ForeignKey('parts.id', name='users_parts_part_id_fk'))
     role = Column(Unicode(255))
 
@@ -579,7 +250,7 @@ class Part(Base):
     def available_children(self):
         """Returns the list of child :class:`~wte.models.Part` for which the ``status``
         attribute is set to "available".
-        
+
         :return: The available child :class:`~wte.models.Part`
         :rtype: :func:`list`
         """
@@ -678,7 +349,7 @@ class Part(Base):
                 # Add Part Menu Item
                 builder.menu('Add Part',
                              request.route_url('part.new', new_type='part', _query=[('parent_id', self.id)]),
-                             icon = 'fi-plus',
+                             icon='fi-plus',
                              highlight=True)
             if self.type == 'part':
                 builder.menu('Add Page',
