@@ -23,7 +23,7 @@ from pyramid.response import Response
 from pyramid.renderers import render_to_response
 from pyramid.view import view_config
 from pywebtools.formencode import State, CSRFSchema
-from pywebtools.pyramid.auth import current_user
+from pywebtools.pyramid.auth.views import current_user
 from pywebtools.sqlalchemy import DBSession
 from pkg_resources import resource_string
 from sqlalchemy import and_

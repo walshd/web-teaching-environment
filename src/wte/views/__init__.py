@@ -17,7 +17,7 @@ from pkg_resources import resource_string
 from pyramid.httpexceptions import HTTPNotFound
 from pyramid.view import view_config
 from pyramid.response import Response
-from pywebtools.pyramid.auth import current_user
+from pywebtools.pyramid.auth.views import current_user
 
 from . import (user, part, asset, user_role, timed_tasks, admin)
 

@@ -18,8 +18,8 @@ from pyramid.httpexceptions import (HTTPSeeOther, HTTPNotFound)
 from pyramid.view import view_config
 from pywebtools.formencode import State, CSRFSchema, UniqueEmailValidator, EmailDomainValidator
 from pywebtools.pyramid import auth as pyramid_auth
-from pywebtools.pyramid.auth import current_user
 from pywebtools.pyramid.auth.models import (User, Permission, PermissionGroup, TimeToken)
+from pywebtools.pyramid.auth.views import current_user
 from pywebtools.sqlalchemy import DBSession
 from sqlalchemy import or_
 

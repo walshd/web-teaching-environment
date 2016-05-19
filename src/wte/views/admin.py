@@ -15,7 +15,7 @@ import transaction
 
 from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.view import view_config
-from pywebtools.pyramid.auth import current_user
+from pywebtools.pyramid.auth.views import current_user
 from pywebtools.sqlalchemy import DBSession
 
 from wte.decorators import (require_logged_in)

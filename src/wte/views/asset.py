@@ -17,7 +17,7 @@ import transaction
 
 from mimetypes import guess_type
 from pyramid.httpexceptions import (HTTPSeeOther, HTTPNotFound, HTTPNotModified)
-from pywebtools.pyramid.auth import current_user
+from pywebtools.pyramid.auth.views import current_user
 from pyramid.response import Response
 from pyramid.view import view_config
 from pywebtools.formencode import State, CSRFSchema
