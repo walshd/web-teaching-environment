@@ -454,7 +454,8 @@ def edit(request):
             help_path = ['user', 'teacher', part.type, 'edit.html']
             if request.method == 'POST':
                 try:
-                    params = EditPartSchema().to_python(request.params)
+                    params = EditPartSchema().to_python(request.params,
+                                                        State(request=request))
                     with transaction.manager:
                         dbsession.add(part)
                         part.title = params['title']

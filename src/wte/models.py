@@ -15,12 +15,12 @@ import re
 from datetime import datetime
 from pywebtools.pyramid.auth.models import Base, User
 from sqlalchemy import (Column, Index, ForeignKey, Integer, Unicode,
-                        UnicodeText, Table, LargeBinary, DateTime)
+                        UnicodeText, Table, LargeBinary, DateTime, Boolean)
 from sqlalchemy.orm import (relationship, backref)
 
 from wte.helpers.frontend import confirm_delete, MenuBuilder, confirm_action
 
-DB_VERSION = '58f6e5c75e86'
+DB_VERSION = '1d79e6b04177'
 """The currently required database version."""
 
 
@@ -655,3 +655,43 @@ class TimedTask(Base):
                                                                self.title,
                                                                False)})
         return builder.generate()
+
+
+class QuizAnswer(Base):
+    """The class:`~wte.models.QuizAnswer` represents an answer to a
+    :class:`~wte.text_formatter.docutils_ext.QuizQuestion` in a
+    :class:`~wte.text_formatter.docutils_ext.Quiz`. 
+
+    Instances of :class:`~wte.models.QuizAnswer` have the following attributes:
+
+    * ``id`` - The unique database identifier
+    * ``part_id`` - The unique identifier of the :class:`~wte.models.Part` the
+      :class:`~wte.models.QuizAnswer` belongs to
+    * ``part_id`` - The unique identifier of the :class:`~wte.models.User` the
+      :class:`~wte.models.QuizAnswer` belongs to
+    * ``quiz`` - The name of the :class:`~wte.text_formatter.docutils_ext.Quiz`.
+    * ``question`` - The name of the :class:`~wte.text_formatter.docutils_ext.QuizQuestion`.
+    * ``initial_answer`` - The first answer the user provided
+    * ``initial_correct`` - Whether the first answer was correct
+    * ``final_answer`` - The final answer the user provided
+    * ``final_correct`` - Whether the final answer was correct
+    * ``attempts`` - How many attempts the user has had
+    """
+    
+    __tablename__ = 'quiz_answers'
+    
+    id = Column(Integer, primary_key=True)
+    part_id = Column(Integer, ForeignKey('parts.id',
+                                         name='quiz_answers_part_id_fk'))
+    user_id = Column(Integer, ForeignKey('users.id',
+                                         name='quiz_answers_user_id_fk'))
+    quiz = Column(Unicode(255))
+    question = Column(Unicode(255))
+    initial_answer = Column(Unicode(255))
+    initial_correct = Column(Boolean)
+    final_answer = Column(Unicode(255))
+    final_correct = Column(Boolean)
+    attempts = Column(Integer)
+
+    #op.create_index('quiz_answers_full_ix', 'quiz_answers',
+    #                ['part_id', 'user_id', 'quiz', 'question'])

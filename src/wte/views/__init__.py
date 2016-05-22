@@ -19,7 +19,7 @@ from pyramid.view import view_config
 from pyramid.response import Response
 from pywebtools.pyramid.auth.views import current_user
 
-from . import (user, part, asset, user_role, timed_tasks, admin)
+from . import (user, part, asset, user_role, timed_tasks, admin, quiz)
 
 
 def init(config, settings):
@@ -35,6 +35,7 @@ def init(config, settings):
     admin.init(config)
     user.init(config)
     part.init(config)
+    quiz.init(config)
     asset.init(config)
     user_role.init(config)
     timed_tasks.init(config)

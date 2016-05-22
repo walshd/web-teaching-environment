@@ -8,10 +8,12 @@ This module contains docutils extensions (roles and directives) that provide
 the additional formatting support required by the
 :func:`~wte.text_formatter.compile_rst` function.
 """
+import json
 import re
 
 from docutils import nodes, utils
 from docutils.parsers.rst import directives, roles, Directive
+from docutils.writers.html4css1 import HTMLTranslator
 from pygments import highlight
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import get_lexer_by_name, TextLexer, get_all_lexers
@@ -26,12 +28,17 @@ def init(settings):
     """
     directives.register_directive('sourcecode', Pygments)
     directives.register_directive('youtube', YouTube)
+    directives.register_directive('quiz', Quiz)
+    directives.register_directive('quiz-question', QuizQuestion)
     roles.register_local_role('asset', asset_ref_role)
     roles.register_local_role('crossref', crossref_role)
     roles.register_local_role('style', inline_css_role)
     for _, aliases, _, _ in get_all_lexers():
         for alias in aliases:
             roles.register_local_role('code-%s' % (alias), inline_pygments_role)
+    nodes._add_node_class_names([HtmlElementBlock.__name__])
+    setattr(HTMLTranslator, 'visit_%s' % HtmlElementBlock.__name__, visit_htmlelementblock)
+    setattr(HTMLTranslator, 'depart_%s' % HtmlElementBlock.__name__, depart_htmlelementblock)
 
 
 class HtmlTitleFormatter(HtmlFormatter):
@@ -279,3 +286,146 @@ def inline_css_role(name, rawtext, text, lineno, inliner, options={}, content=[]
     else:
         messages.append(inliner.reporter.error('No CSS definition found in "%s"' % (text)))
     return result, messages
+
+
+class HtmlElementBlock(nodes.General, nodes.Element):
+    """The :class:`~wte.text_formatter.docutils_ext.HtmlElementBlock` is a docutils node
+    for generating arbitrary HTML elements.
+
+    The HTML element to generate can be configured by setting ``html_element`` on the node.
+    HTML attributes can be configured by setting the ``html_attributes`` property on the node,
+    which must be set to a ``dict``.
+    """
+    pass
+
+
+def visit_htmlelementblock(self, node):
+    """Visitor for the :class:`~wte.text_formatter.docutils_ext.HtmlElementBlock` to generate
+    the actual HTML output.
+    """
+    if hasattr(node, 'html_element'):
+        element_name = node.html_element
+    else:
+        element_name = 'div'
+    if hasattr(node, 'html_attributes'):
+        attrs = node.html_attributes
+    else:
+        attrs = {}
+    self.body.append(self.starttag(node, element_name, **attrs))
+
+
+def depart_htmlelementblock(self, node):
+    """Visitor exit for the :class:`~wte.text_formatter.docutils_ext.HtmlElementBlock`.
+    """
+    if hasattr(node, 'html_element'):
+        element_name = node.html_element
+    else:
+        element_name = 'div'
+    self.body.append('</%s>\n' % element_name)
+
+
+class Quiz(Directive):
+    """The :class:`~wte.text_formatter.docutils_ext.Quiz` is a directive to generate
+    the outer wrapper for an in-part quiz. It takes a single required parameter that
+    is the identifier for the quiz in the current :class:`~wte.models.Part`. An optional
+    ``title`` parameter is the title of the quiz to show to the user. The actual
+    questions need to be provided via :class:`~wte.text_formatter.docutils_ext.QuizAnswer`::
+
+      .. quiz: quiz_identifier
+         :title: This is a Quiz!
+
+         .. quiz-question: question1
+            :question: Is this right?
+
+            [x] Answer 1
+            Answer 2
+            Answer 3
+    """
+    required_arguments = 1
+    optional_arguments = 1
+    final_argument_whitespace = True
+    option_spec = {'title': directives.unchanged}
+    has_content = True
+
+    def run(self):
+        node = nodes.Element()
+        node.document = self.state.document
+        self.state.nested_parse(self.content, self.content_offset, node)
+        quiz = HtmlElementBlock()
+        quiz.html_element = 'form'
+        quiz.html_attributes = {'class': 'quiz',
+                                'action': '',
+                                'data-quiz-id': self.arguments[0]}
+        if 'title' in self.options:
+            heading = HtmlElementBlock()
+            heading.html_attributes = {'class': 'title'}
+            heading.append(nodes.paragraph(self.options['title'], self.options['title']))
+            quiz.append(heading)
+        quiz.extend(node)
+        buttons = HtmlElementBlock()
+        buttons.html_attributes = {'class': 'text-right'}
+        clear_button = HtmlElementBlock()
+        clear_button.html_element = 'input'
+        clear_button.html_attributes = {'type': 'reset',
+                                        'value': 'Clear Answers',
+                                        'class': 'button secondary'}
+        buttons.append(clear_button)
+        submit_button = HtmlElementBlock()
+        submit_button.html_element = 'input'
+        submit_button.html_attributes = {'type': 'submit',
+                                         'value': 'Check Answers',
+                                         'class': 'button'}
+        buttons.append(submit_button)
+        quiz.append(buttons)
+        return [quiz]
+
+
+class QuizQuestion(Directive):
+    """The :class:`~wte.text_formatter.docutils_ext.QuizQuestion` generates a single
+    question output. It takes a single required parameter that is the identifier for
+    the question. An optional ``question`` parameter can be used to give the question's
+    title. An optional ``type`` parameter can be used to specify whether single ("single-choice")
+    or multiple choices ("multi-choice") are available::
+    
+      .. quiz-question:: question_id
+         :question: Is this right?
+         :type: single-choice
+         
+         [x]Answer 1
+         [x]Answer 2
+         Answer 3
+
+    Each line of content represents one answer. The correct answers must be pre-fixed with
+    "[x]". 
+    """
+    required_arguments = 1
+    optional_arguments = 1
+    final_argument_whitespace = True
+    option_spec = {'question': directives.unchanged,
+                   'type': directives.unchanged}
+    has_content = True
+
+    def run(self):
+        question = HtmlElementBlock()
+        question.html_element = 'section'
+        question.html_attributes = {'class': 'question',
+                                    'data-question-id': self.arguments[0],
+                                    'data-answers': json.dumps([a.replace('[x]', '').strip() for a in self.content if '[x]' in a])}
+        if 'question' in self.options:
+            heading = HtmlElementBlock()
+            heading.html_attributes = {'class': 'title'}
+            heading.append(nodes.paragraph(self.options['question'], self.options['question']))
+            question.append(heading)
+        for answer_source in self.content:
+            answer_source = answer_source.replace('[x]', '').strip()
+            answer = HtmlElementBlock()
+            answer.html_element = 'label'
+            input_element = HtmlElementBlock()
+            input_element.html_element = 'input'
+            input_element.html_attributes = {'type': 'radio' if 'type' not in self.options or self.options['type'] == 'single-choice' else 'checkbox',
+                                             'value': answer_source,
+                                             'name': self.arguments[0]}
+            answer.append(input_element)
+            answer.append(nodes.inline(answer_source, answer_source))
+            question.append(answer)
+        return [question]

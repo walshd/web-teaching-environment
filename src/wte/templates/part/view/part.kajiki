@@ -59,4 +59,13 @@
       </section>
     </py:else>
   </py:block>
+  <py:block name="body_script">
+  <script>
+  $('.quiz').quiz({
+      'submit_url': '${request.route_url('quiz.set_answers', pid=part.id)}',
+      'check_url': '${request.route_url('quiz.check_answers', pid=part.id)}',
+      'csrf_token': '${request.session.get_csrf_token()}'
+  });
+  </script>
+  </py:block>
 </py:extends>
