@@ -451,7 +451,7 @@ function codemirror_for_textarea(textarea) {
                             question.find('.title').append('<span class="label incorrect"><span class="fi-x"> Incorrect</span></span>');
                             all_correct = false;
                         }
-                        if(data.status != 'unanswered') {
+                        if(data.status && data.status != 'unanswered') {
                             form.children('.title').find('.label').remove();
                             if(all_correct === true) {
                                 form.children('.title').append('<span class="label correct"><span class="fi-check"> You answered all questions correctly</span></span>')

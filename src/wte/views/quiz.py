@@ -23,7 +23,7 @@ from pywebtools.sqlalchemy import DBSession
 from sqlalchemy import and_
 
 from wte.decorators import (require_logged_in, require_method)
-from wte.models import QuizAnswer, Part
+from wte.models import Quiz, QuizAnswer, Part
 
 
 def init(config):
@@ -70,21 +70,24 @@ def set_answers(request):
         if part and part.has_role('student', request.current_user):
             params = SetAnswersSchema().to_python(request.params,
                                                   State(request=request))
-            quiz = dbsession.query(QuizAnswer).filter(and_(QuizAnswer.part_id == request.matchdict['pid'],
-                                                           QuizAnswer.user_id == request.current_user.id,
-                                                           QuizAnswer.quiz == params['quiz'],
-                                                           QuizAnswer.question == params['question'])).first()
             with transaction.manager:
-                if quiz:
-                    if not quiz.initial_correct and not quiz.final_correct:
-                        dbsession.add(quiz)
-                        quiz.attempts = quiz.attempts + 1
-                        quiz.final_answer = json.dumps(params['answer'])
-                        quiz.final_correct = params['correct']
+                quiz = dbsession.query(Quiz).filter(and_(Quiz.part_id == request.matchdict['pid'],
+                                                         Quiz.name == params['quiz'])).first()
+                if quiz is None:
+                    quiz = Quiz(part_id = request.matchdict['pid'],
+                                name = params['quiz'])
+                    dbsession.add(quiz)
+                answer = dbsession.query(QuizAnswer).filter(and_(QuizAnswer.user_id == request.current_user.id,
+                                                                 QuizAnswer.quiz_id == quiz.id,
+                                                                 QuizAnswer.question == params['question'])).first()
+                if answer:
+                    if not answer.initial_correct and not answer.final_correct:
+                        answer.attempts = answer.attempts + 1
+                        answer.final_answer = json.dumps(params['answer'])
+                        answer.final_correct = params['correct']
                 else:
-                    dbsession.add(QuizAnswer(part_id=request.matchdict['pid'],
-                                             user_id=request.current_user.id,
-                                             quiz=params['quiz'],
+                    dbsession.add(QuizAnswer(user_id=request.current_user.id,
+                                             quiz=quiz,
                                              question=params['question'],
                                              initial_answer=json.dumps(params['answer']),
                                              initial_correct=params['correct'],
@@ -122,25 +125,26 @@ def check_answers(request):
         params = CheckAnswerSchema().to_python(request.params,
                                                 State(request=request))
         dbsession = DBSession()
-        quiz = dbsession.query(QuizAnswer).filter(and_(QuizAnswer.part_id == request.matchdict['pid'],
-                                                       QuizAnswer.user_id == request.current_user.id,
-                                                       QuizAnswer.quiz == params['quiz'],
-                                                       QuizAnswer.question == params['question'])).first()
+        quiz = dbsession.query(Quiz).filter(and_(Quiz.part_id == request.matchdict['pid'],
+                                                 Quiz.name == params['quiz'])).first()
         if quiz:
-            if quiz.initial_correct:
-                return {'status': 'correct',
-                        'answer': json.loads(quiz.initial_answer)}
-            elif quiz.final_correct:
-                return {'status': 'correct',
-                        'answer': json.loads(quiz.final_answer)}
-            elif quiz.final_correct is None:
-                return {'status': 'incorrect',
-                        'answer': json.loads(quiz.initial_answer)}
-            else:
-                return {'status': 'incorrect',
-                        'answer': json.loads(quiz.final_answer)}
-        else:
-            return {'status': 'unanswered'}
+            answer = dbsession.query(QuizAnswer).filter(and_(QuizAnswer.user_id == request.current_user.id,
+                                                             QuizAnswer.quiz_id == quiz.id,
+                                                             QuizAnswer.question == params['question'])).first()
+            if answer:
+                if answer.initial_correct:
+                    return {'status': 'correct',
+                            'answer': json.loads(answer.initial_answer)}
+                elif answer.final_correct:
+                    return {'status': 'correct',
+                            'answer': json.loads(answer.final_answer)}
+                elif answer.final_correct is None:
+                    return {'status': 'incorrect',
+                            'answer': json.loads(answer.initial_answer)}
+                else:
+                    return {'status': 'incorrect',
+                            'answer': json.loads(answer.final_answer)}
+        return {'status': 'unanswered'}
     except Invalid as e:
         return {'status': 'error',
                 'errors': e.error_dict}
