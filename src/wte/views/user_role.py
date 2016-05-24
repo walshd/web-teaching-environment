@@ -162,7 +162,8 @@ def action(request):
                 if param in request.params and request.params[param]:
                     query_params.append((param, request.params[param]))
             try:
-                params = ActionSchema().to_python(request.params)
+                params = ActionSchema().to_python(request.params,
+                                                  State(request=request))
             except formencode.api.Invalid:
                 request.session.flash('Please select the action you wish to apply ' +
                                       'and the users you wish to apply it to', queue='error')
@@ -235,7 +236,8 @@ def update(request):
                                               'url': request.current_route_url()}])
                 users = []
                 params = {}
-                params = ActionSchema().to_python(request.params)
+                params = ActionSchema().to_python(request.params,
+                                                  State(request=request))
                 users = dbsession.query(UserPartRole).filter(UserPartRole.id.in_(params['role_id'])).all()
                 if params['action'] == 'change_role':
                     params = ChangeRoleSchema().to_python(request.params, State(request=request))

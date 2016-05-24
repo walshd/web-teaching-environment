@@ -377,7 +377,8 @@ def edit(request):
                                                                                            key='registration.domains',
                                                                                            target_type='list',
                                                                                            default=None),
-                                                          user_class=User))
+                                                          user_class=User,
+                                                          request=request))
                     with transaction.manager:
                         dbsession.add(user)
                         user.email = params['email']

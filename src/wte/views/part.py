@@ -419,7 +419,8 @@ def new(request):
     help_path = ['user', 'teacher', request.matchdict['new_type'], 'new.html']
     if request.method == 'POST':
         try:
-            params = NewPartSchema().to_python(request.params)
+            params = NewPartSchema().to_python(request.params,
+                                               State(request=request))
             dbsession = DBSession()
             with transaction.manager:
                 if params['order'] is not None:
@@ -596,7 +597,8 @@ def edit_register_settings(request):
                                          'url': request.current_route_url()})
             if request.method == 'POST':
                 try:
-                    params = RegisterSettingsSchema().to_python(request.params)
+                    params = RegisterSettingsSchema().to_python(request.params,
+                                                                State(request=request))
                     with transaction.manager:
                         rights = {}
                         if params['require']:
@@ -870,7 +872,8 @@ def change_status(request):
                                          'url': request.current_route_url()})
             if request.method == 'POST':
                 try:
-                    params = ChangeStatusSchema().to_python(request.params)
+                    params = ChangeStatusSchema().to_python(request.params,
+                                                            State(request=request))
                     with transaction.manager:
                         dbsession.add(part)
                         part.status = params['status']
@@ -1203,7 +1206,8 @@ def import_file(request):
                                  'url': request.current_route_url()})
     if request.method == 'POST':
         try:
-            params = ImportPartSchema().to_python(request.params, State(parent=parent))
+            params = ImportPartSchema().to_python(request.params, State(parent=parent,
+                                                                        request=request))
             with transaction.manager:
                 if parent:
                     dbsession.add(parent)
