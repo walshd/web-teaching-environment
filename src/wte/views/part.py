@@ -245,7 +245,8 @@ def view_part(request):
                 help_path = ['user', 'learner', 'module.html']
                 # Quiz Summary Generation - @Todo Should be refactored. Perhaps into the quiz view?
                 quiz_ids = {}
-                for quiz in dbsession.query(Quiz).filter(Quiz.part_id.in_([c.id for c in part.children])):
+                for quiz in dbsession.query(Quiz).join(Part).\
+                        filter(Quiz.part_id.in_([c.id for c in part.children])).order_by(Part.order):
                     quiz_ids[quiz.id] = len(quizzes)
                     quizzes.append({'id': quiz.id,
                                     'title': quiz.title,

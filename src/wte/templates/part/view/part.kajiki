@@ -108,7 +108,7 @@
                           <py:if test="question['correct']['initial'] + question['correct']['subsequent'] != 0">${question['correct']['initial'] + question['correct']['subsequent']} correct</py:if><!-- 
                           --><py:if test="question['correct']['initial'] + question['correct']['subsequent'] != 0 and question['correct']['incorrect'] != 0"> and</py:if><!-- 
                           --><py:if test="question['correct']['incorrect'] != 0"> ${question['correct']['incorrect']} incorrect</py:if>.
-                          <py:if test="question['correct']['subsequent'] != 0">${question['correct']['subsequent']} correct ${inflector.plural('response', question['correct']['subsequent'])} required more than one attempt.</py:if>
+                          <py:if test="question['correct']['subsequent'] != 0">${question['correct']['subsequent']} correct ${inflector.plural('answer', question['correct']['subsequent'])} required more than one attempt.</py:if>
                         </py:if>
                         <py:if test="question['correct']['total'] - (question['correct']['initial'] + question['correct']['subsequent'] + question['correct']['incorrect']) != 0">${question['correct']['total'] - (question['correct']['initial'] + question['correct']['subsequent'] + question['correct']['incorrect'])} ${inflector.plural('student', question['correct']['total'] - (question['correct']['initial'] + question['correct']['subsequent'] + question['correct']['incorrect']))} ${inflector.plural_verb('has', question['correct']['total'] - (question['correct']['initial'] + question['correct']['subsequent'] + question['correct']['incorrect']))} not yet answered the question.</py:if>
                       </p>
