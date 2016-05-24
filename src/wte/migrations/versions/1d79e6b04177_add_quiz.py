@@ -26,7 +26,9 @@ def upgrade():
                     sa.Column('id', sa.Integer, primary_key=True),
                     sa.Column('part_id', sa.Integer, sa.ForeignKey('parts.id',
                                                                    name='quiz_answers_part_id_fk')),
-                    sa.Column('name', sa.Unicode(255)))
+                    sa.Column('name', sa.Unicode(255)),
+                    sa.Column('questions', sa.UnicodeText()),
+                    sa.Column('title', sa.Unicode(255)))
     op.create_index('quizzes_full_ix', 'quizzes',
                     ['part_id', 'name'])
     op.create_table('quiz_answers',

@@ -21,6 +21,7 @@ from pywebtools.formencode import CSRFSchema, State
 from pywebtools.pyramid.auth.views import current_user
 from pywebtools.sqlalchemy import DBSession
 from sqlalchemy import and_
+from xml.etree import ElementTree
 
 from wte.decorators import (require_logged_in, require_method)
 from wte.models import Quiz, QuizAnswer, Part
@@ -35,6 +36,29 @@ def init(config):
     """
     config.add_route('quiz.set_answers', '/parts/{pid}/quiz/set_answers')
     config.add_route('quiz.check_answers', '/parts/{pid}/quiz/check_answers')
+
+
+def extract_quizzes(dbsession, part):
+    dom = ElementTree.fromstring('<div>%s</div>' % part.compiled_content)
+    for form in dom.findall(".//form[@class='quiz']"):
+        quiz_name = form.attrib['data-quiz-id']
+        quiz = dbsession.query(Quiz).filter(and_(Quiz.part_id == part.id,
+                                                 Quiz.name == quiz_name)).first()
+        if quiz is None:
+            quiz = Quiz(part_id=part.id,
+                        name=quiz_name)
+            dbsession.add(quiz)
+        quiz_title = form.find("./div[@class='title']")
+        if quiz_title is not None:
+            quiz.title = quiz_title.text.strip()
+        questions = []
+        for question in dom.findall(".//section[@class='question']"):
+            question_data = {'name': question.attrib['data-question-id']}
+            question_title = question.find("./div[@class='title']")
+            if question_title is not None:
+                question_data['title'] = question_title.text.strip()
+            questions.append(question_data)
+        quiz.questions = json.dumps(questions)
 
 
 class SetAnswersSchema(CSRFSchema):
@@ -73,27 +97,24 @@ def set_answers(request):
             with transaction.manager:
                 quiz = dbsession.query(Quiz).filter(and_(Quiz.part_id == request.matchdict['pid'],
                                                          Quiz.name == params['quiz'])).first()
-                if quiz is None:
-                    quiz = Quiz(part_id = request.matchdict['pid'],
-                                name = params['quiz'])
-                    dbsession.add(quiz)
-                answer = dbsession.query(QuizAnswer).filter(and_(QuizAnswer.user_id == request.current_user.id,
-                                                                 QuizAnswer.quiz_id == quiz.id,
-                                                                 QuizAnswer.question == params['question'])).first()
-                if answer:
-                    if not answer.initial_correct and not answer.final_correct:
-                        answer.attempts = answer.attempts + 1
-                        answer.final_answer = json.dumps(params['answer'])
-                        answer.final_correct = params['correct']
-                else:
-                    dbsession.add(QuizAnswer(user_id=request.current_user.id,
-                                             quiz=quiz,
-                                             question=params['question'],
-                                             initial_answer=json.dumps(params['answer']),
-                                             initial_correct=params['correct'],
-                                             final_answer=None,
-                                             final_correct=None,
-                                             attempts=1))
+                if quiz:
+                    answer = dbsession.query(QuizAnswer).filter(and_(QuizAnswer.user_id == request.current_user.id,
+                                                                     QuizAnswer.quiz_id == quiz.id,
+                                                                     QuizAnswer.question == params['question'])).first()
+                    if answer:
+                        if not answer.initial_correct and not answer.final_correct:
+                            answer.attempts = answer.attempts + 1
+                            answer.final_answer = json.dumps(params['answer'])
+                            answer.final_correct = params['correct']
+                    else:
+                        dbsession.add(QuizAnswer(user_id=request.current_user.id,
+                                                 quiz=quiz,
+                                                 question=params['question'],
+                                                 initial_answer=json.dumps(params['answer']),
+                                                 initial_correct=params['correct'],
+                                                 final_answer=None,
+                                                 final_correct=None,
+                                                attempts=1))
         return {}
     except Invalid as e:
         return {'errors': e.error_dict}

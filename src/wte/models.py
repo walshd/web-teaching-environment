@@ -668,6 +668,8 @@ class Quiz(Base):
     * ``part_id`` - The unique identifier of the :class:`~wte.models.User` the
       :class:`~wte.models.Part` belongs to
     * ``name`` - The name of the :class:`~wte.text_formatter.docutils_ext.Quiz`.
+    * ``questions`` - JSON-encoded list of question-name / question-title pairs
+    * ``title`` - The title to show to the user
     """
 
     __tablename__ = 'quizzes'
@@ -676,8 +678,10 @@ class Quiz(Base):
     part_id = Column(Integer, ForeignKey('parts.id',
                                          name='quiz_answers_part_id_fk'))
     name = Column(Unicode(255))
+    title = Column(Unicode(255))
+    questions = Column(UnicodeText)
 
-    answers = relationship('QuizAnswer')
+    answers = relationship('QuizAnswer', cascade='all,delete')
 
 
 Index('quizzes_full_ix', Quiz.part_id, Quiz.name)

@@ -386,17 +386,17 @@ class QuizQuestion(Directive):
     the question. An optional ``question`` parameter can be used to give the question's
     title. An optional ``type`` parameter can be used to specify whether single ("single-choice")
     or multiple choices ("multi-choice") are available::
-    
+
       .. quiz-question:: question_id
          :question: Is this right?
          :type: single-choice
-         
+
          [x]Answer 1
          [x]Answer 2
          Answer 3
 
     Each line of content represents one answer. The correct answers must be pre-fixed with
-    "[x]". 
+    "[x]".
     """
     required_arguments = 1
     optional_arguments = 1
@@ -410,7 +410,8 @@ class QuizQuestion(Directive):
         question.html_element = 'section'
         question.html_attributes = {'class': 'question',
                                     'data-question-id': self.arguments[0],
-                                    'data-answers': json.dumps([a.replace('[x]', '').strip() for a in self.content if '[x]' in a])}
+                                    'data-answers': json.dumps([a.replace('[x]', '').strip()
+                                                                for a in self.content if '[x]' in a])}
         if 'question' in self.options:
             heading = HtmlElementBlock()
             heading.html_attributes = {'class': 'title'}
@@ -422,7 +423,8 @@ class QuizQuestion(Directive):
             answer.html_element = 'label'
             input_element = HtmlElementBlock()
             input_element.html_element = 'input'
-            input_element.html_attributes = {'type': 'radio' if 'type' not in self.options or self.options['type'] == 'single-choice' else 'checkbox',
+            input_element.html_attributes = {'type': 'radio' if 'type' not in self.options or
+                                             self.options['type'] == 'single-choice' else 'checkbox',
                                              'value': answer_source,
                                              'name': self.arguments[0]}
             answer.append(input_element)
