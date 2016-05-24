@@ -39,26 +39,43 @@ def init(config):
 
 
 def extract_quizzes(dbsession, part):
-    dom = ElementTree.fromstring('<div>%s</div>' % part.compiled_content)
-    for form in dom.findall(".//form[@class='quiz']"):
-        quiz_name = form.attrib['data-quiz-id']
-        quiz = dbsession.query(Quiz).filter(and_(Quiz.part_id == part.id,
-                                                 Quiz.name == quiz_name)).first()
-        if quiz is None:
-            quiz = Quiz(part_id=part.id,
-                        name=quiz_name)
-            dbsession.add(quiz)
-        quiz_title = form.find("./div[@class='title']")
-        if quiz_title is not None:
-            quiz.title = quiz_title.text.strip()
-        questions = []
-        for question in dom.findall(".//section[@class='question']"):
-            question_data = {'name': question.attrib['data-question-id']}
-            question_title = question.find("./div[@class='title']")
-            if question_title is not None:
-                question_data['title'] = question_title.text.strip()
-            questions.append(question_data)
-        quiz.questions = json.dumps(questions)
+    """Extracts the :class:`~wte.models.Quiz` from the compiled HTML content
+    of a :class:`~wte.models.Part`. Either updates the :class:`~wte.models.Quiz`
+    or creates a new one if none exists with the given quiz name.
+
+    :param dbsession: The class:`~pywebtools.sqlalchemy.DBSession` to use for database access
+    :type dbsession: :class:`~pywebtools.sqlalchemy.DBSession`
+    :param part: The :class:`~wte.models.Part` to extract the quizzes from
+    :type part: :class:`~wte.models.Part`
+    """
+    try:
+        dom = ElementTree.fromstring('<div>%s</div>' % part.compiled_content)
+        quiz_names = []
+        for form in dom.findall(".//form[@class='quiz']"):
+            quiz_name = form.attrib['data-quiz-id']
+            quiz_names.append(quiz_name)
+            quiz = dbsession.query(Quiz).filter(and_(Quiz.part_id == part.id,
+                                                     Quiz.name == quiz_name)).first()
+            if quiz is None:
+                quiz = Quiz(part_id=part.id,
+                            name=quiz_name)
+                dbsession.add(quiz)
+            quiz_title = form.find("./div[@class='title']")
+            if quiz_title is not None:
+                quiz.title = quiz_title.text.strip()
+            questions = []
+            for question in dom.findall(".//section[@class='question']"):
+                question_data = {'name': question.attrib['data-question-id']}
+                question_title = question.find("./div[@class='title']")
+                if question_title is not None:
+                    question_data['title'] = question_title.text.strip()
+                questions.append(question_data)
+            quiz.questions = json.dumps(questions)
+        for quiz in dbsession.query(Quiz).filter(Quiz.part_id == part.id):
+            if quiz.name not in quiz_names:
+                dbsession.delete(quiz)
+    except:
+        pass
 
 
 class SetAnswersSchema(CSRFSchema):
@@ -114,7 +131,7 @@ def set_answers(request):
                                                  initial_correct=params['correct'],
                                                  final_answer=None,
                                                  final_correct=None,
-                                                attempts=1))
+                                                 attempts=1))
         return {}
     except Invalid as e:
         return {'errors': e.error_dict}
@@ -144,7 +161,7 @@ def check_answers(request):
     """
     try:
         params = CheckAnswerSchema().to_python(request.params,
-                                                State(request=request))
+                                               State(request=request))
         dbsession = DBSession()
         quiz = dbsession.query(Quiz).filter(and_(Quiz.part_id == request.matchdict['pid'],
                                                  Quiz.name == params['quiz'])).first()

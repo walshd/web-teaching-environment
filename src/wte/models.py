@@ -690,7 +690,7 @@ Index('quizzes_full_ix', Quiz.part_id, Quiz.name)
 class QuizAnswer(Base):
     """The class:`~wte.models.QuizAnswer` represents an answer to a
     :class:`~wte.text_formatter.docutils_ext.QuizQuestion` in a
-    :class:`~wte.models.Quiz`. 
+    :class:`~wte.models.Quiz`.
 
     Instances of :class:`~wte.models.QuizAnswer` have the following attributes:
 
@@ -707,9 +707,9 @@ class QuizAnswer(Base):
     * ``user_id`` - The unique identifier of the :class:`~wte.models.User` the
       :class:`~wte.models.QuizAnswer` belongs to
     """
-    
+
     __tablename__ = 'quiz_answers'
-    
+
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id',
                                          name='quiz_answers_user_id_fk'))
