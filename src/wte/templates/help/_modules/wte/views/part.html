@@ -24,7 +24,7 @@
         <div class="column small-12">
           <h1>Source code for wte.views.part</h1><div class="highlight"><pre>
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
-<span class="sd">u&quot;&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">#####################################</span>
 <span class="sd">:mod:`wte.views.part` -- Part Backend</span>
 <span class="sd">#####################################</span>
@@ -36,6 +36,8 @@
 
 <span class="sd">.. moduleauthor:: Mark Hall &lt;mark.hall@work.room3b.eu&gt;</span>
 <span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">nine</span> <span class="kn">import</span> <span class="p">(</span><span class="n">IS_PYTHON2</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">native_str</span><span class="p">,</span> <span class="n">nimport</span><span class="p">)</span>  <span class="c1"># Python 2.7 compatibility</span>
+
 <span class="kn">import</span> <span class="nn">formencode</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">re</span>
@@ -45,22 +47,25 @@
 <span class="kn">from</span> <span class="nn">pyramid.response</span> <span class="kn">import</span> <span class="n">Response</span>
 <span class="kn">from</span> <span class="nn">pyramid.renderers</span> <span class="kn">import</span> <span class="n">render_to_response</span>
 <span class="kn">from</span> <span class="nn">pyramid.view</span> <span class="kn">import</span> <span class="n">view_config</span>
+<span class="kn">from</span> <span class="nn">pywebtools.formencode</span> <span class="kn">import</span> <span class="n">State</span><span class="p">,</span> <span class="n">CSRFSchema</span>
+<span class="kn">from</span> <span class="nn">pywebtools.pyramid.auth.views</span> <span class="kn">import</span> <span class="n">current_user</span>
+<span class="kn">from</span> <span class="nn">pywebtools.sqlalchemy</span> <span class="kn">import</span> <span class="n">DBSession</span>
 <span class="kn">from</span> <span class="nn">pkg_resources</span> <span class="kn">import</span> <span class="n">resource_string</span>
 <span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="n">and_</span>
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">cStringIO</span> <span class="kn">import</span> <span class="n">StringIO</span>
-<span class="k">except</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">StringIO</span> <span class="kn">import</span> <span class="n">StringIO</span>
 <span class="kn">from</span> <span class="nn">zipfile</span> <span class="kn">import</span> <span class="n">ZipFile</span><span class="p">,</span> <span class="n">ZIP_DEFLATED</span><span class="p">,</span> <span class="n">ZIP_STORED</span><span class="p">,</span> <span class="n">BadZipfile</span>
 
-<span class="kn">from</span> <span class="nn">wte.decorators</span> <span class="kn">import</span> <span class="p">(</span><span class="n">current_user</span><span class="p">,</span> <span class="n">require_logged_in</span><span class="p">,</span> <span class="n">require_method</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">wte.models</span> <span class="kn">import</span> <span class="p">(</span><span class="n">DBSession</span><span class="p">,</span> <span class="n">Part</span><span class="p">,</span> <span class="n">UserPartRole</span><span class="p">,</span> <span class="n">Asset</span><span class="p">,</span> <span class="n">UserPartProgress</span><span class="p">,</span> <span class="n">User</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">wte.decorators</span> <span class="kn">import</span> <span class="p">(</span><span class="n">require_logged_in</span><span class="p">,</span> <span class="n">require_method</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">wte.models</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Part</span><span class="p">,</span> <span class="n">UserPartRole</span><span class="p">,</span> <span class="n">Asset</span><span class="p">,</span> <span class="n">UserPartProgress</span><span class="p">,</span> <span class="n">User</span><span class="p">,</span>
+                        <span class="n">Quiz</span><span class="p">,</span> <span class="n">QuizAnswer</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">wte.text_formatter</span> <span class="kn">import</span> <span class="n">compile_rst</span>
-<span class="kn">from</span> <span class="nn">wte.util</span> <span class="kn">import</span> <span class="p">(</span><span class="n">unauthorised_redirect</span><span class="p">,</span> <span class="n">State</span><span class="p">,</span> <span class="n">CSRFSchema</span><span class="p">,</span> <span class="n">ordered_counted_set</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">wte.util</span> <span class="kn">import</span> <span class="p">(</span><span class="n">unauthorised_redirect</span><span class="p">,</span> <span class="n">ordered_counted_set</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">wte.views.quiz</span> <span class="kn">import</span> <span class="n">extract_quizzes</span>
+
+<span class="n">BytesIO</span> <span class="o">=</span> <span class="n">nimport</span><span class="p">(</span><span class="s1">&#39;io:BytesIO&#39;</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="init"><a class="viewcode-back" href="../../../api/wte_views_part.html#wte.views.part.init">[docs]</a><span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;Adds the part-specific backend routes (route name, URL pattern</span>
+    <span class="sd">&quot;&quot;&quot;Adds the part-specific backend routes (route name, URL pattern</span>
 <span class="sd">    handler):</span>
 
 <span class="sd">    * ``part.list`` -- ``/parts`` -- :func:`~wte.views.part.list_parts`</span>
@@ -116,7 +121,7 @@
 
 
 <div class="viewcode-block" id="get_user_part_progress"><a class="viewcode-back" href="../../../api/wte_views_part.html#wte.views.part.get_user_part_progress">[docs]</a><span class="k">def</span> <span class="nf">get_user_part_progress</span><span class="p">(</span><span class="n">dbsession</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">part</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;Returns the :class:`~wte.models.UserPartProgress` for the given</span>
+    <span class="sd">&quot;&quot;&quot;Returns the :class:`~wte.models.UserPartProgress` for the given</span>
 <span class="sd">    ``user`` and ``part. If none exists, then a new one is instantiated. If</span>
 <span class="sd">    the :class:`~wte.models.UserPartProgress` points to a current page that</span>
 <span class="sd">    is different to ``page``, then the :class:`~wte.models.UserPartProgress`</span>
@@ -129,14 +134,14 @@
 <span class="sd">    :return: The :class:`~wte.models.UserPartProgress`</span>
 <span class="sd">    :rtype: :class:`~wte.models.UserPartProgress`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">u&#39;part&#39;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;part&#39;</span><span class="p">:</span>
         <span class="n">progress</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UserPartProgress</span><span class="p">)</span><span class="o">.</span>\
             <span class="nb">filter</span><span class="p">(</span><span class="n">and_</span><span class="p">(</span><span class="n">UserPartProgress</span><span class="o">.</span><span class="n">user_id</span> <span class="o">==</span> <span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
                         <span class="n">UserPartProgress</span><span class="o">.</span><span class="n">part_id</span> <span class="o">==</span> <span class="n">part</span><span class="o">.</span><span class="n">id</span><span class="p">))</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">progress</span><span class="p">:</span>
             <span class="n">progress</span> <span class="o">=</span> <span class="n">UserPartProgress</span><span class="p">(</span><span class="n">user_id</span><span class="o">=</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
                                         <span class="n">part_id</span><span class="o">=</span><span class="n">part</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">part</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">u&#39;page&#39;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">part</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;page&#39;</span><span class="p">:</span>
         <span class="n">progress</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UserPartProgress</span><span class="p">)</span><span class="o">.</span>\
             <span class="nb">filter</span><span class="p">(</span><span class="n">and_</span><span class="p">(</span><span class="n">UserPartProgress</span><span class="o">.</span><span class="n">user_id</span> <span class="o">==</span> <span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
                         <span class="n">UserPartProgress</span><span class="o">.</span><span class="n">part_id</span> <span class="o">==</span> <span class="n">part</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">id</span><span class="p">))</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
@@ -150,7 +155,7 @@
         <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">manager</span><span class="p">:</span>
             <span class="n">dbsession</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">progress</span><span class="p">)</span>
             <span class="n">dbsession</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">part</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">u&#39;page&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;page&#39;</span><span class="p">:</span>
                 <span class="n">templates</span> <span class="o">=</span> <span class="n">part</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">templates</span>
                 <span class="n">progress</span><span class="o">.</span><span class="n">current_id</span> <span class="o">=</span> <span class="n">part</span><span class="o">.</span><span class="n">id</span>
             <span class="k">else</span><span class="p">:</span>
@@ -166,7 +171,7 @@
                                       <span class="n">mimetype</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">mimetype</span><span class="p">,</span>
                                       <span class="n">order</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">order</span><span class="p">,</span>
                                       <span class="n">data</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
-                                      <span class="nb">type</span><span class="o">=</span><span class="s1">u&#39;file&#39;</span><span class="p">,</span>
+                                      <span class="nb">type</span><span class="o">=</span><span class="s1">&#39;file&#39;</span><span class="p">,</span>
                                       <span class="n">etag</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">etag</span><span class="p">)</span>
                     <span class="n">dbsession</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">user_file</span><span class="p">)</span>
                     <span class="n">progress</span><span class="o">.</span><span class="n">files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">user_file</span><span class="p">)</span>
@@ -184,7 +189,7 @@
 <span class="nd">@view_config</span><span class="p">(</span><span class="n">route_name</span><span class="o">=</span><span class="s1">&#39;part.list&#39;</span><span class="p">,</span> <span class="n">renderer</span><span class="o">=</span><span class="s1">&#39;wte:templates/part/list.kajiki&#39;</span><span class="p">)</span>
 <span class="nd">@current_user</span><span class="p">()</span>
 <div class="viewcode-block" id="list_parts"><a class="viewcode-back" href="../../../api/wte_views_part.html#wte.views.part.list_parts">[docs]</a><span class="k">def</span> <span class="nf">list_parts</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;Handles the ``/parts`` URL, displaying modules. If no parameters are specified,</span>
+    <span class="sd">&quot;&quot;&quot;Handles the ``/parts`` URL, displaying modules. If no parameters are specified,</span>
 <span class="sd">    lists all available modules. If a &quot;user_id&quot; parameter is specified, lists all</span>
 <span class="sd">    modules for that user.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -201,7 +206,7 @@
             <span class="n">parts</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Part</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">UserPartRole</span><span class="p">)</span>
             <span class="n">status</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;available&#39;</span><span class="p">,</span> <span class="s1">&#39;unavailable&#39;</span><span class="p">]</span>
             <span class="n">has_archived</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Part</span><span class="p">)</span><span class="o">.</span>\
-                <span class="n">join</span><span class="p">(</span><span class="n">UserPartRole</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">and_</span><span class="p">(</span><span class="n">Part</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">u&#39;module&#39;</span><span class="p">,</span>
+                <span class="n">join</span><span class="p">(</span><span class="n">UserPartRole</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">and_</span><span class="p">(</span><span class="n">Part</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;module&#39;</span><span class="p">,</span>
                                                <span class="n">Part</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;archived&#39;</span><span class="p">,</span>
                                                <span class="n">UserPartRole</span><span class="o">.</span><span class="n">user_id</span> <span class="o">==</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;user_id&#39;</span><span class="p">]))</span><span class="o">.</span><span class="n">count</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span>
             <span class="k">if</span> <span class="n">has_archived</span> <span class="ow">and</span> <span class="s1">&#39;status&#39;</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">:</span>
@@ -209,7 +214,7 @@
                     <span class="n">status</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;archived&#39;</span><span class="p">)</span>
                 <span class="k">elif</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;archived&#39;</span><span class="p">:</span>
                     <span class="n">status</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;archived&#39;</span><span class="p">]</span>
-            <span class="n">parts</span> <span class="o">=</span> <span class="n">parts</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">and_</span><span class="p">(</span><span class="n">Part</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">u&#39;module&#39;</span><span class="p">,</span>
+            <span class="n">parts</span> <span class="o">=</span> <span class="n">parts</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">and_</span><span class="p">(</span><span class="n">Part</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;module&#39;</span><span class="p">,</span>
                                       <span class="n">Part</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">status</span><span class="p">),</span>
                                       <span class="n">UserPartRole</span><span class="o">.</span><span class="n">user_id</span> <span class="o">==</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;user_id&#39;</span><span class="p">]))</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">Part</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>
             <span class="n">crumbs</span> <span class="o">=</span> <span class="p">[{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;My Modules&#39;</span><span class="p">,</span>
@@ -221,8 +226,8 @@
             <span class="k">raise</span> <span class="n">HTTPNotFound</span><span class="p">()</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">title</span> <span class="o">=</span> <span class="s1">&#39;Available Modules&#39;</span>
-        <span class="n">parts</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Part</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">and_</span><span class="p">(</span><span class="n">Part</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">u&#39;module&#39;</span><span class="p">,</span>
-                                                  <span class="n">Part</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s1">u&#39;available&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">Part</span><span class="o">.</span><span class="n">title</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Part</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">and_</span><span class="p">(</span><span class="n">Part</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;module&#39;</span><span class="p">,</span>
+                                                  <span class="n">Part</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;available&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">Part</span><span class="o">.</span><span class="n">title</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
         <span class="n">missing</span> <span class="o">=</span> <span class="s1">&#39;There are currently no modules available.&#39;</span>
         <span class="n">crumbs</span> <span class="o">=</span> <span class="p">[{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Modules&#39;</span><span class="p">,</span> <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.list&#39;</span><span class="p">),</span> <span class="s1">&#39;current&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">}]</span>
         <span class="n">has_archived</span> <span class="o">=</span> <span class="bp">False</span>
@@ -239,7 +244,7 @@
 <span class="nd">@current_user</span><span class="p">()</span>
 <span class="nd">@require_logged_in</span><span class="p">()</span>
 <div class="viewcode-block" id="view_part"><a class="viewcode-back" href="../../../api/wte_views_part.html#wte.views.part.view_part">[docs]</a><span class="k">def</span> <span class="nf">view_part</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;Handles the ``parts/{pid}`` URL, displaying the</span>
+    <span class="sd">&quot;&quot;&quot;Handles the ``parts/{pid}`` URL, displaying the</span>
 <span class="sd">    :class:`~wte.models.Part`.</span>
 
 <span class="sd">    Requires that the user has &quot;view&quot; rights on the</span>
@@ -253,6 +258,7 @@
             <span class="n">crumbs</span> <span class="o">=</span> <span class="n">create_part_crumbs</span><span class="p">(</span><span class="n">request</span><span class="p">,</span>
                                         <span class="n">part</span><span class="p">,</span>
                                         <span class="bp">None</span><span class="p">)</span>
+            <span class="n">quizzes</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;page&#39;</span><span class="p">:</span>
                 <span class="n">template_path</span> <span class="o">=</span> <span class="s1">&#39;wte:templates/part/view/</span><span class="si">%s</span><span class="s1">.kajiki&#39;</span> <span class="o">%</span> <span class="n">part</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">display_mode</span>
                 <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">display_mode</span> <span class="o">==</span> <span class="s1">&#39;three_pane_html&#39;</span><span class="p">:</span>
@@ -262,6 +268,55 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">template_path</span> <span class="o">=</span> <span class="s1">&#39;wte:templates/part/view/</span><span class="si">%s</span><span class="s1">.kajiki&#39;</span> <span class="o">%</span> <span class="n">part</span><span class="o">.</span><span class="n">type</span>
                 <span class="n">help_path</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;learner&#39;</span><span class="p">,</span> <span class="s1">&#39;module.html&#39;</span><span class="p">]</span>
+                <span class="c1"># Quiz Summary Generation - @Todo Should be refactored. Perhaps into the quiz view?</span>
+                <span class="n">quiz_ids</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="k">for</span> <span class="n">quiz</span> <span class="ow">in</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Quiz</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">Part</span><span class="p">)</span><span class="o">.</span>\
+                        <span class="nb">filter</span><span class="p">(</span><span class="n">Quiz</span><span class="o">.</span><span class="n">part_id</span><span class="o">.</span><span class="n">in_</span><span class="p">([</span><span class="n">c</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">part</span><span class="o">.</span><span class="n">children</span><span class="p">]))</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">Part</span><span class="o">.</span><span class="n">order</span><span class="p">):</span>
+                    <span class="n">quiz_ids</span><span class="p">[</span><span class="n">quiz</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">quizzes</span><span class="p">)</span>
+                    <span class="n">quizzes</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="n">quiz</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                    <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="n">quiz</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+                                    <span class="s1">&#39;questions&#39;</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">quiz</span><span class="o">.</span><span class="n">questions</span><span class="p">)})</span>
+                <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">has_role</span><span class="p">(</span><span class="s1">&#39;student&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">quiz_ids</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">answer</span> <span class="ow">in</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">QuizAnswer</span><span class="p">)</span><span class="o">.</span>\
+                                <span class="nb">filter</span><span class="p">(</span><span class="n">and_</span><span class="p">(</span><span class="n">QuizAnswer</span><span class="o">.</span><span class="n">quiz_id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">quiz_ids</span><span class="o">.</span><span class="n">keys</span><span class="p">())),</span>
+                                            <span class="n">QuizAnswer</span><span class="o">.</span><span class="n">user_id</span> <span class="o">==</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="o">.</span><span class="n">id</span><span class="p">)):</span>
+                            <span class="n">quizzes</span><span class="p">[</span><span class="n">quiz_ids</span><span class="p">[</span><span class="n">answer</span><span class="o">.</span><span class="n">quiz_id</span><span class="p">]][</span><span class="s1">&#39;answered&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">True</span>
+                            <span class="k">for</span> <span class="n">question</span> <span class="ow">in</span> <span class="n">quizzes</span><span class="p">[</span><span class="n">quiz_ids</span><span class="p">[</span><span class="n">answer</span><span class="o">.</span><span class="n">quiz_id</span><span class="p">]][</span><span class="s1">&#39;questions&#39;</span><span class="p">]:</span>
+                                <span class="k">if</span> <span class="n">question</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">answer</span><span class="o">.</span><span class="n">question</span><span class="p">:</span>
+                                    <span class="n">question</span><span class="p">[</span><span class="s1">&#39;attempts&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">answer</span><span class="o">.</span><span class="n">attempts</span>
+                                    <span class="k">if</span> <span class="n">answer</span><span class="o">.</span><span class="n">initial_correct</span><span class="p">:</span>
+                                        <span class="n">question</span><span class="p">[</span><span class="s1">&#39;correct&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">True</span>
+                                        <span class="n">question</span><span class="p">[</span><span class="s1">&#39;answer&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">answer</span><span class="o">.</span><span class="n">initial_answer</span><span class="p">)</span>
+                                    <span class="k">elif</span> <span class="n">answer</span><span class="o">.</span><span class="n">final_correct</span><span class="p">:</span>
+                                        <span class="n">question</span><span class="p">[</span><span class="s1">&#39;correct&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">True</span>
+                                        <span class="n">question</span><span class="p">[</span><span class="s1">&#39;answer&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">answer</span><span class="o">.</span><span class="n">final_answer</span><span class="p">)</span>
+                                    <span class="k">else</span><span class="p">:</span>
+                                        <span class="n">question</span><span class="p">[</span><span class="s1">&#39;correct&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">False</span>
+                                        <span class="k">if</span> <span class="n">answer</span><span class="o">.</span><span class="n">final_answer</span><span class="p">:</span>
+                                            <span class="n">question</span><span class="p">[</span><span class="s1">&#39;answer&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">answer</span><span class="o">.</span><span class="n">final_answer</span><span class="p">)</span>
+                    <span class="n">quizzes</span> <span class="o">=</span> <span class="p">[</span><span class="n">quiz</span> <span class="k">for</span> <span class="n">quiz</span> <span class="ow">in</span> <span class="n">quizzes</span> <span class="k">if</span> <span class="s1">&#39;answered&#39;</span> <span class="ow">in</span> <span class="n">quiz</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">student_count</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UserPartRole</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">and_</span><span class="p">(</span><span class="n">UserPartRole</span><span class="o">.</span><span class="n">part_id</span> <span class="o">==</span> <span class="n">part</span><span class="o">.</span><span class="n">parent_id</span><span class="p">,</span>
+                                                                              <span class="n">UserPartRole</span><span class="o">.</span><span class="n">role</span> <span class="o">==</span> <span class="s1">&#39;student&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+                    <span class="k">for</span> <span class="n">quiz</span> <span class="ow">in</span> <span class="n">quizzes</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">question</span> <span class="ow">in</span> <span class="n">quiz</span><span class="p">[</span><span class="s1">&#39;questions&#39;</span><span class="p">]:</span>
+                            <span class="n">question</span><span class="p">[</span><span class="s1">&#39;correct&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;initial&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                                                   <span class="s1">&#39;subsequent&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                                                   <span class="s1">&#39;incorrect&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                                                   <span class="s1">&#39;total&#39;</span><span class="p">:</span> <span class="n">student_count</span><span class="p">}</span>
+                    <span class="k">if</span> <span class="n">quiz_ids</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">answer</span> <span class="ow">in</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">QuizAnswer</span><span class="p">)</span><span class="o">.</span>\
+                                <span class="nb">filter</span><span class="p">(</span><span class="n">QuizAnswer</span><span class="o">.</span><span class="n">quiz_id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">quiz_ids</span><span class="o">.</span><span class="n">keys</span><span class="p">()))):</span>
+                            <span class="k">for</span> <span class="n">question</span> <span class="ow">in</span> <span class="n">quizzes</span><span class="p">[</span><span class="n">quiz_ids</span><span class="p">[</span><span class="n">answer</span><span class="o">.</span><span class="n">quiz_id</span><span class="p">]][</span><span class="s1">&#39;questions&#39;</span><span class="p">]:</span>
+                                <span class="k">if</span> <span class="n">question</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">answer</span><span class="o">.</span><span class="n">question</span><span class="p">:</span>
+                                    <span class="k">if</span> <span class="n">answer</span><span class="o">.</span><span class="n">initial_correct</span><span class="p">:</span>
+                                        <span class="n">question</span><span class="p">[</span><span class="s1">&#39;correct&#39;</span><span class="p">][</span><span class="s1">&#39;initial&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">question</span><span class="p">[</span><span class="s1">&#39;correct&#39;</span><span class="p">][</span><span class="s1">&#39;initial&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+                                    <span class="k">elif</span> <span class="n">answer</span><span class="o">.</span><span class="n">final_correct</span><span class="p">:</span>
+                                        <span class="n">question</span><span class="p">[</span><span class="s1">&#39;correct&#39;</span><span class="p">][</span><span class="s1">&#39;subsequent&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">question</span><span class="p">[</span><span class="s1">&#39;correct&#39;</span><span class="p">][</span><span class="s1">&#39;subsequent&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+                                    <span class="k">else</span><span class="p">:</span>
+                                        <span class="n">question</span><span class="p">[</span><span class="s1">&#39;correct&#39;</span><span class="p">][</span><span class="s1">&#39;incorrect&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">question</span><span class="p">[</span><span class="s1">&#39;correct&#39;</span><span class="p">][</span><span class="s1">&#39;incorrect&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="c1"># End Quiz Summary Generation</span>
             <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">child</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">title</span><span class="p">()</span> <span class="k">if</span> <span class="n">child</span><span class="o">.</span><span class="n">label</span> <span class="k">else</span> <span class="n">child</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">title</span><span class="p">()</span> <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">part</span><span class="o">.</span><span class="n">children</span><span class="p">]</span>
             <span class="k">return</span> <span class="n">render_to_response</span><span class="p">(</span><span class="n">template_path</span><span class="p">,</span>
                                       <span class="p">{</span><span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
@@ -269,8 +324,9 @@
                                        <span class="s1">&#39;progress&#39;</span><span class="p">:</span> <span class="n">progress</span><span class="p">,</span>
                                        <span class="s1">&#39;include_footer&#39;</span><span class="p">:</span> <span class="n">part</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="s1">&#39;page&#39;</span><span class="p">,</span>
                                        <span class="s1">&#39;labels&#39;</span><span class="p">:</span> <span class="n">ordered_counted_set</span><span class="p">(</span><span class="n">labels</span><span class="p">),</span>
+                                       <span class="s1">&#39;quizzes&#39;</span><span class="p">:</span> <span class="n">quizzes</span><span class="p">,</span>
                                        <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="n">help_path</span><span class="p">},</span>
-                                       <span class="n">request</span><span class="o">=</span><span class="n">request</span><span class="p">)</span>
+                                      <span class="n">request</span><span class="o">=</span><span class="n">request</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;module&#39;</span><span class="p">:</span>
                 <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
@@ -281,30 +337,30 @@
 
 
 <div class="viewcode-block" id="NewPartSchema"><a class="viewcode-back" href="../../../api/wte_views_part.html#wte.views.part.NewPartSchema">[docs]</a><span class="k">class</span> <span class="nc">NewPartSchema</span><span class="p">(</span><span class="n">CSRFSchema</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;The :class:`~wte.views.backend.NewPartSchema` handles the validation</span>
+    <span class="sd">&quot;&quot;&quot;The :class:`~wte.views.backend.NewPartSchema` handles the validation</span>
 <span class="sd">    of a new :class:`~wte.models.Part`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">title</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">UnicodeString</span><span class="p">(</span><span class="n">not_empty</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-    <span class="sd">u&quot;&quot;&quot;The part&#39;s title&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;The part&#39;s title&quot;&quot;&quot;</span>
     <span class="n">parent_id</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">Int</span><span class="p">(</span><span class="n">if_missing</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
-    <span class="sd">u&quot;&quot;&quot;The parent :class:`~wte.models.Part`&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;The parent :class:`~wte.models.Part`&quot;&quot;&quot;</span>
     <span class="n">order</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">Int</span><span class="p">(</span><span class="n">if_missing</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
     <span class="sd">&quot;&quot;&quot;The optional order index to create the new :class:`~wte.models.Part` at&quot;&quot;&quot;</span>
-    <span class="n">status</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">All</span><span class="p">(</span><span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">UnicodeString</span><span class="p">(</span><span class="n">if_empty</span><span class="o">=</span><span class="s1">u&#39;available&#39;</span><span class="p">,</span> <span class="n">if_missing</span><span class="o">=</span><span class="s1">u&#39;available&#39;</span><span class="p">),</span>
-                            <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">OneOf</span><span class="p">([</span><span class="s1">u&#39;unavailable&#39;</span><span class="p">,</span>
-                                                         <span class="s1">u&#39;available&#39;</span><span class="p">]))</span>
-    <span class="sd">u&quot;&quot;&quot;The part&#39;s status&quot;&quot;&quot;</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">All</span><span class="p">(</span><span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">UnicodeString</span><span class="p">(</span><span class="n">if_empty</span><span class="o">=</span><span class="s1">&#39;available&#39;</span><span class="p">,</span> <span class="n">if_missing</span><span class="o">=</span><span class="s1">&#39;available&#39;</span><span class="p">),</span>
+                            <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">OneOf</span><span class="p">([</span><span class="s1">&#39;unavailable&#39;</span><span class="p">,</span>
+                                                         <span class="s1">&#39;available&#39;</span><span class="p">]))</span>
+    <span class="sd">&quot;&quot;&quot;The part&#39;s status&quot;&quot;&quot;</span>
     <span class="n">display_mode</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">All</span><span class="p">(</span><span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">UnicodeString</span><span class="p">(</span><span class="n">if_empty</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">if_missing</span><span class="o">=</span><span class="bp">None</span><span class="p">),</span>
                                   <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">OneOf</span><span class="p">([</span><span class="bp">None</span><span class="p">,</span>
-                                                               <span class="s1">u&#39;three_pane_html&#39;</span><span class="p">,</span>
-                                                               <span class="s1">u&#39;text_only&#39;</span><span class="p">]))</span>
-    <span class="sd">u&quot;&quot;&quot;The part&#39;s display mode&quot;&quot;&quot;</span>
+                                                               <span class="s1">&#39;three_pane_html&#39;</span><span class="p">,</span>
+                                                               <span class="s1">&#39;text_only&#39;</span><span class="p">]))</span>
+    <span class="sd">&quot;&quot;&quot;The part&#39;s display mode&quot;&quot;&quot;</span>
     <span class="n">label</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">UnicodeString</span><span class="p">(</span><span class="n">if_empty</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">if_missing</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
     <span class="sd">&quot;&quot;&quot;The part&#39;s label&quot;&quot;&quot;</span></div>
 
 
 <div class="viewcode-block" id="create_part_crumbs"><a class="viewcode-back" href="../../../api/wte_views_part.html#wte.views.part.create_part_crumbs">[docs]</a><span class="k">def</span> <span class="nf">create_part_crumbs</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">part</span><span class="p">,</span> <span class="n">current</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;Creates the list of breadcrumbs for a given ``part``. If the ``current`` is a ``list``,</span>
+    <span class="sd">&quot;&quot;&quot;Creates the list of breadcrumbs for a given ``part``. If the ``current`` is a ``list``,</span>
 <span class="sd">    then all will be added to the end of the crumbs.</span>
 
 <span class="sd">    :param part: The part to create the breadcrumbs to</span>
@@ -341,7 +397,7 @@
 <span class="nd">@current_user</span><span class="p">()</span>
 <span class="nd">@require_logged_in</span><span class="p">()</span>
 <div class="viewcode-block" id="new"><a class="viewcode-back" href="../../../api/wte_views_part.html#wte.views.part.new">[docs]</a><span class="k">def</span> <span class="nf">new</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;Handles the ``/parts/new`` URL, providing the UI and</span>
+    <span class="sd">&quot;&quot;&quot;Handles the ``/parts/new`` URL, providing the UI and</span>
 <span class="sd">    backend for creating a new :class:`~wte.models.Part`.</span>
 
 <span class="sd">    The required permissions depend on the type of :class:`~wte.models.Part`</span>
@@ -354,8 +410,8 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">dbsession</span> <span class="o">=</span> <span class="n">DBSession</span><span class="p">()</span>
     <span class="n">parent</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Part</span><span class="p">)</span><span class="o">.</span>\
-        <span class="nb">filter</span><span class="p">(</span><span class="n">Part</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">u&#39;parent_id&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>\
-        <span class="k">if</span> <span class="s1">u&#39;parent_id&#39;</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span> <span class="k">else</span> <span class="bp">None</span>
+        <span class="nb">filter</span><span class="p">(</span><span class="n">Part</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;parent_id&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>\
+        <span class="k">if</span> <span class="s1">&#39;parent_id&#39;</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span> <span class="k">else</span> <span class="bp">None</span>
     <span class="k">if</span> <span class="n">parent</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">parent</span><span class="o">.</span><span class="n">allow</span><span class="p">(</span><span class="s1">&#39;edit&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="p">):</span>
             <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">&#39;new_type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;module&#39;</span><span class="p">:</span>
@@ -368,14 +424,14 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">parent</span><span class="p">:</span>
             <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">flash</span><span class="p">(</span><span class="s1">&#39;You cannot create a new part without a parent&#39;</span><span class="p">,</span> <span class="n">queue</span><span class="o">=</span><span class="s1">&#39;error&#39;</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">HTTPSeeOther</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.view&#39;</span><span class="p">,</span> <span class="n">pid</span><span class="o">=</span><span class="n">parent</span><span class="o">.</span><span class="n">id</span><span class="p">))</span>
-        <span class="k">elif</span> <span class="n">parent</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="s1">u&#39;module&#39;</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">parent</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="s1">&#39;module&#39;</span><span class="p">:</span>
             <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">flash</span><span class="p">(</span><span class="s1">&#39;You can only add parts to a module&#39;</span><span class="p">,</span> <span class="n">queue</span><span class="o">=</span><span class="s1">&#39;error&#39;</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">HTTPSeeOther</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.view&#39;</span><span class="p">,</span> <span class="n">pid</span><span class="o">=</span><span class="n">parent</span><span class="o">.</span><span class="n">id</span><span class="p">))</span>
     <span class="k">elif</span> <span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">&#39;new_type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;page&#39;</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">parent</span><span class="p">:</span>
             <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">flash</span><span class="p">(</span><span class="s1">&#39;You cannot create a new page without a parent&#39;</span><span class="p">,</span> <span class="n">queue</span><span class="o">=</span><span class="s1">&#39;error&#39;</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">HTTPSeeOther</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.view&#39;</span><span class="p">,</span> <span class="n">pid</span><span class="o">=</span><span class="n">parent</span><span class="o">.</span><span class="n">id</span><span class="p">))</span>
-        <span class="k">elif</span> <span class="n">parent</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="s1">u&#39;part&#39;</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">parent</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="s1">&#39;part&#39;</span><span class="p">:</span>
             <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">flash</span><span class="p">(</span><span class="s1">&#39;You can only add pages to a part&#39;</span><span class="p">,</span> <span class="n">queue</span><span class="o">=</span><span class="s1">&#39;error&#39;</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">HTTPSeeOther</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.view&#39;</span><span class="p">,</span> <span class="n">pid</span><span class="o">=</span><span class="n">parent</span><span class="o">.</span><span class="n">id</span><span class="p">))</span>
     <span class="k">else</span><span class="p">:</span>
@@ -386,9 +442,10 @@
                                 <span class="p">{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Add </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">&#39;new_type&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">title</span><span class="p">()),</span>
                                  <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">current_route_url</span><span class="p">()})</span>
     <span class="n">help_path</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">&#39;new_type&#39;</span><span class="p">],</span> <span class="s1">&#39;new.html&#39;</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">u&#39;POST&#39;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">params</span> <span class="o">=</span> <span class="n">NewPartSchema</span><span class="p">()</span><span class="o">.</span><span class="n">to_python</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">)</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="n">NewPartSchema</span><span class="p">()</span><span class="o">.</span><span class="n">to_python</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">,</span>
+                                               <span class="n">State</span><span class="p">(</span><span class="n">request</span><span class="o">=</span><span class="n">request</span><span class="p">))</span>
             <span class="n">dbsession</span> <span class="o">=</span> <span class="n">DBSession</span><span class="p">()</span>
             <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">manager</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;order&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
@@ -418,7 +475,7 @@
                                 <span class="n">content</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">&#39;new_type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;module&#39;</span><span class="p">:</span>
                     <span class="n">new_part</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">UserPartRole</span><span class="p">(</span><span class="n">user</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="p">,</span>
-                                                       <span class="n">role</span><span class="o">=</span><span class="s1">u&#39;owner&#39;</span><span class="p">))</span>
+                                                       <span class="n">role</span><span class="o">=</span><span class="s1">&#39;owner&#39;</span><span class="p">))</span>
                 <span class="n">dbsession</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">new_part</span><span class="p">)</span>
             <span class="n">dbsession</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">new_part</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">HTTPSeeOther</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.edit&#39;</span><span class="p">,</span> <span class="n">pid</span><span class="o">=</span><span class="n">new_part</span><span class="o">.</span><span class="n">id</span><span class="p">))</span>
@@ -432,35 +489,35 @@
 
 
 <div class="viewcode-block" id="EditPartSchema"><a class="viewcode-back" href="../../../api/wte_views_part.html#wte.views.part.EditPartSchema">[docs]</a><span class="k">class</span> <span class="nc">EditPartSchema</span><span class="p">(</span><span class="n">CSRFSchema</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;The :class:`~wte.views.part.EditPartSchema` handles the validation</span>
+    <span class="sd">&quot;&quot;&quot;The :class:`~wte.views.part.EditPartSchema` handles the validation</span>
 <span class="sd">    for editing :class:`~wte.models.Part`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">title</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">UnicodeString</span><span class="p">(</span><span class="n">not_empty</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-    <span class="sd">u&quot;&quot;&quot;The part&#39;s title&quot;&quot;&quot;</span>
-    <span class="n">status</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">All</span><span class="p">(</span><span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">UnicodeString</span><span class="p">(</span><span class="n">if_empty</span><span class="o">=</span><span class="s1">u&#39;available&#39;</span><span class="p">,</span> <span class="n">if_missing</span><span class="o">=</span><span class="s1">u&#39;available&#39;</span><span class="p">),</span>
-                            <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">OneOf</span><span class="p">([</span><span class="s1">u&#39;unavailable&#39;</span><span class="p">,</span>
-                                                         <span class="s1">u&#39;available&#39;</span><span class="p">]))</span>
-    <span class="sd">u&quot;&quot;&quot;The part&#39;s status&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;The part&#39;s title&quot;&quot;&quot;</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">All</span><span class="p">(</span><span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">UnicodeString</span><span class="p">(</span><span class="n">if_empty</span><span class="o">=</span><span class="s1">&#39;available&#39;</span><span class="p">,</span> <span class="n">if_missing</span><span class="o">=</span><span class="s1">&#39;available&#39;</span><span class="p">),</span>
+                            <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">OneOf</span><span class="p">([</span><span class="s1">&#39;unavailable&#39;</span><span class="p">,</span>
+                                                         <span class="s1">&#39;available&#39;</span><span class="p">]))</span>
+    <span class="sd">&quot;&quot;&quot;The part&#39;s status&quot;&quot;&quot;</span>
     <span class="n">display_mode</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">All</span><span class="p">(</span><span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">UnicodeString</span><span class="p">(</span><span class="n">if_empty</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">if_missing</span><span class="o">=</span><span class="bp">None</span><span class="p">),</span>
                                   <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">OneOf</span><span class="p">([</span><span class="bp">None</span><span class="p">,</span>
-                                                               <span class="s1">u&#39;three_pane_html&#39;</span><span class="p">,</span>
-                                                               <span class="s1">u&#39;text_only&#39;</span><span class="p">]))</span>
-    <span class="sd">u&quot;&quot;&quot;The part&#39;s display mode&quot;&quot;&quot;</span>
+                                                               <span class="s1">&#39;three_pane_html&#39;</span><span class="p">,</span>
+                                                               <span class="s1">&#39;text_only&#39;</span><span class="p">]))</span>
+    <span class="sd">&quot;&quot;&quot;The part&#39;s display mode&quot;&quot;&quot;</span>
     <span class="n">label</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">UnicodeString</span><span class="p">(</span><span class="n">if_empty</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">if_missing</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
     <span class="sd">&quot;&quot;&quot;The part&#39;s label&quot;&quot;&quot;</span>
-    <span class="n">content</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">UnicodeString</span><span class="p">(</span><span class="n">if_missing</span><span class="o">=</span><span class="s1">u&#39;&#39;</span><span class="p">)</span>
-    <span class="sd">u&quot;&quot;&quot;The ReST content&quot;&quot;&quot;</span>
+    <span class="n">content</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">UnicodeString</span><span class="p">(</span><span class="n">if_missing</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;The ReST content&quot;&quot;&quot;</span>
     <span class="n">child_part_id</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">ForEach</span><span class="p">(</span><span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">Int</span><span class="p">,</span> <span class="n">if_missing</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
-    <span class="sd">u&quot;&quot;&quot;The child :class:`~wte.models.Part` ids for re-ordering&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;The child :class:`~wte.models.Part` ids for re-ordering&quot;&quot;&quot;</span>
     <span class="n">template_id</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">ForEach</span><span class="p">(</span><span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">Int</span><span class="p">,</span> <span class="n">if_missing</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
-    <span class="sd">u&quot;&quot;&quot;The :class:`~wte.models.Template` ids for re-ordering&quot;&quot;&quot;</span></div>
+    <span class="sd">&quot;&quot;&quot;The :class:`~wte.models.Template` ids for re-ordering&quot;&quot;&quot;</span></div>
 
 
 <span class="nd">@view_config</span><span class="p">(</span><span class="n">route_name</span><span class="o">=</span><span class="s1">&#39;part.edit&#39;</span><span class="p">,</span> <span class="n">renderer</span><span class="o">=</span><span class="s1">&#39;wte:templates/part/edit.kajiki&#39;</span><span class="p">)</span>
 <span class="nd">@current_user</span><span class="p">()</span>
 <span class="nd">@require_logged_in</span><span class="p">()</span>
 <div class="viewcode-block" id="edit"><a class="viewcode-back" href="../../../api/wte_views_part.html#wte.views.part.edit">[docs]</a><span class="k">def</span> <span class="nf">edit</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;Handles the ``/parts/{pid}/edit`` URL,</span>
+    <span class="sd">&quot;&quot;&quot;Handles the ``/parts/{pid}/edit`` URL,</span>
 <span class="sd">    providing the UI and backend for editing a :class:`~wte.models.Part`.</span>
 
 <span class="sd">    Requires that the user has &quot;edit&quot; rights on the :class:`~wte.models.Part`.</span>
@@ -474,9 +531,10 @@
                                         <span class="p">{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Edit&#39;</span><span class="p">,</span>
                                          <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">current_route_url</span><span class="p">()})</span>
             <span class="n">help_path</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="n">part</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="s1">&#39;edit.html&#39;</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">u&#39;POST&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
                 <span class="k">try</span><span class="p">:</span>
-                    <span class="n">params</span> <span class="o">=</span> <span class="n">EditPartSchema</span><span class="p">()</span><span class="o">.</span><span class="n">to_python</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">)</span>
+                    <span class="n">params</span> <span class="o">=</span> <span class="n">EditPartSchema</span><span class="p">()</span><span class="o">.</span><span class="n">to_python</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">,</span>
+                                                        <span class="n">State</span><span class="p">(</span><span class="n">request</span><span class="o">=</span><span class="n">request</span><span class="p">))</span>
                     <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">manager</span><span class="p">:</span>
                         <span class="n">dbsession</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">part</span><span class="p">)</span>
                         <span class="n">part</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">]</span>
@@ -487,6 +545,7 @@
                             <span class="n">part</span><span class="o">.</span><span class="n">compiled_content</span> <span class="o">=</span> <span class="n">compile_rst</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;content&#39;</span><span class="p">],</span>
                                                                 <span class="n">request</span><span class="p">,</span>
                                                                 <span class="n">part</span><span class="o">=</span><span class="n">part</span><span class="p">)</span>
+                            <span class="n">extract_quizzes</span><span class="p">(</span><span class="n">dbsession</span><span class="p">,</span> <span class="n">part</span><span class="p">)</span>
                         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                             <span class="n">msg</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;&lt;string&gt;:&#39;</span><span class="p">,</span> <span class="s1">&#39;Invalid ReST: Line &#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;(SEVERE/4) &#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
                             <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="p">[:</span><span class="n">msg</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)]</span>
@@ -525,7 +584,7 @@
 
 
 <div class="viewcode-block" id="RegisterSettingsSchema"><a class="viewcode-back" href="../../../api/wte_views_part.html#wte.views.part.RegisterSettingsSchema">[docs]</a><span class="k">class</span> <span class="nc">RegisterSettingsSchema</span><span class="p">(</span><span class="n">CSRFSchema</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;The :class:`~wte.views.part.RegisterSettingsSchema` handles the validation</span>
+    <span class="sd">&quot;&quot;&quot;The :class:`~wte.views.part.RegisterSettingsSchema` handles the validation</span>
 <span class="sd">    for modifying the ``access_rights`` of a :class:`~wte.models.Part`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">require</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">ForEach</span><span class="p">(</span><span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">OneOf</span><span class="p">([</span><span class="s1">&#39;password&#39;</span><span class="p">,</span> <span class="s1">&#39;email_domains&#39;</span><span class="p">]))</span>
@@ -540,7 +599,7 @@
 <span class="nd">@current_user</span><span class="p">()</span>
 <span class="nd">@require_logged_in</span><span class="p">()</span>
 <div class="viewcode-block" id="edit_register_settings"><a class="viewcode-back" href="../../../api/wte_views_part.html#wte.views.part.edit_register_settings">[docs]</a><span class="k">def</span> <span class="nf">edit_register_settings</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;Handles the ``/parts/{pid}/register/settings`` URL,</span>
+    <span class="sd">&quot;&quot;&quot;Handles the ``/parts/{pid}/register/settings`` URL,</span>
 <span class="sd">    providing the UI and backend for editing the settings for registering for</span>
 <span class="sd">    a &quot;module&quot; type :class:`~wte.models.Part`.</span>
 
@@ -561,9 +620,10 @@
                                         <span class="n">part</span><span class="p">,</span>
                                         <span class="p">{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Access Settings&#39;</span><span class="p">,</span>
                                          <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">current_route_url</span><span class="p">()})</span>
-            <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">u&#39;POST&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
                 <span class="k">try</span><span class="p">:</span>
-                    <span class="n">params</span> <span class="o">=</span> <span class="n">RegisterSettingsSchema</span><span class="p">()</span><span class="o">.</span><span class="n">to_python</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">)</span>
+                    <span class="n">params</span> <span class="o">=</span> <span class="n">RegisterSettingsSchema</span><span class="p">()</span><span class="o">.</span><span class="n">to_python</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">,</span>
+                                                                <span class="n">State</span><span class="p">(</span><span class="n">request</span><span class="o">=</span><span class="n">request</span><span class="p">))</span>
                     <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">manager</span><span class="p">:</span>
                         <span class="n">rights</span> <span class="o">=</span> <span class="p">{}</span>
                         <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;require&#39;</span><span class="p">]:</span>
@@ -597,7 +657,7 @@
 <span class="nd">@current_user</span><span class="p">()</span>
 <span class="nd">@require_logged_in</span><span class="p">()</span>
 <div class="viewcode-block" id="delete"><a class="viewcode-back" href="../../../api/wte_views_part.html#wte.views.part.delete">[docs]</a><span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;Handles the ``/modules/{mid}/parts/{pid}/delete`` URL, providing</span>
+    <span class="sd">&quot;&quot;&quot;Handles the ``/modules/{mid}/parts/{pid}/delete`` URL, providing</span>
 <span class="sd">    the UI and backend for deleting a :class:`~wte.models.Part`.</span>
 
 <span class="sd">    Requires that the user has &quot;delete&quot; rights on the :class:`~wte.models.Part`.</span>
@@ -611,7 +671,7 @@
                                         <span class="p">{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Delete&#39;</span><span class="p">,</span>
                                          <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.delete&#39;</span><span class="p">,</span>
                                                                   <span class="n">pid</span><span class="o">=</span><span class="n">part</span><span class="o">.</span><span class="n">id</span><span class="p">)})</span>
-            <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">u&#39;POST&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="n">CSRFSchema</span><span class="p">()</span><span class="o">.</span><span class="n">to_python</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="n">State</span><span class="p">(</span><span class="n">request</span><span class="o">=</span><span class="n">request</span><span class="p">))</span>
                     <span class="n">parent</span> <span class="o">=</span> <span class="n">part</span><span class="o">.</span><span class="n">parent</span>
@@ -646,7 +706,7 @@
 <span class="nd">@current_user</span><span class="p">()</span>
 <span class="nd">@require_logged_in</span><span class="p">()</span>
 <div class="viewcode-block" id="preview"><a class="viewcode-back" href="../../../api/wte_views_part.html#wte.views.part.preview">[docs]</a><span class="k">def</span> <span class="nf">preview</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;Handles the ``/parts/{pid}/rst_preview`` URL, generating an HTML preview of</span>
+    <span class="sd">&quot;&quot;&quot;Handles the ``/parts/{pid}/rst_preview`` URL, generating an HTML preview of</span>
 <span class="sd">    the submitted ReST. The ReST text to render has to be set as the ``content`` parameter.</span>
 
 <span class="sd">    In addition to rendering the ReST the in the same way that it is rendered when</span>
@@ -660,7 +720,7 @@
     <span class="k">if</span> <span class="n">part</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">allow</span><span class="p">(</span><span class="s1">&#39;edit&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="p">):</span>
             <span class="k">if</span> <span class="s1">&#39;content&#39;</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">:</span>
-                <span class="k">try</span> <span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
                     <span class="n">content</span> <span class="o">=</span> <span class="n">compile_rst</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;content&#39;</span><span class="p">],</span> <span class="n">request</span><span class="p">,</span> <span class="n">part</span><span class="o">=</span><span class="n">part</span><span class="p">)</span>
                 <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                     <span class="n">content</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&lt;div class=&quot;callout alert&quot;&gt;&lt;p&gt;&#39;</span><span class="p">]</span>
@@ -687,7 +747,7 @@
 <span class="nd">@current_user</span><span class="p">()</span>
 <span class="nd">@require_logged_in</span><span class="p">()</span>
 <div class="viewcode-block" id="register"><a class="viewcode-back" href="../../../api/wte_views_part.html#wte.views.part.register">[docs]</a><span class="k">def</span> <span class="nf">register</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;Handles the ``/parts/{pid}/register`` URL, to allow users to register</span>
+    <span class="sd">&quot;&quot;&quot;Handles the ``/parts/{pid}/register`` URL, to allow users to register</span>
 <span class="sd">    for a :class:`~wte.models.Part` that is a &quot;module&quot;.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">dbsession</span> <span class="o">=</span> <span class="n">DBSession</span><span class="p">()</span>
@@ -741,7 +801,7 @@
             <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">manager</span><span class="p">:</span>
                 <span class="n">dbsession</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">UserPartRole</span><span class="p">(</span><span class="n">user</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="p">,</span>
                                            <span class="n">part</span><span class="o">=</span><span class="n">part</span><span class="p">,</span>
-                                           <span class="n">role</span><span class="o">=</span><span class="s1">u&#39;student&#39;</span><span class="p">))</span>
+                                           <span class="n">role</span><span class="o">=</span><span class="s1">&#39;student&#39;</span><span class="p">))</span>
             <span class="k">raise</span> <span class="n">HTTPSeeOther</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.view&#39;</span><span class="p">,</span> <span class="n">pid</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">&#39;pid&#39;</span><span class="p">]))</span>
         <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
                 <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">}</span>
@@ -750,7 +810,7 @@
 
 
 <div class="viewcode-block" id="get_all_parts"><a class="viewcode-back" href="../../../api/wte_views_part.html#wte.views.part.get_all_parts">[docs]</a><span class="k">def</span> <span class="nf">get_all_parts</span><span class="p">(</span><span class="n">part</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;Recursively returns the :class:`~wte.models.Part` and all its children.</span>
+    <span class="sd">&quot;&quot;&quot;Recursively returns the :class:`~wte.models.Part` and all its children.</span>
 
 <span class="sd">    :param part: The :class:`~wte.models.Part` for which to find it children</span>
 <span class="sd">    :type part: :class:`~wte.models.Part`</span>
@@ -768,7 +828,7 @@
 <span class="nd">@current_user</span><span class="p">()</span>
 <span class="nd">@require_logged_in</span><span class="p">()</span>
 <div class="viewcode-block" id="deregister"><a class="viewcode-back" href="../../../api/wte_views_part.html#wte.views.part.deregister">[docs]</a><span class="k">def</span> <span class="nf">deregister</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;Handles the ``/parts/{pid}/deregister`` URL, to allow users to de-register</span>
+    <span class="sd">&quot;&quot;&quot;Handles the ``/parts/{pid}/deregister`` URL, to allow users to de-register</span>
 <span class="sd">    from a :class:`~wte.models.Part` that is a &quot;module&quot;.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">dbsession</span> <span class="o">=</span> <span class="n">DBSession</span><span class="p">()</span>
@@ -788,7 +848,7 @@
                 <span class="n">role</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UserPartRole</span><span class="p">)</span><span class="o">.</span>\
                     <span class="nb">filter</span><span class="p">(</span><span class="n">and_</span><span class="p">(</span><span class="n">UserPartRole</span><span class="o">.</span><span class="n">part_id</span> <span class="o">==</span> <span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">&#39;pid&#39;</span><span class="p">],</span>
                                 <span class="n">UserPartRole</span><span class="o">.</span><span class="n">user_id</span> <span class="o">==</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
-                                <span class="n">UserPartRole</span><span class="o">.</span><span class="n">role</span> <span class="o">==</span> <span class="s1">u&#39;student&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+                                <span class="n">UserPartRole</span><span class="o">.</span><span class="n">role</span> <span class="o">==</span> <span class="s1">&#39;student&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
                 <span class="k">if</span> <span class="n">role</span><span class="p">:</span>
                     <span class="n">dbsession</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">role</span><span class="p">)</span>
                 <span class="n">parts</span> <span class="o">=</span> <span class="n">get_all_parts</span><span class="p">(</span><span class="n">part</span><span class="p">)</span>
@@ -806,23 +866,23 @@
 
 
 <div class="viewcode-block" id="ChangeStatusSchema"><a class="viewcode-back" href="../../../api/wte_views_part.html#wte.views.part.ChangeStatusSchema">[docs]</a><span class="k">class</span> <span class="nc">ChangeStatusSchema</span><span class="p">(</span><span class="n">CSRFSchema</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;The :class:`~wte.views.part.ChangeStatusSchema` handles the validation</span>
+    <span class="sd">&quot;&quot;&quot;The :class:`~wte.views.part.ChangeStatusSchema` handles the validation</span>
 <span class="sd">    for editing :class:`~wte.models.Part`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">status</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">All</span><span class="p">(</span><span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">UnicodeString</span><span class="p">(</span><span class="n">not_empty</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
-                            <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">OneOf</span><span class="p">([</span><span class="s1">u&#39;unavailable&#39;</span><span class="p">,</span>
-                                                         <span class="s1">u&#39;available&#39;</span><span class="p">,</span>
-                                                         <span class="s1">u&#39;archived&#39;</span><span class="p">]))</span>
-    <span class="sd">u&quot;&quot;&quot;The part&#39;s status&quot;&quot;&quot;</span>
+                            <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">OneOf</span><span class="p">([</span><span class="s1">&#39;unavailable&#39;</span><span class="p">,</span>
+                                                         <span class="s1">&#39;available&#39;</span><span class="p">,</span>
+                                                         <span class="s1">&#39;archived&#39;</span><span class="p">]))</span>
+    <span class="sd">&quot;&quot;&quot;The part&#39;s status&quot;&quot;&quot;</span>
     <span class="n">return_to</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">if_missing</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
-    <span class="sd">u&quot;&quot;&quot;Return to this URL&quot;&quot;&quot;</span></div>
+    <span class="sd">&quot;&quot;&quot;Return to this URL&quot;&quot;&quot;</span></div>
 
 
 <span class="nd">@view_config</span><span class="p">(</span><span class="n">route_name</span><span class="o">=</span><span class="s1">&#39;part.change_status&#39;</span><span class="p">,</span> <span class="n">renderer</span><span class="o">=</span><span class="s1">&#39;wte:templates/part/change_status.kajiki&#39;</span><span class="p">)</span>
 <span class="nd">@current_user</span><span class="p">()</span>
 <span class="nd">@require_logged_in</span><span class="p">()</span>
 <div class="viewcode-block" id="change_status"><a class="viewcode-back" href="../../../api/wte_views_part.html#wte.views.part.change_status">[docs]</a><span class="k">def</span> <span class="nf">change_status</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;Handles the ``/parts/{pid}/change_status`` URL,</span>
+    <span class="sd">&quot;&quot;&quot;Handles the ``/parts/{pid}/change_status`` URL,</span>
 <span class="sd">    providing the UI and backend for changing the status of a :class:`~wte.models.Part`.</span>
 
 <span class="sd">    Requires that the user has &quot;edit&quot; rights on the :class:`~wte.models.Part`.</span>
@@ -835,9 +895,10 @@
                                         <span class="n">part</span><span class="p">,</span>
                                         <span class="p">{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Change Status&#39;</span><span class="p">,</span>
                                          <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">current_route_url</span><span class="p">()})</span>
-            <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">u&#39;POST&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
                 <span class="k">try</span><span class="p">:</span>
-                    <span class="n">params</span> <span class="o">=</span> <span class="n">ChangeStatusSchema</span><span class="p">()</span><span class="o">.</span><span class="n">to_python</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">)</span>
+                    <span class="n">params</span> <span class="o">=</span> <span class="n">ChangeStatusSchema</span><span class="p">()</span><span class="o">.</span><span class="n">to_python</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">,</span>
+                                                            <span class="n">State</span><span class="p">(</span><span class="n">request</span><span class="o">=</span><span class="n">request</span><span class="p">))</span>
                     <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">manager</span><span class="p">:</span>
                         <span class="n">dbsession</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">part</span><span class="p">)</span>
                         <span class="n">part</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span>
@@ -848,7 +909,7 @@
                         <span class="k">raise</span> <span class="n">HTTPSeeOther</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.view&#39;</span><span class="p">,</span> <span class="n">pid</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">&#39;pid&#39;</span><span class="p">]))</span>
                 <span class="k">except</span> <span class="n">formencode</span><span class="o">.</span><span class="n">Invalid</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                     <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;errors&#39;</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">error_dict</span><span class="p">,</span>
-                            <span class="s1">&#39;valuse&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">,</span>
+                            <span class="s1">&#39;values&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">,</span>
                             <span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
                             <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">}</span>
             <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
@@ -863,7 +924,7 @@
 
 
 <div class="viewcode-block" id="crossref_replace"><a class="viewcode-back" href="../../../api/wte_views_part.html#wte.views.part.crossref_replace">[docs]</a><span class="k">def</span> <span class="nf">crossref_replace</span><span class="p">(</span><span class="n">match</span><span class="p">,</span> <span class="n">id_mapping</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;The :func:`~wte.views.part.crossref_replace` function updates a single</span>
+    <span class="sd">&quot;&quot;&quot;The :func:`~wte.views.part.crossref_replace` function updates a single</span>
 <span class="sd">    cross-reference ReST role identified by the ``match`` parameter with the</span>
 <span class="sd">    correct new target part identifier from the ``id_mapping``. If the</span>
 <span class="sd">    identifier in the current cross-reference is not in the ``id_mapping``,</span>
@@ -895,7 +956,7 @@
 <span class="nd">@current_user</span><span class="p">()</span>
 <span class="nd">@require_logged_in</span><span class="p">()</span>
 <div class="viewcode-block" id="export"><a class="viewcode-back" href="../../../api/wte_views_part.html#wte.views.part.export">[docs]</a><span class="k">def</span> <span class="nf">export</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;Handles the ``/parts/{pid}/export`` URL, providing the UI and backend</span>
+    <span class="sd">&quot;&quot;&quot;Handles the ``/parts/{pid}/export`` URL, providing the UI and backend</span>
 <span class="sd">    for exporting a :class:`~wte.models.Part`.</span>
 
 <span class="sd">    The difference between exporting and downloading</span>
@@ -914,7 +975,7 @@
                 <span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="n">part</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
                 <span class="s1">&#39;order&#39;</span><span class="p">:</span> <span class="n">part</span><span class="o">.</span><span class="n">order</span><span class="p">,</span>
                 <span class="s1">&#39;content&#39;</span><span class="p">:</span> <span class="n">part</span><span class="o">.</span><span class="n">content</span><span class="p">}</span>
-        <span class="n">id_mapping</span><span class="p">[</span><span class="nb">unicode</span><span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">id</span><span class="p">)]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>
+        <span class="n">id_mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">id</span><span class="p">)]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
             <span class="n">data</span><span class="p">[</span><span class="s1">&#39;children&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">part_as_dict</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">assets</span><span class="p">,</span> <span class="n">id_mapping</span><span class="p">)</span> <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">part</span><span class="o">.</span><span class="n">children</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">all_assets</span><span class="p">:</span>
@@ -943,8 +1004,8 @@
                                         <span class="n">part</span><span class="p">,</span>
                                         <span class="p">{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Export&#39;</span><span class="p">,</span>
                                          <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">current_route_url</span><span class="p">()})</span>
-            <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">u&#39;POST&#39;</span><span class="p">:</span>
-                <span class="n">body</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
+                <span class="n">body</span> <span class="o">=</span> <span class="n">BytesIO</span><span class="p">()</span>
                 <span class="n">body_zip</span> <span class="o">=</span> <span class="n">ZipFile</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
                 <span class="n">assets</span> <span class="o">=</span> <span class="p">[]</span>
                 <span class="n">id_mapping</span> <span class="o">=</span> <span class="p">{}</span>
@@ -962,9 +1023,10 @@
                         <span class="k">else</span><span class="p">:</span>
                             <span class="n">body_zip</span><span class="o">.</span><span class="n">writestr</span><span class="p">(</span><span class="s1">&#39;assets/</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">export_id</span><span class="p">),</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">ZIP_DEFLATED</span><span class="p">)</span>
                 <span class="n">body_zip</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-                <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()),</span>
+                <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="o">.</span><span class="n">getvalue</span><span class="p">(),</span>
                                 <span class="n">headers</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;Content-Type&#39;</span><span class="p">,</span> <span class="s1">&#39;application/zip&#39;</span><span class="p">),</span>
-                                         <span class="p">(</span><span class="s1">&#39;Content-Disposition&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="s1">&#39;attachment; filename=&quot;</span><span class="si">%s</span><span class="s1">.zip&quot;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">title</span><span class="p">)))])</span>
+                                         <span class="p">(</span><span class="s1">&#39;Content-Disposition&#39;</span><span class="p">,</span>
+                                          <span class="n">native_str</span><span class="p">(</span><span class="s1">&#39;attachment; filename=&quot;</span><span class="si">%s</span><span class="s1">.zip&quot;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">title</span><span class="p">)))])</span>
 
             <span class="k">return</span> <span class="n">render_to_response</span><span class="p">(</span><span class="s1">&#39;wte:templates/part/export.kajiki&#39;</span><span class="p">,</span>
                                       <span class="p">{</span><span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
@@ -978,7 +1040,7 @@
 
 
 <div class="viewcode-block" id="ImportPartConverter"><a class="viewcode-back" href="../../../api/wte_views_part.html#wte.views.part.ImportPartConverter">[docs]</a><span class="k">class</span> <span class="nc">ImportPartConverter</span><span class="p">(</span><span class="n">formencode</span><span class="o">.</span><span class="n">FancyValidator</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;The :class:`~wte.views.part.ImportPartConverter` converts a :class:`~cgi.FieldStorage`</span>
+    <span class="sd">&quot;&quot;&quot;The :class:`~wte.views.part.ImportPartConverter` converts a :class:`~cgi.FieldStorage`</span>
 <span class="sd">    into a (``dict``, :class:`~zipfile.ZipFile`) ``tuple``. Checks that the uploaded</span>
 <span class="sd">    zip file is actually a valid file and that it can be imported with the given parent</span>
 <span class="sd">    :class:`~wte.models.Part`. The ``dict`` contains the :class:`~wte.models.Part` data to</span>
@@ -990,7 +1052,7 @@
                 <span class="s1">&#39;invalidpart&#39;</span><span class="p">:</span> <span class="s1">&#39;You cannot import a </span><span class="si">%(part_type)s</span><span class="s1"> here&#39;</span><span class="p">}</span>
 
     <span class="k">def</span> <span class="nf">_convert_to_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
-        <span class="sd">u&quot;&quot;&quot;Convert the submitted ``value`` into a (``dict``, :class:`~zipfile.ZipFile`)</span>
+        <span class="sd">&quot;&quot;&quot;Convert the submitted ``value`` into a (``dict``, :class:`~zipfile.ZipFile`)</span>
 <span class="sd">        ``tuple``. Checks that the uploaded file is a valid ZIP file and contains the</span>
 <span class="sd">        &quot;content.json&quot; file.</span>
 
@@ -1003,7 +1065,11 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="n">zip_file</span> <span class="o">=</span> <span class="n">ZipFile</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">file</span><span class="p">)</span>
             <span class="n">zip_file</span><span class="o">.</span><span class="n">getinfo</span><span class="p">(</span><span class="s1">&#39;content.json&#39;</span><span class="p">)</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">zip_file</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;content.json&#39;</span><span class="p">))</span>
+            <span class="k">with</span> <span class="n">zip_file</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;content.json&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">data</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">IS_PYTHON2</span><span class="p">:</span>
+                    <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
             <span class="k">return</span> <span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">zip_file</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">BadZipfile</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">formencode</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">Invalid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">(</span><span class="s1">&#39;notzip&#39;</span><span class="p">,</span> <span class="n">state</span><span class="p">),</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
@@ -1015,7 +1081,7 @@
             <span class="k">raise</span> <span class="n">formencode</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">Invalid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">(</span><span class="s1">&#39;nopart&#39;</span><span class="p">,</span> <span class="n">state</span><span class="p">),</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_validate_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
-        <span class="sd">u&quot;&quot;&quot;Checks that the uploaded &quot;content.json&quot; file is actually valid. Checks that the</span>
+        <span class="sd">&quot;&quot;&quot;Checks that the uploaded &quot;content.json&quot; file is actually valid. Checks that the</span>
 <span class="sd">        JSON data is catually a ``dict`` and that it has the minium fields &quot;title&quot; and &quot;type&quot;.</span>
 <span class="sd">        Also checks if there is a ``state.parent`` object, whether the :class:`~wte.models.Part`</span>
 <span class="sd">        data to import can be imported into the ``state.parent`` :class:`~wte.models.Part`.</span>
@@ -1060,7 +1126,7 @@
 
 
 <div class="viewcode-block" id="ImportPartSchema"><a class="viewcode-back" href="../../../api/wte_views_part.html#wte.views.part.ImportPartSchema">[docs]</a><span class="k">class</span> <span class="nc">ImportPartSchema</span><span class="p">(</span><span class="n">CSRFSchema</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;The :class:`~wte.views.part.ImportPartSchema` validates the request to import</span>
+    <span class="sd">&quot;&quot;&quot;The :class:`~wte.views.part.ImportPartSchema` validates the request to import</span>
 <span class="sd">    a :class:`~wte.models.Part` (and any children and :class:`~wte.models.Asset`).</span>
 
 <span class="sd">    Uses the :class:`~wte.views.part.ImportPartConverter` to actually check whether the</span>
@@ -1078,7 +1144,7 @@
 <span class="nd">@current_user</span><span class="p">()</span>
 <span class="nd">@require_logged_in</span><span class="p">()</span>
 <div class="viewcode-block" id="import_file"><a class="viewcode-back" href="../../../api/wte_views_part.html#wte.views.part.import_file">[docs]</a><span class="k">def</span> <span class="nf">import_file</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;Handles the ``/parts/import`` URL, providing the UI and</span>
+    <span class="sd">&quot;&quot;&quot;Handles the ``/parts/import`` URL, providing the UI and</span>
 <span class="sd">    backend for importing a :class:`~wte.models.Part`.</span>
 
 <span class="sd">    The required permissions depend on the type of :class:`~wte.models.Part`</span>
@@ -1097,9 +1163,9 @@
             <span class="n">part_type</span> <span class="o">=</span> <span class="s1">&#39;part&#39;</span>
         <span class="n">part</span> <span class="o">=</span> <span class="n">Part</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="n">part_type</span><span class="p">,</span>
                     <span class="n">title</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">],</span>
-                    <span class="n">status</span><span class="o">=</span><span class="s1">u&#39;available&#39;</span> <span class="k">if</span> <span class="n">part_type</span> <span class="o">==</span> <span class="s1">u&#39;page&#39;</span> <span class="k">else</span> <span class="s1">u&#39;unavailable&#39;</span><span class="p">)</span>
+                    <span class="n">status</span><span class="o">=</span><span class="s1">&#39;available&#39;</span> <span class="k">if</span> <span class="n">part_type</span> <span class="o">==</span> <span class="s1">&#39;page&#39;</span> <span class="k">else</span> <span class="s1">&#39;unavailable&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="s1">&#39;id&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
-            <span class="n">id_mapping</span><span class="p">[</span><span class="nb">unicode</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">])]</span> <span class="o">=</span> <span class="n">part</span>
+            <span class="n">id_mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">])]</span> <span class="o">=</span> <span class="n">part</span>
         <span class="k">if</span> <span class="s1">&#39;order&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">part</span><span class="o">.</span><span class="n">order</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;order&#39;</span><span class="p">])</span>
@@ -1153,8 +1219,8 @@
 
     <span class="n">dbsession</span> <span class="o">=</span> <span class="n">DBSession</span><span class="p">()</span>
     <span class="n">parent</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Part</span><span class="p">)</span><span class="o">.</span>\
-        <span class="nb">filter</span><span class="p">(</span><span class="n">Part</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">u&#39;parent_id&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>\
-        <span class="k">if</span> <span class="s1">u&#39;parent_id&#39;</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span> <span class="k">else</span> <span class="bp">None</span>
+        <span class="nb">filter</span><span class="p">(</span><span class="n">Part</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;parent_id&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>\
+        <span class="k">if</span> <span class="s1">&#39;parent_id&#39;</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span> <span class="k">else</span> <span class="bp">None</span>
     <span class="k">if</span> <span class="n">parent</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">parent</span><span class="o">.</span><span class="n">allow</span><span class="p">(</span><span class="s1">&#39;edit&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="p">):</span>
         <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
     <span class="k">elif</span> <span class="ow">not</span> <span class="n">parent</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="o">.</span><span class="n">has_permission</span><span class="p">(</span><span class="s1">&#39;modules.create&#39;</span><span class="p">):</span>
@@ -1163,9 +1229,10 @@
                                 <span class="n">parent</span><span class="p">,</span>
                                 <span class="p">{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Import&#39;</span><span class="p">,</span>
                                  <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">current_route_url</span><span class="p">()})</span>
-    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">u&#39;POST&#39;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">params</span> <span class="o">=</span> <span class="n">ImportPartSchema</span><span class="p">()</span><span class="o">.</span><span class="n">to_python</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="n">State</span><span class="p">(</span><span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">))</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="n">ImportPartSchema</span><span class="p">()</span><span class="o">.</span><span class="n">to_python</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="n">State</span><span class="p">(</span><span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">,</span>
+                                                                        <span class="n">request</span><span class="o">=</span><span class="n">request</span><span class="p">))</span>
             <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">manager</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">parent</span><span class="p">:</span>
                     <span class="n">dbsession</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
@@ -1173,21 +1240,21 @@
                 <span class="n">part</span> <span class="o">=</span> <span class="n">recursive_import</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">id_mapping</span><span class="p">)</span>
                 <span class="n">dbsession</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">part</span><span class="p">)</span>
                 <span class="n">params</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-                <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">u&#39;module&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;module&#39;</span><span class="p">:</span>
                     <span class="n">part</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">UserPartRole</span><span class="p">(</span><span class="n">user</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="p">,</span>
-                                                   <span class="n">role</span><span class="o">=</span><span class="s1">u&#39;owner&#39;</span><span class="p">))</span>
+                                                   <span class="n">role</span><span class="o">=</span><span class="s1">&#39;owner&#39;</span><span class="p">))</span>
                 <span class="k">if</span> <span class="n">parent</span><span class="p">:</span>
                     <span class="n">parent</span><span class="o">.</span><span class="n">children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">part</span><span class="p">)</span>
             <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">manager</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">id_mapping</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">id_mapping</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
                     <span class="n">dbsession</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
                     <span class="n">id_mapping</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">id</span>
                 <span class="n">fix_references</span><span class="p">(</span><span class="n">part</span><span class="p">,</span> <span class="n">dbsession</span><span class="p">,</span> <span class="n">id_mapping</span><span class="p">)</span>
             <span class="n">dbsession</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">part</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">HTTPSeeOther</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.view&#39;</span><span class="p">,</span> <span class="n">pid</span><span class="o">=</span><span class="n">part</span><span class="o">.</span><span class="n">id</span><span class="p">))</span>
         <span class="k">except</span> <span class="n">formencode</span><span class="o">.</span><span class="n">Invalid</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="n">e</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span>
-            <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;e&#39;</span><span class="p">:</span> <span class="n">e</span><span class="p">,</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;errors&#39;</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">error_dict</span><span class="p">,</span>
+                    <span class="s1">&#39;valuse&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">,</span>
                     <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
                     <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;import_export.html&#39;</span><span class="p">]}</span>
     <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
@@ -1200,7 +1267,7 @@
 <span class="nd">@current_user</span><span class="p">()</span>
 <span class="nd">@require_logged_in</span><span class="p">()</span>
 <div class="viewcode-block" id="download"><a class="viewcode-back" href="../../../api/wte_views_part.html#wte.views.part.download">[docs]</a><span class="k">def</span> <span class="nf">download</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;Handles the ``/parts/{pid}/download`` URL, providing the UI and backend</span>
+    <span class="sd">&quot;&quot;&quot;Handles the ``/parts/{pid}/download`` URL, providing the UI and backend</span>
 <span class="sd">    for downloading a :class:`~wte.models.Part`.</span>
 
 <span class="sd">    The difference between exporting (:func:`~wte.views.part.export`) and</span>
@@ -1221,45 +1288,44 @@
             <span class="n">body_zip</span><span class="o">.</span><span class="n">writestr</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/</span><span class="si">%s</span><span class="s1">/assets/</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">base_path</span><span class="p">,</span> <span class="n">part</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">asset</span><span class="o">.</span><span class="n">filename</span><span class="p">),</span>
                               <span class="n">asset</span><span class="o">.</span><span class="n">data</span> <span class="k">if</span> <span class="n">asset</span><span class="o">.</span><span class="n">data</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">template</span> <span class="ow">in</span> <span class="n">part</span><span class="o">.</span><span class="n">templates</span><span class="p">:</span>
-            <span class="n">body_zip</span><span class="o">.</span><span class="n">writestr</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/</span><span class="si">%s</span><span class="s1">/</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">base_path</span><span class="p">,</span> <span class="n">part</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">template</span><span class="o">.</span><span class="n">filename</span><span class="p">),</span>
-                              <span class="n">template</span><span class="o">.</span><span class="n">data</span> <span class="k">if</span> <span class="n">template</span><span class="o">.</span><span class="n">data</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="n">template_data</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">data</span> <span class="k">if</span> <span class="n">template</span><span class="o">.</span><span class="n">data</span> <span class="k">else</span> <span class="n">native_str</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="n">body_zip</span><span class="o">.</span><span class="n">writestr</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/</span><span class="si">%s</span><span class="s1">/</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">base_path</span><span class="p">,</span> <span class="n">part</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">template</span><span class="o">.</span><span class="n">filename</span><span class="p">),</span> <span class="n">template_data</span><span class="p">)</span>
     <span class="n">dbsession</span> <span class="o">=</span> <span class="n">DBSession</span><span class="p">()</span>
     <span class="n">part</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Part</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">Part</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">&#39;pid&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">part</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">allow</span><span class="p">(</span><span class="s1">&#39;view&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="p">):</span>
-            <span class="n">body</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">()</span>
+            <span class="n">body</span> <span class="o">=</span> <span class="n">BytesIO</span><span class="p">()</span>
             <span class="n">body_zip</span> <span class="o">=</span> <span class="n">ZipFile</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
-            <span class="n">body_zip</span><span class="o">.</span><span class="n">writestr</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/_static/application.min.css&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">title</span><span class="p">),</span>
-                              <span class="n">resource_string</span><span class="p">(</span><span class="s1">&#39;wte&#39;</span><span class="p">,</span> <span class="s1">&#39;static/css/application.min.css&#39;</span><span class="p">))</span>
-            <span class="n">body_zip</span><span class="o">.</span><span class="n">writestr</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/_static/icons/foundation-icons.eot&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">title</span><span class="p">),</span>
-                              <span class="n">resource_string</span><span class="p">(</span><span class="s1">&#39;wte&#39;</span><span class="p">,</span> <span class="s1">&#39;static/css/icons/foundation-icons.eot&#39;</span><span class="p">))</span>
-            <span class="n">body_zip</span><span class="o">.</span><span class="n">writestr</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/_static/icons/foundation-icons.svg&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">title</span><span class="p">),</span>
-                              <span class="n">resource_string</span><span class="p">(</span><span class="s1">&#39;wte&#39;</span><span class="p">,</span> <span class="s1">&#39;static/css/icons/foundation-icons.svg&#39;</span><span class="p">))</span>
-            <span class="n">body_zip</span><span class="o">.</span><span class="n">writestr</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/_static/icons/foundation-icons.ttf&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">title</span><span class="p">),</span>
-                              <span class="n">resource_string</span><span class="p">(</span><span class="s1">&#39;wte&#39;</span><span class="p">,</span> <span class="s1">&#39;static/css/icons/foundation-icons.ttf&#39;</span><span class="p">))</span>
-            <span class="n">body_zip</span><span class="o">.</span><span class="n">writestr</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/_static/icons/foundation-icons.woff&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">title</span><span class="p">),</span>
-                              <span class="n">resource_string</span><span class="p">(</span><span class="s1">&#39;wte&#39;</span><span class="p">,</span> <span class="s1">&#39;static/css/icons/foundation-icons.woff&#39;</span><span class="p">))</span>
-            <span class="n">body_zip</span><span class="o">.</span><span class="n">writestr</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/_static/jquery.min.js&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">title</span><span class="p">),</span>
-                              <span class="n">resource_string</span><span class="p">(</span><span class="s1">&#39;wte&#39;</span><span class="p">,</span> <span class="s1">&#39;static/js/jquery.min.js&#39;</span><span class="p">))</span>
-            <span class="n">body_zip</span><span class="o">.</span><span class="n">writestr</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/index.html&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">title</span><span class="p">),</span>
-                              <span class="sd">&#39;&#39;&#39;&lt;!DOCTYPE html&gt;</span>
-<span class="sd">&lt;html&gt;</span>
-<span class="sd">  &lt;head&gt;</span>
-<span class="sd">    &lt;title&gt;%(title)s&lt;/title&gt;</span>
-<span class="sd">    &lt;script&gt;</span>
-<span class="sd">      window.location.href = &#39;%(url)s&#39;;</span>
-<span class="sd">    &lt;/script&gt;</span>
-<span class="sd">    &lt;meta http-equiv=&quot;refresh&quot; content=&quot;1; url=%(url)s&quot;&gt;</span>
-<span class="sd">  &lt;/head&gt;</span>
-<span class="sd">  &lt;body&gt;</span>
-<span class="sd">    &lt;p&gt;The main content can be found &lt;a href=&quot;%(url)s&quot;&gt;here&lt;/a&gt;&lt;/p&gt;</span>
-<span class="sd">  &lt;/body&gt;</span>
-<span class="sd">&lt;/html&gt;&#39;&#39;&#39;</span> <span class="o">%</span> <span class="p">{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="n">part</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">.html&#39;</span> <span class="o">%</span> <span class="n">part</span><span class="o">.</span><span class="n">id</span><span class="p">})</span>
+            <span class="k">for</span> <span class="n">target</span><span class="p">,</span> <span class="n">source</span> <span class="ow">in</span> <span class="p">[(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/_static/application.min.css&#39;</span><span class="p">,</span> <span class="s1">&#39;static/css/application.min.css&#39;</span><span class="p">),</span>
+                                   <span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/_static/icons/foundation-icons.eot&#39;</span><span class="p">,</span> <span class="s1">&#39;static/css/icons/foundation-icons.eot&#39;</span><span class="p">),</span>
+                                   <span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/_static/icons/foundation-icons.svg&#39;</span><span class="p">,</span> <span class="s1">&#39;static/css/icons/foundation-icons.svg&#39;</span><span class="p">),</span>
+                                   <span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/_static/icons/foundation-icons.ttf&#39;</span><span class="p">,</span> <span class="s1">&#39;static/css/icons/foundation-icons.ttf&#39;</span><span class="p">),</span>
+                                   <span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/_static/icons/foundation-icons.woff&#39;</span><span class="p">,</span> <span class="s1">&#39;static/css/icons/foundation-icons.woff&#39;</span><span class="p">),</span>
+                                   <span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/_static/jquery.min.js&#39;</span><span class="p">,</span> <span class="s1">&#39;static/js/jquery.min.js&#39;</span><span class="p">)]:</span>
+                <span class="n">body_zip</span><span class="o">.</span><span class="n">writestr</span><span class="p">(</span><span class="n">target</span> <span class="o">%</span> <span class="n">part</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+                                  <span class="n">native_str</span><span class="p">(</span><span class="n">resource_string</span><span class="p">(</span><span class="s1">&#39;wte&#39;</span><span class="p">,</span> <span class="n">source</span><span class="p">)))</span>
+            <span class="n">index_html</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;&lt;!DOCTYPE html&gt;</span>
+<span class="s1">&lt;html&gt;</span>
+<span class="s1">  &lt;head&gt;</span>
+<span class="s1">    &lt;title&gt;</span><span class="si">%(title)s</span><span class="s1">&lt;/title&gt;</span>
+<span class="s1">    &lt;script&gt;</span>
+<span class="s1">      window.location.href = &#39;</span><span class="si">%(url)s</span><span class="s1">&#39;;</span>
+<span class="s1">    &lt;/script&gt;</span>
+<span class="s1">    &lt;meta http-equiv=&quot;refresh&quot; content=&quot;1; url=</span><span class="si">%(url)s</span><span class="s1">&quot;&gt;</span>
+<span class="s1">  &lt;/head&gt;</span>
+<span class="s1">  &lt;body&gt;</span>
+<span class="s1">    &lt;p&gt;The main content can be found &lt;a href=&quot;</span><span class="si">%(url)s</span><span class="s1">&quot;&gt;here&lt;/a&gt;&lt;/p&gt;</span>
+<span class="s1">  &lt;/body&gt;</span>
+<span class="s1">&lt;/html&gt;&#39;&#39;&#39;</span> <span class="o">%</span> <span class="p">{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="n">part</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">.html&#39;</span> <span class="o">%</span> <span class="n">part</span><span class="o">.</span><span class="n">id</span><span class="p">}</span>
+            <span class="k">if</span> <span class="n">IS_PYTHON2</span><span class="p">:</span>
+                <span class="n">index_html</span> <span class="o">=</span> <span class="n">index_html</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+            <span class="n">body_zip</span><span class="o">.</span><span class="n">writestr</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/index.html&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">title</span><span class="p">),</span> <span class="n">index_html</span><span class="p">)</span>
             <span class="n">download_part</span><span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="n">part</span><span class="p">,</span> <span class="n">body_zip</span><span class="p">)</span>
             <span class="n">body_zip</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-            <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()),</span>
+            <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="o">.</span><span class="n">getvalue</span><span class="p">(),</span>
                             <span class="n">headers</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;Content-Type&#39;</span><span class="p">,</span> <span class="s1">&#39;application/zip&#39;</span><span class="p">),</span>
-                                     <span class="p">(</span><span class="s1">&#39;Content-Disposition&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="s1">&#39;attachment; filename=&quot;</span><span class="si">%s</span><span class="s1">.zip&quot;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">title</span><span class="p">)))])</span>
+                                     <span class="p">(</span><span class="s1">&#39;Content-Disposition&#39;</span><span class="p">,</span>
+                                      <span class="n">native_str</span><span class="p">(</span><span class="s1">&#39;attachment; filename=&quot;</span><span class="si">%s</span><span class="s1">.zip&quot;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">title</span><span class="p">)))])</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
@@ -1278,7 +1344,7 @@
 <span class="nd">@current_user</span><span class="p">()</span>
 <span class="nd">@require_logged_in</span><span class="p">()</span>
 <div class="viewcode-block" id="reset_files"><a class="viewcode-back" href="../../../api/wte_views_part.html#wte.views.part.reset_files">[docs]</a><span class="k">def</span> <span class="nf">reset_files</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;Handles the ``/parts/{pid}/reset_files`` URL, providing</span>
+    <span class="sd">&quot;&quot;&quot;Handles the ``/parts/{pid}/reset_files`` URL, providing</span>
 <span class="sd">    the UI and backend for resetting all :class:`~wte.models.Assets` of a</span>
 <span class="sd">    :class:`~wte.models.Part` to the default for the current user.</span>
 
@@ -1293,7 +1359,7 @@
                                         <span class="n">part</span><span class="p">,</span>
                                         <span class="p">{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Discard all Changes&#39;</span><span class="p">,</span>
                                          <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">current_route_url</span><span class="p">()})</span>
-            <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">u&#39;POST&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="n">params</span> <span class="o">=</span> <span class="n">ResetFilesSchema</span><span class="p">()</span><span class="o">.</span><span class="n">to_python</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="n">State</span><span class="p">(</span><span class="n">request</span><span class="o">=</span><span class="n">request</span><span class="p">))</span>
                     <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">manager</span><span class="p">:</span>
@@ -1320,7 +1386,7 @@
 <span class="nd">@current_user</span><span class="p">()</span>
 <span class="nd">@require_logged_in</span><span class="p">()</span>
 <div class="viewcode-block" id="download_part_progress"><a class="viewcode-back" href="../../../api/wte_views_part.html#wte.views.part.download_part_progress">[docs]</a><span class="k">def</span> <span class="nf">download_part_progress</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;Handles the ``/users/{uid}/progress/{pid}/download``</span>
+    <span class="sd">&quot;&quot;&quot;Handles the ``/users/{uid}/progress/{pid}/download``</span>
 <span class="sd">    URL, sending back the complete set of data associated with the</span>
 <span class="sd">    :class:`~wte.models.UserPartProgress`.</span>
 
@@ -1341,7 +1407,7 @@
                 <span class="n">parent</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">parent</span>
             <span class="n">basepath</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">basepath</span><span class="p">)</span>
             <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">.zip&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">filename</span><span class="p">)</span>
-            <span class="n">body</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">()</span>
+            <span class="n">body</span> <span class="o">=</span> <span class="n">BytesIO</span><span class="p">()</span>
             <span class="n">zipfile</span> <span class="o">=</span> <span class="n">ZipFile</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">user_file</span> <span class="ow">in</span> <span class="n">progress</span><span class="o">.</span><span class="n">files</span><span class="p">:</span>
                 <span class="n">zipfile</span><span class="o">.</span><span class="n">writestr</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">basepath</span><span class="p">,</span> <span class="n">user_file</span><span class="o">.</span><span class="n">filename</span><span class="p">),</span> <span class="n">user_file</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
@@ -1350,7 +1416,7 @@
             <span class="n">zipfile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
             <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="o">.</span><span class="n">getvalue</span><span class="p">(),</span>
                             <span class="n">headerlist</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;Content-Type&#39;</span><span class="p">,</span> <span class="s1">&#39;application/zip&#39;</span><span class="p">),</span>
-                                        <span class="p">(</span><span class="s1">&#39;Content-Disposition&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="s1">&#39;attachment; filename=&quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">filename</span><span class="p">)))])</span>
+                                        <span class="p">(</span><span class="s1">&#39;Content-Disposition&#39;</span><span class="p">,</span> <span class="s1">&#39;attachment; filename=&quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">filename</span><span class="p">))])</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>

@@ -38,7 +38,7 @@
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">math</span>
 
-<span class="kn">from</span> <span class="nn">wte.util</span> <span class="kn">import</span> <span class="n">get_config_setting</span>
+<span class="kn">from</span> <span class="nn">pywebtools.pyramid.util</span> <span class="kn">import</span> <span class="p">(</span><span class="n">get_config_setting</span><span class="p">,</span> <span class="n">MenuBuilder</span><span class="p">)</span>
 
 <span class="n">inflector</span> <span class="o">=</span> <span class="n">inflect</span><span class="o">.</span><span class="n">engine</span><span class="p">()</span>
 
@@ -184,77 +184,6 @@
                            <span class="s1">&#39;class_&#39;</span><span class="p">:</span> <span class="s1">&#39;alert&#39;</span><span class="p">})</span></div>
 
 
-<div class="viewcode-block" id="MenuBuilder"><a class="viewcode-back" href="../../../api/wte_helpers_frontend.html#wte.helpers.frontend.MenuBuilder">[docs]</a><span class="k">class</span> <span class="nc">MenuBuilder</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;The :class:`~wte.helpers.frontend.MenuBuilder` helps with creating the ``list``</span>
-<span class="sd">    structure used for creating the icon-menubar. Call :func:`~wte.helpers.frontend.MenuBuilder.group`</span>
-<span class="sd">    to start a new group of menu items. Call :func:`~wte.helpers.frontend.MenuBuilder.item`</span>
-<span class="sd">    to add a menu item to the current group. :func:`~wte.helpers.frontend.MenuBuilder.generate`</span>
-<span class="sd">    then generates the final structure for use in the menubar.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_groups</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_group</span> <span class="o">=</span> <span class="bp">None</span>
-
-<div class="viewcode-block" id="MenuBuilder.group"><a class="viewcode-back" href="../../../api/wte_helpers_frontend.html#wte.helpers.frontend.MenuBuilder.group">[docs]</a>    <span class="k">def</span> <span class="nf">group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">icon</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Add a new group to the lost of groups in this :class:`~wte.helpers.frontend.MenuBuilder`.</span>
-
-<span class="sd">        :param label: The menu group&#39;s label</span>
-<span class="sd">        :type label: `unicode`</span>
-<span class="sd">        :param icon: The optional icon for this group. An icon must be provided in order to</span>
-<span class="sd">                     enable highlighting of menu items</span>
-<span class="sd">        :type icon: `unicode`</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_group</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_group</span><span class="p">[</span><span class="s1">&#39;items&#39;</span><span class="p">]:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_groups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_group</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_group</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="n">label</span><span class="p">,</span>
-                       <span class="s1">&#39;items&#39;</span><span class="p">:</span> <span class="p">[]}</span>
-        <span class="k">if</span> <span class="n">icon</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_group</span><span class="p">[</span><span class="s1">&#39;icon&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">icon</span></div>
-
-<div class="viewcode-block" id="MenuBuilder.menu"><a class="viewcode-back" href="../../../api/wte_helpers_frontend.html#wte.helpers.frontend.MenuBuilder.menu">[docs]</a>    <span class="k">def</span> <span class="nf">menu</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">href</span><span class="p">,</span> <span class="n">icon</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">highlight</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Add a new menu item to the current group. Will create a new group with an empty</span>
-<span class="sd">        label if :func:`~wte.helpers.frontend.MenuBuilder.group` has not been called</span>
-
-<span class="sd">        :param label: The menu item&#39;s label</span>
-<span class="sd">        :type label: `unicode`</span>
-<span class="sd">        :param href: The URL that the menu item loads</span>
-<span class="sd">        :type href: `unicode`</span>
-<span class="sd">        :param icon: The optional icon for this menu item</span>
-<span class="sd">        :type icon: `unicode`</span>
-<span class="sd">        :param highlight: Whether to highlight the menu item by displaying it at the top level</span>
-<span class="sd">        :type highlight: `boolean`</span>
-<span class="sd">        :param attrs: Additional attributes to set for the menu item link</span>
-<span class="sd">        :type attrs: :class:`dict`</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_group</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_group</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
-                           <span class="s1">&#39;items&#39;</span><span class="p">:</span> <span class="p">[]}</span>
-        <span class="k">if</span> <span class="n">attrs</span><span class="p">:</span>
-            <span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;href&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">href</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;href&#39;</span><span class="p">:</span> <span class="n">href</span><span class="p">}</span>
-        <span class="n">item</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;visible&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
-                <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="n">label</span><span class="p">,</span>
-                <span class="s1">&#39;attrs&#39;</span><span class="p">:</span> <span class="n">attrs</span><span class="p">}</span>
-        <span class="k">if</span> <span class="n">icon</span><span class="p">:</span>
-            <span class="n">item</span><span class="p">[</span><span class="s1">&#39;icon&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">icon</span>
-        <span class="k">if</span> <span class="n">highlight</span><span class="p">:</span>
-            <span class="n">item</span><span class="p">[</span><span class="s1">&#39;highlight&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">True</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_group</span><span class="p">[</span><span class="s1">&#39;items&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="MenuBuilder.generate"><a class="viewcode-back" href="../../../api/wte_helpers_frontend.html#wte.helpers.frontend.MenuBuilder.generate">[docs]</a>    <span class="k">def</span> <span class="nf">generate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Generate the final menu structure.</span>
-
-<span class="sd">        :return: The list of menu groups with their menu items</span>
-<span class="sd">        :r_type: ``list`` of menu groups</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_group</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_group</span><span class="p">[</span><span class="s1">&#39;items&#39;</span><span class="p">]:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_groups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_group</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_group</span> <span class="o">=</span> <span class="bp">None</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_groups</span></div></div>
-
-
 <div class="viewcode-block" id="readable_timedelta"><a class="viewcode-back" href="../../../api/wte_helpers_frontend.html#wte.helpers.frontend.readable_timedelta">[docs]</a><span class="k">def</span> <span class="nf">readable_timedelta</span><span class="p">(</span><span class="n">delta</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Converts a :class:`datetime.timedelta` into a human-readable string.</span>
 
@@ -389,7 +318,7 @@
 <span class="sd">    are joined together using the ``final_separator``. For a list of more than</span>
 <span class="sd">    two items, the all but the last item are joined using ``separator`` and the</span>
 <span class="sd">    last item is joined using ``final_separator``.</span>
-<span class="sd">    </span>
+
 <span class="sd">    :param items: The list of items to join</span>
 <span class="sd">    :type items: :func:`list`</span>
 <span class="sd">    :param separator: The separator to use when more than 2 items are joined.</span>
@@ -399,7 +328,7 @@
 <span class="sd">                            Defaults to &#39; &amp; &#39;.</span>
 <span class="sd">    :type separator: :func:`unicode`</span>
 <span class="sd">    :return: A string representation of the list</span>
-<span class="sd">    :r_type: :func:`unicode`</span>
+<span class="sd">    :return_type: :func:`unicode`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">return</span> <span class="s1">&#39;&#39;</span>
@@ -415,13 +344,55 @@
     <span class="sd">&quot;&quot;&quot;Returns a string representation of the unique items in the ``items``. The</span>
 <span class="sd">    ``items`` must be a :func:`list` of :func:`tuple` ``(item, count)`` as returned</span>
 <span class="sd">    by :func:`~wte.util.ordered_counted_set`.</span>
-<span class="sd">    </span>
+
 <span class="sd">    :param items: The list of items to transform into a string</span>
 <span class="sd">    :type istems: :func:`list` of :func:`tuple`</span>
 <span class="sd">    :return: A string containing all unique items</span>
-<span class="sd">    :r_type: :func:`unicode`</span>
+<span class="sd">    :return_type: :func:`unicode`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">natural_list</span><span class="p">([</span><span class="n">inflector</span><span class="o">.</span><span class="n">plural</span><span class="p">(</span><span class="n">category</span><span class="p">,</span> <span class="n">count</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">category</span><span class="p">,</span> <span class="n">count</span><span class="p">)</span> <span class="ow">in</span> <span class="n">items</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="user_admin_menubar"><a class="viewcode-back" href="../../../api/wte_helpers_frontend.html#wte.helpers.frontend.user_admin_menubar">[docs]</a><span class="k">def</span> <span class="nf">user_admin_menubar</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generates the menu bar for the users administration list.&quot;&quot;&quot;</span>
+    <span class="n">builder</span> <span class="o">=</span> <span class="n">MenuBuilder</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">allow</span><span class="p">(</span><span class="s1">&#39;edit&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;active&#39;</span><span class="p">:</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;Edit&#39;</span><span class="p">,</span> <span class="s1">&#39;fi-pencil&#39;</span><span class="p">)</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Edit&#39;</span><span class="p">,</span>
+                         <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;user.edit&#39;</span><span class="p">,</span> <span class="n">uid</span><span class="o">=</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+                         <span class="n">icon</span><span class="o">=</span><span class="s1">&#39;fi-pencil&#39;</span><span class="p">,</span>
+                         <span class="n">highlight</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;Access&#39;</span><span class="p">,</span> <span class="s1">&#39;fi-key&#39;</span><span class="p">)</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Edit Permissions&#39;</span><span class="p">,</span>
+                         <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;user.permissions&#39;</span><span class="p">,</span> <span class="n">uid</span><span class="o">=</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+                         <span class="n">icon</span><span class="o">=</span><span class="s1">&#39;fi-key&#39;</span><span class="p">,</span>
+                         <span class="n">highlight</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Reset Password&#39;</span><span class="p">,</span>
+                         <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;user.forgotten_password&#39;</span><span class="p">,</span>
+                                           <span class="n">_query</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;email&#39;</span><span class="p">,</span> <span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="p">),</span>
+                                                   <span class="p">(</span><span class="s1">&#39;csrf_token&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get_csrf_token</span><span class="p">()),</span>
+                                                   <span class="p">(</span><span class="s1">&#39;return_to&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_route_url</span><span class="p">())]),</span>
+                         <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;post-link&#39;</span><span class="p">})</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;Access&#39;</span><span class="p">,</span> <span class="s1">&#39;fi-key&#39;</span><span class="p">)</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Validate user&#39;</span><span class="p">,</span>
+                         <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;users.action&#39;</span><span class="p">,</span> <span class="n">_query</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;user_id&#39;</span><span class="p">,</span> <span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+                                                                   <span class="p">(</span><span class="s1">&#39;action&#39;</span><span class="p">,</span> <span class="s1">&#39;validate&#39;</span><span class="p">),</span>
+                                                                   <span class="p">(</span><span class="s1">&#39;csrf_token&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get_csrf_token</span><span class="p">())]),</span>
+                         <span class="n">icon</span><span class="o">=</span><span class="s1">&#39;fi-check&#39;</span><span class="p">,</span>
+                         <span class="n">highlight</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                         <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;post-link&#39;</span><span class="p">})</span>
+    <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">allow</span><span class="p">(</span><span class="s1">&#39;delete&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="p">):</span>
+        <span class="n">builder</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;Delete&#39;</span><span class="p">,</span> <span class="s1">&#39;fi-trash&#39;</span><span class="p">)</span>
+        <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Delete&#39;</span><span class="p">,</span>
+                     <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;user.delete&#39;</span><span class="p">,</span>
+                                       <span class="n">uid</span><span class="o">=</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                       <span class="n">_query</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;csrf_token&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get_csrf_token</span><span class="p">()}),</span>
+                     <span class="n">icon</span><span class="o">=</span><span class="s1">&#39;fi-trash&#39;</span><span class="p">,</span>
+                     <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;alert post-link&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;data-wte-confirm&#39;</span><span class="p">:</span> <span class="n">confirm_delete</span><span class="p">(</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="n">user</span><span class="o">.</span><span class="n">display_name</span><span class="p">,</span> <span class="bp">False</span><span class="p">)})</span>
+    <span class="k">return</span> <span class="n">builder</span><span class="o">.</span><span class="n">generate</span><span class="p">()</span></div>
 </pre></div>
         </div>
       </div>

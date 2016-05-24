@@ -22,7 +22,7 @@
         <div class="column small-12">
           <h1>Source code for wte.scripts.timed_tasks</h1><div class="highlight"><pre>
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
-<span class="sd">u&quot;&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">###########################################################</span>
 <span class="sd">:mod:`wte.scripts.timed_tasks` -- Script to run timed tasks</span>
 <span class="sd">###########################################################</span>
@@ -38,14 +38,15 @@
 
 <span class="kn">from</span> <span class="nn">pyramid.paster</span> <span class="kn">import</span> <span class="p">(</span><span class="n">get_appsettings</span><span class="p">,</span> <span class="n">setup_logging</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="n">randint</span>
+<span class="kn">from</span> <span class="nn">pywebtools.sqlalchemy</span> <span class="kn">import</span> <span class="n">DBSession</span>
 <span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="p">(</span><span class="n">engine_from_config</span><span class="p">,</span> <span class="n">and_</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">threading</span> <span class="kn">import</span> <span class="n">Thread</span>
 
-<span class="kn">from</span> <span class="nn">wte.models</span> <span class="kn">import</span> <span class="p">(</span><span class="n">DBSession</span><span class="p">,</span> <span class="n">Base</span><span class="p">,</span> <span class="n">TimedTask</span><span class="p">,</span> <span class="n">Part</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">wte.models</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">TimedTask</span><span class="p">,</span> <span class="n">Part</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="init"><a class="viewcode-back" href="../../../api/wte_scripts_timed_tasks.html#wte.scripts.timed_tasks.init">[docs]</a><span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="n">subparsers</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;Initialises the :class:`~argparse.ArgumentParser`, adding the</span>
+    <span class="sd">&quot;&quot;&quot;Initialises the :class:`~argparse.ArgumentParser`, adding the</span>
 <span class="sd">    &quot;run-timed-tasks&quot; command that runs :func:`~wte.scripts.timed_tasks.run_timed_tasks`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">parser</span> <span class="o">=</span> <span class="n">subparsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span><span class="s1">&#39;run-timed-tasks&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Run all timed tasks that are due&#39;</span><span class="p">)</span>
@@ -54,7 +55,7 @@
 
 
 <div class="viewcode-block" id="run_timed_tasks"><a class="viewcode-back" href="../../../api/wte_scripts_timed_tasks.html#wte.scripts.timed_tasks.run_timed_tasks">[docs]</a><span class="k">def</span> <span class="nf">run_timed_tasks</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;Runs all timed tasks where the timestamp is in the past and the status is &quot;ready&quot;.</span>
+    <span class="sd">&quot;&quot;&quot;Runs all timed tasks where the timestamp is in the past and the status is &quot;ready&quot;.</span>
 
 <span class="sd">    All :class:`~wte.models.TimedTask` that are to be run are given a unique &quot;run-{random-number}&quot;</span>
 <span class="sd">    ``status`` to uniquely identify them for this run. Individual task runners are then</span>
@@ -72,11 +73,11 @@
     <span class="n">Base</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">bind</span> <span class="o">=</span> <span class="n">engine</span>
     <span class="n">dbsession</span> <span class="o">=</span> <span class="n">DBSession</span><span class="p">()</span>
     <span class="n">tasks</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">TimedTask</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">and_</span><span class="p">(</span><span class="n">TimedTask</span><span class="o">.</span><span class="n">timestamp</span> <span class="o">&lt;=</span> <span class="n">func</span><span class="o">.</span><span class="n">now</span><span class="p">(),</span>
-                                                   <span class="n">TimedTask</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s1">u&#39;ready&#39;</span><span class="p">))</span>
+                                                   <span class="n">TimedTask</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;ready&#39;</span><span class="p">))</span>
     <span class="n">rnd</span> <span class="o">=</span> <span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000000</span><span class="p">)</span>
     <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">manager</span><span class="p">:</span>
-        <span class="n">tasks</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">TimedTask</span><span class="o">.</span><span class="n">status</span><span class="p">:</span> <span class="s1">u&#39;running-</span><span class="si">%i</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">rnd</span><span class="p">)},</span> <span class="n">synchronize_session</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-    <span class="n">tasks</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">TimedTask</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">TimedTask</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s1">u&#39;running-</span><span class="si">%i</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">rnd</span><span class="p">))</span>
+        <span class="n">tasks</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">TimedTask</span><span class="o">.</span><span class="n">status</span><span class="p">:</span> <span class="s1">&#39;running-</span><span class="si">%i</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">rnd</span><span class="p">)},</span> <span class="n">synchronize_session</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="n">tasks</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">TimedTask</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">TimedTask</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;running-</span><span class="si">%i</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">rnd</span><span class="p">))</span>
     <span class="n">task_count</span> <span class="o">=</span> <span class="n">tasks</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">task_count</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;wte&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Running </span><span class="si">%i</span><span class="s1"> tasks&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">task_count</span><span class="p">))</span>
@@ -95,11 +96,11 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;wte&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;All tasks completed&#39;</span><span class="p">)</span>
         <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">manager</span><span class="p">:</span>
-            <span class="n">tasks</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">TimedTask</span><span class="o">.</span><span class="n">status</span><span class="p">:</span> <span class="s1">u&#39;failed&#39;</span><span class="p">})</span></div>
+            <span class="n">tasks</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">TimedTask</span><span class="o">.</span><span class="n">status</span><span class="p">:</span> <span class="s1">&#39;failed&#39;</span><span class="p">})</span></div>
 
 
 <div class="viewcode-block" id="run_change_status"><a class="viewcode-back" href="../../../api/wte_scripts_timed_tasks.html#wte.scripts.timed_tasks.run_change_status">[docs]</a><span class="k">def</span> <span class="nf">run_change_status</span><span class="p">(</span><span class="n">task_id</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;Run the status change task for the :class:`~wte.models.TimedTask` with the</span>
+    <span class="sd">&quot;&quot;&quot;Run the status change task for the :class:`~wte.models.TimedTask` with the</span>
 <span class="sd">    id ``task_id``. It changes the :class:`~wte.models.TimedTask`\ s status to the</span>
 <span class="sd">    value of the &quot;target_status&quot; key in the :attr:`~wte.models.TimedTask.options`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>

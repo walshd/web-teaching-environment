@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="../../../../static/css/application.min.css"/>
+    <link rel="stylesheet" href="../../../_static/default.css"/>
+    <link rel="stylesheet" href="../../../_static/override.css"/>
+    <link rel="stylesheet" href="../../../_static/pygments.css"/>
+    <title>In-Tutorial Quizes</title>
+  </head>
+  <body class="help">
+    <nav>
+      <ul class="breadcrumbs">
+        <li><a href="../../../index.html">Home</a></li>
+        
+          <li><a href="../../index.html">User Documentation</a></li>
+        
+          <li><a href="../index.html">Creating Teaching Materials</a></li>
+        
+          <li><a href="index.html">Editor</a></li>
+        
+        <li>In-Tutorial Quizes</li>
+      </ul>
+      <div class="row">
+        <div class="column small-12">
+          <div class="section" id="in-tutorial-quizes">
+<h1>In-Tutorial Quizes<a class="headerlink" href="#in-tutorial-quizes" title="Permalink to this headline">¶</a></h1>
+<p>The Web Teaching Environment lets you create small quizzes as part of the main content
+of a module, tutorial, or page. The quiz system currently allows single or multiple
+choice questions with one or more correct answers per question.</p>
+<p>To create a new Quiz use the following ReST:</p>
+<div class="highlight-rest"><div class="highlight"><pre><span></span><span class="p">..</span> <span class="ow">quiz</span><span class="p">::</span> quiz-identifier
+   <span class="nc">:title:</span> <span class="nf">This is the quiz&#39;s title</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal"><span class="pre">quiz-identifier</span></code> must consist only of letters and numbers. The <code class="docutils literal"><span class="pre">title</span></code> can consist
+of any content you wish to use.</p>
+<p>To add questions to the quiz, include <code class="docutils literal"><span class="pre">quiz-question</span></code> entries in the <code class="docutils literal"><span class="pre">quiz</span></code>:</p>
+<div class="highlight-rest"><div class="highlight"><pre><span></span><span class="p"> ..</span> <span class="ow">quiz</span><span class="p">::</span> quiz-identifier
+    <span class="nc">:title:</span> <span class="nf">This is the quiz&#39;s title</span>
+
+<span class="p">    ..</span> <span class="ow">quiz-question</span><span class="p">::</span> question-identifier-1
+       <span class="nc">:type:</span> <span class="nf">single-choice</span>
+       <span class="nc">:question:</span> <span class="nf">Select one of these options</span>
+
+       [x] Answer 1
+       Answer 2
+       Answer 3
+
+<span class="p">    ..</span> <span class="ow">quiz-question</span><span class="p">::</span> question-identifier-2
+       <span class="nc">:type:</span> <span class="nf">multi-choice</span>
+       <span class="nc">:question:</span> <span class="nf">Select all options that are correct</span>
+
+       Answer 1
+       [x] Answer 2
+       [x] Answer 3
+       Answer 4
+
+The <span class="s">``question-identifier-1``</span> must consist only of letters and numbers. The <span class="s">``question``</span> can
+consist of any content you wish to use. The <span class="s">``type``</span> must be either &quot;single-choice&quot; for a
+single-choice question or &quot;multi-choice&quot; for a multi-choice question.
+
+Each line in the <span class="s">``quiz-question``</span> is shown as one potential answer. Use &quot;[x]&quot; at the beginning
+of those answers that are correct. For single choice questions, you can only mark one question
+as correct. For multiple choice questions you can mark multiple answers as correct. The learner
+has to select all correct answers and none of the incorrect answers in order for the question
+to be judged to be correct overall.
+</pre></div>
+</div>
+</div>
+
+        </div>
+      </div>
+      <ul class="pagination text-center" role="navigation" aria-label="Pagination">
+        
+          <li class="pagination-previous"><a href="video.html">Videos</a></li>
+        
+        
+          <li class="pagination-next"><a href="../status.html">Changing the Status</a></li>
+        
+      </ul>
+    </nav>
+  </body>
+</html>

@@ -37,16 +37,20 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">formencode</span>
 <span class="kn">import</span> <span class="nn">transaction</span>
-<span class="kn">import</span> <span class="nn">uuid</span>
 
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
 <span class="kn">from</span> <span class="nn">pyramid.httpexceptions</span> <span class="kn">import</span> <span class="p">(</span><span class="n">HTTPSeeOther</span><span class="p">,</span> <span class="n">HTTPNotFound</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">pyramid.view</span> <span class="kn">import</span> <span class="n">view_config</span>
-<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="n">and_</span><span class="p">,</span> <span class="n">or_</span>
+<span class="kn">from</span> <span class="nn">pywebtools.formencode</span> <span class="kn">import</span> <span class="n">State</span><span class="p">,</span> <span class="n">CSRFSchema</span><span class="p">,</span> <span class="n">UniqueEmailValidator</span><span class="p">,</span> <span class="n">EmailDomainValidator</span>
+<span class="kn">from</span> <span class="nn">pywebtools.pyramid</span> <span class="kn">import</span> <span class="n">auth</span> <span class="k">as</span> <span class="n">pyramid_auth</span>
+<span class="kn">from</span> <span class="nn">pywebtools.pyramid.auth.models</span> <span class="kn">import</span> <span class="p">(</span><span class="n">User</span><span class="p">,</span> <span class="n">Permission</span><span class="p">,</span> <span class="n">PermissionGroup</span><span class="p">,</span> <span class="n">TimeToken</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">pywebtools.pyramid.auth.views</span> <span class="kn">import</span> <span class="n">current_user</span>
+<span class="kn">from</span> <span class="nn">pywebtools.sqlalchemy</span> <span class="kn">import</span> <span class="n">DBSession</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="n">or_</span>
 
-<span class="kn">from</span> <span class="nn">wte.decorators</span> <span class="kn">import</span> <span class="p">(</span><span class="n">current_user</span><span class="p">,</span> <span class="n">require_logged_in</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">wte.util</span> <span class="kn">import</span> <span class="p">(</span><span class="n">unauthorised_redirect</span><span class="p">,</span> <span class="n">State</span><span class="p">,</span> <span class="n">send_email</span><span class="p">,</span> <span class="n">get_config_setting</span><span class="p">,</span>
-                      <span class="n">paginate</span><span class="p">,</span> <span class="n">CSRFSchema</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">wte.models</span> <span class="kn">import</span> <span class="p">(</span><span class="n">DBSession</span><span class="p">,</span> <span class="n">User</span><span class="p">,</span> <span class="n">Permission</span><span class="p">,</span> <span class="n">PermissionGroup</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">wte.decorators</span> <span class="kn">import</span> <span class="p">(</span><span class="n">require_logged_in</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">wte.util</span> <span class="kn">import</span> <span class="p">(</span><span class="n">unauthorised_redirect</span><span class="p">,</span> <span class="n">send_email</span><span class="p">,</span> <span class="n">get_config_setting</span><span class="p">,</span>
+                      <span class="n">paginate</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="init"><a class="viewcode-back" href="../../../api/wte_views_user.html#wte.views.user.init">[docs]</a><span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
@@ -54,32 +58,170 @@
 
 <span class="sd">    * ``users`` -- ``/users`` -- :func:`~wte.views.user.users`</span>
 <span class="sd">    * ``users.action`` -- ``/users/action`` -- :func:`~wte.views.user.action`</span>
-<span class="sd">    * ``user.login`` -- ``/users/login`` -- :func:`~wte.views.user.login`</span>
-<span class="sd">    * ``user.logout`` -- ``/users/logout`` -- :func:`~wte.views.user.logout`</span>
-<span class="sd">    * ``user.register`` -- ``/users/register`` --</span>
-<span class="sd">      :func:`~wte.views.user.register`</span>
-<span class="sd">    * ``user.forgotten_password`` -- ``/users/forgotten-password`` --</span>
-<span class="sd">      :func:`~wte.views.user.forgotten_password`</span>
 <span class="sd">    * ``user.view`` -- ``/users/{uid}`` -- :func:`~wte.views.user.view`</span>
-<span class="sd">    * ``user.confirm`` -- ``/users/{uid}/confirm/{token}`` --</span>
-<span class="sd">      :func:`~wte.views.user.confirm`</span>
 <span class="sd">    * ``user.edit`` -- ``/users/{uid}/edit`` -- :func:`~wte.views.user.edit`</span>
 <span class="sd">    * ``user.permissions`` -- ``/users/{uid}/permissions`` --</span>
 <span class="sd">      :func:`~wte.views.user.permissions`</span>
 <span class="sd">    * ``user.delete`` -- ``/users/{uid}/delete`` --</span>
 <span class="sd">      :func:`~wte.views.user.delete`</span>
+
+<span class="sd">    Also initialises the :mod:`pywebtools.pyramid.auth` authentication system</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pyramid_auth</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">config</span><span class="p">,</span>
+                      <span class="n">renderers</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;user.login&#39;</span><span class="p">:</span> <span class="s1">&#39;wte:templates/users/login.kajiki&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;user.logout&#39;</span><span class="p">:</span> <span class="s1">&#39;wte:templates/users/logout.kajiki&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;user.register&#39;</span><span class="p">:</span> <span class="s1">&#39;wte:templates/users/register.kajiki&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;user.confirm&#39;</span><span class="p">:</span> <span class="s1">&#39;wte:templates/users/confirm.kajiki&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;user.forgotten_password&#39;</span><span class="p">:</span> <span class="s1">&#39;wte:templates/users/forgotten_password.kajiki&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;user.reset_password&#39;</span><span class="p">:</span> <span class="s1">&#39;wte:templates/users/reset_password.kajiki&#39;</span><span class="p">},</span>
+                      <span class="n">redirects</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;_default&#39;</span><span class="p">:</span> <span class="s1">&#39;root&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;user.login&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;route&#39;</span><span class="p">:</span> <span class="s1">&#39;part.list&#39;</span><span class="p">,</span>
+                                                <span class="s1">&#39;params&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;_query&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;user_id&#39;</span><span class="p">:</span> <span class="s1">&#39;{uid}&#39;</span><span class="p">}}},</span>
+                                 <span class="s1">&#39;user.logout&#39;</span><span class="p">:</span> <span class="s1">&#39;root&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;user.register&#39;</span><span class="p">:</span> <span class="s1">&#39;root&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;user.forgotten_password&#39;</span><span class="p">:</span> <span class="s1">&#39;root&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;user.reset_password&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;route&#39;</span><span class="p">:</span> <span class="s1">&#39;part.list&#39;</span><span class="p">,</span>
+                                                         <span class="s1">&#39;params&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;_query&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;user_id&#39;</span><span class="p">:</span> <span class="s1">&#39;{uid}&#39;</span><span class="p">}}}},</span>
+                      <span class="n">callbacks</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;user.created&#39;</span><span class="p">:</span> <span class="n">new_user_created</span><span class="p">,</span>
+                                 <span class="s1">&#39;user.validated&#39;</span><span class="p">:</span> <span class="n">new_user_validated</span><span class="p">,</span>
+                                 <span class="s1">&#39;user.password_reset&#39;</span><span class="p">:</span> <span class="n">password_reset</span><span class="p">,</span>
+                                 <span class="s1">&#39;user.password_reset_failed&#39;</span><span class="p">:</span> <span class="n">password_reset_failed</span><span class="p">,</span>
+                                 <span class="s1">&#39;user.password_reset_complete&#39;</span><span class="p">:</span> <span class="n">password_reset_complete</span><span class="p">})</span>
     <span class="n">config</span><span class="o">.</span><span class="n">add_route</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">,</span> <span class="s1">&#39;/users&#39;</span><span class="p">)</span>
     <span class="n">config</span><span class="o">.</span><span class="n">add_route</span><span class="p">(</span><span class="s1">&#39;users.action&#39;</span><span class="p">,</span> <span class="s1">&#39;/users/action&#39;</span><span class="p">)</span>
-    <span class="n">config</span><span class="o">.</span><span class="n">add_route</span><span class="p">(</span><span class="s1">&#39;user.login&#39;</span><span class="p">,</span> <span class="s1">&#39;/users/login&#39;</span><span class="p">)</span>
-    <span class="n">config</span><span class="o">.</span><span class="n">add_route</span><span class="p">(</span><span class="s1">&#39;user.logout&#39;</span><span class="p">,</span> <span class="s1">&#39;/users/logout&#39;</span><span class="p">)</span>
-    <span class="n">config</span><span class="o">.</span><span class="n">add_route</span><span class="p">(</span><span class="s1">&#39;user.register&#39;</span><span class="p">,</span> <span class="s1">&#39;/users/register&#39;</span><span class="p">)</span>
-    <span class="n">config</span><span class="o">.</span><span class="n">add_route</span><span class="p">(</span><span class="s1">&#39;user.forgotten_password&#39;</span><span class="p">,</span> <span class="s1">&#39;/users/forgotten-password&#39;</span><span class="p">)</span>
     <span class="n">config</span><span class="o">.</span><span class="n">add_route</span><span class="p">(</span><span class="s1">&#39;user.view&#39;</span><span class="p">,</span> <span class="s1">&#39;/users/{uid}&#39;</span><span class="p">)</span>
-    <span class="n">config</span><span class="o">.</span><span class="n">add_route</span><span class="p">(</span><span class="s1">&#39;user.confirm&#39;</span><span class="p">,</span> <span class="s1">&#39;/users/{uid}/confirm/{token}&#39;</span><span class="p">)</span>
     <span class="n">config</span><span class="o">.</span><span class="n">add_route</span><span class="p">(</span><span class="s1">&#39;user.edit&#39;</span><span class="p">,</span> <span class="s1">&#39;/users/{uid}/edit&#39;</span><span class="p">)</span>
     <span class="n">config</span><span class="o">.</span><span class="n">add_route</span><span class="p">(</span><span class="s1">&#39;user.permissions&#39;</span><span class="p">,</span> <span class="s1">&#39;/users/{uid}/permissions&#39;</span><span class="p">)</span>
     <span class="n">config</span><span class="o">.</span><span class="n">add_route</span><span class="p">(</span><span class="s1">&#39;user.delete&#39;</span><span class="p">,</span> <span class="s1">&#39;/users/{uid}/delete&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="new_user_created"><a class="viewcode-back" href="../../../api/wte_views_user.html#wte.views.user.new_user_created">[docs]</a><span class="k">def</span> <span class="nf">new_user_created</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">token</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Callback that sends an e-mail to the newly created user&#39;s e-mail address</span>
+<span class="sd">    to give them a validation link.</span>
+
+<span class="sd">    :param request: The request to use for configuration settings</span>
+<span class="sd">    :type request: :class:`~pyramid.request.Request`</span>
+<span class="sd">    :param user: The user to send the e-mail to</span>
+<span class="sd">    :type user: :class:`~pywebtools.pyramid.auth.models.User`</span>
+<span class="sd">    :param token: The validation token</span>
+<span class="sd">    :type token: :class:`~pywebtools.pyramid.auth.models.TimeToken`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">flash</span><span class="p">(</span><span class="s1">&#39;A confirmation e-mail has been sent to the e-mail address you provided.&#39;</span><span class="p">,</span> <span class="n">queue</span><span class="o">=</span><span class="s1">&#39;info&#39;</span><span class="p">)</span>
+    <span class="n">send_email</span><span class="p">(</span><span class="n">request</span><span class="p">,</span>
+               <span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="p">,</span>
+               <span class="n">get_config_setting</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;email.sender&#39;</span><span class="p">,</span>
+                                  <span class="n">default</span><span class="o">=</span><span class="s1">&#39;no-reply@example.com&#39;</span><span class="p">),</span>
+               <span class="s1">&#39;Please confirm your registration&#39;</span><span class="p">,</span>
+               <span class="sd">&#39;&#39;&#39;Hello %s,</span>
+
+<span class="sd">Thank you for registering with the Web Teaching Environment. To complete your</span>
+<span class="sd">registration, please click on the following link or copy it into your browser:</span>
+
+<span class="sd">%s</span>
+
+<span class="sd">This link is valid for 60 minutes. If you do not confirm your registration within</span>
+<span class="sd">that time, you will need to use the &quot;Forgotten Password&quot; function to request a new</span>
+<span class="sd">confirmation link.</span>
+
+<span class="sd">Best Regards,</span>
+<span class="sd">Web Teaching Environment&#39;&#39;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">display_name</span><span class="p">,</span>
+                               <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;user.confirm&#39;</span><span class="p">,</span>
+                                                 <span class="n">token</span><span class="o">=</span><span class="n">token</span><span class="o">.</span><span class="n">token</span><span class="p">)))</span></div>
+
+
+<div class="viewcode-block" id="new_user_validated"><a class="viewcode-back" href="../../../api/wte_views_user.html#wte.views.user.new_user_validated">[docs]</a><span class="k">def</span> <span class="nf">new_user_validated</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">token</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Callback that sends an e-mail to the newly created user&#39;s e-mail address</span>
+<span class="sd">    to give them a password-reset link.</span>
+
+<span class="sd">    :param request: The request to use for configuration settings</span>
+<span class="sd">    :type request: :class:`~pyramid.request.Request`</span>
+<span class="sd">    :param user: The user to send the e-mail to</span>
+<span class="sd">    :type user: :class:`~pywebtools.pyramid.auth.models.User`</span>
+<span class="sd">    :param token: The validation token</span>
+<span class="sd">    :type token: :class:`~pywebtools.pyramid.auth.models.TimeToken`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">send_email</span><span class="p">(</span><span class="n">request</span><span class="p">,</span>
+               <span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="p">,</span>
+               <span class="n">get_config_setting</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;email.sender&#39;</span><span class="p">,</span>
+                                  <span class="n">default</span><span class="o">=</span><span class="s1">&#39;no-reply@example.com&#39;</span><span class="p">),</span>
+               <span class="s1">&#39;Registration for the Web Teaching Environment Complete&#39;</span><span class="p">,</span>
+               <span class="sd">&#39;&#39;&#39;Hello %s,</span>
+
+<span class="sd">Thank you for completing the registration process. To log in, please</span>
+<span class="sd">click on the following link and set a new password:</span>
+
+<span class="sd">%s</span>
+
+<span class="sd">The link is valid for 20 minutes. If you do not set a password within that time,</span>
+<span class="sd">you will need to use the &quot;Forgotten Password&quot; function to request a new confirmation</span>
+<span class="sd">link.</span>
+
+<span class="sd">Best Regards,</span>
+<span class="sd">Web Teaching Environment&#39;&#39;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">display_name</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;user.reset_password&#39;</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="n">token</span><span class="o">.</span><span class="n">token</span><span class="p">)))</span></div>
+
+
+<div class="viewcode-block" id="password_reset"><a class="viewcode-back" href="../../../api/wte_views_user.html#wte.views.user.password_reset">[docs]</a><span class="k">def</span> <span class="nf">password_reset</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">token</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Callback that sends an e-mail to the user&#39;s e-mail address with a</span>
+<span class="sd">    link to reset their password.</span>
+
+<span class="sd">    :param request: The request to use for configuration settings</span>
+<span class="sd">    :type request: :class:`~pyramid.request.Request`</span>
+<span class="sd">    :param user: The user to send the e-mail to</span>
+<span class="sd">    :type user: :class:`~pywebtools.pyramid.auth.models.User`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">flash</span><span class="p">(</span><span class="s1">&#39;A password reset link has been sent to the e-mail address you provided.&#39;</span><span class="p">,</span> <span class="n">queue</span><span class="o">=</span><span class="s1">&#39;info&#39;</span><span class="p">)</span>
+    <span class="n">send_email</span><span class="p">(</span><span class="n">request</span><span class="p">,</span>
+               <span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="p">,</span>
+               <span class="n">get_config_setting</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;email.sender&#39;</span><span class="p">,</span>
+                                  <span class="n">default</span><span class="o">=</span><span class="s1">&#39;no-reply@example.com&#39;</span><span class="p">),</span>
+               <span class="s1">&#39;Password for the Web Teaching Environment reset&#39;</span><span class="p">,</span>
+               <span class="sd">&#39;&#39;&#39;Hello %s,</span>
+
+<span class="sd">You have asked to have your password reset. To complete the reset password</span>
+<span class="sd">click on the following link or copy it into your browser:</span>
+
+<span class="sd">%s</span>
+
+<span class="sd">The link is valid for 20 minutes. If you do not set a password within that time,</span>
+<span class="sd">you will need to use the &quot;Forgotten Password&quot; function to request a new confirmation</span>
+<span class="sd">link.</span>
+
+<span class="sd">If you did not ask for your password to be reset, then please check that</span>
+<span class="sd">nobody else has access to your e-mail account and might be trying to</span>
+<span class="sd">access your Web Teaching Environment account.</span>
+
+<span class="sd">Best Regards,</span>
+<span class="sd">Web Teaching Environment&#39;&#39;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">display_name</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;user.reset_password&#39;</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="n">token</span><span class="o">.</span><span class="n">token</span><span class="p">)))</span></div>
+
+
+<div class="viewcode-block" id="password_reset_failed"><a class="viewcode-back" href="../../../api/wte_views_user.html#wte.views.user.password_reset_failed">[docs]</a><span class="k">def</span> <span class="nf">password_reset_failed</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Callback that handles a failed password reset.&quot;&quot;&quot;</span>
+    <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">flash</span><span class="p">(</span><span class="s1">&#39;A password reset link has been sent to the e-mail address you provided.&#39;</span><span class="p">,</span> <span class="n">queue</span><span class="o">=</span><span class="s1">&#39;info&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="password_reset_complete"><a class="viewcode-back" href="../../../api/wte_views_user.html#wte.views.user.password_reset_complete">[docs]</a><span class="k">def</span> <span class="nf">password_reset_complete</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Callback that sends an e-mail to the user&#39;s e-mail address letting them</span>
+<span class="sd">    know that their password has been reset.</span>
+
+<span class="sd">    :param request: The request to use for configuration settings</span>
+<span class="sd">    :type request: :class:`~pyramid.request.Request`</span>
+<span class="sd">    :param user: The user to send the e-mail to</span>
+<span class="sd">    :type user: :class:`~pywebtools.pyramid.auth.models.User`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">send_email</span><span class="p">(</span><span class="n">request</span><span class="p">,</span>
+               <span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="p">,</span>
+               <span class="n">get_config_setting</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;email.sender&#39;</span><span class="p">,</span>
+                                  <span class="n">default</span><span class="o">=</span><span class="s1">&#39;no-reply@example.com&#39;</span><span class="p">),</span>
+               <span class="s1">&#39;Reset your password for the Web Teaching Environment&#39;</span><span class="p">,</span>
+               <span class="sd">&#39;&#39;&#39;Hello %s,</span>
+
+<span class="sd">You have just reset your password for the Web Teaching Environment.</span>
+
+<span class="sd">If you have not done so, then please contact your administrator as soon as</span>
+<span class="sd">possible as somebody else may have gained access to your account.</span>
+
+<span class="sd">Best Regards,</span>
+<span class="sd">Web Teaching Environment&#39;&#39;&#39;</span> <span class="o">%</span> <span class="n">user</span><span class="o">.</span><span class="n">display_name</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="create_user_crumbs"><a class="viewcode-back" href="../../../api/wte_views_user.html#wte.views.user.create_user_crumbs">[docs]</a><span class="k">def</span> <span class="nf">create_user_crumbs</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">crumbs</span><span class="p">):</span>
@@ -114,9 +256,9 @@
         <span class="k">if</span> <span class="s1">&#39;status&#39;</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span> <span class="ow">and</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]:</span>
             <span class="n">query_params</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]))</span>
             <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;confirmed&#39;</span><span class="p">:</span>
-                <span class="n">users</span> <span class="o">=</span> <span class="n">users</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">validation_token</span> <span class="o">==</span> <span class="bp">None</span><span class="p">)</span>
+                <span class="n">users</span> <span class="o">=</span> <span class="n">users</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;active&#39;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">users</span> <span class="o">=</span> <span class="n">users</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">validation_token</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">)</span>
+                <span class="n">users</span> <span class="o">=</span> <span class="n">users</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">status</span> <span class="o">!=</span> <span class="s1">&#39;active&#39;</span><span class="p">)</span>
         <span class="n">start</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">if</span> <span class="s1">&#39;start&#39;</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
@@ -143,6 +285,7 @@
     <span class="n">confirm</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">StringBool</span><span class="p">(</span><span class="n">if_empty</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">if_missing</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
     <span class="sd">&quot;&quot;&quot;Whether the user has confirmed the action&quot;&quot;&quot;</span>
     <span class="n">user_id</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">ForEach</span><span class="p">(</span><span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">Int</span><span class="p">(),</span> <span class="n">if_missing</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;User ids to apply the action to&quot;&quot;&quot;</span>
     <span class="n">q</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">UnicodeString</span><span class="p">(</span><span class="n">if_empty</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">if_missing</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
     <span class="sd">&quot;&quot;&quot;Optional query parameter for the redirect&quot;&quot;&quot;</span>
     <span class="n">status</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">UnicodeString</span><span class="p">(</span><span class="n">if_empty</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">if_missing</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
@@ -166,19 +309,25 @@
             <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;start&#39;</span><span class="p">]:</span>
                 <span class="k">if</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span> <span class="ow">and</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">param</span><span class="p">]:</span>
                     <span class="n">query_params</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">param</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">param</span><span class="p">]))</span>
-            <span class="n">params</span> <span class="o">=</span> <span class="n">ActionSchema</span><span class="p">()</span><span class="o">.</span><span class="n">to_python</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="p">)</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="n">ActionSchema</span><span class="p">()</span><span class="o">.</span><span class="n">to_python</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">,</span>
+                                              <span class="n">State</span><span class="p">(</span><span class="n">request</span><span class="o">=</span><span class="n">request</span><span class="p">))</span>
             <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;action&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;delete&#39;</span> <span class="ow">or</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;confirm&#39;</span><span class="p">]:</span>
                 <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">manager</span><span class="p">:</span>
                     <span class="k">for</span> <span class="n">user</span> <span class="ow">in</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">User</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;user_id&#39;</span><span class="p">])):</span>
                         <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;action&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;validate&#39;</span><span class="p">:</span>
-                            <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">validation_token</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">user</span><span class="o">.</span><span class="n">allow</span><span class="p">(</span><span class="s1">&#39;edit&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="p">):</span>
-                                <span class="n">process_confirmation</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">user</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;unconfirmed&#39;</span> <span class="ow">and</span> <span class="n">user</span><span class="o">.</span><span class="n">allow</span><span class="p">(</span><span class="s1">&#39;edit&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="p">):</span>
+                                <span class="n">user</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s1">&#39;active&#39;</span>
                         <span class="k">elif</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;action&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;delete&#39;</span><span class="p">:</span>
                             <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">allow</span><span class="p">(</span><span class="s1">&#39;delete&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="p">):</span>
                                 <span class="n">dbsession</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
                         <span class="k">elif</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;action&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;password&#39;</span><span class="p">:</span>
-                            <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">validation_token</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">user</span><span class="o">.</span><span class="n">allow</span><span class="p">(</span><span class="s1">&#39;edit&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="p">):</span>
-                                <span class="n">user</span><span class="o">.</span><span class="n">random_password</span><span class="p">()</span>
+                            <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;active&#39;</span> <span class="ow">and</span> <span class="n">user</span><span class="o">.</span><span class="n">allow</span><span class="p">(</span><span class="s1">&#39;edit&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="p">):</span>
+                                <span class="n">token</span> <span class="o">=</span> <span class="n">TimeToken</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                                  <span class="s1">&#39;reset_password&#39;</span><span class="p">,</span>
+                                                  <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="mi">1200</span><span class="p">))</span>
+                                <span class="n">dbsession</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+                                <span class="n">dbsession</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+                                <span class="n">password_reset</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">token</span><span class="p">)</span>
                 <span class="k">raise</span> <span class="n">HTTPSeeOther</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">,</span> <span class="n">_query</span><span class="o">=</span><span class="n">query_params</span><span class="p">))</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;params&#39;</span><span class="p">:</span> <span class="n">params</span><span class="p">,</span>
@@ -186,405 +335,13 @@
                         <span class="s1">&#39;query_params&#39;</span><span class="p">:</span> <span class="n">query_params</span><span class="p">,</span>
                         <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">create_user_crumbs</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="p">[{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Confirm&#39;</span><span class="p">,</span>
                                                                 <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">current_route_url</span><span class="p">()}])}</span>
-        <span class="k">except</span> <span class="n">formencode</span><span class="o">.</span><span class="n">Invalid</span><span class="p">:</span>
+        <span class="k">except</span> <span class="n">formencode</span><span class="o">.</span><span class="n">Invalid</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
             <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">flash</span><span class="p">(</span><span class="s1">&#39;Please select the action you wish to apply and the users to apply it to&#39;</span><span class="p">,</span>
                                   <span class="n">queue</span><span class="o">=</span><span class="s1">&#39;error&#39;</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">HTTPSeeOther</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">,</span> <span class="n">_query</span><span class="o">=</span><span class="n">query_params</span><span class="p">))</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="PasswordValidator"><a class="viewcode-back" href="../../../api/wte_views_user.html#wte.views.user.PasswordValidator">[docs]</a><span class="k">class</span> <span class="nc">PasswordValidator</span><span class="p">(</span><span class="n">formencode</span><span class="o">.</span><span class="n">FancyValidator</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;The :class:`~wte.views.user.PasswordValidator` handles the checking of</span>
-<span class="sd">    user-provided passwords against the database to allow / dissallow login.</span>
-
-<span class="sd">    Login is disallowed, if the password does not match the e-mail address or</span>
-<span class="sd">    if the :class:`~wte.models.User`&#39;s ``validation_token`` is still set,</span>
-<span class="sd">    meaning they have not confirmed their registration.</span>
-
-<span class="sd">    Requires a SQLAlchemy database session to be available via</span>
-<span class="sd">    ``state.dbsession``.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">messages</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;nologin&#39;</span><span class="p">:</span> <span class="s1">&#39;No user exists with the given e-mail address or the password does not match&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;noconfirmed&#39;</span><span class="p">:</span> <span class="s1">&#39;You must confirm your registration before being able to log in&#39;</span><span class="p">}</span>
-
-    <span class="k">def</span> <span class="nf">_validate_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
-        <span class="n">user</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">User</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">email</span> <span class="o">==</span> <span class="n">value</span><span class="p">[</span><span class="s1">&#39;email&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">user</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">validation_token</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">formencode</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">Invalid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">(</span><span class="s1">&#39;noconfirmed&#39;</span><span class="p">,</span> <span class="n">state</span><span class="p">),</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="ow">not</span> <span class="n">user</span><span class="o">.</span><span class="n">password_matches</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="s1">&#39;password&#39;</span><span class="p">]):</span>
-                <span class="k">raise</span> <span class="n">formencode</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">Invalid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">(</span><span class="s1">&#39;nologin&#39;</span><span class="p">,</span> <span class="n">state</span><span class="p">),</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">formencode</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">Invalid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">(</span><span class="s1">&#39;nologin&#39;</span><span class="p">,</span> <span class="n">state</span><span class="p">),</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="LoginSchema"><a class="viewcode-back" href="../../../api/wte_views_user.html#wte.views.user.LoginSchema">[docs]</a><span class="k">class</span> <span class="nc">LoginSchema</span><span class="p">(</span><span class="n">CSRFSchema</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;The :class:`~wte.views.user.LoginSchema` handles the validation of a</span>
-<span class="sd">    login request.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">return_to</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">UnicodeString</span><span class="p">(</span><span class="n">if_missing</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
-    <span class="sd">&quot;&quot;&quot;URL to redirect to after a successful login (optional)&quot;&quot;&quot;</span>
-    <span class="n">email</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">Email</span><span class="p">(</span><span class="n">not_empty</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-    <span class="sd">&quot;&quot;&quot;E-mail address to log in with&quot;&quot;&quot;</span>
-    <span class="n">password</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">UnicodeString</span><span class="p">(</span><span class="n">not_empty</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-    <span class="sd">&quot;&quot;&quot;Password to log in with&quot;&quot;&quot;</span>
-
-    <span class="n">chained_validators</span> <span class="o">=</span> <span class="p">[</span><span class="n">PasswordValidator</span><span class="p">()]</span></div>
-
-
-<span class="nd">@view_config</span><span class="p">(</span><span class="n">route_name</span><span class="o">=</span><span class="s1">&#39;user.login&#39;</span><span class="p">,</span> <span class="n">renderer</span><span class="o">=</span><span class="s1">&#39;wte:templates/users/login.kajiki&#39;</span><span class="p">)</span>
-<span class="nd">@current_user</span><span class="p">()</span>
-<div class="viewcode-block" id="login"><a class="viewcode-back" href="../../../api/wte_views_user.html#wte.views.user.login">[docs]</a><span class="k">def</span> <span class="nf">login</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Handles the &quot;/users/login&quot; URL, checking the submitted username and</span>
-<span class="sd">    password against the stored :class:`~wte.models.User` and setting the</span>
-<span class="sd">    necessary session variables if the login is successful.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="o">.</span><span class="n">logged_in</span><span class="p">:</span>
-        <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">flash</span><span class="p">(</span><span class="s1">&#39;You are already logged in&#39;</span><span class="p">,</span> <span class="n">queue</span><span class="o">=</span><span class="s1">&#39;info&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="s1">&#39;return_to&#39;</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;return_to&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">)</span> <span class="ow">and</span> \
-                    <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;return_to&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">request</span><span class="o">.</span><span class="n">current_route_url</span><span class="p">():</span>
-                <span class="k">raise</span> <span class="n">HTTPSeeOther</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;return_to&#39;</span><span class="p">])</span>
-        <span class="k">raise</span> <span class="n">HTTPSeeOther</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.list&#39;</span><span class="p">,</span>
-                                             <span class="n">_query</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;user_id&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="o">.</span><span class="n">id</span><span class="p">}))</span>
-    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">dbsession</span> <span class="o">=</span> <span class="n">DBSession</span><span class="p">()</span>
-            <span class="n">params</span> <span class="o">=</span> <span class="n">LoginSchema</span><span class="p">()</span><span class="o">.</span><span class="n">to_python</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="n">State</span><span class="p">(</span><span class="n">dbsession</span><span class="o">=</span><span class="n">dbsession</span><span class="p">,</span>
-                                                                   <span class="n">request</span><span class="o">=</span><span class="n">request</span><span class="p">))</span>
-            <span class="n">user</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">User</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">email</span> <span class="o">==</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;email&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
-            <span class="n">request</span><span class="o">.</span><span class="n">current_user</span> <span class="o">=</span> <span class="n">user</span>
-            <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="o">.</span><span class="n">logged_in</span> <span class="o">=</span> <span class="bp">True</span>
-            <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="s1">&#39;uid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">id</span>
-            <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">new_csrf_token</span><span class="p">()</span>
-            <span class="k">if</span> <span class="s1">&#39;return_to&#39;</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;return_to&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">)</span> <span class="ow">and</span> \
-                        <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;return_to&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">request</span><span class="o">.</span><span class="n">current_route_url</span><span class="p">():</span>
-                    <span class="k">raise</span> <span class="n">HTTPSeeOther</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;return_to&#39;</span><span class="p">])</span>
-            <span class="k">raise</span> <span class="n">HTTPSeeOther</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.list&#39;</span><span class="p">,</span>
-                                                 <span class="n">_query</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;user_id&#39;</span><span class="p">:</span> <span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">}))</span>
-        <span class="k">except</span> <span class="n">formencode</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">Invalid</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;errors&#39;</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">error_dict</span> <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">error_dict</span> <span class="k">else</span> <span class="p">{</span><span class="s1">&#39;email&#39;</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">msg</span><span class="p">,</span>
-                                                                 <span class="s1">&#39;password&#39;</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">msg</span><span class="p">},</span>
-                    <span class="s1">&#39;values&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">,</span>
-                    <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Login&#39;</span><span class="p">,</span> <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;user.login&#39;</span><span class="p">),</span> <span class="s1">&#39;current&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">}],</span>
-                    <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;login.html&#39;</span><span class="p">]}</span>
-    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Login&#39;</span><span class="p">,</span> <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;user.login&#39;</span><span class="p">),</span> <span class="s1">&#39;current&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">}],</span>
-            <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;login.html&#39;</span><span class="p">]}</span></div>
-
-
-<span class="nd">@view_config</span><span class="p">(</span><span class="n">route_name</span><span class="o">=</span><span class="s1">&#39;user.logout&#39;</span><span class="p">,</span> <span class="n">renderer</span><span class="o">=</span><span class="s1">&#39;wte:templates/users/logout.kajiki&#39;</span><span class="p">)</span>
-<span class="nd">@current_user</span><span class="p">()</span>
-<div class="viewcode-block" id="logout"><a class="viewcode-back" href="../../../api/wte_views_user.html#wte.views.user.logout">[docs]</a><span class="k">def</span> <span class="nf">logout</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Handles the &quot;/users/logout&quot; URL and deletes the current session,</span>
-<span class="sd">    thus logging the user out</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">CSRFSchema</span><span class="p">()</span><span class="o">.</span><span class="n">to_python</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="n">State</span><span class="p">(</span><span class="n">request</span><span class="o">=</span><span class="n">request</span><span class="p">))</span>
-            <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="o">.</span><span class="n">logged_in</span> <span class="o">=</span> <span class="bp">False</span>
-            <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
-            <span class="k">raise</span> <span class="n">HTTPSeeOther</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">))</span>
-        <span class="k">except</span> <span class="n">formencode</span><span class="o">.</span><span class="n">Invalid</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;errors&#39;</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">error_dict</span><span class="p">,</span>
-                    <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Logout&#39;</span><span class="p">,</span> <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;user.logout&#39;</span><span class="p">),</span> <span class="s1">&#39;current&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">}]}</span>
-    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Logout&#39;</span><span class="p">,</span> <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;user.logout&#39;</span><span class="p">),</span> <span class="s1">&#39;current&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">}]}</span></div>
-
-
-<div class="viewcode-block" id="UniqueEmailValidator"><a class="viewcode-back" href="../../../api/wte_views_user.html#wte.views.user.UniqueEmailValidator">[docs]</a><span class="k">class</span> <span class="nc">UniqueEmailValidator</span><span class="p">(</span><span class="n">formencode</span><span class="o">.</span><span class="n">FancyValidator</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;The :class:`~wte.views.user.UniqueEmailValidator` checks that the given</span>
-<span class="sd">    e-mail address is not already used by a :class:`~wte.models.User`.</span>
-
-<span class="sd">    Requires a SQLAlchemy database session to be available via</span>
-<span class="sd">    ``state.dbsession``. If a ``state.userid`` is provided, then the</span>
-<span class="sd">    :class:`~wte.models.User` with that `id` can have the same e-mail address.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">messages</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;existing&#39;</span><span class="p">:</span> <span class="s1">&#39;A user with this e-mail address already exists&#39;</span><span class="p">}</span>
-
-    <span class="k">def</span> <span class="nf">_validate_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
-        <span class="n">user</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">User</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">email</span> <span class="o">==</span> <span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">user</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="s1">&#39;userid&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">user</span><span class="o">.</span><span class="n">id</span> <span class="o">!=</span> <span class="n">state</span><span class="o">.</span><span class="n">userid</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">formencode</span><span class="o">.</span><span class="n">Invalid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">(</span><span class="s1">&#39;existing&#39;</span><span class="p">,</span> <span class="n">state</span><span class="p">),</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="EmailDomainValidator"><a class="viewcode-back" href="../../../api/wte_views_user.html#wte.views.user.EmailDomainValidator">[docs]</a><span class="k">class</span> <span class="nc">EmailDomainValidator</span><span class="p">(</span><span class="n">formencode</span><span class="o">.</span><span class="n">FancyValidator</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;The :class:`~wte.views.user.EmailDomainValidator` checks that the given</span>
-<span class="sd">    e-mail address is in the list of allowed e-mail address domains.</span>
-
-<span class="sd">    Requires that the list of allowed domains is available via the ``state.email_domains``</span>
-<span class="sd">    attribute. If nothing is provided in the ``state``, then all e-mail addresses</span>
-<span class="sd">    are seen as valid.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">messages</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;wrongdomain&#39;</span><span class="p">:</span> <span class="s1">&#39;Only e-mail address in the following domains can be used: </span><span class="si">%(domains)s</span><span class="s1">&#39;</span><span class="p">}</span>
-
-    <span class="k">def</span> <span class="nf">_validate_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="s1">&#39;email_domains&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">state</span><span class="o">.</span><span class="n">email_domains</span><span class="p">:</span>
-            <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="n">value</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;@&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">email_domains</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">email_domains</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="n">formencode</span><span class="o">.</span><span class="n">Invalid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">(</span><span class="s1">&#39;wrongdomain&#39;</span><span class="p">,</span>
-                                                          <span class="n">state</span><span class="p">,</span>
-                                                          <span class="n">domains</span><span class="o">=</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">email_domains</span><span class="p">)),</span>
-                                             <span class="n">value</span><span class="p">,</span>
-                                             <span class="n">state</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">value</span> <span class="o">!=</span> <span class="n">state</span><span class="o">.</span><span class="n">email_domains</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">formencode</span><span class="o">.</span><span class="n">Invalid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">(</span><span class="s1">&#39;wrongdomain&#39;</span><span class="p">,</span>
-                                                      <span class="n">state</span><span class="p">,</span>
-                                                      <span class="n">domains</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">email_domains</span><span class="p">),</span>
-                                         <span class="n">value</span><span class="p">,</span>
-                                         <span class="n">state</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="RegisterSchema"><a class="viewcode-back" href="../../../api/wte_views_user.html#wte.views.user.RegisterSchema">[docs]</a><span class="k">class</span> <span class="nc">RegisterSchema</span><span class="p">(</span><span class="n">CSRFSchema</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;The :class:`~wte.user.views.RegisterSchema` handles the validation of</span>
-<span class="sd">    registration requests.</span>
-<span class="sd">    s&quot;&quot;&quot;</span>
-    <span class="n">return_to</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">UnicodeString</span><span class="p">(</span><span class="n">if_missing</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
-    <span class="sd">&quot;&quot;&quot;URL to redirect to after a successful registration (optional)&quot;&quot;&quot;</span>
-    <span class="n">email</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">All</span><span class="p">(</span><span class="n">UniqueEmailValidator</span><span class="p">(),</span>
-                           <span class="n">EmailDomainValidator</span><span class="p">(),</span>
-                           <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">Email</span><span class="p">(</span><span class="n">not_empty</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
-    <span class="sd">&quot;&quot;&quot;E-mail address to register with&quot;&quot;&quot;</span>
-    <span class="n">email_confirm</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">Email</span><span class="p">(</span><span class="n">not_empty</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-    <span class="sd">&quot;&quot;&quot;Confirmation of the registration e-mail address&quot;&quot;&quot;</span>
-    <span class="n">name</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">UnicodeString</span><span class="p">(</span><span class="n">not_empty</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-    <span class="sd">&quot;&quot;&quot;Name of the registering user&quot;&quot;&quot;</span>
-
-    <span class="n">chained_validators</span> <span class="o">=</span> <span class="p">[</span><span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">FieldsMatch</span><span class="p">(</span><span class="s1">&#39;email&#39;</span><span class="p">,</span>
-                                                            <span class="s1">&#39;email_confirm&#39;</span><span class="p">)]</span></div>
-
-
-<span class="nd">@view_config</span><span class="p">(</span><span class="n">route_name</span><span class="o">=</span><span class="s1">&#39;user.register&#39;</span><span class="p">,</span> <span class="n">renderer</span><span class="o">=</span><span class="s1">&#39;wte:templates/users/register.kajiki&#39;</span><span class="p">)</span>
-<span class="nd">@current_user</span><span class="p">()</span>
-<div class="viewcode-block" id="register"><a class="viewcode-back" href="../../../api/wte_views_user.html#wte.views.user.register">[docs]</a><span class="k">def</span> <span class="nf">register</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Handles the &quot;/users/register&quot; URL, displaying the registration form</span>
-<span class="sd">    or if data is POSTed, creating a new user. Upon registration, a</span>
-<span class="sd">    confirmation e-mail is sent to the given e-mail address.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">dbsession</span> <span class="o">=</span> <span class="n">DBSession</span><span class="p">()</span>
-            <span class="n">params</span> <span class="o">=</span> <span class="n">RegisterSchema</span><span class="p">()</span><span class="o">.</span><span class="n">to_python</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">,</span>
-                                                <span class="n">State</span><span class="p">(</span><span class="n">dbsession</span><span class="o">=</span><span class="n">dbsession</span><span class="p">,</span>
-                                                      <span class="n">email_domains</span><span class="o">=</span><span class="n">get_config_setting</span><span class="p">(</span><span class="n">request</span><span class="p">,</span>
-                                                                                       <span class="n">key</span><span class="o">=</span><span class="s1">&#39;registration.domains&#39;</span><span class="p">,</span>
-                                                                                       <span class="n">target_type</span><span class="o">=</span><span class="s1">&#39;list&#39;</span><span class="p">,</span>
-                                                                                       <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">)))</span>
-            <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">manager</span><span class="p">:</span>
-                <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;email&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">])</span>
-                <span class="n">user</span><span class="o">.</span><span class="n">validation_token</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">get_hex</span><span class="p">()</span>
-                <span class="n">dbsession</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
-            <span class="n">dbsession</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
-            <span class="n">send_email</span><span class="p">(</span><span class="n">request</span><span class="p">,</span>
-                       <span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="p">,</span>
-                       <span class="n">get_config_setting</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;email.sender&#39;</span><span class="p">,</span>
-                                          <span class="n">default</span><span class="o">=</span><span class="s1">&#39;no-reply@example.com&#39;</span><span class="p">),</span>
-                       <span class="s1">&#39;Please confirm your registration&#39;</span><span class="p">,</span>
-                       <span class="sd">&#39;&#39;&#39;Hello %s,</span>
-
-<span class="sd">Thank you for registering with the Web Teaching Environment. To complete your</span>
-<span class="sd">registration, please click on the following link or copy it into your browser:</span>
-
-<span class="sd">%s</span>
-
-<span class="sd">Best Regards,</span>
-<span class="sd">Web Teaching Environment&#39;&#39;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">display_name</span><span class="p">,</span>
-                               <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;user.confirm&#39;</span><span class="p">,</span>
-                                                 <span class="n">uid</span><span class="o">=</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
-                                                 <span class="n">token</span><span class="o">=</span><span class="n">user</span><span class="o">.</span><span class="n">validation_token</span><span class="p">)))</span>
-            <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">flash</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;Your registration has been successful. A confirmation e-mail has been sent to</span>
-<span class="s1"> the e-mail address you specified.&#39;&#39;&#39;</span><span class="p">,</span> <span class="n">queue</span><span class="o">=</span><span class="s1">&#39;info&#39;</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="n">HTTPSeeOther</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">))</span>
-        <span class="k">except</span> <span class="n">formencode</span><span class="o">.</span><span class="n">Invalid</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;errors&#39;</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">error_dict</span><span class="p">,</span>
-                    <span class="s1">&#39;values&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">,</span>
-                    <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Login&#39;</span><span class="p">,</span> <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;user.login&#39;</span><span class="p">)},</span>
-                               <span class="p">{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Register&#39;</span><span class="p">,</span> <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;user.register&#39;</span><span class="p">),</span> <span class="s1">&#39;current&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">}],</span>
-                    <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;register.html&#39;</span><span class="p">]}</span>
-    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Login&#39;</span><span class="p">,</span> <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;user.login&#39;</span><span class="p">)},</span>
-                       <span class="p">{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Register&#39;</span><span class="p">,</span> <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;user.register&#39;</span><span class="p">),</span> <span class="s1">&#39;current&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">}],</span>
-            <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;register.html&#39;</span><span class="p">]}</span></div>
-
-
-<div class="viewcode-block" id="process_confirmation"><a class="viewcode-back" href="../../../api/wte_views_user.html#wte.views.user.process_confirmation">[docs]</a><span class="k">def</span> <span class="nf">process_confirmation</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;The :func:`~wte.views.user.process_confirmation` function handles</span>
-<span class="sd">    clearing the ``validation_token``, generating a new password, and sending</span>
-<span class="sd">    a welcome e-mail if the validation of the :class:`~wte.models.User` was</span>
-<span class="sd">    successful.</span>
-
-<span class="sd">    :param request: The request to use for configuration access</span>
-<span class="sd">    :type request: :class:`~pyramid.request.Request`</span>
-<span class="sd">    :param user: The user to process</span>
-<span class="sd">    :type user: :class:`~wte.models.User`</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">user</span><span class="o">.</span><span class="n">validation_token</span> <span class="o">=</span> <span class="bp">None</span>
-    <span class="n">new_password</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">random_password</span><span class="p">()</span>
-    <span class="n">send_email</span><span class="p">(</span><span class="n">request</span><span class="p">,</span>
-               <span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="p">,</span>
-               <span class="n">get_config_setting</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;email.sender&#39;</span><span class="p">,</span>
-                                  <span class="n">default</span><span class="o">=</span><span class="s1">&#39;no-reply@example.com&#39;</span><span class="p">),</span>
-               <span class="s1">&#39;Log in to the Web Teaching Environment&#39;</span><span class="p">,</span>
-               <span class="sd">&#39;&#39;&#39;Hello %s,</span>
-
-<span class="sd">Thank you for confirming your registration with the Web Teaching Environment.</span>
-<span class="sd">You can now log in using the following credentials:</span>
-
-<span class="sd">Username: %s</span>
-<span class="sd">Password: %s</span>
-
-<span class="sd">Best Regards,</span>
-<span class="sd">Web Teaching Environment&#39;&#39;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">display_name</span><span class="p">,</span> <span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="p">,</span> <span class="n">new_password</span><span class="p">))</span></div>
-
-
-<span class="nd">@view_config</span><span class="p">(</span><span class="n">route_name</span><span class="o">=</span><span class="s1">&#39;user.confirm&#39;</span><span class="p">,</span> <span class="n">renderer</span><span class="o">=</span><span class="s2">&quot;wte:templates/users/confirm.kajiki&quot;</span><span class="p">)</span>
-<span class="nd">@current_user</span><span class="p">()</span>
-<div class="viewcode-block" id="confirm"><a class="viewcode-back" href="../../../api/wte_views_user.html#wte.views.user.confirm">[docs]</a><span class="k">def</span> <span class="nf">confirm</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Handles the &quot;/users/{uid}/confirm/{token}&quot; URL, validating that the</span>
-<span class="sd">    user with the given ``{uid}`` received the ``{token}`` at the given e-mail</span>
-<span class="sd">    address.</span>
-
-<span class="sd">    If confirmed, will send an e-mail with a new, random password.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">dbsession</span> <span class="o">=</span> <span class="n">DBSession</span><span class="p">()</span>
-    <span class="n">user</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">User</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">and_</span><span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">&#39;uid&#39;</span><span class="p">],</span>
-                                             <span class="n">User</span><span class="o">.</span><span class="n">validation_token</span> <span class="o">==</span> <span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">&#39;token&#39;</span><span class="p">]))</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">user</span><span class="p">:</span>
-        <span class="n">status</span> <span class="o">=</span> <span class="s1">u&#39;success&#39;</span>
-        <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">manager</span><span class="p">:</span>
-            <span class="n">dbsession</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
-            <span class="n">process_confirmation</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">user</span><span class="p">)</span>
-        <span class="n">dbsession</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">user</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">User</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">and_</span><span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">&#39;uid&#39;</span><span class="p">],</span>
-                                                 <span class="n">User</span><span class="o">.</span><span class="n">validation_token</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">))</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">user</span><span class="p">:</span>
-            <span class="n">status</span> <span class="o">=</span> <span class="s1">u&#39;confirmed&#39;</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">status</span> <span class="o">=</span> <span class="s1">u&#39;fail&#39;</span>
-    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="o">.</span><span class="n">has_permission</span><span class="p">(</span><span class="s1">&#39;admin.users.view&#39;</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s1">u&#39;fail&#39;</span><span class="p">:</span>
-            <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">flash</span><span class="p">(</span><span class="s1">&#39;Failed to validate the given user&#39;</span><span class="p">,</span> <span class="n">queue</span><span class="o">=</span><span class="s1">&#39;error&#39;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">flash</span><span class="p">(</span><span class="s1">&#39;The user has been validated and an e-mail with access details sent&#39;</span><span class="p">,</span> <span class="n">queue</span><span class="o">=</span><span class="s1">&#39;info&#39;</span><span class="p">)</span>
-        <span class="k">raise</span> <span class="n">HTTPSeeOther</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">))</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="n">status</span><span class="p">,</span>
-                <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Login&#39;</span><span class="p">,</span> <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;user.login&#39;</span><span class="p">)},</span>
-                           <span class="p">{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Register&#39;</span><span class="p">,</span> <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;user.register&#39;</span><span class="p">)},</span>
-                           <span class="p">{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Confirmation&#39;</span><span class="p">,</span>
-                            <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;user.confirm&#39;</span><span class="p">,</span>
-                                                     <span class="n">uid</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">&#39;uid&#39;</span><span class="p">],</span>
-                                                     <span class="n">token</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">&#39;token&#39;</span><span class="p">])}],</span>
-                <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;register.html&#39;</span><span class="p">]}</span></div>
-
-
-<div class="viewcode-block" id="ForgottenPasswordSchema"><a class="viewcode-back" href="../../../api/wte_views_user.html#wte.views.user.ForgottenPasswordSchema">[docs]</a><span class="k">class</span> <span class="nc">ForgottenPasswordSchema</span><span class="p">(</span><span class="n">CSRFSchema</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;The :class:`~wte.views.user.ForgottenPasswordSchema` handles the</span>
-<span class="sd">    validation of forgotten password requests.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">email</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">Email</span><span class="p">(</span><span class="n">not_empty</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-    <span class="sd">&quot;&quot;&quot;E-mail to request a new password or validation token for&quot;&quot;&quot;</span></div>
-
-
-<div class="viewcode-block" id="process_forgotten_password"><a class="viewcode-back" href="../../../api/wte_views_user.html#wte.views.user.process_forgotten_password">[docs]</a><span class="k">def</span> <span class="nf">process_forgotten_password</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;The :func:`~wte.views.user.process_forgotten_password` function handles</span>
-<span class="sd">    generating a new password and sending the information e-mail. It can</span>
-<span class="sd">    distinguish between :class:`~wte.models.User` who have been validated and</span>
-<span class="sd">    those that have not yet and will send the appropriate e-mail.</span>
-
-<span class="sd">    :param request: The request to use for URL generation</span>
-<span class="sd">    :type request: :class:`~pyramid.request.Request`</span>
-<span class="sd">    :param user: The user to generate a new password for</span>
-<span class="sd">    :type user: :class:`~wte.models.User`</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">validation_token</span><span class="p">:</span>
-        <span class="n">user</span><span class="o">.</span><span class="n">validation_token</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">get_hex</span><span class="p">()</span>
-        <span class="n">send_email</span><span class="p">(</span><span class="n">request</span><span class="p">,</span>
-                   <span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="p">,</span>
-                   <span class="n">get_config_setting</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;email.sender&#39;</span><span class="p">,</span>
-                                      <span class="n">default</span><span class="o">=</span><span class="s1">&#39;no-reply@example.com&#39;</span><span class="p">),</span>
-                   <span class="s1">&#39;Please confirm your registration&#39;</span><span class="p">,</span>
-                   <span class="sd">&#39;&#39;&#39;Hello %s,</span>
-
-<span class="sd">Thank you for registering with the Web Teaching Environment. To complete your</span>
-<span class="sd">registration, please click on the following link or copy it into your browser:</span>
-
-<span class="sd">%s</span>
-
-<span class="sd">Best Regards,</span>
-<span class="sd">Web Teaching Environment&#39;&#39;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">display_name</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;user.confirm&#39;</span><span class="p">,</span>
-                                                                    <span class="n">uid</span><span class="o">=</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
-                                                                    <span class="n">token</span><span class="o">=</span><span class="n">user</span><span class="o">.</span><span class="n">validation_token</span><span class="p">)))</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">new_password</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">random_password</span><span class="p">()</span>
-        <span class="n">send_email</span><span class="p">(</span><span class="n">request</span><span class="p">,</span>
-                   <span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="p">,</span>
-                   <span class="n">get_config_setting</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;email.sender&#39;</span><span class="p">,</span>
-                                      <span class="n">default</span><span class="o">=</span><span class="s1">&#39;no-reply@example.com&#39;</span><span class="p">),</span>
-                   <span class="s1">&#39;Log in to the Web Teaching Environment&#39;</span><span class="p">,</span>
-                   <span class="sd">&#39;&#39;&#39;Hello %s,</span>
-
-<span class="sd">Thank you for confirming your registration with the Web Teaching Environment.</span>
-<span class="sd">You can now log in using the following credentials:</span>
-
-<span class="sd">Username: %s</span>
-<span class="sd">Password: %s</span>
-
-<span class="sd">Best Regards,</span>
-<span class="sd">Web Teaching Environment&#39;&#39;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">display_name</span><span class="p">,</span> <span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="p">,</span> <span class="n">new_password</span><span class="p">))</span></div>
-
-
-<span class="nd">@view_config</span><span class="p">(</span><span class="n">route_name</span><span class="o">=</span><span class="s1">&#39;user.forgotten_password&#39;</span><span class="p">,</span> <span class="n">renderer</span><span class="o">=</span><span class="s1">&#39;wte:templates/users/forgotten_password.kajiki&#39;</span><span class="p">)</span>
-<span class="nd">@current_user</span><span class="p">()</span>
-<div class="viewcode-block" id="forgotten_password"><a class="viewcode-back" href="../../../api/wte_views_user.html#wte.views.user.forgotten_password">[docs]</a><span class="k">def</span> <span class="nf">forgotten_password</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Handles the &quot;/users/forgotten-password&quot; URL, showing the form where</span>
-<span class="sd">    the user can provide their e-mail address. If the</span>
-<span class="sd">    :class:`~wte.models.User` has a ``validation_token``, then an e-mail with a</span>
-<span class="sd">    new validation token is sent, otherwise an e-mail with a new, random</span>
-<span class="sd">    password is sent.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
-        <span class="n">dbsession</span> <span class="o">=</span> <span class="n">DBSession</span><span class="p">()</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">params</span> <span class="o">=</span> <span class="n">ForgottenPasswordSchema</span><span class="p">()</span><span class="o">.</span><span class="n">to_python</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">)</span>
-            <span class="n">user</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">User</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">email</span> <span class="o">==</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;email&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
-            <span class="k">if</span> <span class="n">user</span><span class="p">:</span>
-                <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">manager</span><span class="p">:</span>
-                    <span class="n">dbsession</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
-                    <span class="n">process_forgotten_password</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">user</span><span class="p">)</span>
-                <span class="n">dbsession</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">validation_token</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-                    <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">flash</span><span class="p">(</span><span class="s1">&#39;A new confirmation e-mail has been sent to the&#39;</span> <span class="o">+</span>
-                                          <span class="s1">&#39; specified e-mail address.&#39;</span><span class="p">,</span> <span class="n">queue</span><span class="o">=</span><span class="s1">&#39;info&#39;</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">flash</span><span class="p">(</span><span class="s1">&#39;A new password has been sent to the specified e-mail address.&#39;</span><span class="p">,</span>
-                                          <span class="n">queue</span><span class="o">=</span><span class="s1">&#39;info&#39;</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="o">.</span><span class="n">has_permission</span><span class="p">(</span><span class="s1">&#39;admin.users.view&#39;</span><span class="p">):</span>
-                    <span class="k">raise</span> <span class="n">HTTPSeeOther</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">))</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="n">HTTPSeeOther</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">))</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">flash</span><span class="p">(</span><span class="s1">&#39;A new password has been sent to the specified e-mail address.&#39;</span><span class="p">,</span>
-                                      <span class="n">queue</span><span class="o">=</span><span class="s1">&#39;info&#39;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="o">.</span><span class="n">has_permission</span><span class="p">(</span><span class="s1">&#39;admin.users.view&#39;</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="n">HTTPSeeOther</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">))</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">HTTPSeeOther</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">))</span>
-        <span class="k">except</span> <span class="n">formencode</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">Invalid</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;errors&#39;</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">error_dict</span><span class="p">,</span>
-                    <span class="s1">&#39;values&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">,</span>
-                    <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Login&#39;</span><span class="p">,</span>
-                                <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;user.login&#39;</span><span class="p">)},</span>
-                               <span class="p">{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Forgotten Password&#39;</span><span class="p">,</span>
-                                <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;user.forgotten_password&#39;</span><span class="p">),</span> <span class="s1">&#39;current&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">}],</span>
-                    <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;forgotten_password.html&#39;</span><span class="p">]}</span>
-    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Login&#39;</span><span class="p">,</span>
-                        <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;user.login&#39;</span><span class="p">)},</span>
-                       <span class="p">{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Forgotten Password&#39;</span><span class="p">,</span>
-                        <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;user.forgotten_password&#39;</span><span class="p">),</span> <span class="s1">&#39;current&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">}],</span>
-            <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;forgotten_password.html&#39;</span><span class="p">]}</span></div>
 
 
 <span class="nd">@view_config</span><span class="p">(</span><span class="n">route_name</span><span class="o">=</span><span class="s1">&#39;user.view&#39;</span><span class="p">,</span> <span class="n">renderer</span><span class="o">=</span><span class="s1">&#39;wte:templates/users/view.kajiki&#39;</span><span class="p">)</span>
@@ -644,7 +401,9 @@
                                                           <span class="n">email_domains</span><span class="o">=</span><span class="n">get_config_setting</span><span class="p">(</span><span class="n">request</span><span class="p">,</span>
                                                                                            <span class="n">key</span><span class="o">=</span><span class="s1">&#39;registration.domains&#39;</span><span class="p">,</span>
                                                                                            <span class="n">target_type</span><span class="o">=</span><span class="s1">&#39;list&#39;</span><span class="p">,</span>
-                                                                                           <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">)))</span>
+                                                                                           <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">),</span>
+                                                          <span class="n">user_class</span><span class="o">=</span><span class="n">User</span><span class="p">,</span>
+                                                          <span class="n">request</span><span class="o">=</span><span class="n">request</span><span class="p">))</span>
                     <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">manager</span><span class="p">:</span>
                         <span class="n">dbsession</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
                         <span class="n">user</span><span class="o">.</span><span class="n">email</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;email&#39;</span><span class="p">]</span>

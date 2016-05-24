@@ -91,3 +91,11 @@ settings).
    automatically if you make any changes in the *workspace*. If you make
    changes in the *workspace* then you need to manually re-load the page in
    the new tab or window for those changes to become visible.
+   
+Quizzes
+^^^^^^^
+
+The Web Teaching Environment allows the tutor to set small quizzes. To answer the quiz,
+simply select the correct answers and then click on the :primary_btn:`Check Answers` button.
+You will immediately be shown which answers you got right and which are wrong. You can re-try
+any questions that you did not get right.

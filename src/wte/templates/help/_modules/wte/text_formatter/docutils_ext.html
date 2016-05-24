@@ -33,16 +33,19 @@
 <span class="sd">the additional formatting support required by the</span>
 <span class="sd">:func:`~wte.text_formatter.compile_rst` function.</span>
 <span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">re</span>
 
 <span class="kn">from</span> <span class="nn">docutils</span> <span class="kn">import</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">utils</span>
 <span class="kn">from</span> <span class="nn">docutils.parsers.rst</span> <span class="kn">import</span> <span class="n">directives</span><span class="p">,</span> <span class="n">roles</span><span class="p">,</span> <span class="n">Directive</span>
+<span class="kn">from</span> <span class="nn">docutils.writers.html4css1</span> <span class="kn">import</span> <span class="n">HTMLTranslator</span>
 <span class="kn">from</span> <span class="nn">pygments</span> <span class="kn">import</span> <span class="n">highlight</span>
 <span class="kn">from</span> <span class="nn">pygments.formatters</span> <span class="kn">import</span> <span class="n">HtmlFormatter</span>
 <span class="kn">from</span> <span class="nn">pygments.lexers</span> <span class="kn">import</span> <span class="n">get_lexer_by_name</span><span class="p">,</span> <span class="n">TextLexer</span><span class="p">,</span> <span class="n">get_all_lexers</span>
+<span class="kn">from</span> <span class="nn">pywebtools.sqlalchemy</span> <span class="kn">import</span> <span class="n">DBSession</span>
 <span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="n">and_</span>
 
-<span class="kn">from</span> <span class="nn">wte.models</span> <span class="kn">import</span> <span class="p">(</span><span class="n">DBSession</span><span class="p">,</span> <span class="n">Asset</span><span class="p">,</span> <span class="n">Part</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">wte.models</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Asset</span><span class="p">,</span> <span class="n">Part</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="init"><a class="viewcode-back" href="../../../api/wte_text_formatter_docutils_ext.html#wte.text_formatter.docutils_ext.init">[docs]</a><span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="n">settings</span><span class="p">):</span>
@@ -50,12 +53,17 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">directives</span><span class="o">.</span><span class="n">register_directive</span><span class="p">(</span><span class="s1">&#39;sourcecode&#39;</span><span class="p">,</span> <span class="n">Pygments</span><span class="p">)</span>
     <span class="n">directives</span><span class="o">.</span><span class="n">register_directive</span><span class="p">(</span><span class="s1">&#39;youtube&#39;</span><span class="p">,</span> <span class="n">YouTube</span><span class="p">)</span>
+    <span class="n">directives</span><span class="o">.</span><span class="n">register_directive</span><span class="p">(</span><span class="s1">&#39;quiz&#39;</span><span class="p">,</span> <span class="n">Quiz</span><span class="p">)</span>
+    <span class="n">directives</span><span class="o">.</span><span class="n">register_directive</span><span class="p">(</span><span class="s1">&#39;quiz-question&#39;</span><span class="p">,</span> <span class="n">QuizQuestion</span><span class="p">)</span>
     <span class="n">roles</span><span class="o">.</span><span class="n">register_local_role</span><span class="p">(</span><span class="s1">&#39;asset&#39;</span><span class="p">,</span> <span class="n">asset_ref_role</span><span class="p">)</span>
     <span class="n">roles</span><span class="o">.</span><span class="n">register_local_role</span><span class="p">(</span><span class="s1">&#39;crossref&#39;</span><span class="p">,</span> <span class="n">crossref_role</span><span class="p">)</span>
     <span class="n">roles</span><span class="o">.</span><span class="n">register_local_role</span><span class="p">(</span><span class="s1">&#39;style&#39;</span><span class="p">,</span> <span class="n">inline_css_role</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">aliases</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">get_all_lexers</span><span class="p">():</span>
         <span class="k">for</span> <span class="n">alias</span> <span class="ow">in</span> <span class="n">aliases</span><span class="p">:</span>
-            <span class="n">roles</span><span class="o">.</span><span class="n">register_local_role</span><span class="p">(</span><span class="s1">&#39;code-</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">alias</span><span class="p">),</span> <span class="n">inline_pygments_role</span><span class="p">)</span></div>
+            <span class="n">roles</span><span class="o">.</span><span class="n">register_local_role</span><span class="p">(</span><span class="s1">&#39;code-</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">alias</span><span class="p">),</span> <span class="n">inline_pygments_role</span><span class="p">)</span>
+    <span class="n">nodes</span><span class="o">.</span><span class="n">_add_node_class_names</span><span class="p">([</span><span class="n">HtmlElementBlock</span><span class="o">.</span><span class="n">__name__</span><span class="p">])</span>
+    <span class="nb">setattr</span><span class="p">(</span><span class="n">HTMLTranslator</span><span class="p">,</span> <span class="s1">&#39;visit_</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">HtmlElementBlock</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">visit_htmlelementblock</span><span class="p">)</span>
+    <span class="nb">setattr</span><span class="p">(</span><span class="n">HTMLTranslator</span><span class="p">,</span> <span class="s1">&#39;depart_</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">HtmlElementBlock</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">depart_htmlelementblock</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="HtmlTitleFormatter"><a class="viewcode-back" href="../../../api/wte_text_formatter_docutils_ext.html#wte.text_formatter.docutils_ext.HtmlTitleFormatter">[docs]</a><span class="k">class</span> <span class="nc">HtmlTitleFormatter</span><span class="p">(</span><span class="n">HtmlFormatter</span><span class="p">):</span>
@@ -85,7 +93,7 @@
 
 
 <div class="viewcode-block" id="flag_bool_option"><a class="viewcode-back" href="../../../api/wte_text_formatter_docutils_ext.html#wte.text_formatter.docutils_ext.flag_bool_option">[docs]</a><span class="k">def</span> <span class="nf">flag_bool_option</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;Options conversion function for ReST</span>
+    <span class="sd">&quot;&quot;&quot;Options conversion function for ReST</span>
 <span class="sd">    :class:`~docutils.parser.rst.Directive` that returns ``True`` if the</span>
 <span class="sd">    value is set and has any value except &quot;false&quot;.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -149,10 +157,10 @@
                                        <span class="n">filename</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="s1">&#39;filename&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="k">else</span> <span class="bp">None</span><span class="p">,</span>
                                        <span class="n">noclasses</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
                                        <span class="n">style</span><span class="o">=</span><span class="s1">&#39;native&#39;</span><span class="p">,</span>
-                                       <span class="n">cssclass</span><span class="o">=</span><span class="s1">u&#39;source </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">lexer</span><span class="o">.</span><span class="n">name</span><span class="p">),</span>
+                                       <span class="n">cssclass</span><span class="o">=</span><span class="s1">&#39;source </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">lexer</span><span class="o">.</span><span class="n">name</span><span class="p">),</span>
                                        <span class="n">linenos</span><span class="o">=</span><span class="s1">&#39;inline&#39;</span> <span class="k">if</span> <span class="s1">&#39;linenos&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="k">else</span> <span class="bp">False</span><span class="p">,</span>
                                        <span class="n">linenostart</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;linenos&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="s1">&#39;linenos&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="k">else</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="n">parsed</span> <span class="o">=</span> <span class="n">highlight</span><span class="p">(</span><span class="s1">u&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">content</span><span class="p">),</span> <span class="n">lexer</span><span class="p">,</span> <span class="n">formatter</span><span class="p">)</span>
+        <span class="n">parsed</span> <span class="o">=</span> <span class="n">highlight</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">content</span><span class="p">),</span> <span class="n">lexer</span><span class="p">,</span> <span class="n">formatter</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">nodes</span><span class="o">.</span><span class="n">raw</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">parsed</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s1">&#39;html&#39;</span><span class="p">)]</span></div>
 
 
@@ -303,6 +311,151 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inliner</span><span class="o">.</span><span class="n">reporter</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;No CSS definition found in &quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">text</span><span class="p">)))</span>
     <span class="k">return</span> <span class="n">result</span><span class="p">,</span> <span class="n">messages</span></div>
+
+
+<div class="viewcode-block" id="HtmlElementBlock"><a class="viewcode-back" href="../../../api/wte_text_formatter_docutils_ext.html#wte.text_formatter.docutils_ext.HtmlElementBlock">[docs]</a><span class="k">class</span> <span class="nc">HtmlElementBlock</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">General</span><span class="p">,</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Element</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The :class:`~wte.text_formatter.docutils_ext.HtmlElementBlock` is a docutils node</span>
+<span class="sd">    for generating arbitrary HTML elements.</span>
+
+<span class="sd">    The HTML element to generate can be configured by setting ``html_element`` on the node.</span>
+<span class="sd">    HTML attributes can be configured by setting the ``html_attributes`` property on the node,</span>
+<span class="sd">    which must be set to a ``dict``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="visit_htmlelementblock"><a class="viewcode-back" href="../../../api/wte_text_formatter_docutils_ext.html#wte.text_formatter.docutils_ext.visit_htmlelementblock">[docs]</a><span class="k">def</span> <span class="nf">visit_htmlelementblock</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Visitor for the :class:`~wte.text_formatter.docutils_ext.HtmlElementBlock` to generate</span>
+<span class="sd">    the actual HTML output.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">&#39;html_element&#39;</span><span class="p">):</span>
+        <span class="n">element_name</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">html_element</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">element_name</span> <span class="o">=</span> <span class="s1">&#39;div&#39;</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">&#39;html_attributes&#39;</span><span class="p">):</span>
+        <span class="n">attrs</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">html_attributes</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">attrs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">starttag</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">element_name</span><span class="p">,</span> <span class="o">**</span><span class="n">attrs</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="depart_htmlelementblock"><a class="viewcode-back" href="../../../api/wte_text_formatter_docutils_ext.html#wte.text_formatter.docutils_ext.depart_htmlelementblock">[docs]</a><span class="k">def</span> <span class="nf">depart_htmlelementblock</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Visitor exit for the :class:`~wte.text_formatter.docutils_ext.HtmlElementBlock`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">&#39;html_element&#39;</span><span class="p">):</span>
+        <span class="n">element_name</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">html_element</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">element_name</span> <span class="o">=</span> <span class="s1">&#39;div&#39;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&lt;/</span><span class="si">%s</span><span class="s1">&gt;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">element_name</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Quiz"><a class="viewcode-back" href="../../../api/wte_text_formatter_docutils_ext.html#wte.text_formatter.docutils_ext.Quiz">[docs]</a><span class="k">class</span> <span class="nc">Quiz</span><span class="p">(</span><span class="n">Directive</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The :class:`~wte.text_formatter.docutils_ext.Quiz` is a directive to generate</span>
+<span class="sd">    the outer wrapper for an in-part quiz. It takes a single required parameter that</span>
+<span class="sd">    is the identifier for the quiz in the current :class:`~wte.models.Part`. An optional</span>
+<span class="sd">    ``title`` parameter is the title of the quiz to show to the user. The actual</span>
+<span class="sd">    questions need to be provided via :class:`~wte.text_formatter.docutils_ext.QuizAnswer`::</span>
+
+<span class="sd">      .. quiz: quiz_identifier</span>
+<span class="sd">         :title: This is a Quiz!</span>
+
+<span class="sd">         .. quiz-question: question1</span>
+<span class="sd">            :question: Is this right?</span>
+
+<span class="sd">            [x] Answer 1</span>
+<span class="sd">            Answer 2</span>
+<span class="sd">            Answer 3</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">required_arguments</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">optional_arguments</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">final_argument_whitespace</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">option_spec</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="n">directives</span><span class="o">.</span><span class="n">unchanged</span><span class="p">}</span>
+    <span class="n">has_content</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Element</span><span class="p">()</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">document</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">document</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">nested_parse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">content</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">content_offset</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+        <span class="n">quiz</span> <span class="o">=</span> <span class="n">HtmlElementBlock</span><span class="p">()</span>
+        <span class="n">quiz</span><span class="o">.</span><span class="n">html_element</span> <span class="o">=</span> <span class="s1">&#39;form&#39;</span>
+        <span class="n">quiz</span><span class="o">.</span><span class="n">html_attributes</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;quiz&#39;</span><span class="p">,</span>
+                                <span class="s1">&#39;action&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+                                <span class="s1">&#39;data-quiz-id&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="mi">0</span><span class="p">]}</span>
+        <span class="k">if</span> <span class="s1">&#39;title&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">:</span>
+            <span class="n">heading</span> <span class="o">=</span> <span class="n">HtmlElementBlock</span><span class="p">()</span>
+            <span class="n">heading</span><span class="o">.</span><span class="n">html_attributes</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;title&#39;</span><span class="p">}</span>
+            <span class="n">heading</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">paragraph</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">]))</span>
+            <span class="n">quiz</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">heading</span><span class="p">)</span>
+        <span class="n">quiz</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="n">buttons</span> <span class="o">=</span> <span class="n">HtmlElementBlock</span><span class="p">()</span>
+        <span class="n">buttons</span><span class="o">.</span><span class="n">html_attributes</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;text-right&#39;</span><span class="p">}</span>
+        <span class="n">clear_button</span> <span class="o">=</span> <span class="n">HtmlElementBlock</span><span class="p">()</span>
+        <span class="n">clear_button</span><span class="o">.</span><span class="n">html_element</span> <span class="o">=</span> <span class="s1">&#39;input&#39;</span>
+        <span class="n">clear_button</span><span class="o">.</span><span class="n">html_attributes</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;reset&#39;</span><span class="p">,</span>
+                                        <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="s1">&#39;Clear Answers&#39;</span><span class="p">,</span>
+                                        <span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;button secondary&#39;</span><span class="p">}</span>
+        <span class="n">buttons</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">clear_button</span><span class="p">)</span>
+        <span class="n">submit_button</span> <span class="o">=</span> <span class="n">HtmlElementBlock</span><span class="p">()</span>
+        <span class="n">submit_button</span><span class="o">.</span><span class="n">html_element</span> <span class="o">=</span> <span class="s1">&#39;input&#39;</span>
+        <span class="n">submit_button</span><span class="o">.</span><span class="n">html_attributes</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;submit&#39;</span><span class="p">,</span>
+                                         <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="s1">&#39;Check Answers&#39;</span><span class="p">,</span>
+                                         <span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;button&#39;</span><span class="p">}</span>
+        <span class="n">buttons</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">submit_button</span><span class="p">)</span>
+        <span class="n">quiz</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">buttons</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">quiz</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="QuizQuestion"><a class="viewcode-back" href="../../../api/wte_text_formatter_docutils_ext.html#wte.text_formatter.docutils_ext.QuizQuestion">[docs]</a><span class="k">class</span> <span class="nc">QuizQuestion</span><span class="p">(</span><span class="n">Directive</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The :class:`~wte.text_formatter.docutils_ext.QuizQuestion` generates a single</span>
+<span class="sd">    question output. It takes a single required parameter that is the identifier for</span>
+<span class="sd">    the question. An optional ``question`` parameter can be used to give the question&#39;s</span>
+<span class="sd">    title. An optional ``type`` parameter can be used to specify whether single (&quot;single-choice&quot;)</span>
+<span class="sd">    or multiple choices (&quot;multi-choice&quot;) are available::</span>
+
+<span class="sd">      .. quiz-question:: question_id</span>
+<span class="sd">         :question: Is this right?</span>
+<span class="sd">         :type: single-choice</span>
+
+<span class="sd">         [x]Answer 1</span>
+<span class="sd">         [x]Answer 2</span>
+<span class="sd">         Answer 3</span>
+
+<span class="sd">    Each line of content represents one answer. The correct answers must be pre-fixed with</span>
+<span class="sd">    &quot;[x]&quot;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">required_arguments</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">optional_arguments</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">final_argument_whitespace</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">option_spec</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;question&#39;</span><span class="p">:</span> <span class="n">directives</span><span class="o">.</span><span class="n">unchanged</span><span class="p">,</span>
+                   <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="n">directives</span><span class="o">.</span><span class="n">unchanged</span><span class="p">}</span>
+    <span class="n">has_content</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">question</span> <span class="o">=</span> <span class="n">HtmlElementBlock</span><span class="p">()</span>
+        <span class="n">question</span><span class="o">.</span><span class="n">html_element</span> <span class="o">=</span> <span class="s1">&#39;section&#39;</span>
+        <span class="n">question</span><span class="o">.</span><span class="n">html_attributes</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;question&#39;</span><span class="p">,</span>
+                                    <span class="s1">&#39;data-question-id&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                    <span class="s1">&#39;data-answers&#39;</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">a</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;[x]&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                                                                <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">content</span> <span class="k">if</span> <span class="s1">&#39;[x]&#39;</span> <span class="ow">in</span> <span class="n">a</span><span class="p">])}</span>
+        <span class="k">if</span> <span class="s1">&#39;question&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">:</span>
+            <span class="n">heading</span> <span class="o">=</span> <span class="n">HtmlElementBlock</span><span class="p">()</span>
+            <span class="n">heading</span><span class="o">.</span><span class="n">html_attributes</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;title&#39;</span><span class="p">}</span>
+            <span class="n">heading</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">paragraph</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;question&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;question&#39;</span><span class="p">]))</span>
+            <span class="n">question</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">heading</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">answer_source</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">content</span><span class="p">:</span>
+            <span class="n">answer_source</span> <span class="o">=</span> <span class="n">answer_source</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;[x]&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="n">answer</span> <span class="o">=</span> <span class="n">HtmlElementBlock</span><span class="p">()</span>
+            <span class="n">answer</span><span class="o">.</span><span class="n">html_element</span> <span class="o">=</span> <span class="s1">&#39;label&#39;</span>
+            <span class="n">input_element</span> <span class="o">=</span> <span class="n">HtmlElementBlock</span><span class="p">()</span>
+            <span class="n">input_element</span><span class="o">.</span><span class="n">html_element</span> <span class="o">=</span> <span class="s1">&#39;input&#39;</span>
+            <span class="n">input_element</span><span class="o">.</span><span class="n">html_attributes</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;radio&#39;</span> <span class="k">if</span> <span class="s1">&#39;type&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="ow">or</span>
+                                             <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;single-choice&#39;</span> <span class="k">else</span> <span class="s1">&#39;checkbox&#39;</span><span class="p">,</span>
+                                             <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="n">answer_source</span><span class="p">,</span>
+                                             <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="mi">0</span><span class="p">]}</span>
+            <span class="n">answer</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">input_element</span><span class="p">)</span>
+            <span class="n">answer</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">inline</span><span class="p">(</span><span class="n">answer_source</span><span class="p">,</span> <span class="n">answer_source</span><span class="p">))</span>
+            <span class="n">question</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">answer</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">question</span><span class="p">]</span></div>
 </pre></div>
         </div>
       </div>

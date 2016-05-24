@@ -22,7 +22,7 @@
         <div class="column small-12">
           <h1>Source code for wte.scripts.main</h1><div class="highlight"><pre>
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
-<span class="sd">u&quot;&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">######################################################</span>
 <span class="sd">:mod:`wte.scripts.main` -- Administration application</span>
 <span class="sd">######################################################</span>
@@ -36,7 +36,7 @@
 
 
 <div class="viewcode-block" id="get_user_parameter"><a class="viewcode-back" href="../../../api/wte_scripts_main.html#wte.scripts.main.get_user_parameter">[docs]</a><span class="k">def</span> <span class="nf">get_user_parameter</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;The :func:`~wte.scripts.main.get_user_parameter` function provides a</span>
+    <span class="sd">&quot;&quot;&quot;The :func:`~wte.scripts.main.get_user_parameter` function provides a</span>
 <span class="sd">    generic helper function that prompts the user for a value.</span>
 
 <span class="sd">    :param prompt: The prompt to display to the user</span>
@@ -51,7 +51,7 @@
         <span class="n">prompt</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> [</span><span class="si">%s</span><span class="s1">]: &#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">prompt</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">prompt</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">: &#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">prompt</span><span class="p">)</span>
-    <span class="n">response</span> <span class="o">=</span> <span class="nb">raw_input</span><span class="p">(</span><span class="n">prompt</span><span class="p">)</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="n">prompt</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">default</span>
     <span class="k">else</span><span class="p">:</span>
@@ -59,7 +59,7 @@
 
 
 <div class="viewcode-block" id="main"><a class="viewcode-back" href="../../../api/wte_scripts_main.html#wte.scripts.main.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
-    <span class="sd">u&quot;&quot;&quot;The :func:`~wte.scripts.main.main` function handles the creation of</span>
+    <span class="sd">&quot;&quot;&quot;The :func:`~wte.scripts.main.main` function handles the creation of</span>
 <span class="sd">    the :class:`~argparse.ArgumentParser` that processes the administrative</span>
 <span class="sd">    application&#39;s command-line parameters. It calls the ``init()`` functions</span>
 <span class="sd">    on the modules that implement the actual functionality to build up the</span>
@@ -77,7 +77,10 @@
 
     <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
 
-    <span class="n">args</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">args</span><span class="p">)</span></div>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="s1">&#39;func&#39;</span><span class="p">):</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">print_usage</span><span class="p">()</span></div>
 </pre></div>
         </div>
       </div>

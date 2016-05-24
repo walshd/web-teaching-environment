@@ -42,3 +42,6 @@ You can find further detail here:
    edit
    delete
 
+If you have defined any quizzes in the part's pages, then these are shown on the right-hand side. For each quiz, you will be shown
+all its questions together with a summary of the number of correct, incorrect, and outstanding answers. The correct answers are further
+split into those that were given correctly the first time and those where the learner required multiple attempts.

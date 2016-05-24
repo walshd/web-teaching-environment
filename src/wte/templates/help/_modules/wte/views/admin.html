@@ -40,9 +40,11 @@
 
 <span class="kn">from</span> <span class="nn">pyramid.httpexceptions</span> <span class="kn">import</span> <span class="n">HTTPSeeOther</span>
 <span class="kn">from</span> <span class="nn">pyramid.view</span> <span class="kn">import</span> <span class="n">view_config</span>
+<span class="kn">from</span> <span class="nn">pywebtools.pyramid.auth.views</span> <span class="kn">import</span> <span class="n">current_user</span>
+<span class="kn">from</span> <span class="nn">pywebtools.sqlalchemy</span> <span class="kn">import</span> <span class="n">DBSession</span>
 
-<span class="kn">from</span> <span class="nn">wte.decorators</span> <span class="kn">import</span> <span class="p">(</span><span class="n">current_user</span><span class="p">,</span> <span class="n">require_logged_in</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">wte.models</span> <span class="kn">import</span> <span class="p">(</span><span class="n">DBSession</span><span class="p">,</span> <span class="n">Part</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">wte.decorators</span> <span class="kn">import</span> <span class="p">(</span><span class="n">require_logged_in</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">wte.models</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Part</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">wte.text_formatter</span> <span class="kn">import</span> <span class="n">compile_rst</span>
 <span class="kn">from</span> <span class="nn">wte.util</span> <span class="kn">import</span> <span class="n">unauthorised_redirect</span>
 

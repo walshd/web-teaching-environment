@@ -24,7 +24,7 @@
         <div class="column small-12">
           <h1>Source code for wte.views.user_role</h1><div class="highlight"><pre>
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
-<span class="sd">u&quot;&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">########################################################</span>
 <span class="sd">:mod:`wte.views.user_role` -- Backend for Users in Parts</span>
 <span class="sd">########################################################</span>
@@ -44,15 +44,18 @@
 <span class="kn">from</span> <span class="nn">pyramid.httpexceptions</span> <span class="kn">import</span> <span class="p">(</span><span class="n">HTTPSeeOther</span><span class="p">,</span> <span class="n">HTTPNotFound</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">pyramid.view</span> <span class="kn">import</span> <span class="n">view_config</span>
 <span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="n">and_</span><span class="p">,</span> <span class="n">or_</span>
+<span class="kn">from</span> <span class="nn">pywebtools.formencode</span> <span class="kn">import</span> <span class="n">State</span><span class="p">,</span> <span class="n">CSRFSchema</span>
+<span class="kn">from</span> <span class="nn">pywebtools.pyramid.auth.views</span> <span class="kn">import</span> <span class="n">current_user</span>
+<span class="kn">from</span> <span class="nn">pywebtools.sqlalchemy</span> <span class="kn">import</span> <span class="n">DBSession</span>
 
-<span class="kn">from</span> <span class="nn">wte.decorators</span> <span class="kn">import</span> <span class="p">(</span><span class="n">current_user</span><span class="p">,</span> <span class="n">require_logged_in</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">wte.models</span> <span class="kn">import</span> <span class="p">(</span><span class="n">DBSession</span><span class="p">,</span> <span class="n">Part</span><span class="p">,</span> <span class="n">UserPartRole</span><span class="p">,</span> <span class="n">User</span><span class="p">,</span> <span class="n">UserPartProgress</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">wte.util</span> <span class="kn">import</span> <span class="p">(</span><span class="n">unauthorised_redirect</span><span class="p">,</span> <span class="n">CSRFSchema</span><span class="p">,</span> <span class="n">State</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">wte.decorators</span> <span class="kn">import</span> <span class="p">(</span><span class="n">require_logged_in</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">wte.models</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Part</span><span class="p">,</span> <span class="n">UserPartRole</span><span class="p">,</span> <span class="n">User</span><span class="p">,</span> <span class="n">UserPartProgress</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">wte.util</span> <span class="kn">import</span> <span class="p">(</span><span class="n">unauthorised_redirect</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">wte.views.part</span> <span class="kn">import</span> <span class="p">(</span><span class="n">create_part_crumbs</span><span class="p">,</span> <span class="n">get_all_parts</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="init"><a class="viewcode-back" href="../../../api/wte_views_user_role.html#wte.views.user_role.init">[docs]</a><span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;Adds the user-part-role-specific backend routes (route name, URL pattern</span>
+    <span class="sd">&quot;&quot;&quot;Adds the user-part-role-specific backend routes (route name, URL pattern</span>
 <span class="sd">    handler):</span>
 
 <span class="sd">    * ``part.users`` -- ``/parts/{pid}/users`` -- :func:`~wte.views.user_role.users`</span>
@@ -70,7 +73,7 @@
 <span class="nd">@current_user</span><span class="p">()</span>
 <span class="nd">@require_logged_in</span><span class="p">()</span>
 <div class="viewcode-block" id="users"><a class="viewcode-back" href="../../../api/wte_views_user_role.html#wte.views.user_role.users">[docs]</a><span class="k">def</span> <span class="nf">users</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;Handles the ``parts/{pid}/users`` URL, displaying the</span>
+    <span class="sd">&quot;&quot;&quot;Handles the ``parts/{pid}/users`` URL, displaying the</span>
 <span class="sd">    :class:`~wte.models.User` registered for a :class:`~wte.models.Part`.</span>
 
 <span class="sd">    Requires that the user has &quot;users&quot; rights on the</span>
@@ -93,12 +96,12 @@
             <span class="n">query_params</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">if</span> <span class="s1">&#39;role&#39;</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;role&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;active&#39;</span><span class="p">:</span>
-                    <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">UserPartRole</span><span class="o">.</span><span class="n">role</span> <span class="o">!=</span> <span class="s1">u&#39;block&#39;</span><span class="p">)</span>
+                    <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">UserPartRole</span><span class="o">.</span><span class="n">role</span> <span class="o">!=</span> <span class="s1">&#39;block&#39;</span><span class="p">)</span>
                 <span class="k">elif</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;role&#39;</span><span class="p">]:</span>
                     <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">UserPartRole</span><span class="o">.</span><span class="n">role</span> <span class="o">==</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;role&#39;</span><span class="p">])</span>
                     <span class="n">query_params</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s1">&#39;role&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;role&#39;</span><span class="p">]))</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">UserPartRole</span><span class="o">.</span><span class="n">role</span> <span class="o">!=</span> <span class="s1">u&#39;block&#39;</span><span class="p">)</span>
+                <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">UserPartRole</span><span class="o">.</span><span class="n">role</span> <span class="o">!=</span> <span class="s1">&#39;block&#39;</span><span class="p">)</span>
             <span class="k">if</span> <span class="s1">&#39;q&#39;</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span> <span class="ow">and</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;q&#39;</span><span class="p">]:</span>
                 <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">or_</span><span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">display_name</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;q&#39;</span><span class="p">]),</span>
                                          <span class="n">User</span><span class="o">.</span><span class="n">email</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;q&#39;</span><span class="p">])))</span>
@@ -150,18 +153,18 @@
 
 
 <div class="viewcode-block" id="ActionSchema"><a class="viewcode-back" href="../../../api/wte_views_user_role.html#wte.views.user_role.ActionSchema">[docs]</a><span class="k">class</span> <span class="nc">ActionSchema</span><span class="p">(</span><span class="n">CSRFSchema</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;The :class:`~wte.views.user_role.ActionSchema` handles the</span>
+    <span class="sd">&quot;&quot;&quot;The :class:`~wte.views.user_role.ActionSchema` handles the</span>
 <span class="sd">    validation of a actions applied in :func:`~wte.views.user_role.action` and</span>
 <span class="sd">    :func:`~wte.views.user_role.update`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">action</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">All</span><span class="p">(</span><span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">UnicodeString</span><span class="p">(</span><span class="n">not_empty</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
                             <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">OneOf</span><span class="p">([</span><span class="s1">&#39;block&#39;</span><span class="p">,</span> <span class="s1">&#39;remove&#39;</span><span class="p">,</span> <span class="s1">&#39;change_role&#39;</span><span class="p">]))</span>
-    <span class="sd">u&quot;&quot;&quot;The action to apply&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;The action to apply&quot;&quot;&quot;</span>
     <span class="n">role_id</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">ForEach</span><span class="p">(</span><span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">Int</span><span class="p">(</span><span class="n">not_empty</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
                                  <span class="n">convert_to_list</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
                                  <span class="n">if_missing</span><span class="o">=</span><span class="n">formencode</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">NoDefault</span><span class="p">,</span>
                                  <span class="n">not_empty</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-    <span class="sd">u&quot;&quot;&quot;The list of :class:`~wte.models.UserPartRole` to apply the action to&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;The list of :class:`~wte.models.UserPartRole` to apply the action to&quot;&quot;&quot;</span>
     <span class="n">allow_extra_fields</span> <span class="o">=</span> <span class="bp">True</span></div>
 
 
@@ -169,7 +172,7 @@
 <span class="nd">@current_user</span><span class="p">()</span>
 <span class="nd">@require_logged_in</span><span class="p">()</span>
 <div class="viewcode-block" id="action"><a class="viewcode-back" href="../../../api/wte_views_user_role.html#wte.views.user_role.action">[docs]</a><span class="k">def</span> <span class="nf">action</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;Handles the ``parts/{pid}/users/action`` URL, loads the interface for changing</span>
+    <span class="sd">&quot;&quot;&quot;Handles the ``parts/{pid}/users/action`` URL, loads the interface for changing</span>
 <span class="sd">    :class:`~wte.models.User` registered for a :class:`~wte.models.Part`.</span>
 
 <span class="sd">    Requires that the user has &quot;users&quot; rights on the</span>
@@ -184,7 +187,8 @@
                 <span class="k">if</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span> <span class="ow">and</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">param</span><span class="p">]:</span>
                     <span class="n">query_params</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">param</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">param</span><span class="p">]))</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">params</span> <span class="o">=</span> <span class="n">ActionSchema</span><span class="p">()</span><span class="o">.</span><span class="n">to_python</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">)</span>
+                <span class="n">params</span> <span class="o">=</span> <span class="n">ActionSchema</span><span class="p">()</span><span class="o">.</span><span class="n">to_python</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">,</span>
+                                                  <span class="n">State</span><span class="p">(</span><span class="n">request</span><span class="o">=</span><span class="n">request</span><span class="p">))</span>
             <span class="k">except</span> <span class="n">formencode</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">Invalid</span><span class="p">:</span>
                 <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">flash</span><span class="p">(</span><span class="s1">&#39;Please select the action you wish to apply &#39;</span> <span class="o">+</span>
                                       <span class="s1">&#39;and the users you wish to apply it to&#39;</span><span class="p">,</span> <span class="n">queue</span><span class="o">=</span><span class="s1">&#39;error&#39;</span><span class="p">)</span>
@@ -209,31 +213,31 @@
 
 
 <div class="viewcode-block" id="ChangeRoleSchema"><a class="viewcode-back" href="../../../api/wte_views_user_role.html#wte.views.user_role.ChangeRoleSchema">[docs]</a><span class="k">class</span> <span class="nc">ChangeRoleSchema</span><span class="p">(</span><span class="n">CSRFSchema</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;The :class:`~wte.views.user_role.ChangeRoleSchema` handles the</span>
+    <span class="sd">&quot;&quot;&quot;The :class:`~wte.views.user_role.ChangeRoleSchema` handles the</span>
 <span class="sd">    validation of a &quot;change_role&quot; action applied in :func:`~wte.views.user_role.update`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">action</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">All</span><span class="p">(</span><span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">UnicodeString</span><span class="p">(</span><span class="n">not_empty</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
                             <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">OneOf</span><span class="p">([</span><span class="s1">&#39;change_role&#39;</span><span class="p">]))</span>
-    <span class="sd">u&quot;&quot;&quot;The action to apply&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;The action to apply&quot;&quot;&quot;</span>
     <span class="n">role_id</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">ForEach</span><span class="p">(</span><span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">Int</span><span class="p">(</span><span class="n">not_empty</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
                                  <span class="n">convert_to_list</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
                                  <span class="n">if_missing</span><span class="o">=</span><span class="n">formencode</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">NoDefault</span><span class="p">,</span>
                                  <span class="n">not_empty</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-    <span class="sd">u&quot;&quot;&quot;The list of :class:`~wte.models.UserPartRole` to apply the action to&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;The list of :class:`~wte.models.UserPartRole` to apply the action to&quot;&quot;&quot;</span>
     <span class="n">role</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">All</span><span class="p">(</span><span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">UnicodeString</span><span class="p">(</span><span class="n">not_empty</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
                           <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">OneOf</span><span class="p">([</span><span class="s1">&#39;owner&#39;</span><span class="p">,</span> <span class="s1">&#39;tutor&#39;</span><span class="p">,</span> <span class="s1">&#39;student&#39;</span><span class="p">]))</span>
-    <span class="sd">u&quot;&quot;&quot;The new role&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;The new role&quot;&quot;&quot;</span>
     <span class="n">q</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">UnicodeString</span><span class="p">(</span><span class="n">if_empty</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">if_missing</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
-    <span class="sd">u&quot;&quot;&quot;Optional query parameter for the redirect&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Optional query parameter for the redirect&quot;&quot;&quot;</span>
     <span class="n">start</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">UnicodeString</span><span class="p">(</span><span class="n">if_empty</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">if_missing</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
-    <span class="sd">u&quot;&quot;&quot;Optional start parameter for the redirect&quot;&quot;&quot;</span></div>
+    <span class="sd">&quot;&quot;&quot;Optional start parameter for the redirect&quot;&quot;&quot;</span></div>
 
 
 <span class="nd">@view_config</span><span class="p">(</span><span class="n">route_name</span><span class="o">=</span><span class="s1">&#39;part.users.update&#39;</span><span class="p">,</span> <span class="n">renderer</span><span class="o">=</span><span class="s1">&#39;wte:templates/user_role/action.kajiki&#39;</span><span class="p">)</span>
 <span class="nd">@current_user</span><span class="p">()</span>
 <span class="nd">@require_logged_in</span><span class="p">()</span>
 <div class="viewcode-block" id="update"><a class="viewcode-back" href="../../../api/wte_views_user_role.html#wte.views.user_role.update">[docs]</a><span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;Handles the ``parts/{pid}/users`` URL, applying the changes select when the</span>
+    <span class="sd">&quot;&quot;&quot;Handles the ``parts/{pid}/users`` URL, applying the changes select when the</span>
 <span class="sd">    user views :func:`~wte.views.user_role.action`.</span>
 
 <span class="sd">    Requires that the user has &quot;users&quot; rights on the</span>
@@ -257,7 +261,8 @@
                                               <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">current_route_url</span><span class="p">()}])</span>
                 <span class="n">users</span> <span class="o">=</span> <span class="p">[]</span>
                 <span class="n">params</span> <span class="o">=</span> <span class="p">{}</span>
-                <span class="n">params</span> <span class="o">=</span> <span class="n">ActionSchema</span><span class="p">()</span><span class="o">.</span><span class="n">to_python</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">)</span>
+                <span class="n">params</span> <span class="o">=</span> <span class="n">ActionSchema</span><span class="p">()</span><span class="o">.</span><span class="n">to_python</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">,</span>
+                                                  <span class="n">State</span><span class="p">(</span><span class="n">request</span><span class="o">=</span><span class="n">request</span><span class="p">))</span>
                 <span class="n">users</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UserPartRole</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">UserPartRole</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;role_id&#39;</span><span class="p">]))</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
                 <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;action&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;change_role&#39;</span><span class="p">:</span>
                     <span class="n">params</span> <span class="o">=</span> <span class="n">ChangeRoleSchema</span><span class="p">()</span><span class="o">.</span><span class="n">to_python</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="n">State</span><span class="p">(</span><span class="n">request</span><span class="o">=</span><span class="n">request</span><span class="p">))</span>
@@ -292,7 +297,7 @@
                     <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">manager</span><span class="p">:</span>
                         <span class="k">for</span> <span class="n">role</span> <span class="ow">in</span> <span class="n">users</span><span class="p">:</span>
                             <span class="n">dbsession</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">role</span><span class="p">)</span>
-                            <span class="n">role</span><span class="o">.</span><span class="n">role</span> <span class="o">=</span> <span class="s1">u&#39;block&#39;</span>
+                            <span class="n">role</span><span class="o">.</span><span class="n">role</span> <span class="o">=</span> <span class="s1">&#39;block&#39;</span>
                     <span class="k">raise</span> <span class="n">HTTPSeeOther</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.users&#39;</span><span class="p">,</span> <span class="n">pid</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">matchdict</span><span class="p">[</span><span class="s1">&#39;pid&#39;</span><span class="p">],</span>
                                                          <span class="n">_query</span><span class="o">=</span><span class="n">query_params</span><span class="p">))</span>
             <span class="k">except</span> <span class="n">formencode</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">Invalid</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
@@ -317,27 +322,27 @@
 
 
 <div class="viewcode-block" id="AddUserSchema"><a class="viewcode-back" href="../../../api/wte_views_user_role.html#wte.views.user_role.AddUserSchema">[docs]</a><span class="k">class</span> <span class="nc">AddUserSchema</span><span class="p">(</span><span class="n">CSRFSchema</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;The :class:`~wte.views.user_role.AddUserSchema` handles the</span>
+    <span class="sd">&quot;&quot;&quot;The :class:`~wte.views.user_role.AddUserSchema` handles the</span>
 <span class="sd">    validation of a adding a :class:`~wte.models.User` to a</span>
 <span class="sd">    :class:`~wte.models.Part`..</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">user_id</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">ForEach</span><span class="p">(</span><span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">Int</span><span class="p">(</span><span class="n">not_empty</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
                                  <span class="n">convert_to_list</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-    <span class="sd">u&quot;&quot;&quot;The id of the :class:`~wte.models.User` to add&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;The id of the :class:`~wte.models.User` to add&quot;&quot;&quot;</span>
     <span class="n">role</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">All</span><span class="p">(</span><span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">UnicodeString</span><span class="p">(</span><span class="n">not_empty</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
                           <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">OneOf</span><span class="p">([</span><span class="s1">&#39;owner&#39;</span><span class="p">,</span> <span class="s1">&#39;tutor&#39;</span><span class="p">,</span> <span class="s1">&#39;student&#39;</span><span class="p">]))</span>
-    <span class="sd">u&quot;&quot;&quot;The new role for the :class:`~wte.models.User`&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;The new role for the :class:`~wte.models.User`&quot;&quot;&quot;</span>
     <span class="n">q</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">UnicodeString</span><span class="p">(</span><span class="n">not_empty</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-    <span class="sd">u&quot;&quot;&quot;Save the query in case there are validation errors&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Save the query in case there are validation errors&quot;&quot;&quot;</span>
     <span class="n">start</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">Int</span><span class="p">(</span><span class="n">not_empty</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">if_missing</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-    <span class="sd">u&quot;&quot;&quot;Save the pagination in case there are validation errors&quot;&quot;&quot;</span></div>
+    <span class="sd">&quot;&quot;&quot;Save the pagination in case there are validation errors&quot;&quot;&quot;</span></div>
 
 
 <span class="nd">@view_config</span><span class="p">(</span><span class="n">route_name</span><span class="o">=</span><span class="s1">&#39;part.users.add&#39;</span><span class="p">,</span> <span class="n">renderer</span><span class="o">=</span><span class="s1">&#39;wte:templates/user_role/add.kajiki&#39;</span><span class="p">)</span>
 <span class="nd">@current_user</span><span class="p">()</span>
 <span class="nd">@require_logged_in</span><span class="p">()</span>
 <div class="viewcode-block" id="add"><a class="viewcode-back" href="../../../api/wte_views_user_role.html#wte.views.user_role.add">[docs]</a><span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;Handles the ``parts/{pid}/users/add`` URL, providing the functionality for adding a</span>
+    <span class="sd">&quot;&quot;&quot;Handles the ``parts/{pid}/users/add`` URL, providing the functionality for adding a</span>
 <span class="sd">    :class:`~wte.models.User` to a :class:`~wte.models.Part`.</span>
 
 <span class="sd">    Requires that the user has &quot;users&quot; rights on the</span>

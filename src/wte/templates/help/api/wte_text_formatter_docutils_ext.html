@@ -24,6 +24,16 @@
 the additional formatting support required by the
 <a class="reference internal" href="wte_text_formatter.html#wte.text_formatter.compile_rst" title="wte.text_formatter.compile_rst"><code class="xref py py-func docutils literal"><span class="pre">compile_rst()</span></code></a> function.</p>
 <dl class="class">
+<dt id="wte.text_formatter.docutils_ext.HtmlElementBlock">
+<em class="property">class </em><code class="descclassname">wte.text_formatter.docutils_ext.</code><code class="descname">HtmlElementBlock</code><span class="sig-paren">(</span><em>rawsource=''</em>, <em>*children</em>, <em>**attributes</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/text_formatter/docutils_ext.html#HtmlElementBlock"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.text_formatter.docutils_ext.HtmlElementBlock" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <a class="reference internal" href="#wte.text_formatter.docutils_ext.HtmlElementBlock" title="wte.text_formatter.docutils_ext.HtmlElementBlock"><code class="xref py py-class docutils literal"><span class="pre">HtmlElementBlock</span></code></a> is a docutils node
+for generating arbitrary HTML elements.</p>
+<p>The HTML element to generate can be configured by setting <code class="docutils literal"><span class="pre">html_element</span></code> on the node.
+HTML attributes can be configured by setting the <code class="docutils literal"><span class="pre">html_attributes</span></code> property on the node,
+which must be set to a <code class="docutils literal"><span class="pre">dict</span></code>.</p>
+</dd></dl>
+
+<dl class="class">
 <dt id="wte.text_formatter.docutils_ext.HtmlTitleFormatter">
 <em class="property">class </em><code class="descclassname">wte.text_formatter.docutils_ext.</code><code class="descname">HtmlTitleFormatter</code><span class="sig-paren">(</span><em>language=None</em>, <em>filename=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/text_formatter/docutils_ext.html#HtmlTitleFormatter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.text_formatter.docutils_ext.HtmlTitleFormatter" title="Permalink to this definition">¶</a></dt>
 <dd><p>The <a class="reference internal" href="#wte.text_formatter.docutils_ext.HtmlTitleFormatter" title="wte.text_formatter.docutils_ext.HtmlTitleFormatter"><code class="xref py py-class docutils literal"><span class="pre">HtmlTitleFormatter</span></code></a> is
@@ -42,19 +52,19 @@ block.</p>
 that you import on initialization.  The code then automatically
 registers a <code class="docutils literal"><span class="pre">sourcecode</span></code> directive that you can use instead of
 normal code blocks like this:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>.. sourcecode:: python
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">..</span> <span class="n">sourcecode</span><span class="p">::</span> <span class="n">python</span>
 
-    My code goes here.
+    <span class="n">My</span> <span class="n">code</span> <span class="n">goes</span> <span class="n">here</span><span class="o">.</span>
 </pre></div>
 </div>
 <p>If you want to have different code styles, e.g. one with line numbers
 and one without, add formatters with their names in the VARIANTS dict
 below.  You can invoke them instead of the DEFAULT one by using a
 directive option:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>.. sourcecode:: python
-    :linenos:
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">..</span> <span class="n">sourcecode</span><span class="p">::</span> <span class="n">python</span>
+    <span class="p">:</span><span class="n">linenos</span><span class="p">:</span>
 
-    My code goes here.
+    <span class="n">My</span> <span class="n">code</span> <span class="n">goes</span> <span class="n">here</span><span class="o">.</span>
 </pre></div>
 </div>
 <p>Look at the <a class="reference external" href="http://docutils.sourceforge.net/docs/howto/rst-directives.html">directive documentation</a> to get all the gory details.</p>
@@ -71,53 +81,55 @@ directive option:</p>
 </dd></dl>
 
 <dl class="class">
+<dt id="wte.text_formatter.docutils_ext.Quiz">
+<em class="property">class </em><code class="descclassname">wte.text_formatter.docutils_ext.</code><code class="descname">Quiz</code><span class="sig-paren">(</span><em>name</em>, <em>arguments</em>, <em>options</em>, <em>content</em>, <em>lineno</em>, <em>content_offset</em>, <em>block_text</em>, <em>state</em>, <em>state_machine</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/text_formatter/docutils_ext.html#Quiz"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.text_formatter.docutils_ext.Quiz" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <a class="reference internal" href="#wte.text_formatter.docutils_ext.Quiz" title="wte.text_formatter.docutils_ext.Quiz"><code class="xref py py-class docutils literal"><span class="pre">Quiz</span></code></a> is a directive to generate
+the outer wrapper for an in-part quiz. It takes a single required parameter that
+is the identifier for the quiz in the current <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>. An optional
+<code class="docutils literal"><span class="pre">title</span></code> parameter is the title of the quiz to show to the user. The actual
+questions need to be provided via <code class="xref py py-class docutils literal"><span class="pre">QuizAnswer</span></code>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>.. quiz: quiz_identifier
+   :title: This is a Quiz!
+
+   .. quiz-question: question1
+      :question: Is this right?
+
+      [x] Answer 1
+      Answer 2
+      Answer 3
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="wte.text_formatter.docutils_ext.QuizQuestion">
+<em class="property">class </em><code class="descclassname">wte.text_formatter.docutils_ext.</code><code class="descname">QuizQuestion</code><span class="sig-paren">(</span><em>name</em>, <em>arguments</em>, <em>options</em>, <em>content</em>, <em>lineno</em>, <em>content_offset</em>, <em>block_text</em>, <em>state</em>, <em>state_machine</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/text_formatter/docutils_ext.html#QuizQuestion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.text_formatter.docutils_ext.QuizQuestion" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <a class="reference internal" href="#wte.text_formatter.docutils_ext.QuizQuestion" title="wte.text_formatter.docutils_ext.QuizQuestion"><code class="xref py py-class docutils literal"><span class="pre">QuizQuestion</span></code></a> generates a single
+question output. It takes a single required parameter that is the identifier for
+the question. An optional <code class="docutils literal"><span class="pre">question</span></code> parameter can be used to give the question&#8217;s
+title. An optional <code class="docutils literal"><span class="pre">type</span></code> parameter can be used to specify whether single (&#8220;single-choice&#8221;)
+or multiple choices (&#8220;multi-choice&#8221;) are available:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>.. quiz-question:: question_id
+   :question: Is this right?
+   :type: single-choice
+
+   [x]Answer 1
+   [x]Answer 2
+   Answer 3
+</pre></div>
+</div>
+<p>Each line of content represents one answer. The correct answers must be pre-fixed with
+&#8220;[x]&#8221;.</p>
+</dd></dl>
+
+<dl class="class">
 <dt id="wte.text_formatter.docutils_ext.YouTube">
 <em class="property">class </em><code class="descclassname">wte.text_formatter.docutils_ext.</code><code class="descname">YouTube</code><span class="sig-paren">(</span><em>name</em>, <em>arguments</em>, <em>options</em>, <em>content</em>, <em>lineno</em>, <em>content_offset</em>, <em>block_text</em>, <em>state</em>, <em>state_machine</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/text_formatter/docutils_ext.html#YouTube"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.text_formatter.docutils_ext.YouTube" title="Permalink to this definition">¶</a></dt>
 <dd><p>The <a class="reference internal" href="#wte.text_formatter.docutils_ext.YouTube" title="wte.text_formatter.docutils_ext.YouTube"><code class="xref py py-class docutils literal"><span class="pre">YouTube</span></code></a> directive enables
 support for embeddeding YouTube videos in ReST. It takes a single parameter
 that is the YouTube URL to embed:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>.. youtube:: https://URL/TO/VIDEO
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">..</span> <span class="n">youtube</span><span class="p">::</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">URL</span><span class="o">/</span><span class="n">TO</span><span class="o">/</span><span class="n">VIDEO</span>
 </pre></div>
-</div>
-</dd></dl>
-
-<dl class="function">
-<dt id="wte.text_formatter.docutils_ext.and_">
-<code class="descclassname">wte.text_formatter.docutils_ext.</code><code class="descname">and_</code><span class="sig-paren">(</span><em>*clauses</em><span class="sig-paren">)</span><a class="headerlink" href="#wte.text_formatter.docutils_ext.and_" title="Permalink to this definition">¶</a></dt>
-<dd><p>Produce a conjunction of expressions joined by <code class="docutils literal"><span class="pre">AND</span></code>.</p>
-<p>E.g.:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="n">and_</span>
-
-<span class="n">stmt</span> <span class="o">=</span> <span class="n">select</span><span class="p">([</span><span class="n">users_table</span><span class="p">])</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
-                <span class="n">and_</span><span class="p">(</span>
-                    <span class="n">users_table</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;wendy&#39;</span><span class="p">,</span>
-                    <span class="n">users_table</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">enrolled</span> <span class="o">==</span> <span class="bp">True</span>
-                <span class="p">)</span>
-            <span class="p">)</span>
-</pre></div>
-</div>
-<p>The <a class="reference internal" href="#wte.text_formatter.docutils_ext.and_" title="wte.text_formatter.docutils_ext.and_"><code class="xref py py-func docutils literal"><span class="pre">and_()</span></code></a> conjunction is also available using the
-Python <code class="docutils literal"><span class="pre">&amp;</span></code> operator (though note that compound expressions
-need to be parenthesized in order to function with Python
-operator precedence behavior):</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">stmt</span> <span class="o">=</span> <span class="n">select</span><span class="p">([</span><span class="n">users_table</span><span class="p">])</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
-                <span class="p">(</span><span class="n">users_table</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;wendy&#39;</span><span class="p">)</span> <span class="o">&amp;</span>
-                <span class="p">(</span><span class="n">users_table</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">enrolled</span> <span class="o">==</span> <span class="bp">True</span><span class="p">)</span>
-            <span class="p">)</span>
-</pre></div>
-</div>
-<p>The <a class="reference internal" href="#wte.text_formatter.docutils_ext.and_" title="wte.text_formatter.docutils_ext.and_"><code class="xref py py-func docutils literal"><span class="pre">and_()</span></code></a> operation is also implicit in some cases;
-the <code class="xref py py-meth docutils literal"><span class="pre">Select.where()</span></code> method for example can be invoked multiple
-times against a statement, which will have the effect of each
-clause being combined using <a class="reference internal" href="#wte.text_formatter.docutils_ext.and_" title="wte.text_formatter.docutils_ext.and_"><code class="xref py py-func docutils literal"><span class="pre">and_()</span></code></a>:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">stmt</span> <span class="o">=</span> <span class="n">select</span><span class="p">([</span><span class="n">users_table</span><span class="p">])</span><span class="o">.</span>\
-            <span class="n">where</span><span class="p">(</span><span class="n">users_table</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;wendy&#39;</span><span class="p">)</span><span class="o">.</span>\
-            <span class="n">where</span><span class="p">(</span><span class="n">users_table</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">enrolled</span> <span class="o">==</span> <span class="bp">True</span><span class="p">)</span>
-</pre></div>
-</div>
-<div class="admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last"><code class="xref py py-func docutils literal"><span class="pre">or_()</span></code></p>
 </div>
 </dd></dl>
 
@@ -139,6 +151,12 @@ implements an additional docutils role that handles cross-references
 between <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>s.</p>
 <p>Usage in ReST is :crossref:`part_id` or :crossref:`link text
 &lt;part_id&gt;`.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.text_formatter.docutils_ext.depart_htmlelementblock">
+<code class="descclassname">wte.text_formatter.docutils_ext.</code><code class="descname">depart_htmlelementblock</code><span class="sig-paren">(</span><em>self</em>, <em>node</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/text_formatter/docutils_ext.html#depart_htmlelementblock"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.text_formatter.docutils_ext.depart_htmlelementblock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visitor exit for the <a class="reference internal" href="#wte.text_formatter.docutils_ext.HtmlElementBlock" title="wte.text_formatter.docutils_ext.HtmlElementBlock"><code class="xref py py-class docutils literal"><span class="pre">HtmlElementBlock</span></code></a>.</p>
 </dd></dl>
 
 <dl class="function">
@@ -170,6 +188,13 @@ that is then assigned to a &lt;span&gt; element.</p>
 function provides a docutils role that handles inline code highlighting
 using Pygments. The name of the language to use for highlighting is taken
 from the name of the role (which must be formatted <code class="docutils literal"><span class="pre">code-language_name</span></code>).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.text_formatter.docutils_ext.visit_htmlelementblock">
+<code class="descclassname">wte.text_formatter.docutils_ext.</code><code class="descname">visit_htmlelementblock</code><span class="sig-paren">(</span><em>self</em>, <em>node</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/text_formatter/docutils_ext.html#visit_htmlelementblock"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.text_formatter.docutils_ext.visit_htmlelementblock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visitor for the <a class="reference internal" href="#wte.text_formatter.docutils_ext.HtmlElementBlock" title="wte.text_formatter.docutils_ext.HtmlElementBlock"><code class="xref py py-class docutils literal"><span class="pre">HtmlElementBlock</span></code></a> to generate
+the actual HTML output.</p>
 </dd></dl>
 
 </div>

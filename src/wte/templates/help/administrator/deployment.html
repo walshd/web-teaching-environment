@@ -27,13 +27,13 @@ the <a class="reference external" href="http://docs.pylonsproject.org/projects/p
 <h2>Deploying with supervisord<a class="headerlink" href="#deploying-with-supervisord" title="Permalink to this headline">¶</a></h2>
 <p>To deploy via <a class="reference external" href="http://supervisord.org/">supervisord</a> create the a new file &#8220;wte.conf&#8221; in the
 supervisord configuration directory:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>[program:wte]
-directory = /path/to/the/virtualenv
-user = www-data
-command = /path/to/the/virtualenv/bin/pserve /path/to/the/config.ini http_port=XX%(process_num)02d
-stopasgroup = true
-numprocs = Y
-process_name = %(program_name)s-%(process_num)01d
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">program</span><span class="p">:</span><span class="n">wte</span><span class="p">]</span>
+<span class="n">directory</span> <span class="o">=</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">the</span><span class="o">/</span><span class="n">virtualenv</span>
+<span class="n">user</span> <span class="o">=</span> <span class="n">www</span><span class="o">-</span><span class="n">data</span>
+<span class="n">command</span> <span class="o">=</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">the</span><span class="o">/</span><span class="n">virtualenv</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">pserve</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">the</span><span class="o">/</span><span class="n">config</span><span class="o">.</span><span class="n">ini</span> <span class="n">http_port</span><span class="o">=</span><span class="n">XX</span><span class="o">%</span><span class="p">(</span><span class="n">process_num</span><span class="p">)</span><span class="mi">02</span><span class="n">d</span>
+<span class="n">stopasgroup</span> <span class="o">=</span> <span class="n">true</span>
+<span class="n">numprocs</span> <span class="o">=</span> <span class="n">Y</span>
+<span class="n">process_name</span> <span class="o">=</span> <span class="o">%</span><span class="p">(</span><span class="n">program_name</span><span class="p">)</span><span class="n">s</span><span class="o">-%</span><span class="p">(</span><span class="n">process_num</span><span class="p">)</span><span class="mi">01</span><span class="n">d</span>
 </pre></div>
 </div>
 <p>Replace the <code class="docutils literal"><span class="pre">XX</span></code> in the <code class="docutils literal"><span class="pre">command</span></code> section with the port-number that
@@ -45,11 +45,11 @@ the number of which are configured via the <code class="docutils literal"><span 
 set to a number greater than 1 and <code class="docutils literal"><span class="pre">X</span></code> is set to <code class="docutils literal"><span class="pre">50</span></code>, then further
 parallel instances will be listening on port 5001, 5002, 5003, ...</p>
 <p>To start the instances run:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>supervisorctl start wte:*
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">supervisorctl</span> <span class="n">start</span> <span class="n">wte</span><span class="p">:</span><span class="o">*</span>
 </pre></div>
 </div>
 <p>To stop the instances run:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>supervisorctl stop wte:*
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">supervisorctl</span> <span class="n">stop</span> <span class="n">wte</span><span class="p">:</span><span class="o">*</span>
 </pre></div>
 </div>
 </div>
@@ -57,11 +57,11 @@ parallel instances will be listening on port 5001, 5002, 5003, ...</p>
 <h2>Deploying with Apache2 &amp; mod_wsgi<a class="headerlink" href="#deploying-with-apache2-mod-wsgi" title="Permalink to this headline">¶</a></h2>
 <p>To deploy the Experiment Support System via <a class="reference external" href="http://httpd.apache.org/">Apache2</a> and <a class="reference external" href="http://code.google.com/p/modwsgi/">mod_wsgi</a> add the
 following settings to the VirtualHost configuration:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>WSGIDaemonProcess wte user=www-data group=www-data processes=1 threads=4 python-path=/path/to/virtualenv/lib/python2.7/site-packages
-WSGIScriptAlias /web-teaching-environment /path/to/the/application.wsgi
-&lt;Location /wte&gt;
-    WSGIProcessGroup wte
-&lt;/Location&gt;
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">WSGIDaemonProcess</span> <span class="n">wte</span> <span class="n">user</span><span class="o">=</span><span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="n">group</span><span class="o">=</span><span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="n">processes</span><span class="o">=</span><span class="mi">1</span> <span class="n">threads</span><span class="o">=</span><span class="mi">4</span> <span class="n">python</span><span class="o">-</span><span class="n">path</span><span class="o">=/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">virtualenv</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">python2</span><span class="o">.</span><span class="mi">7</span><span class="o">/</span><span class="n">site</span><span class="o">-</span><span class="n">packages</span>
+<span class="n">WSGIScriptAlias</span> <span class="o">/</span><span class="n">web</span><span class="o">-</span><span class="n">teaching</span><span class="o">-</span><span class="n">environment</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">the</span><span class="o">/</span><span class="n">application</span><span class="o">.</span><span class="n">wsgi</span>
+<span class="o">&lt;</span><span class="n">Location</span> <span class="o">/</span><span class="n">wte</span><span class="o">&gt;</span>
+    <span class="n">WSGIProcessGroup</span> <span class="n">wte</span>
+<span class="o">&lt;/</span><span class="n">Location</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <div class="admonition note">
@@ -73,7 +73,7 @@ you are expecting.</p>
 <p>Then create the following script to to run the application via <a class="reference external" href="http://wsgi.readthedocs.org/en/latest/">WSGI</a>. Adapt
 it by replacing the paths with the paths to where the Web Teaching Environment
 is installed:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
 <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">__file__</span><span class="p">))</span>
 <span class="kn">import</span> <span class="nn">site</span>
 <span class="kn">import</span> <span class="nn">sys</span>
@@ -91,8 +91,8 @@ is installed:</p>
         <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
 <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">[:</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_sys_path</span>
 
-<span class="kn">from</span> <span class="nn">pyramid.paster</span> <span class="kn">import</span> <span class="n">get_app</span>
-<span class="kn">from</span> <span class="nn">paste.script.util.logging_config</span> <span class="kn">import</span> <span class="n">fileConfig</span>
+<span class="kn">from</span> <span class="nn">pyramid.paster</span> <span class="k">import</span> <span class="n">get_app</span>
+<span class="kn">from</span> <span class="nn">paste.script.util.logging_config</span> <span class="k">import</span> <span class="n">fileConfig</span>
 <span class="n">fileConfig</span><span class="p">(</span><span class="s1">&#39;/path/to/the/application/production.ini&#39;</span><span class="p">)</span>
 <span class="n">application</span> <span class="o">=</span> <span class="n">get_app</span><span class="p">(</span><span class="s1">&#39;/path/to/the/application/production.ini&#39;</span><span class="p">,</span> <span class="s1">&#39;main&#39;</span><span class="p">)</span>
 </pre></div>
@@ -103,7 +103,7 @@ is installed:</p>
 <p>The Web Teaching Environment provides a number of automated tasks that can be
 set up from within it. To ensure that the automated tasks are actually executed
 the following command needs to be run regularly:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>WTE run-timed-tasks &lt;configuration.ini&gt;
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">WTE</span> <span class="n">run</span><span class="o">-</span><span class="n">timed</span><span class="o">-</span><span class="n">tasks</span> <span class="o">&lt;</span><span class="n">configuration</span><span class="o">.</span><span class="n">ini</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <p>In the Web Teaching Environment the automated tasks can be scheduled to a

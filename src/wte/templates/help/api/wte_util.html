@@ -22,188 +22,6 @@
 <h1><a class="reference internal" href="#module-wte.util" title="wte.util"><code class="xref py py-mod docutils literal"><span class="pre">wte.util</span></code></a> &#8211; Utility functions<a class="headerlink" href="#wte-util-utility-functions" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#module-wte.util" title="wte.util"><code class="xref py py-mod docutils literal"><span class="pre">util</span></code></a> module provides various utility objects and
 functions.</p>
-<dl class="class">
-<dt id="wte.util.CSRFSchema">
-<em class="property">class </em><code class="descclassname">wte.util.</code><code class="descname">CSRFSchema</code><span class="sig-paren">(</span><em>*args</em>, <em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/util.html#CSRFSchema"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.util.CSRFSchema" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="docutils">
-<dt>The class:<cite>wte.util.CSRFSchema</cite> is a base <code class="xref py py-class docutils literal"><span class="pre">formencode.Schema</span></code></dt>
-<dd><p class="first">that includes Cross-Site Request Forgery detection.</p>
-<p class="last">It should be used as the base class for all specific request schemas.</p>
-</dd>
-</dl>
-<p><strong>Messages</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal"><span class="pre">badDictType</span></code>:</dt>
-<dd>The input must be dict-like (not a <code class="docutils literal"><span class="pre">%(type)s</span></code>: <code class="docutils literal"><span class="pre">%(value)r</span></code>)</dd>
-<dt><code class="docutils literal"><span class="pre">badType</span></code>:</dt>
-<dd>The input must be a string (not a <code class="docutils literal"><span class="pre">%(type)s</span></code>: <code class="docutils literal"><span class="pre">%(value)r</span></code>)</dd>
-<dt><code class="docutils literal"><span class="pre">empty</span></code>:</dt>
-<dd>Please enter a value</dd>
-<dt><code class="docutils literal"><span class="pre">missingValue</span></code>:</dt>
-<dd>Missing value</dd>
-<dt><code class="docutils literal"><span class="pre">noneType</span></code>:</dt>
-<dd>The input must be a string (not None)</dd>
-<dt><code class="docutils literal"><span class="pre">notExpected</span></code>:</dt>
-<dd>The input field <code class="docutils literal"><span class="pre">%(name)s</span></code> was not expected.</dd>
-<dt><code class="docutils literal"><span class="pre">singleValueExpected</span></code>:</dt>
-<dd>Please provide only one value</dd>
-</dl>
-</dd></dl>
-
-<dl class="class">
-<dt id="wte.util.CSRFValidator">
-<em class="property">class </em><code class="descclassname">wte.util.</code><code class="descname">CSRFValidator</code><span class="sig-paren">(</span><em>*args</em>, <em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/util.html#CSRFValidator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.util.CSRFValidator" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="docutils">
-<dt>Validator that checks a value against the Cross-Site Request Forgery</dt>
-<dd>token stored in the user&#8217;s session.</dd>
-</dl>
-<p><strong>Messages</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal"><span class="pre">badType</span></code>:</dt>
-<dd>The input must be a string (not a <code class="docutils literal"><span class="pre">%(type)s</span></code>: <code class="docutils literal"><span class="pre">%(value)r</span></code>)</dd>
-<dt><code class="docutils literal"><span class="pre">empty</span></code>:</dt>
-<dd>An empty CSRF token was provided. This might indicate a malicious attack.</dd>
-<dt><code class="docutils literal"><span class="pre">invalid_csrf_token</span></code>:</dt>
-<dd>The CSRF token is invalid. This might indicate a malicious attack.</dd>
-<dt><code class="docutils literal"><span class="pre">missing</span></code>:</dt>
-<dd>No CSRF token was provided. This might indicate a malicious attack.</dd>
-<dt><code class="docutils literal"><span class="pre">noneType</span></code>:</dt>
-<dd>The input must be a string (not None)</dd>
-</dl>
-</dd></dl>
-
-<dl class="class">
-<dt id="wte.util.DateValidator">
-<em class="property">class </em><code class="descclassname">wte.util.</code><code class="descname">DateValidator</code><span class="sig-paren">(</span><em>*args</em>, <em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/util.html#DateValidator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.util.DateValidator" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="docutils">
-<dt>The <a class="reference internal" href="#wte.util.DateValidator" title="wte.util.DateValidator"><code class="xref py py-class docutils literal"><span class="pre">DateValidator</span></code></a> provides date validation and</dt>
-<dd>conversion from the formats &#8220;YYYY-MM-DD&#8221; or &#8220;DD/MM/YYYY&#8221; to a python
-<a class="reference external" href="http://docs.python.org/library/datetime.html#datetime.date" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">datetime.date</span></code></a>.</dd>
-</dl>
-<p><strong>Messages</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal"><span class="pre">badType</span></code>:</dt>
-<dd>The input must be a string (not a <code class="docutils literal"><span class="pre">%(type)s</span></code>: <code class="docutils literal"><span class="pre">%(value)r</span></code>)</dd>
-<dt><code class="docutils literal"><span class="pre">empty</span></code>:</dt>
-<dd>Please enter a value</dd>
-<dt><code class="docutils literal"><span class="pre">invalid_format</span></code>:</dt>
-<dd>Please enter a date either as YYYY-MM-DD or DD/MM/YYYY</dd>
-<dt><code class="docutils literal"><span class="pre">noneType</span></code>:</dt>
-<dd>The input must be a string (not None)</dd>
-</dl>
-</dd></dl>
-
-<dl class="class">
-<dt id="wte.util.DynamicSchema">
-<em class="property">class </em><code class="descclassname">wte.util.</code><code class="descname">DynamicSchema</code><span class="sig-paren">(</span><em>fields=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/util.html#DynamicSchema"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.util.DynamicSchema" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="docutils">
-<dt>The <a class="reference internal" href="#wte.util.DynamicSchema" title="wte.util.DynamicSchema"><code class="xref py py-class docutils literal"><span class="pre">DynamicSchema</span></code></a> provides a dynamic</dt>
-<dd><a class="reference external" href="http://www.formencode.org/en/latest/modules/schema.html#formencode.schema.Schema" title="(in FormEncode v2.0.0)"><code class="xref py py-class docutils literal"><span class="pre">Schema</span></code></a> for which the validation fields are
-defined from the <code class="docutils literal"><span class="pre">list</span></code> of (field-name,
-<a class="reference external" href="http://www.formencode.org/en/latest/modules/api.html#formencode.api.FancyValidator" title="(in FormEncode v2.0.0)"><code class="xref py py-class docutils literal"><span class="pre">FancyValidator</span></code></a>) pairs passed to the
-constructor.</dd>
-</dl>
-<p><strong>Messages</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal"><span class="pre">badDictType</span></code>:</dt>
-<dd>The input must be dict-like (not a <code class="docutils literal"><span class="pre">%(type)s</span></code>: <code class="docutils literal"><span class="pre">%(value)r</span></code>)</dd>
-<dt><code class="docutils literal"><span class="pre">badType</span></code>:</dt>
-<dd>The input must be a string (not a <code class="docutils literal"><span class="pre">%(type)s</span></code>: <code class="docutils literal"><span class="pre">%(value)r</span></code>)</dd>
-<dt><code class="docutils literal"><span class="pre">empty</span></code>:</dt>
-<dd>Please enter a value</dd>
-<dt><code class="docutils literal"><span class="pre">missingValue</span></code>:</dt>
-<dd>Missing value</dd>
-<dt><code class="docutils literal"><span class="pre">noneType</span></code>:</dt>
-<dd>The input must be a string (not None)</dd>
-<dt><code class="docutils literal"><span class="pre">notExpected</span></code>:</dt>
-<dd>The input field <code class="docutils literal"><span class="pre">%(name)s</span></code> was not expected.</dd>
-<dt><code class="docutils literal"><span class="pre">singleValueExpected</span></code>:</dt>
-<dd>Please provide only one value</dd>
-</dl>
-</dd></dl>
-
-<dl class="class">
-<dt id="wte.util.State">
-<em class="property">class </em><code class="descclassname">wte.util.</code><code class="descname">State</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/util.html#State"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.util.State" title="Permalink to this definition">¶</a></dt>
-<dd><p>The <a class="reference internal" href="#wte.util.State" title="wte.util.State"><code class="xref py py-class docutils literal"><span class="pre">State</span></code></a> provides a blank state object for use
-with Formencode validation. Any parameters passed to the constructor are
-automatically set as attributes of the <a class="reference internal" href="#wte.util.State" title="wte.util.State"><code class="xref py py-class docutils literal"><span class="pre">State</span></code></a>.</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="wte.util.TimeValidator">
-<em class="property">class </em><code class="descclassname">wte.util.</code><code class="descname">TimeValidator</code><span class="sig-paren">(</span><em>*args</em>, <em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/util.html#TimeValidator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.util.TimeValidator" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="docutils">
-<dt>The <a class="reference internal" href="#wte.util.DateValidator" title="wte.util.DateValidator"><code class="xref py py-class docutils literal"><span class="pre">DateValidator</span></code></a> provides time validation and</dt>
-<dd>conversion from the format &#8220;HH:MM&#8221; to a python <a class="reference external" href="http://docs.python.org/library/datetime.html#datetime.time" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">datetime.time</span></code></a>.</dd>
-</dl>
-<p><strong>Messages</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal"><span class="pre">badType</span></code>:</dt>
-<dd>The input must be a string (not a <code class="docutils literal"><span class="pre">%(type)s</span></code>: <code class="docutils literal"><span class="pre">%(value)r</span></code>)</dd>
-<dt><code class="docutils literal"><span class="pre">empty</span></code>:</dt>
-<dd>Please enter a value</dd>
-<dt><code class="docutils literal"><span class="pre">invalid_format</span></code>:</dt>
-<dd>Please enter a time as HH:MM</dd>
-<dt><code class="docutils literal"><span class="pre">noneType</span></code>:</dt>
-<dd>The input must be a string (not None)</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="wte.util.convert_type">
-<code class="descclassname">wte.util.</code><code class="descname">convert_type</code><span class="sig-paren">(</span><em>value</em>, <em>target_type</em>, <em>default=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/util.html#convert_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.util.convert_type" title="Permalink to this definition">¶</a></dt>
-<dd><p>Attempts to convert the <code class="docutils literal"><span class="pre">value</span></code> to the given <code class="docutils literal"><span class="pre">target_type</span></code>. Will
-return <code class="docutils literal"><span class="pre">default</span></code> if the conversion fails.</p>
-<p>Supported <code class="docutils literal"><span class="pre">target_type</span></code> values are:</p>
-<ul class="simple">
-<li><cite>int</cite> &#8211; Convert to an integer value</li>
-<li><cite>boolean</cite> &#8211; Convert to a boolean value (<code class="docutils literal"><span class="pre">True</span></code> if the value is the
-<code class="docutils literal"><span class="pre">unicode</span></code> string &#8220;true&#8221; in any capitalisation</li>
-<li><cite>list</cite> &#8211; Convert to a list, splitting on line-breaks and commas</li>
-</ul>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>value</strong> (<cite>unicode</cite>) &#8211; The value to convert</li>
-<li><strong>target_type</strong> (<cite>unicode</cite>) &#8211; The target type to convert to</li>
-<li><strong>default</strong> &#8211; The default value if the conversion fails</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The converted value</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="wte.util.get_config_setting">
-<code class="descclassname">wte.util.</code><code class="descname">get_config_setting</code><span class="sig-paren">(</span><em>request</em>, <em>key</em>, <em>target_type=None</em>, <em>default=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/util.html#get_config_setting"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.util.get_config_setting" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets a configuration setting from the application configuration.
-Settings are cached for faster access.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>request</strong> (<a class="reference external" href="http://docs.pylonsproject.org/projects/pyramid/en/latest/api/request.html#pyramid.request.Request" title="(in The Pyramid Web Framework v1.6.1)"><code class="xref py py-class docutils literal"><span class="pre">Request</span></code></a>) &#8211; The request used to access the configuration settings</li>
-<li><strong>key</strong> (<cite>unicode</cite>) &#8211; The configuration key</li>
-<li><strong>target_type</strong> &#8211; If specified, will convert the configuration setting
-to the given type using <a class="reference internal" href="#wte.util.convert_type" title="wte.util.convert_type"><code class="xref py py-func docutils literal"><span class="pre">convert_type()</span></code></a></li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The configuration setting value or <code class="docutils literal"><span class="pre">default</span></code></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
 <dl class="function">
 <dt id="wte.util.ordered_counted_set">
 <code class="descclassname">wte.util.</code><code class="descname">ordered_counted_set</code><span class="sig-paren">(</span><em>items</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/util.html#ordered_counted_set"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.util.ordered_counted_set" title="Permalink to this definition">¶</a></dt>
@@ -234,7 +52,7 @@ they appear in the <code class="docutils literal"><span class="pre">items</span>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>request</strong> (<a class="reference external" href="http://docs.pylonsproject.org/projects/pyramid/en/latest/api/request.html#pyramid.request.Request" title="(in The Pyramid Web Framework v1.6.1)"><code class="xref py py-class docutils literal"><span class="pre">Request</span></code></a>) &#8211; The request used to generate URLs</li>
+<li><strong>request</strong> (<a class="reference external" href="http://docs.pylonsproject.org/projects/pyramid/en/latest/api/request.html#pyramid.request.Request" title="(in The Pyramid Web Framework v1.7)"><code class="xref py py-class docutils literal"><span class="pre">Request</span></code></a>) &#8211; The request used to generate URLs</li>
 <li><strong>query</strong> (<code class="xref py py-class docutils literal"><span class="pre">Query</span></code>) &#8211; The SQLAlchemy query to generate the pagination for</li>
 <li><strong>start</strong> (<code class="xref py py-func docutils literal"><span class="pre">int()</span></code>) &#8211; The current starting index</li>
 <li><strong>rows</strong> (<code class="xref py py-func docutils literal"><span class="pre">int()</span></code>) &#8211; The number of rows per page</li>
@@ -265,7 +83,7 @@ exception sending the e-mail, then it will log an error.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>request</strong> (<a class="reference external" href="http://docs.pylonsproject.org/projects/pyramid/en/latest/api/request.html#pyramid.request.Request" title="(in The Pyramid Web Framework v1.6.1)"><code class="xref py py-class docutils literal"><span class="pre">pyramid.request.Request</span></code></a>) &#8211; The current request used to access the settings</li>
+<li><strong>request</strong> (<a class="reference external" href="http://docs.pylonsproject.org/projects/pyramid/en/latest/api/request.html#pyramid.request.Request" title="(in The Pyramid Web Framework v1.7)"><code class="xref py py-class docutils literal"><span class="pre">pyramid.request.Request</span></code></a>) &#8211; The current request used to access the settings</li>
 <li><strong>recipient</strong> (<cite>unicode</cite>) &#8211; The recipient&#8217;s e-mail address</li>
 <li><strong>sender</strong> (<cite>unicode</cite>) &#8211; The sender&#8217;s e-mail address</li>
 <li><strong>subject</strong> (<cite>unicode</cite>) &#8211; The e-mail&#8217;s subject line</li>
