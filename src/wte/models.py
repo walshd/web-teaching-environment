@@ -15,12 +15,12 @@ import re
 from datetime import datetime
 from pywebtools.pyramid.auth.models import Base, User
 from sqlalchemy import (Column, Index, ForeignKey, Integer, Unicode,
-                        UnicodeText, Table, LargeBinary, DateTime)
+                        UnicodeText, Table, LargeBinary, DateTime, Boolean)
 from sqlalchemy.orm import (relationship, backref)
 
 from wte.helpers.frontend import confirm_delete, MenuBuilder, confirm_action
 
-DB_VERSION = '58f6e5c75e86'
+DB_VERSION = '1d79e6b04177'
 """The currently required database version."""
 
 
@@ -655,3 +655,74 @@ class TimedTask(Base):
                                                                self.title,
                                                                False)})
         return builder.generate()
+
+
+class Quiz(Base):
+    """The :class:`~wte.models.Quiz` represents a :class:`~wte.text_formatter.docutils_ext.Quiz`
+    in the database.
+
+    Instances of :class:`~wte.models.QuizAnswer` have the following attributes:
+
+    * ``id`` - The unique database identifier
+    * ``answers`` - All :class:`~wte.models.QuizAnswer` that belong to this :class:`~wte.models.Quiz`
+    * ``part_id`` - The unique identifier of the :class:`~wte.models.User` the
+      :class:`~wte.models.Part` belongs to
+    * ``name`` - The name of the :class:`~wte.text_formatter.docutils_ext.Quiz`.
+    * ``questions`` - JSON-encoded list of question-name / question-title pairs
+    * ``title`` - The title to show to the user
+    """
+
+    __tablename__ = 'quizzes'
+
+    id = Column(Integer, primary_key=True)
+    part_id = Column(Integer, ForeignKey('parts.id',
+                                         name='quiz_answers_part_id_fk'))
+    name = Column(Unicode(255))
+    title = Column(Unicode(255))
+    questions = Column(UnicodeText)
+
+    answers = relationship('QuizAnswer', cascade='all,delete')
+
+
+Index('quizzes_full_ix', Quiz.part_id, Quiz.name)
+
+
+class QuizAnswer(Base):
+    """The class:`~wte.models.QuizAnswer` represents an answer to a
+    :class:`~wte.text_formatter.docutils_ext.QuizQuestion` in a
+    :class:`~wte.models.Quiz`.
+
+    Instances of :class:`~wte.models.QuizAnswer` have the following attributes:
+
+    * ``id`` - The unique database identifier
+    * ``attempts`` - How many attempts the user has had
+    * ``final_answer`` - The final answer the user provided
+    * ``final_correct`` - Whether the final answer was correct
+    * ``initial_answer`` - The first answer the user provided
+    * ``initial_correct`` - Whether the first answer was correct
+    * ``question`` - The name of the :class:`~wte.text_formatter.docutils_ext.QuizQuestion`.
+    * ``quiz_id`` - The unique identifier of the :class:`~wte.models.Quiz` the
+      :class:`~wte.models.QuizAnswer` belongs to
+    * ``quiz`` - The :class:`~wte.models.Quiz` identified by ``quiz_id``
+    * ``user_id`` - The unique identifier of the :class:`~wte.models.User` the
+      :class:`~wte.models.QuizAnswer` belongs to
+    """
+
+    __tablename__ = 'quiz_answers'
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id',
+                                         name='quiz_answers_user_id_fk'))
+    quiz_id = Column(Integer, ForeignKey('quizzes.id',
+                                         name='quiz_answers_quiz_id_fk'))
+    question = Column(Unicode(255))
+    initial_answer = Column(Unicode(255))
+    initial_correct = Column(Boolean)
+    final_answer = Column(Unicode(255))
+    final_correct = Column(Boolean)
+    attempts = Column(Integer)
+
+    quiz = relationship('Quiz')
+
+
+Index('quiz_answers_full_ix', QuizAnswer.user_id, QuizAnswer.quiz_id, QuizAnswer.question)

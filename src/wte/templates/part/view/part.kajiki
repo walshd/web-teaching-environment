@@ -5,7 +5,7 @@
   </py:block>
   <py:block name="content">
     <py:import href="pywebtools:kajiki/menu.kajiki" alias="menu"/>
-    <?py from wte.helpers.frontend import set_list ?>
+    <?py from wte.helpers.frontend import set_list, inflector ?>
     <div class="float-right">${menu.menubar(part.menu(request))}</div>
     <h1>${part.title} <small py:if="part.status != 'available'" class="label">${part.status.title()}</small></h1>
     <py:if test="part.has_role('student', request.current_user)">
@@ -15,48 +15,120 @@
           <a py:if="not progress.current and progress.part.children" href="${request.route_url('part.view', pid=progress.part.children[0].id)}" class="button small">Follow the ${part.label.title() if part.label else 'Part'}</a>
           <a py:if="progress.current" href="${request.route_url('part.view', pid=progress.current.id)}" class="button small">Continue the ${part.label.title() if part.label else 'Part'}</a>
         </div>
-        <div class="column small-12 medium-6">
-          <table>
-            <tbody>
-              <tr>
-                <th class="text-left"># Pages</th>
-                <td>${len(part.children)}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <aside class="column small-12 medium-5">
+          <section py:if="quizzes" class="quiz-stats">
+            <h3>Quizzes</h3>
+            <section py:for="quiz in quizzes">
+              <table>
+                <colgroup>
+                  <col style="width: 45%" />
+                  <col />
+                  <col />
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th colspan="3">${quiz['title']}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr py:for="question in quiz['questions']">
+                    <td>${question['title']}</td>
+                    <td>${', '.join(question['answer']) if 'answer' in question else ''}</td>
+                    <td>
+                      <span py:if="question['correct'] and question['attempts'] == 1" class="label correct"><span class="fi-check"> </span></span>
+                      <span py:if="question['correct'] and question['attempts'] != 1" class="label partial"><span class="fi-check" title="Correct after ${question['attempts']} attempts"> </span></span>
+                      <span py:if="not question['correct']" class="label incorrect"><span class="fi-x"> </span></span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </section>
+          </section>
+        </aside>
       </div>
     </py:if><py:else>
-      <div class="rest">${literal(part.compiled_content)}</div>
-      <section py:if="part.children">
-        <h2>${set_list(labels)}</h2>
-        <ul class="no-symbol">
-          <li py:for="child in part.children" py:if="child.allow('view', request.current_user)">
-            <div class="float-right">${menu.menubar(child.menu(request))}</div>
-            <h3><a href="${request.route_url('part.view', pid=child.id)}">${child.title}</a> <small py:if="len(labels) != 1 and child.label" class="label secondary">${child.label.title()}</small> <small py:if="child.status != 'available'" class="label">${child.status.title()}</small></h3>
-            <div class="rest">${literal(child.summary)}</div>
-          </li>
-        </ul>
-        <a py:if="part.has_role('student', request.current_user)" href="${request.route_url('part.deregister', pid=part.id)}" class="button post-link">De-register</a>
-      </section>
-      <section py:if="part.templates">
-        <h2>Templates</h2>
-        <ul class="no-symbol">
-          <li py:for="asset in part.templates">
-            <div class="float-right">${menu.menubar(asset.menu(request, part))}</div>
-            <h3><a href="${request.route_url('asset.view', mid=-1, pid=part.id, filename=asset.filename)}">${asset.filename} (${asset.mimetype})</a></h3>
-          </li>
-        </ul>
-      </section>
-      <section py:if="part.assets">
-        <h2>Assets</h2>
-        <ul class="no-symbol">
-          <li py:for="asset in part.assets">
-            <div class="float-right">${menu.menubar(asset.menu(request, part))}</div>
-            <h3><a href="${request.route_url('asset.view', mid=-1, pid=part.id, filename=asset.filename)}">${asset.filename} (${asset.mimetype})</a></h3>
-          </li>
-        </ul>
-      </section>
+      <div class="row">
+        <div class="column small-12 medium-7">
+          <div class="rest">${literal(part.compiled_content)}</div>
+          <section py:if="part.children">
+            <h2>${set_list(labels)}</h2>
+            <ul class="no-symbol">
+              <li py:for="child in part.children" py:if="child.allow('view', request.current_user)">
+                <div class="float-right">${menu.menubar(child.menu(request))}</div>
+                <h3><a href="${request.route_url('part.view', pid=child.id)}">${child.title}</a> <small py:if="len(labels) != 1 and child.label" class="label secondary">${child.label.title()}</small> <small py:if="child.status != 'available'" class="label">${child.status.title()}</small></h3>
+                <div class="rest">${literal(child.summary)}</div>
+              </li>
+            </ul>
+            <a py:if="part.has_role('student', request.current_user)" href="${request.route_url('part.deregister', pid=part.id)}" class="button post-link">De-register</a>
+          </section>
+          <section py:if="part.templates">
+            <h2>Templates</h2>
+            <ul class="no-symbol">
+              <li py:for="asset in part.templates">
+                <div class="float-right">${menu.menubar(asset.menu(request, part))}</div>
+                <h3><a href="${request.route_url('asset.view', mid=-1, pid=part.id, filename=asset.filename)}">${asset.filename} (${asset.mimetype})</a></h3>
+              </li>
+            </ul>
+          </section>
+          <section py:if="part.assets">
+            <h2>Assets</h2>
+            <ul class="no-symbol">
+              <li py:for="asset in part.assets">
+                <div class="float-right">${menu.menubar(asset.menu(request, part))}</div>
+                <h3><a href="${request.route_url('asset.view', mid=-1, pid=part.id, filename=asset.filename)}">${asset.filename} (${asset.mimetype})</a></h3>
+              </li>
+            </ul>
+          </section>
+        </div>
+        <aside class="column small-12 medium-5">
+          <section py:if="quizzes" class="quiz-stats">
+            <h3>${inflector.plural('Quiz', len(quizzes))}</h3>
+            <section py:for="quiz in quizzes">
+              <table>
+                <colgroup>
+                  <col style="width: 50%" />
+                  <col style="width: 50%" />
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th colspan="2">${quiz['title']}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr py:for="question in quiz['questions']">
+                    <td>${question['title']}</td>
+                    <td>
+                      <div class="overview-bar"> 
+                        <div class="stat correct" style="width: ${100.0 * question['correct']['initial'] / question['correct']['total']}%" title="${question['correct']['initial']} correct answers"> </div>
+                        <div class="stat partial" style="width: ${100.0 * question['correct']['subsequent'] / question['correct']['total']}%" title="${question['correct']['subsequent']} correct answers after 2 or more attempts"> </div>
+                        <div class="stat incorrect" style="width: ${100.0 * question['correct']['incorrect'] / question['correct']['total']}%" title="${question['correct']['incorrect']} incorrect answers"> </div>
+                      </div>
+                      <p>
+                        <py:if test="question['correct']['initial'] + question['correct']['subsequent'] + question['correct']['incorrect'] != 0">${question['correct']['initial'] + question['correct']['subsequent'] + question['correct']['incorrect']} ${inflector.plural('answer', question['correct']['initial'] + question['correct']['subsequent'] + question['correct']['incorrect'])}, of which
+                          <py:if test="question['correct']['initial'] + question['correct']['subsequent'] != 0">${question['correct']['initial'] + question['correct']['subsequent']} correct</py:if><!-- 
+                          --><py:if test="question['correct']['initial'] + question['correct']['subsequent'] != 0 and question['correct']['incorrect'] != 0"> and</py:if><!-- 
+                          --><py:if test="question['correct']['incorrect'] != 0"> ${question['correct']['incorrect']} incorrect</py:if>.
+                          <py:if test="question['correct']['subsequent'] != 0">${question['correct']['subsequent']} correct ${inflector.plural('answer', question['correct']['subsequent'])} required more than one attempt.</py:if>
+                        </py:if>
+                        <py:if test="question['correct']['total'] - (question['correct']['initial'] + question['correct']['subsequent'] + question['correct']['incorrect']) != 0">${question['correct']['total'] - (question['correct']['initial'] + question['correct']['subsequent'] + question['correct']['incorrect'])} ${inflector.plural('student', question['correct']['total'] - (question['correct']['initial'] + question['correct']['subsequent'] + question['correct']['incorrect']))} ${inflector.plural_verb('has', question['correct']['total'] - (question['correct']['initial'] + question['correct']['subsequent'] + question['correct']['incorrect']))} not yet answered the question.</py:if>
+                      </p>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </section>
+          </section>
+        </aside>
+      </div>
     </py:else>
+  </py:block>
+  <py:block name="body_script">
+  <script>
+  $('.quiz').quiz({
+      'submit_url': '${request.route_url('quiz.set_answers', pid=part.id)}',
+      'check_url': '${request.route_url('quiz.check_answers', pid=part.id)}',
+      'csrf_token': '${request.session.get_csrf_token()}'
+  });
+  </script>
   </py:block>
 </py:extends>

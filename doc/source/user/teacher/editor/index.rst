@@ -19,3 +19,4 @@ You can find more detail here:
    asset
    crossref
    video
+   quiz

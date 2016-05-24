@@ -30,9 +30,11 @@ from sqlalchemy import and_
 from zipfile import ZipFile, ZIP_DEFLATED, ZIP_STORED, BadZipfile
 
 from wte.decorators import (require_logged_in, require_method)
-from wte.models import (Part, UserPartRole, Asset, UserPartProgress, User)
+from wte.models import (Part, UserPartRole, Asset, UserPartProgress, User,
+                        Quiz, QuizAnswer)
 from wte.text_formatter import compile_rst
 from wte.util import (unauthorised_redirect, ordered_counted_set)
+from wte.views.quiz import extract_quizzes
 
 BytesIO = nimport('io:BytesIO')
 
@@ -231,6 +233,7 @@ def view_part(request):
             crumbs = create_part_crumbs(request,
                                         part,
                                         None)
+            quizzes = []
             if part.type == 'page':
                 template_path = 'wte:templates/part/view/%s.kajiki' % part.parent.display_mode
                 if part.parent.display_mode == 'three_pane_html':
@@ -240,6 +243,55 @@ def view_part(request):
             else:
                 template_path = 'wte:templates/part/view/%s.kajiki' % part.type
                 help_path = ['user', 'learner', 'module.html']
+                # Quiz Summary Generation - @Todo Should be refactored. Perhaps into the quiz view?
+                quiz_ids = {}
+                for quiz in dbsession.query(Quiz).join(Part).\
+                        filter(Quiz.part_id.in_([c.id for c in part.children])).order_by(Part.order):
+                    quiz_ids[quiz.id] = len(quizzes)
+                    quizzes.append({'id': quiz.id,
+                                    'title': quiz.title,
+                                    'questions': json.loads(quiz.questions)})
+                if part.has_role('student', request.current_user):
+                    if quiz_ids:
+                        for answer in dbsession.query(QuizAnswer).\
+                                filter(and_(QuizAnswer.quiz_id.in_(list(quiz_ids.keys())),
+                                            QuizAnswer.user_id == request.current_user.id)):
+                            quizzes[quiz_ids[answer.quiz_id]]['answered'] = True
+                            for question in quizzes[quiz_ids[answer.quiz_id]]['questions']:
+                                if question['name'] == answer.question:
+                                    question['attempts'] = answer.attempts
+                                    if answer.initial_correct:
+                                        question['correct'] = True
+                                        question['answer'] = json.loads(answer.initial_answer)
+                                    elif answer.final_correct:
+                                        question['correct'] = True
+                                        question['answer'] = json.loads(answer.final_answer)
+                                    else:
+                                        question['correct'] = False
+                                        if answer.final_answer:
+                                            question['answer'] = json.loads(answer.final_answer)
+                    quizzes = [quiz for quiz in quizzes if 'answered' in quiz]
+                else:
+                    student_count = dbsession.query(UserPartRole).filter(and_(UserPartRole.part_id == part.parent_id,
+                                                                              UserPartRole.role == 'student')).count()
+                    for quiz in quizzes:
+                        for question in quiz['questions']:
+                            question['correct'] = {'initial': 0,
+                                                   'subsequent': 0,
+                                                   'incorrect': 0,
+                                                   'total': student_count}
+                    if quiz_ids:
+                        for answer in dbsession.query(QuizAnswer).\
+                                filter(QuizAnswer.quiz_id.in_(list(quiz_ids.keys()))):
+                            for question in quizzes[quiz_ids[answer.quiz_id]]['questions']:
+                                if question['name'] == answer.question:
+                                    if answer.initial_correct:
+                                        question['correct']['initial'] = question['correct']['initial'] + 1
+                                    elif answer.final_correct:
+                                        question['correct']['subsequent'] = question['correct']['subsequent'] + 1
+                                    else:
+                                        question['correct']['incorrect'] = question['correct']['incorrect'] + 1
+                # End Quiz Summary Generation
             labels = [child.label.title() if child.label else child.type.title() for child in part.children]
             return render_to_response(template_path,
                                       {'part': part,
@@ -247,6 +299,7 @@ def view_part(request):
                                        'progress': progress,
                                        'include_footer': part.type != 'page',
                                        'labels': ordered_counted_set(labels),
+                                       'quizzes': quizzes,
                                        'help': help_path},
                                       request=request)
         else:
@@ -454,7 +507,8 @@ def edit(request):
             help_path = ['user', 'teacher', part.type, 'edit.html']
             if request.method == 'POST':
                 try:
-                    params = EditPartSchema().to_python(request.params)
+                    params = EditPartSchema().to_python(request.params,
+                                                        State(request=request))
                     with transaction.manager:
                         dbsession.add(part)
                         part.title = params['title']
@@ -465,6 +519,7 @@ def edit(request):
                             part.compiled_content = compile_rst(params['content'],
                                                                 request,
                                                                 part=part)
+                            extract_quizzes(dbsession, part)
                         except Exception as e:
                             msg = e.message.replace('<string>:', 'Invalid ReST: Line ').replace('(SEVERE/4) ', '')
                             msg = msg[:msg.find('\n')]
