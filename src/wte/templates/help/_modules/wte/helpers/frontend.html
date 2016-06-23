@@ -43,6 +43,12 @@
 <span class="n">inflector</span> <span class="o">=</span> <span class="n">inflect</span><span class="o">.</span><span class="n">engine</span><span class="p">()</span>
 
 
+<div class="viewcode-block" id="lt"><a class="viewcode-back" href="../../../api/wte_helpers_frontend.html#wte.helpers.frontend.lt">[docs]</a><span class="k">def</span> <span class="nf">lt</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Helper function that checks if ``a`` is less than ``b``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">a</span> <span class="o">&lt;</span> <span class="n">b</span></div>
+
+
 <div class="viewcode-block" id="html_id"><a class="viewcode-back" href="../../../api/wte_helpers_frontend.html#wte.helpers.frontend.html_id">[docs]</a><span class="k">def</span> <span class="nf">html_id</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Turns a given text into a valid HTML id attribute value. Removes</span>
 <span class="sd">    spaces and full-stops.</span>
@@ -184,12 +190,19 @@
                            <span class="s1">&#39;class_&#39;</span><span class="p">:</span> <span class="s1">&#39;alert&#39;</span><span class="p">})</span></div>
 
 
-<div class="viewcode-block" id="readable_timedelta"><a class="viewcode-back" href="../../../api/wte_helpers_frontend.html#wte.helpers.frontend.readable_timedelta">[docs]</a><span class="k">def</span> <span class="nf">readable_timedelta</span><span class="p">(</span><span class="n">delta</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Converts a :class:`datetime.timedelta` into a human-readable string.</span>
+<div class="viewcode-block" id="time_string"><a class="viewcode-back" href="../../../api/wte_helpers_frontend.html#wte.helpers.frontend.time_string">[docs]</a><span class="k">def</span> <span class="nf">time_string</span><span class="p">(</span><span class="n">days</span><span class="p">,</span> <span class="n">hours</span><span class="p">,</span> <span class="n">minutes</span><span class="p">,</span> <span class="n">seconds</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts the ``days``, ``hours``, ``minutes``, and ``seconds`` into</span>
+<span class="sd">    a human-readable format.</span>
 
-<span class="sd">    :param delta: The time-delta to convert</span>
-<span class="sd">    :type delta: :class:`datetime.timedelta`</span>
-<span class="sd">    :return: The human-readable string representation of the ``delta``</span>
+<span class="sd">    :param days: The number of days to the timestamp</span>
+<span class="sd">    :type days: :func:`int`</span>
+<span class="sd">    :param hours: The number of hours to the timestamp</span>
+<span class="sd">    :type hours: :func:`int`</span>
+<span class="sd">    :param minutes: The number of minutes to the timestamp</span>
+<span class="sd">    :type minutes: :func:`int`</span>
+<span class="sd">    :param seconds: The number of seconds to the timestamp</span>
+<span class="sd">    :type seconds: :func:`int`</span>
+<span class="sd">    :return: The human-readable representation</span>
 <span class="sd">    :rtype: :func:`unicode`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">number_unit</span><span class="p">(</span><span class="n">number</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">fraction</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
@@ -211,64 +224,58 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="s1">&#39;</span><span class="si">%i</span><span class="s1"> </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">number</span><span class="p">,</span> <span class="n">inflector</span><span class="o">.</span><span class="n">plural</span><span class="p">(</span><span class="n">unit</span><span class="p">,</span> <span class="n">number</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">time_string</span><span class="p">(</span><span class="n">days</span><span class="p">,</span> <span class="n">hours</span><span class="p">,</span> <span class="n">minutes</span><span class="p">,</span> <span class="n">seconds</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Converts the ``days``, ``hours``, ``minutes``, and ``seconds`` into</span>
-<span class="sd">        a human-readable format.</span>
-
-<span class="sd">        :param days: The number of days to the timestamp</span>
-<span class="sd">        :type days: :func:`int`</span>
-<span class="sd">        :param hours: The number of hours to the timestamp</span>
-<span class="sd">        :type hours: :func:`int`</span>
-<span class="sd">        :param minutes: The number of minutes to the timestamp</span>
-<span class="sd">        :type minutes: :func:`int`</span>
-<span class="sd">        :param seconds: The number of seconds to the timestamp</span>
-<span class="sd">        :type seconds: :func:`int`</span>
-<span class="sd">        :return: The human-readable representation</span>
-<span class="sd">        :rtype: :func:`unicode`</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">days</span> <span class="o">&gt;</span> <span class="mi">60</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s1">&#39;about </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">number_unit</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">days</span> <span class="o">/</span> <span class="mf">30.0</span><span class="p">),</span> <span class="s1">&#39;month&#39;</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">days</span> <span class="o">&gt;</span> <span class="mi">14</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s1">&#39;about </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">number_unit</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">days</span> <span class="o">/</span> <span class="mf">7.0</span><span class="p">),</span> <span class="s1">&#39;week&#39;</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">days</span> <span class="o">&gt;</span> <span class="mi">5</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">hours</span> <span class="o">&gt;</span> <span class="mi">16</span><span class="p">:</span>
-                <span class="k">return</span> <span class="s1">&#39;a bit less than </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">number_unit</span><span class="p">(</span><span class="n">days</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;day&#39;</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">hours</span> <span class="o">&gt;</span> <span class="mi">8</span><span class="p">:</span>
-                <span class="k">return</span> <span class="s1">&#39;about </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">number_unit</span><span class="p">(</span><span class="n">days</span><span class="p">,</span> <span class="s1">&#39;day&#39;</span><span class="p">,</span> <span class="n">fraction</span><span class="o">=</span><span class="s1">&#39;and a half&#39;</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="s1">&#39;about </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">number_unit</span><span class="p">(</span><span class="n">days</span><span class="p">,</span> <span class="s1">&#39;day&#39;</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">days</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">hours</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="k">return</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> and </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">number_unit</span><span class="p">(</span><span class="n">days</span><span class="p">,</span> <span class="s1">&#39;day&#39;</span><span class="p">),</span> <span class="n">number_unit</span><span class="p">(</span><span class="n">hours</span><span class="p">,</span> <span class="s1">&#39;hour&#39;</span><span class="p">))</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">number_unit</span><span class="p">(</span><span class="n">days</span><span class="p">,</span> <span class="s1">&#39;day&#39;</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">hours</span> <span class="o">&gt;</span> <span class="mi">6</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">minutes</span> <span class="o">&gt;</span> <span class="mi">50</span><span class="p">:</span>
-                <span class="k">return</span> <span class="s1">&#39;a bit less than </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">number_unit</span><span class="p">(</span><span class="n">hours</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;hour&#39;</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">minutes</span> <span class="o">&gt;</span> <span class="mi">20</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">number_unit</span><span class="p">(</span><span class="n">hours</span><span class="p">,</span> <span class="s1">&#39;hour&#39;</span><span class="p">,</span> <span class="n">fraction</span><span class="o">=</span><span class="s1">&#39;and a half&#39;</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">number_unit</span><span class="p">(</span><span class="n">hours</span><span class="p">,</span> <span class="s1">&#39;hour&#39;</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">hours</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">minutes</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">seconds</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="k">return</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> and </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">number_unit</span><span class="p">(</span><span class="n">hours</span><span class="p">,</span> <span class="s1">&#39;hour&#39;</span><span class="p">),</span> <span class="n">number_unit</span><span class="p">(</span><span class="n">minutes</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;minute&#39;</span><span class="p">))</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">return</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> and </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">number_unit</span><span class="p">(</span><span class="n">hours</span><span class="p">,</span> <span class="s1">&#39;hour&#39;</span><span class="p">),</span> <span class="n">number_unit</span><span class="p">(</span><span class="n">minutes</span><span class="p">,</span> <span class="s1">&#39;minute&#39;</span><span class="p">))</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">number_unit</span><span class="p">(</span><span class="n">hours</span><span class="p">,</span> <span class="s1">&#39;hour&#39;</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">minutes</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">seconds</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">number_unit</span><span class="p">(</span><span class="n">minutes</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;minute&#39;</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">number_unit</span><span class="p">(</span><span class="n">minutes</span><span class="p">,</span> <span class="s1">&#39;minute&#39;</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">seconds</span> <span class="o">&gt;</span> <span class="mi">30</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s1">&#39;less than a minute&#39;</span>
-        <span class="k">elif</span> <span class="n">seconds</span> <span class="o">&gt;</span> <span class="mi">15</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s1">&#39;less than 30 seconds&#39;</span>
+    <span class="k">if</span> <span class="n">days</span> <span class="o">&gt;</span> <span class="mi">60</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;about </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">number_unit</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">days</span> <span class="o">/</span> <span class="mf">30.0</span><span class="p">),</span> <span class="s1">&#39;month&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">days</span> <span class="o">&gt;</span> <span class="mi">14</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;about </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">number_unit</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">days</span> <span class="o">/</span> <span class="mf">7.0</span><span class="p">),</span> <span class="s1">&#39;week&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">days</span> <span class="o">&gt;</span> <span class="mi">5</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">hours</span> <span class="o">&gt;</span> <span class="mi">16</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;a bit less than </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">number_unit</span><span class="p">(</span><span class="n">days</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;day&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">hours</span> <span class="o">&gt;</span> <span class="mi">8</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;about </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">number_unit</span><span class="p">(</span><span class="n">days</span><span class="p">,</span> <span class="s1">&#39;day&#39;</span><span class="p">,</span> <span class="n">fraction</span><span class="o">=</span><span class="s1">&#39;and a half&#39;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">number_unit</span><span class="p">(</span><span class="n">seconds</span><span class="p">,</span> <span class="s1">&#39;second&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="s1">&#39;about </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">number_unit</span><span class="p">(</span><span class="n">days</span><span class="p">,</span> <span class="s1">&#39;day&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">days</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">hours</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> and </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">number_unit</span><span class="p">(</span><span class="n">days</span><span class="p">,</span> <span class="s1">&#39;day&#39;</span><span class="p">),</span> <span class="n">number_unit</span><span class="p">(</span><span class="n">hours</span><span class="p">,</span> <span class="s1">&#39;hour&#39;</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">number_unit</span><span class="p">(</span><span class="n">days</span><span class="p">,</span> <span class="s1">&#39;day&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">hours</span> <span class="o">&gt;</span> <span class="mi">6</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">minutes</span> <span class="o">&gt;</span> <span class="mi">50</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;a bit less than </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">number_unit</span><span class="p">(</span><span class="n">hours</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;hour&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">minutes</span> <span class="o">&gt;</span> <span class="mi">20</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">number_unit</span><span class="p">(</span><span class="n">hours</span><span class="p">,</span> <span class="s1">&#39;hour&#39;</span><span class="p">,</span> <span class="n">fraction</span><span class="o">=</span><span class="s1">&#39;and a half&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">number_unit</span><span class="p">(</span><span class="n">hours</span><span class="p">,</span> <span class="s1">&#39;hour&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">hours</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">minutes</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">seconds</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> and </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">number_unit</span><span class="p">(</span><span class="n">hours</span><span class="p">,</span> <span class="s1">&#39;hour&#39;</span><span class="p">),</span> <span class="n">number_unit</span><span class="p">(</span><span class="n">minutes</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;minute&#39;</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> and </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">number_unit</span><span class="p">(</span><span class="n">hours</span><span class="p">,</span> <span class="s1">&#39;hour&#39;</span><span class="p">),</span> <span class="n">number_unit</span><span class="p">(</span><span class="n">minutes</span><span class="p">,</span> <span class="s1">&#39;minute&#39;</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">number_unit</span><span class="p">(</span><span class="n">hours</span><span class="p">,</span> <span class="s1">&#39;hour&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">minutes</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">seconds</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">number_unit</span><span class="p">(</span><span class="n">minutes</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;minute&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">number_unit</span><span class="p">(</span><span class="n">minutes</span><span class="p">,</span> <span class="s1">&#39;minute&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">seconds</span> <span class="o">&gt;</span> <span class="mi">30</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;less than a minute&#39;</span>
+    <span class="k">elif</span> <span class="n">seconds</span> <span class="o">&gt;</span> <span class="mi">15</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;less than 30 seconds&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">number_unit</span><span class="p">(</span><span class="n">seconds</span><span class="p">,</span> <span class="s1">&#39;second&#39;</span><span class="p">)</span></div>
 
+
+<div class="viewcode-block" id="readable_timedelta"><a class="viewcode-back" href="../../../api/wte_helpers_frontend.html#wte.helpers.frontend.readable_timedelta">[docs]</a><span class="k">def</span> <span class="nf">readable_timedelta</span><span class="p">(</span><span class="n">delta</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts a :class:`datetime.timedelta` into a human-readable string.</span>
+
+<span class="sd">    :param delta: The time-delta to convert</span>
+<span class="sd">    :type delta: :class:`datetime.timedelta`</span>
+<span class="sd">    :return: The human-readable string representation of the ``delta``</span>
+<span class="sd">    :rtype: :func:`unicode`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">delta</span><span class="o">.</span><span class="n">days</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">delta</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">delta</span><span class="p">)</span>
         <span class="k">return</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> ago&#39;</span> <span class="o">%</span> <span class="n">time_string</span><span class="p">(</span><span class="n">delta</span><span class="o">.</span><span class="n">days</span><span class="p">,</span>
@@ -289,6 +296,24 @@
                                      <span class="s1">&#39;task&#39;</span><span class="p">:</span> <span class="s1">&#39;_task.html&#39;</span><span class="p">},</span>
                  <span class="s1">&#39;text_only&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;page&#39;</span><span class="p">:</span> <span class="s1">&#39;_page.html&#39;</span><span class="p">,</span>
                                <span class="s1">&#39;task&#39;</span><span class="p">:</span> <span class="s1">&#39;_task.html&#39;</span><span class="p">}}</span>
+
+
+<div class="viewcode-block" id="split_seconds"><a class="viewcode-back" href="../../../api/wte_helpers_frontend.html#wte.helpers.frontend.split_seconds">[docs]</a><span class="k">def</span> <span class="nf">split_seconds</span><span class="p">(</span><span class="n">seconds</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts a time in seconds into a ``(days, hours, minutes, seconds)``</span>
+<span class="sd">    tuple for use in :func:`~wte.helpers.frontend.time_string`.</span>
+
+<span class="sd">    :param seconds: The time in seconds to split</span>
+<span class="sd">    :type seconds: ``int``</span>
+<span class="sd">    :return: A tuple ``(days, hours, minutes, seconds)``</span>
+<span class="sd">    :rtype: ``tuple``</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">days</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">seconds</span> <span class="o">/</span> <span class="p">(</span><span class="mi">3600</span> <span class="o">*</span> <span class="mi">24</span><span class="p">))</span>
+    <span class="n">seconds</span> <span class="o">=</span> <span class="n">seconds</span> <span class="o">%</span> <span class="p">(</span><span class="mi">3600</span> <span class="o">*</span> <span class="mi">24</span><span class="p">)</span>
+    <span class="n">hours</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">seconds</span> <span class="o">/</span> <span class="mi">3600</span><span class="p">)</span>
+    <span class="n">seconds</span> <span class="o">=</span> <span class="n">seconds</span> <span class="o">%</span> <span class="mi">3600</span>
+    <span class="n">minutes</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">seconds</span> <span class="o">/</span> <span class="mi">60</span><span class="p">)</span>
+    <span class="n">seconds</span> <span class="o">=</span> <span class="n">seconds</span> <span class="o">%</span> <span class="mi">60</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">days</span><span class="p">,</span> <span class="n">hours</span><span class="p">,</span> <span class="n">minutes</span><span class="p">,</span> <span class="n">seconds</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="template_for_part"><a class="viewcode-back" href="../../../api/wte_helpers_frontend.html#wte.helpers.frontend.template_for_part">[docs]</a><span class="k">def</span> <span class="nf">template_for_part</span><span class="p">(</span><span class="n">part</span><span class="p">):</span>

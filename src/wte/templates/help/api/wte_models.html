@@ -48,7 +48,7 @@ assets, templates, and files.</p>
 
 <dl class="data">
 <dt id="wte.models.DB_VERSION">
-<code class="descclassname">wte.models.</code><code class="descname">DB_VERSION</code><em class="property"> = '1d79e6b04177'</em><a class="headerlink" href="#wte.models.DB_VERSION" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">wte.models.</code><code class="descname">DB_VERSION</code><em class="property"> = '3ff51ab70eba'</em><a class="headerlink" href="#wte.models.DB_VERSION" title="Permalink to this definition">¶</a></dt>
 <dd><p>The currently required database version.</p>
 </dd></dl>
 
@@ -325,6 +325,9 @@ progress in</li>
 <li><code class="docutils literal"><span class="pre">user_id</span></code> &#8211; The unique identifier of the <code class="xref py py-class docutils literal"><span class="pre">User</span></code></li>
 <li><code class="docutils literal"><span class="pre">user</span></code> &#8211; The <code class="xref py py-class docutils literal"><span class="pre">User</span></code> for which this represents the
 progress</li>
+<li><code class="docutils literal"><span class="pre">visited</span></code> &#8211; A <code class="xref py py-class docutils literal"><span class="pre">MutableDict</span></code> via a
+<code class="xref py py-class docutils literal"><span class="pre">JSONUnicodeText</span></code> that stores information on the visited child
+<a class="reference internal" href="#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a>s.</li>
 </ul>
 <dl class="method">
 <dt id="wte.models.UserPartProgress.allow">

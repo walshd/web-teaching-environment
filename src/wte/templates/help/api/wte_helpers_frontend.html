@@ -138,6 +138,12 @@ spaces and full-stops.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="wte.helpers.frontend.lt">
+<code class="descclassname">wte.helpers.frontend.</code><code class="descname">lt</code><span class="sig-paren">(</span><em>a</em>, <em>b</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/helpers/frontend.html#lt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.helpers.frontend.lt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function that checks if <code class="docutils literal"><span class="pre">a</span></code> is less than <code class="docutils literal"><span class="pre">b</span></code>.</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="wte.helpers.frontend.natural_list">
 <code class="descclassname">wte.helpers.frontend.</code><code class="descname">natural_list</code><span class="sig-paren">(</span><em>items</em>, <em>separator='</em>, <em>'</em>, <em>final_separator=' &amp; '</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/helpers/frontend.html#natural_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.helpers.frontend.natural_list" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a string representation of the <code class="docutils literal"><span class="pre">items</span></code> list. For an empty list
@@ -207,6 +213,25 @@ by <a class="reference internal" href="wte_util.html#wte.util.ordered_counted_se
 </dd></dl>
 
 <dl class="function">
+<dt id="wte.helpers.frontend.split_seconds">
+<code class="descclassname">wte.helpers.frontend.</code><code class="descname">split_seconds</code><span class="sig-paren">(</span><em>seconds</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/helpers/frontend.html#split_seconds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.helpers.frontend.split_seconds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a time in seconds into a <code class="docutils literal"><span class="pre">(days,</span> <span class="pre">hours,</span> <span class="pre">minutes,</span> <span class="pre">seconds)</span></code>
+tuple for use in <a class="reference internal" href="#wte.helpers.frontend.time_string" title="wte.helpers.frontend.time_string"><code class="xref py py-func docutils literal"><span class="pre">time_string()</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>seconds</strong> (<code class="docutils literal"><span class="pre">int</span></code>) &#8211; The time in seconds to split</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A tuple <code class="docutils literal"><span class="pre">(days,</span> <span class="pre">hours,</span> <span class="pre">minutes,</span> <span class="pre">seconds)</span></code></td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal"><span class="pre">tuple</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="wte.helpers.frontend.template_for_part">
 <code class="descclassname">wte.helpers.frontend.</code><code class="descname">template_for_part</code><span class="sig-paren">(</span><em>part</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/helpers/frontend.html#template_for_part"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.helpers.frontend.template_for_part" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the correct partial template path for a given
@@ -221,6 +246,33 @@ by <a class="reference internal" href="wte_util.html#wte.util.ordered_counted_se
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The partial template path or <code class="docutils literal"><span class="pre">None</span></code></td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return_type:</th><td class="field-body"><code class="docutils literal"><span class="pre">string</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.helpers.frontend.time_string">
+<code class="descclassname">wte.helpers.frontend.</code><code class="descname">time_string</code><span class="sig-paren">(</span><em>days</em>, <em>hours</em>, <em>minutes</em>, <em>seconds</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/helpers/frontend.html#time_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.helpers.frontend.time_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts the <code class="docutils literal"><span class="pre">days</span></code>, <code class="docutils literal"><span class="pre">hours</span></code>, <code class="docutils literal"><span class="pre">minutes</span></code>, and <code class="docutils literal"><span class="pre">seconds</span></code> into
+a human-readable format.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>days</strong> (<code class="xref py py-func docutils literal"><span class="pre">int()</span></code>) &#8211; The number of days to the timestamp</li>
+<li><strong>hours</strong> (<code class="xref py py-func docutils literal"><span class="pre">int()</span></code>) &#8211; The number of hours to the timestamp</li>
+<li><strong>minutes</strong> (<code class="xref py py-func docutils literal"><span class="pre">int()</span></code>) &#8211; The number of minutes to the timestamp</li>
+<li><strong>seconds</strong> (<code class="xref py py-func docutils literal"><span class="pre">int()</span></code>) &#8211; The number of seconds to the timestamp</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The human-readable representation</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="http://docs.python.org/library/functions.html#unicode" title="(in Python v2.7)"><code class="xref py py-func docutils literal"><span class="pre">unicode()</span></code></a></p>
+</td>
 </tr>
 </tbody>
 </table>

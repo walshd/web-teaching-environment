@@ -739,7 +739,7 @@ def preview(request):
         if part.allow('edit', request.current_user):
             if 'content' in request.params:
                 try:
-                    content = compile_rst(request.params['content'], request, part=part)
+                    content = compile_rst(request.params['content'], request, part=part, line_numbers=True)
                 except Exception as e:
                     content = ['<div class="callout alert"><p>']
                     for line in e.message.split('\n'):

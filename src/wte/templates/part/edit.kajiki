@@ -204,19 +204,23 @@
     
     // Keyboard shortcuts
     $('#editor').on('keydown', function(ev) {
-        if(ev.key && ev.ctrlKey) {
-            if(ev.key.toLowerCase() == 'b') {
-                ev.preventDefault();
-                wrapText('**');
-            } else if(ev.key.toLowerCase() == 'i') {
-                ev.preventDefault();
-                wrapText('*');
-            } else if(ev.key.toLowerCase() == 'h') {
-                ev.preventDefault();
-                wrapText('``');
-            } else if(ev.key.toLowerCase() == 's') {
-            	ev.preventDefault();
-            	save();
+        if(ev.key) {
+            if(ev.ctrlKey) {
+                if(ev.key.toLowerCase() == 'b') {
+                    ev.preventDefault();
+                    wrapText('**');
+                } else if(ev.key.toLowerCase() == 'i') {
+                    ev.preventDefault();
+                    wrapText('*');
+                } else if(ev.key.toLowerCase() == 'h') {
+                    ev.preventDefault();
+                    wrapText('``');
+                } else if(ev.key.toLowerCase() == 's') {
+                    ev.preventDefault();
+                    save();
+                }
+            } else if (ev.keyCode >= 37 && ev.keyCode <= 40) {
+                scroll_viewer_to_selection();
             }
         }
     });
@@ -228,7 +232,7 @@
             type: 'POST'
         }).success(function(data) {
             $('#textbook').html(data.content + '<div style="margin-bottom: ' + height + 'px">&nbsp;</div>');
-            //$('#textbook').scrollTop($('#textbook').scrollTop() + $('#focus').position().top - (height - 80) / 2);
+            scroll_viewer_to_selection()
             MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
         });
     }
@@ -266,6 +270,55 @@
         ev.preventDefault();
         var pos = cm.getCursor();
         cm.replaceRange(':' + $(this).parent().parent().data('rest-directive') + ':`' + $(this).data('cm-insert') + '`', pos, pos);
+    });
+    
+    // Editor - Viewer position synchronisation
+    $('#textbook').on('click', '*', function(ev) {
+        var element = $(this);
+        if(element.data('source-ln')) {
+            ev.stopImmediatePropagation();
+            cm.setCursor({
+                line: element.data('source-ln') - 1,
+                ch: 0
+            });
+            cm.focus();
+        }
+    });
+    function scroll_viewer_to_selection(highlight) {
+        var lineno = cm.getCursor().line + 1;
+        var children = $('#textbook').find('*[data-source-ln]');
+        var focus = undefined;
+        for(var idx = 0; idx < children.length; idx++) {
+            var child = $(children[idx]);
+            var sourceln = child.data('source-ln');
+            if(sourceln == lineno) {
+                focus = child;
+                break;
+            } else if(sourceln > lineno) {
+                if(idx == 0) {
+                    focus = child;
+                } else {
+                    focus = $(children[idx - 1]);
+                }
+                break;
+            }
+        }
+        if(focus) {
+            $('#textbook').scrollTop($('#textbook').scrollTop() + focus.position().top - (height - 80) / 2);
+            if(highlight) {
+                focus.addClass('focus-highlight');
+                setTimeout(function() {
+                    focus.removeClass('focus-highlight');
+                }, 500);
+            }
+        }
+    }
+    cm.on('mousedown', function(_, ev) {
+        if(ev.ctrlKey) {
+            setTimeout(function() {
+                scroll_viewer_to_selection(true);
+            }, 10);
+        }
     });
     ]]>
     </script>

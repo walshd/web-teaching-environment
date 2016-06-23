@@ -70,6 +70,8 @@ def generate_custom_styling(args):
     with open(resource_filename('wte', 'static/scss/application/_pygments.scss'), 'w') as out_f:
         out_f.write('/* Any changes made here will be automatically overwritten */\n')
         out_f.write(formatters.HtmlFormatter(style=pygments_style).get_style_defs())
+        out_f.write('\n.lineno {color: $dark-gray; margin-right: 1rem; border-right: 1px solid $medium-gray; ' +
+                    'line-height: 1.3rem; display: inline-block;}\n')
 
     # Create the CodeMirror theme partial
     codemirror_theme = None

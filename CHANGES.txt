@@ -18,6 +18,7 @@ DEV
 - *NEW*: Re-worked the registration and forgotten password to use random tokens
 - *NEW*: Support for quizzes
 - *NEW*: Support for capturing time spent on pages (#31)
+- *NEW*: Automatic linking between editor and preview (#29)
 - *UPDATE*: Use Kajiki as the rendering engine (#49)
 - *UPDATE*: Improve caching of permission lookups (#49)
 - *UPDATE*: The :asset: directive now automatically searches in all parent parts

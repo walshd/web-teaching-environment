@@ -36,14 +36,15 @@
 <span class="kn">import</span> <span class="nn">re</span>
 
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
-<span class="kn">from</span> <span class="nn">pywebtools.pyramid.auth.models</span> <span class="kn">import</span> <span class="n">Base</span><span class="p">,</span> <span class="n">User</span>
+<span class="kn">from</span> <span class="nn">pywebtools.sqlalchemy</span> <span class="kn">import</span> <span class="n">Base</span><span class="p">,</span> <span class="n">JSONUnicodeText</span><span class="p">,</span> <span class="n">MutableDict</span>
+<span class="kn">from</span> <span class="nn">pywebtools.pyramid.auth.models</span> <span class="kn">import</span> <span class="n">User</span>
 <span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Column</span><span class="p">,</span> <span class="n">Index</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">,</span> <span class="n">Integer</span><span class="p">,</span> <span class="n">Unicode</span><span class="p">,</span>
                         <span class="n">UnicodeText</span><span class="p">,</span> <span class="n">Table</span><span class="p">,</span> <span class="n">LargeBinary</span><span class="p">,</span> <span class="n">DateTime</span><span class="p">,</span> <span class="n">Boolean</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">sqlalchemy.orm</span> <span class="kn">import</span> <span class="p">(</span><span class="n">relationship</span><span class="p">,</span> <span class="n">backref</span><span class="p">)</span>
 
 <span class="kn">from</span> <span class="nn">wte.helpers.frontend</span> <span class="kn">import</span> <span class="n">confirm_delete</span><span class="p">,</span> <span class="n">MenuBuilder</span><span class="p">,</span> <span class="n">confirm_action</span>
 
-<span class="n">DB_VERSION</span> <span class="o">=</span> <span class="s1">&#39;1d79e6b04177&#39;</span>
+<span class="n">DB_VERSION</span> <span class="o">=</span> <span class="s1">&#39;3ff51ab70eba&#39;</span>
 <span class="sd">&quot;&quot;&quot;The currently required database version.&quot;&quot;&quot;</span>
 
 
@@ -68,7 +69,7 @@
     <span class="n">part_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;parts.id&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;users_parts_part_id_fk&#39;</span><span class="p">))</span>
     <span class="n">role</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Unicode</span><span class="p">(</span><span class="mi">255</span><span class="p">))</span>
 
-    <span class="n">user</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="n">User</span><span class="p">)</span>
+    <span class="n">user</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="n">User</span><span class="p">,</span> <span class="n">backref</span><span class="o">=</span><span class="n">backref</span><span class="p">(</span><span class="s1">&#39;roles&#39;</span><span class="p">))</span>
     <span class="n">part</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">&#39;Part&#39;</span><span class="p">)</span></div>
 
 
@@ -449,6 +450,9 @@
 <span class="sd">    * ``user_id`` -- The unique identifier of the :class:`~wte.models.User`</span>
 <span class="sd">    * ``user`` -- The :class:`~wte.models.User` for which this represents the</span>
 <span class="sd">      progress</span>
+<span class="sd">    * ``visited`` -- A :class:`~pywebtools.sqlalchemy.MutableDict` via a</span>
+<span class="sd">      :class:`~pywebtools.sqlalchemy.JSONUnicodeText` that stores information on the visited child</span>
+<span class="sd">      :class:`~wte.models.Part`\ s.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">__tablename__</span> <span class="o">=</span> <span class="s1">&#39;user_part_progress&#39;</span>
@@ -457,6 +461,7 @@
     <span class="n">user_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;user_part_progress_user_id_fk&#39;</span><span class="p">))</span>
     <span class="n">part_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="n">Part</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;user_part_progress_part_id_fk&#39;</span><span class="p">))</span>
     <span class="n">current_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="n">Part</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;user_part_progress_current_id_fk&#39;</span><span class="p">))</span>
+    <span class="n">visited</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">MutableDict</span><span class="o">.</span><span class="n">as_mutable</span><span class="p">(</span><span class="n">JSONUnicodeText</span><span class="p">))</span>
 
     <span class="n">user</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">&#39;User&#39;</span><span class="p">)</span>
     <span class="n">part</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">&#39;Part&#39;</span><span class="p">,</span> <span class="n">foreign_keys</span><span class="o">=</span><span class="p">[</span><span class="n">part_id</span><span class="p">])</span>

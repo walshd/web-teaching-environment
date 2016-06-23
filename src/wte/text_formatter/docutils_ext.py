@@ -41,32 +41,6 @@ def init(settings):
     setattr(HTMLTranslator, 'depart_%s' % HtmlElementBlock.__name__, depart_htmlelementblock)
 
 
-class HtmlTitleFormatter(HtmlFormatter):
-    """The :class:`~wte.text_formatter.docutils_ext.HtmlTitleFormatter` is
-    an extension of :class:`pygments.formatters.HtmlFormatter` that supports
-    adding the optional language name and filename to the top of the code
-    block.
-    """
-    def __init__(self, language=None, filename=None, **kwargs):
-        HtmlFormatter.__init__(self, **kwargs)
-        self.language = language
-        self.filename = filename
-
-    def wrap(self, source, outfile):
-        return self._wrap_code(source)
-
-    def _wrap_code(self, source):
-        yield 0, '<div class="source panel %s">' % (self.language.replace(' ', '') if self.language else '')
-        if self.language:
-            yield 0, '<div class="title"><span class="main">%s</span>' % (self.language)
-            if self.filename:
-                yield 0, '<span class="filename">%s</span>' % (self.filename)
-            yield 0, '</div><pre>'
-        for i, t in source:
-            yield i, t
-        yield 0, '</pre></div>'
-
-
 def flag_bool_option(value):
     """Options conversion function for ReST
     :class:`~docutils.parser.rst.Directive` that returns ``True`` if the
@@ -76,6 +50,48 @@ def flag_bool_option(value):
         return True
     else:
         return False
+
+
+class HtmlElementBlock(nodes.General, nodes.Element):
+    """The :class:`~wte.text_formatter.docutils_ext.HtmlElementBlock` is a docutils node
+    for generating arbitrary HTML elements.
+
+    The HTML element to generate can be configured by setting ``html_element`` on the node.
+    HTML attributes can be configured by setting the ``html_attributes`` property on the node,
+    which must be set to a ``dict``.
+    """
+
+    def __init__(self, rawsource, *children, html_element=None, html_attributes=None, **kwargs):
+        nodes.Element.__init__(self, rawsource, *children, **kwargs)
+        if html_element:
+            self.html_element = html_element
+        if html_attributes:
+            self.html_attributes = html_attributes
+
+
+def visit_htmlelementblock(self, node):
+    """Visitor for the :class:`~wte.text_formatter.docutils_ext.HtmlElementBlock` to generate
+    the actual HTML output.
+    """
+    if hasattr(node, 'html_element'):
+        element_name = node.html_element
+    else:
+        element_name = 'div'
+    if hasattr(node, 'html_attributes'):
+        attrs = node.html_attributes
+    else:
+        attrs = {}
+    self.body.append(self.starttag(node, element_name, **attrs))
+
+
+def depart_htmlelementblock(self, node):
+    """Visitor exit for the :class:`~wte.text_formatter.docutils_ext.HtmlElementBlock`.
+    """
+    if hasattr(node, 'html_element'):
+        element_name = node.html_element
+    else:
+        element_name = 'div'
+    self.body.append('</%s>\n' % element_name)
 
 
 class Pygments(Directive):
@@ -127,16 +143,22 @@ class Pygments(Directive):
         except ValueError:
             # no lexer found - use the text one instead of an exception
             lexer = TextLexer()
-        # take an arbitrary option if more than one is given
-        formatter = HtmlTitleFormatter(language=lexer.name,
-                                       filename=self.options['filename'] if 'filename' in self.options else None,
-                                       noclasses=False,
-                                       style='native',
-                                       cssclass='source %s' % (lexer.name),
-                                       linenos='inline' if 'linenos' in self.options else False,
-                                       linenostart=self.options['linenos'] if 'linenos' in self.options else 1)
+        formatter = HtmlFormatter(noclasses=False,
+                                  style='native',
+                                  linenos='inline' if 'linenos' in self.options else False,
+                                  linenostart=self.options['linenos'] if 'linenos' in self.options else 1)
         parsed = highlight('\n'.join(self.content), lexer, formatter)
-        return [nodes.raw('', parsed, format='html')]
+        source = HtmlElementBlock('', html_attributes={'class': 'source panel %s' % lexer.name})
+        if self.lineno:
+            source.line = self.lineno
+        title = HtmlElementBlock('',
+                                 nodes.inline(lexer.name, lexer.name, classes=['main']),
+                                 html_attributes={'class': 'title'})
+        if 'filename' in self.options:
+            title.append(nodes.inline(self.options['filename'], self.options['filename'], classes=['filename']))
+        source.append(title)
+        source.append(nodes.raw('\n'.join(self.content), parsed, format='html'))
+        return [source]
 
 
 YOUTUBE_BASE_TEMPLATE = '<iframe width="560" height="315" ' + \
@@ -154,7 +176,10 @@ class YouTube(Directive):
     required_arguments = 1
 
     def run(self):
-        return [nodes.raw('', YOUTUBE_BASE_TEMPLATE % (self.arguments[0]), format='html')]
+        youtube = HtmlElementBlock('', nodes.raw('', YOUTUBE_BASE_TEMPLATE % (self.arguments[0]), format='html'))
+        if self.lineno:
+            youtube.line = self.lineno
+        return [youtube]
 
 
 CROSSREF_PATTERN = re.compile(r'([0-9]+)|(?:(.*)<([0-9]+)>)')
@@ -288,42 +313,6 @@ def inline_css_role(name, rawtext, text, lineno, inliner, options={}, content=[]
     return result, messages
 
 
-class HtmlElementBlock(nodes.General, nodes.Element):
-    """The :class:`~wte.text_formatter.docutils_ext.HtmlElementBlock` is a docutils node
-    for generating arbitrary HTML elements.
-
-    The HTML element to generate can be configured by setting ``html_element`` on the node.
-    HTML attributes can be configured by setting the ``html_attributes`` property on the node,
-    which must be set to a ``dict``.
-    """
-    pass
-
-
-def visit_htmlelementblock(self, node):
-    """Visitor for the :class:`~wte.text_formatter.docutils_ext.HtmlElementBlock` to generate
-    the actual HTML output.
-    """
-    if hasattr(node, 'html_element'):
-        element_name = node.html_element
-    else:
-        element_name = 'div'
-    if hasattr(node, 'html_attributes'):
-        attrs = node.html_attributes
-    else:
-        attrs = {}
-    self.body.append(self.starttag(node, element_name, **attrs))
-
-
-def depart_htmlelementblock(self, node):
-    """Visitor exit for the :class:`~wte.text_formatter.docutils_ext.HtmlElementBlock`.
-    """
-    if hasattr(node, 'html_element'):
-        element_name = node.html_element
-    else:
-        element_name = 'div'
-    self.body.append('</%s>\n' % element_name)
-
-
 class Quiz(Directive):
     """The :class:`~wte.text_formatter.docutils_ext.Quiz` is a directive to generate
     the outer wrapper for an in-part quiz. It takes a single required parameter that
@@ -351,30 +340,23 @@ class Quiz(Directive):
         node = nodes.Element()
         node.document = self.state.document
         self.state.nested_parse(self.content, self.content_offset, node)
-        quiz = HtmlElementBlock()
-        quiz.html_element = 'form'
-        quiz.html_attributes = {'class': 'quiz',
-                                'action': '',
-                                'data-quiz-id': self.arguments[0]}
+        quiz = HtmlElementBlock('', html_element='form', html_attributes={'class': 'quiz',
+                                                                          'action': '',
+                                                                          'data-quiz-id': self.arguments[0]})
         if 'title' in self.options:
-            heading = HtmlElementBlock()
-            heading.html_attributes = {'class': 'title'}
-            heading.append(nodes.paragraph(self.options['title'], self.options['title']))
+            heading = HtmlElementBlock('',
+                                       nodes.paragraph(self.options['title'], self.options['title']),
+                                       html_attributes={'class': 'title'})
             quiz.append(heading)
         quiz.extend(node)
-        buttons = HtmlElementBlock()
-        buttons.html_attributes = {'class': 'text-right'}
-        clear_button = HtmlElementBlock()
-        clear_button.html_element = 'input'
-        clear_button.html_attributes = {'type': 'reset',
-                                        'value': 'Clear Answers',
-                                        'class': 'button secondary'}
+        buttons = HtmlElementBlock('', html_attributes={'class': 'text-right'})
+        clear_button = HtmlElementBlock('', html_element='input', html_attributes={'type': 'reset',
+                                                                                   'value': 'Clear Answers',
+                                                                                   'class': 'button secondary'})
         buttons.append(clear_button)
-        submit_button = HtmlElementBlock()
-        submit_button.html_element = 'input'
-        submit_button.html_attributes = {'type': 'submit',
-                                         'value': 'Check Answers',
-                                         'class': 'button'}
+        submit_button = HtmlElementBlock('', html_element='input', html_attributes={'type': 'submit',
+                                                                                    'value': 'Check Answers',
+                                                                                    'class': 'button'})
         buttons.append(submit_button)
         quiz.append(buttons)
         return [quiz]
@@ -406,27 +388,28 @@ class QuizQuestion(Directive):
     has_content = True
 
     def run(self):
-        question = HtmlElementBlock()
-        question.html_element = 'section'
-        question.html_attributes = {'class': 'question',
-                                    'data-question-id': self.arguments[0],
-                                    'data-answers': json.dumps([a.replace('[x]', '').strip()
-                                                                for a in self.content if '[x]' in a])}
+        question = HtmlElementBlock('',
+                                    html_element='section',
+                                    html_attributes={'class': 'question',
+                                                     'data-question-id': self.arguments[0],
+                                                     'data-answers': json.dumps([a.replace('[x]', '').strip()
+                                                                                 for a in self.content
+                                                                                 if '[x]' in a])})
         if 'question' in self.options:
-            heading = HtmlElementBlock()
-            heading.html_attributes = {'class': 'title'}
-            heading.append(nodes.paragraph(self.options['question'], self.options['question']))
+            heading = HtmlElementBlock('',
+                                       nodes.paragraph(self.options['question'], self.options['question']),
+                                       html_attributes={'class': 'title'})
             question.append(heading)
         for answer_source in self.content:
             answer_source = answer_source.replace('[x]', '').strip()
-            answer = HtmlElementBlock()
-            answer.html_element = 'label'
-            input_element = HtmlElementBlock()
-            input_element.html_element = 'input'
-            input_element.html_attributes = {'type': 'radio' if 'type' not in self.options or
-                                             self.options['type'] == 'single-choice' else 'checkbox',
-                                             'value': answer_source,
-                                             'name': self.arguments[0]}
+            answer = HtmlElementBlock('', html_element='label')
+            input_element = HtmlElementBlock('',
+                                             html_element='input',
+                                             html_attributes={'type': 'radio' if 'type' not in self.options or
+                                                              self.options['type'] == 'single-choice'
+                                                              else 'checkbox',
+                                                              'value': answer_source,
+                                                              'name': self.arguments[0]})
             answer.append(input_element)
             answer.append(nodes.inline(answer_source, answer_source))
             question.append(answer)

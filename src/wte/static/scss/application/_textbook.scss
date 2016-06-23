@@ -3,6 +3,11 @@
  */
 #textbook {
     padding-right: $global-padding;
+    
+    .focus-highlight {
+        background: scale-color(map-get($foundation-palette, warning), $lightness: 85%);
+        transition: background 0.4s;
+    }
 }
 
 .textbook {

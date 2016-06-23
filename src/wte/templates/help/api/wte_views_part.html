@@ -560,8 +560,10 @@ handler):</p>
 &#8211; <a class="reference internal" href="#wte.views.part.download" title="wte.views.part.download"><code class="xref py py-func docutils literal"><span class="pre">download()</span></code></a></li>
 <li><code class="docutils literal"><span class="pre">part.reset-files</span></code> &#8211; <code class="docutils literal"><span class="pre">/parts/{pid}/reset_files</span></code> &#8211;
 <a class="reference internal" href="#wte.views.part.reset_files" title="wte.views.part.reset_files"><code class="xref py py-func docutils literal"><span class="pre">reset_files()</span></code></a></li>
-<li><code class="docutils literal"><span class="pre">part.progress.download</span></code> &#8211; <code class="docutils literal"><span class="pre">/users/{uid}/progress/{pid}/download</span></code>
-&#8211; <code class="xref py py-func docutils literal"><span class="pre">download_part_progress()</span></code></li>
+<li><code class="docutils literal"><span class="pre">part.progress.download</span></code> &#8211; <code class="docutils literal"><span class="pre">/parts/{pid}/progress/download</span></code>
+&#8211; <a class="reference internal" href="#wte.views.part.download_part_progress" title="wte.views.part.download_part_progress"><code class="xref py py-func docutils literal"><span class="pre">download_part_progress()</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">part.progress.update</span></code> &#8211; <code class="docutils literal"><span class="pre">/parts/{pid}/progress/update</span></code>
+&#8211; <a class="reference internal" href="#wte.views.part.update_part_progress" title="wte.views.part.update_part_progress"><code class="xref py py-func docutils literal"><span class="pre">update_part_progress()</span></code></a></li>
 </ul>
 </dd></dl>
 
@@ -622,6 +624,16 @@ the UI and backend for resetting all <code class="xref py py-class docutils lite
 <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a> for matches to the request parameter &#8216;q&#8217;.
 Returns all <a class="reference internal" href="wte_models.html#wte.models.Part" title="wte.models.Part"><code class="xref py py-class docutils literal"><span class="pre">Part</span></code></a> that the current user is
 allowed to view.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wte.views.part.update_part_progress">
+<code class="descclassname">wte.views.part.</code><code class="descname">update_part_progress</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/part.html#update_part_progress"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.part.update_part_progress" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles the <code class="docutils literal"><span class="pre">/users/{uid}/progress/{pid}/download</span></code>
+URL, sending back the complete set of data associated with the
+<a class="reference internal" href="wte_models.html#wte.models.UserPartProgress" title="wte.models.UserPartProgress"><code class="xref py py-class docutils literal"><span class="pre">UserPartProgress</span></code></a>.</p>
+<p>Requires that the user has &#8220;view&#8221; rights on the
+<a class="reference internal" href="wte_models.html#wte.models.UserPartProgress" title="wte.models.UserPartProgress"><code class="xref py py-class docutils literal"><span class="pre">UserPartProgress</span></code></a>.</p>
 </dd></dl>
 
 <dl class="function">
