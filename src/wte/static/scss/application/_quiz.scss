@@ -52,23 +52,4 @@
             background: #ec5840;
         }
     }
-    
-    .overview-bar {
-        @include progress-container;
-        
-        .stat {
-            @include progress-meter;
-            float: left;
-            
-            &.correct {
-                background: #3adb76;
-            }
-            &.partial {
-                background: #ffae00;
-            }
-            &.incorrect {
-                background: #ec5840;
-            }
-        }
-    }
 }

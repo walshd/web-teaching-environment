@@ -5,17 +5,41 @@
   </py:block>
   <py:block name="content">
     <py:import href="pywebtools:kajiki/menu.kajiki" alias="menu"/>
-    <?py from wte.helpers.frontend import set_list, inflector ?>
+    <?py from wte.helpers.frontend import set_list, inflector, split_seconds, time_string, lt ?>
     <div class="float-right">${menu.menubar(part.menu(request))}</div>
     <h1>${part.title} <small py:if="part.status != 'available'" class="label">${part.status.title()}</small></h1>
     <py:if test="part.has_role('student', request.current_user)">
       <div class="row">
         <div class="column small-12 medium-6">
           <div class="rest">${literal(part.compiled_content)}</div>
-          <a py:if="not progress.current and progress.part.children" href="${request.route_url('part.view', pid=progress.part.children[0].id)}" class="button small">Follow the ${part.label.title() if part.label else 'Part'}</a>
-          <a py:if="progress.current" href="${request.route_url('part.view', pid=progress.current.id)}" class="button small">Continue the ${part.label.title() if part.label else 'Part'}</a>
+          <py:if test="len([c for c in part.children if c.allow('view', request.current_user)]) != 0">
+            <py:if test="progress.current">
+              <a href="${request.route_url('part.view', pid=progress.current.id)}" class="button">Continue the ${part.label.title() if part.label else 'Part'} where you left off</a>
+              <p>or jump to</p>
+              <form id="student-jump-part" class="input-group">
+                <select class="input-group-field">
+                  <option py:for="child in part.children" py:if="child.allow('view', request.current_user) and str(child.id) in progress.visited" value="${request.route_url('part.view', pid=child.id)}" py:attrs="{'selected': 'selected' if child.id == progress.current.id else None}">${child.title}</option>
+                </select>
+                <div class="input-group-button">
+                  <input type="submit" value="Go" class="button"/>
+                </div>
+              </form>
+            </py:if><py:else>
+              <a href="${request.route_url('part.view', pid=progress.part.children[0].id)}" class="button small">Take the ${part.label.title() if part.label else 'Part'}</a>
+            </py:else>
+          </py:if>
         </div>
         <aside class="column small-12 medium-5">
+          <section py:if="len([c for c in part.children if c.allow('view', request.current_user)]) != 0">
+            <h3>Progress</h3>
+            <div class="progress" role="progressbar" aria-valuenow="${len(progress.visited)}" aria-valuemin="0" aria-valuemax="${len([c for c in part.children if c.allow('view', request.current_user)])}">
+              <div class="progress-meter" style="width: ${100 * len(progress.visited) / len([c for c in part.children if c.allow('view', request.current_user)])}%"> </div>
+            </div>
+            <py:if test="stats['visited'] != 0">
+              <p>You have so far spent ${time_string(*split_seconds(stats['time']))} on this ${part.label if part.label else 'part'} and completed ${stats['visited']} out of ${len([c for c in part.children if c.allow('view', request.current_user)])} ${inflector.plural('page', len([c for c in part.children if c.allow('view', request.current_user)]))}.</p>
+              <p py:if="stats['time'] != 0 and lt(stats['time'] / stats['visited'], 20)" class="callout warning">You seem to be going through this ${part.label if part.label else 'part'} rather fast. Make sure you actually read the ${part.label if part.label else 'part'} content in detail and follow the instructions.</p>
+            </py:if>
+          </section>
           <section py:if="quizzes" class="quiz-stats">
             <h3>Quizzes</h3>
             <section py:for="quiz in quizzes">
@@ -81,6 +105,41 @@
           </section>
         </div>
         <aside class="column small-12 medium-5">
+          <section py:if="stats">
+            <h3>Statistics</h3>
+            <py:if test="'students' in stats">
+              <div class="partial-progress">
+                <div class="progress-meter complete" style="width: ${100 * stats['students']['completed'] / stats['students']['total']}%"> </div>
+                <div class="progress-meter partial" style="width: ${100 * stats['students']['inprogress'] / stats['students']['total']}%"> </div>
+              </div>
+              <p py:if="stats['students']['completed'] == stats['students']['total']">All students have completed this tutorial.</p>
+              <p py:if="stats['students']['completed'] + stats['students']['inprogress'] == stats['students']['total']">Out of ${stats['students']['total']}
+                ${inflector.plural('student', stats['students']['total'])} in this module ${stats['students']['completed']} ${inflector.plural_verb('has', stats['students']['completed'])}
+                completed the tutorial and ${stats['students']['inprogress']} ${inflector.plural_verb('is', stats['students']['inprogress'])} part way through it</p>
+              <p py:if="stats['students']['completed'] + stats['students']['inprogress'] != stats['students']['total'] and stats['students']['completed'] + stats['students']['inprogress'] != 0">
+                Out of ${stats['students']['total']} ${inflector.plural('student', stats['students']['total'])} in this module ${stats['students']['completed']} ${inflector.plural_verb('has', stats['students']['completed'])}
+                completed the tutorial, ${stats['students']['inprogress']} ${inflector.plural_verb('is', stats['students']['inprogress'])} part way through it, and
+                ${stats['students']['total'] - stats['students']['completed'] - stats['students']['inprogress']} ${inflector.plural_verb('has', stats['students']['total'] - stats['students']['completed'] - stats['students']['inprogress'])} not yet started.</p>
+              <p py:if="stats['students']['completed'] + stats['students']['inprogress'] == 0">No students have started this tutorial yet.</p>
+            </py:if>
+            <table py:if="'time' in stats">
+              <caption>Time spent on this ${part.label.title() if part.label else 'Part'}</caption>
+              <tbody>
+                <tr>
+                  <th>1st Quartile</th>
+                  <td>${time_string(*split_seconds(stats['time'][25]))}</td>
+                </tr>
+                <tr>
+                  <th>Median</th>
+                  <td>${time_string(*split_seconds(stats['time'][25]))}</td>
+                </tr>
+                <tr>
+                  <th>3rd Quartile</th>
+                  <td>${time_string(*split_seconds(stats['time'][25]))}</td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
           <section py:if="quizzes" class="quiz-stats">
             <h3>${inflector.plural('Quiz', len(quizzes))}</h3>
             <section py:for="quiz in quizzes">
@@ -98,10 +157,9 @@
                   <tr py:for="question in quiz['questions']">
                     <td>${question['title']}</td>
                     <td>
-                      <div class="overview-bar"> 
-                        <div class="stat correct" style="width: ${100.0 * question['correct']['initial'] / question['correct']['total']}%" title="${question['correct']['initial']} correct answers"> </div>
-                        <div class="stat partial" style="width: ${100.0 * question['correct']['subsequent'] / question['correct']['total']}%" title="${question['correct']['subsequent']} correct answers after 2 or more attempts"> </div>
-                        <div class="stat incorrect" style="width: ${100.0 * question['correct']['incorrect'] / question['correct']['total']}%" title="${question['correct']['incorrect']} incorrect answers"> </div>
+                      <div class="partial-progress"> 
+                        <div class="progress-meter complete" style="width: ${100.0 * question['correct']['initial'] / question['correct']['total']}%" title="${question['correct']['initial']} correct answers"> </div>
+                        <div class="progress-meter partial" style="width: ${100.0 * question['correct']['subsequent'] / question['correct']['total']}%" title="${question['correct']['subsequent']} correct answers after 2 or more attempts"> </div>
                       </div>
                       <p>
                         <py:if test="question['correct']['initial'] + question['correct']['subsequent'] + question['correct']['incorrect'] != 0">${question['correct']['initial'] + question['correct']['subsequent'] + question['correct']['incorrect']} ${inflector.plural('answer', question['correct']['initial'] + question['correct']['subsequent'] + question['correct']['incorrect'])}, of which
@@ -129,6 +187,13 @@
       'check_url': '${request.route_url('quiz.check_answers', pid=part.id)}',
       'csrf_token': '${request.session.get_csrf_token()}'
   });
+  $('#student-jump-part').on('submit', function(ev) {
+      ev.preventDefault();
+      window.location.href = $(this).find('select').val();
+  });
+  $('#student-jump-part select').on('change', function() {
+      window.location.href = $(this).val();
+  })
   </script>
   </py:block>
 </py:extends>

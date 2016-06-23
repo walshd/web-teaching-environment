@@ -64,6 +64,7 @@
     }
 }
 
+/* Align all labels in headers to the top */
 h1 .label,
 h2 .label,
 h3 .label,
@@ -71,4 +72,9 @@ h4 .label,
 h5 .label,
 h6 .label {
     vertical-align: top;
+}
+
+/* Table heading cells in the table body should be left aligned. */
+tbody th {
+    text-align: left;
 }

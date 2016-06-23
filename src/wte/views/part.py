@@ -14,6 +14,7 @@ Routes are defined in :func:`~wte.views.part.init`.
 from nine import (IS_PYTHON2, str, native_str, nimport)  # Python 2.7 compatibility
 
 import formencode
+import math
 import json
 import re
 import transaction
@@ -74,8 +75,10 @@ def init(config):
       -- :func:`~wte.views.part.download`
     * ``part.reset-files`` -- ``/parts/{pid}/reset_files`` --
       :func:`~wte.views.part.reset_files`
-    * ``part.progress.download`` -- ``/users/{uid}/progress/{pid}/download``
-      -- :func:`~wte.views.frontend.download_part_progress`
+    * ``part.progress.download`` -- ``/parts/{pid}/progress/download``
+      -- :func:`~wte.views.part.download_part_progress`
+    * ``part.progress.update`` -- ``/parts/{pid}/progress/update``
+      -- :func:`~wte.views.part.update_part_progress`
     """
     config.add_route('part.list', '/parts')
     config.add_route('part.new', '/parts/new/{new_type}')
@@ -93,6 +96,7 @@ def init(config):
     config.add_route('part.download', '/parts/{pid}/download')
     config.add_route('part.reset-files', '/parts/{pid}/reset_files')
     config.add_route('part.progress.download', '/parts/{pid}/progress/download')
+    config.add_route('part.progress.update', '/parts/{pid}/progress/update')
 
 
 def get_user_part_progress(dbsession, user, part):
@@ -130,7 +134,11 @@ def get_user_part_progress(dbsession, user, part):
         with transaction.manager:
             dbsession.add(progress)
             dbsession.add(part)
+            if progress.visited is None:
+                progress.visited = {}
             if part.type == 'page':
+                if str(part.id) not in progress.visited:
+                    progress.visited[str(part.id)] = {'duration': 0}
                 templates = part.parent.templates
                 progress.current_id = part.id
             else:
@@ -234,6 +242,7 @@ def view_part(request):
                                         part,
                                         None)
             quizzes = []
+            stats = {}
             if part.type == 'page':
                 template_path = 'wte:templates/part/view/%s.kajiki' % part.parent.display_mode
                 if part.parent.display_mode == 'three_pane_html':
@@ -292,6 +301,40 @@ def view_part(request):
                                     else:
                                         question['correct']['incorrect'] = question['correct']['incorrect'] + 1
                 # End Quiz Summary Generation
+                # Stats Generation
+                if part.has_role('student', request.current_user):
+                    stats['visited'] = len(progress.visited)
+                    stats['time'] = sum([page['duration'] for page in progress.visited.values()])\
+                        if stats['visited'] > 0 else 0
+                else:
+                    progresses = dbsession.query(UserPartProgress).join(UserPartProgress.user, User.roles).\
+                        filter(and_(UserPartProgress.part_id == part.id,
+                                    UserPartRole.part_id == (part.parent_id if part.type == 'part' else part.id),
+                                    UserPartRole.role == 'student'))
+                    total_students = dbsession.query(UserPartRole).\
+                        filter(and_(UserPartRole.part_id == (part.parent_id if part.type == 'part' else part.id),
+                                    UserPartRole.role == 'student')).count()
+                    if total_students > 0:
+                        stats['students'] = {'total': total_students,
+                                             'inprogress': 0,
+                                             'completed': 0}
+                        time_spent = []
+                        for progress in progresses:
+                            if len(progress.visited) == len([c for c in part.children if c.status == 'available']):
+                                stats['students']['completed'] = stats['students']['completed'] + 1
+                            elif len(progress.visited) > 0:
+                                stats['students']['inprogress'] = stats['students']['inprogress'] + 1
+                            if len(progress.visited) > 0:
+                                time_spent.append(sum([p['duration'] for p in progress.visited.values()]))
+                        if time_spent:
+                            time_spent.sort()
+                            first = math.floor(len(time_spent) * 0.25)
+                            median = math.floor(len(time_spent) * 0.5)
+                            third = math.floor(len(time_spent) * 0.75)
+                            stats['time'] = {25: time_spent[first],
+                                             50: time_spent[median],
+                                             75: time_spent[third]}
+                # End Stats Generation
             labels = [child.label.title() if child.label else child.type.title() for child in part.children]
             return render_to_response(template_path,
                                       {'part': part,
@@ -300,6 +343,7 @@ def view_part(request):
                                        'include_footer': part.type != 'page',
                                        'labels': ordered_counted_set(labels),
                                        'quizzes': quizzes,
+                                       'stats': stats,
                                        'help': help_path},
                                       request=request)
         else:
@@ -611,7 +655,6 @@ def edit_register_settings(request):
                     dbsession.add(part)
                     raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
                 except formencode.Invalid as e:
-                    print(e)
                     return {'errors': e.error_dict,
                             'valuse': request.params,
                             'part': part,
@@ -1392,6 +1435,36 @@ def download_part_progress(request):
             return Response(body=body.getvalue(),
                             headerlist=[('Content-Type', 'application/zip'),
                                         ('Content-Disposition', 'attachment; filename="%s"' % (filename))])
+        else:
+            unauthorised_redirect(request)
+    else:
+        raise HTTPNotFound()
+
+
+@view_config(route_name='part.progress.update', renderer='json')
+@current_user()
+@require_logged_in()
+def update_part_progress(request):
+    """Handles the ``/users/{uid}/progress/{pid}/download``
+    URL, sending back the complete set of data associated with the
+    :class:`~wte.models.UserPartProgress`.
+
+    Requires that the user has "view" rights on the
+    :class:`~wte.models.UserPartProgress`.
+    """
+    dbsession = DBSession()
+    part = dbsession.query(Part).filter(Part.id == request.matchdict['pid']).first()
+    request.response.cache_control = 'no-cache'
+    if part:
+        if part.allow('view', request.current_user):
+            progress = get_user_part_progress(dbsession, request.current_user, part)
+            if 'duration' in request.params:
+                with transaction.manager:
+                    dbsession.add(progress)
+                    dbsession.add(part)
+                    progress.visited[str(part.id)]['duration'] = progress.visited[str(part.id)]['duration'] +\
+                        int(int(request.params['duration']) / 1000)
+            return {}
         else:
             unauthorised_redirect(request)
     else:

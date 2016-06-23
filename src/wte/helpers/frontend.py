@@ -18,6 +18,12 @@ from pywebtools.pyramid.util import (get_config_setting, MenuBuilder)
 inflector = inflect.engine()
 
 
+def lt(a, b):
+    """Helper function that checks if ``a`` is less than ``b``.
+    """
+    return a < b
+
+
 def html_id(text):
     """Turns a given text into a valid HTML id attribute value. Removes
     spaces and full-stops.
@@ -159,12 +165,19 @@ def confirm_delete(obj_type, title, has_parts=False):
                            'class_': 'alert'})
 
 
-def readable_timedelta(delta):
-    """Converts a :class:`datetime.timedelta` into a human-readable string.
+def time_string(days, hours, minutes, seconds):
+    """Converts the ``days``, ``hours``, ``minutes``, and ``seconds`` into
+    a human-readable format.
 
-    :param delta: The time-delta to convert
-    :type delta: :class:`datetime.timedelta`
-    :return: The human-readable string representation of the ``delta``
+    :param days: The number of days to the timestamp
+    :type days: :func:`int`
+    :param hours: The number of hours to the timestamp
+    :type hours: :func:`int`
+    :param minutes: The number of minutes to the timestamp
+    :type minutes: :func:`int`
+    :param seconds: The number of seconds to the timestamp
+    :type seconds: :func:`int`
+    :return: The human-readable representation
     :rtype: :func:`unicode`
     """
     def number_unit(number, unit, fraction=None):
@@ -186,64 +199,58 @@ def readable_timedelta(delta):
         else:
             return '%i %s' % (number, inflector.plural(unit, number))
 
-    def time_string(days, hours, minutes, seconds):
-        """Converts the ``days``, ``hours``, ``minutes``, and ``seconds`` into
-        a human-readable format.
-
-        :param days: The number of days to the timestamp
-        :type days: :func:`int`
-        :param hours: The number of hours to the timestamp
-        :type hours: :func:`int`
-        :param minutes: The number of minutes to the timestamp
-        :type minutes: :func:`int`
-        :param seconds: The number of seconds to the timestamp
-        :type seconds: :func:`int`
-        :return: The human-readable representation
-        :rtype: :func:`unicode`
-        """
-        if days > 60:
-            return 'about %s' % number_unit(math.ceil(days / 30.0), 'month')
-        elif days > 14:
-            return 'about %s' % number_unit(math.ceil(days / 7.0), 'week')
-        elif days > 5:
-            if hours > 16:
-                return 'a bit less than %s' % number_unit(days + 1, 'day')
-            elif hours > 8:
-                return 'about %s' % number_unit(days, 'day', fraction='and a half')
-            else:
-                return 'about %s' % number_unit(days, 'day')
-        elif days > 0:
-            if hours > 0:
-                return '%s and %s' % (number_unit(days, 'day'), number_unit(hours, 'hour'))
-            else:
-                return number_unit(days, 'day')
-        elif hours > 6:
-            if minutes > 50:
-                return 'a bit less than %s' % number_unit(hours + 1, 'hour')
-            elif minutes > 20:
-                return number_unit(hours, 'hour', fraction='and a half')
-            else:
-                return number_unit(hours, 'hour')
-        elif hours > 0:
-            if minutes > 0:
-                if seconds > 0:
-                    return '%s and %s' % (number_unit(hours, 'hour'), number_unit(minutes + 1, 'minute'))
-                else:
-                    return '%s and %s' % (number_unit(hours, 'hour'), number_unit(minutes, 'minute'))
-            else:
-                return number_unit(hours, 'hour')
-        elif minutes > 0:
-            if seconds > 0:
-                return number_unit(minutes + 1, 'minute')
-            else:
-                return number_unit(minutes, 'minute')
-        elif seconds > 30:
-            return 'less than a minute'
-        elif seconds > 15:
-            return 'less than 30 seconds'
+    if days > 60:
+        return 'about %s' % number_unit(math.ceil(days / 30.0), 'month')
+    elif days > 14:
+        return 'about %s' % number_unit(math.ceil(days / 7.0), 'week')
+    elif days > 5:
+        if hours > 16:
+            return 'a bit less than %s' % number_unit(days + 1, 'day')
+        elif hours > 8:
+            return 'about %s' % number_unit(days, 'day', fraction='and a half')
         else:
-            return number_unit(seconds, 'second')
+            return 'about %s' % number_unit(days, 'day')
+    elif days > 0:
+        if hours > 0:
+            return '%s and %s' % (number_unit(days, 'day'), number_unit(hours, 'hour'))
+        else:
+            return number_unit(days, 'day')
+    elif hours > 6:
+        if minutes > 50:
+            return 'a bit less than %s' % number_unit(hours + 1, 'hour')
+        elif minutes > 20:
+            return number_unit(hours, 'hour', fraction='and a half')
+        else:
+            return number_unit(hours, 'hour')
+    elif hours > 0:
+        if minutes > 0:
+            if seconds > 0:
+                return '%s and %s' % (number_unit(hours, 'hour'), number_unit(minutes + 1, 'minute'))
+            else:
+                return '%s and %s' % (number_unit(hours, 'hour'), number_unit(minutes, 'minute'))
+        else:
+            return number_unit(hours, 'hour')
+    elif minutes > 0:
+        if seconds > 0:
+            return number_unit(minutes + 1, 'minute')
+        else:
+            return number_unit(minutes, 'minute')
+    elif seconds > 30:
+        return 'less than a minute'
+    elif seconds > 15:
+        return 'less than 30 seconds'
+    else:
+        return number_unit(seconds, 'second')
 
+
+def readable_timedelta(delta):
+    """Converts a :class:`datetime.timedelta` into a human-readable string.
+
+    :param delta: The time-delta to convert
+    :type delta: :class:`datetime.timedelta`
+    :return: The human-readable string representation of the ``delta``
+    :rtype: :func:`unicode`
+    """
     if delta.days < 0:
         delta = abs(delta)
         return '%s ago' % time_string(delta.days,
@@ -264,6 +271,24 @@ DISPLAY_MODES = {'default': {'module': '_module.html',
                                      'task': '_task.html'},
                  'text_only': {'page': '_page.html',
                                'task': '_task.html'}}
+
+
+def split_seconds(seconds):
+    """Converts a time in seconds into a ``(days, hours, minutes, seconds)``
+    tuple for use in :func:`~wte.helpers.frontend.time_string`.
+
+    :param seconds: The time in seconds to split
+    :type seconds: ``int``
+    :return: A tuple ``(days, hours, minutes, seconds)``
+    :rtype: ``tuple``
+    """
+    days = math.floor(seconds / (3600 * 24))
+    seconds = seconds % (3600 * 24)
+    hours = math.floor(seconds / 3600)
+    seconds = seconds % 3600
+    minutes = math.floor(seconds / 60)
+    seconds = seconds % 60
+    return (days, hours, minutes, seconds)
 
 
 def template_for_part(part):

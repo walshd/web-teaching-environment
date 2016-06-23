@@ -13,14 +13,15 @@ import json
 import re
 
 from datetime import datetime
-from pywebtools.pyramid.auth.models import Base, User
+from pywebtools.sqlalchemy import Base, JSONUnicodeText, MutableDict
+from pywebtools.pyramid.auth.models import User
 from sqlalchemy import (Column, Index, ForeignKey, Integer, Unicode,
                         UnicodeText, Table, LargeBinary, DateTime, Boolean)
 from sqlalchemy.orm import (relationship, backref)
 
 from wte.helpers.frontend import confirm_delete, MenuBuilder, confirm_action
 
-DB_VERSION = '1d79e6b04177'
+DB_VERSION = '3ff51ab70eba'
 """The currently required database version."""
 
 
@@ -45,7 +46,7 @@ class UserPartRole(Base):
     part_id = Column(Integer, ForeignKey('parts.id', name='users_parts_part_id_fk'))
     role = Column(Unicode(255))
 
-    user = relationship(User)
+    user = relationship(User, backref=backref('roles'))
     part = relationship('Part')
 
 
@@ -426,6 +427,9 @@ class UserPartProgress(Base):
     * ``user_id`` -- The unique identifier of the :class:`~wte.models.User`
     * ``user`` -- The :class:`~wte.models.User` for which this represents the
       progress
+    * ``visited`` -- A :class:`~pywebtools.sqlalchemy.MutableDict` via a
+      :class:`~pywebtools.sqlalchemy.JSONUnicodeText` that stores information on the visited child
+      :class:`~wte.models.Part`\ s.
     """
 
     __tablename__ = 'user_part_progress'
@@ -434,6 +438,7 @@ class UserPartProgress(Base):
     user_id = Column(Integer, ForeignKey(User.id, name='user_part_progress_user_id_fk'))
     part_id = Column(Integer, ForeignKey(Part.id, name='user_part_progress_part_id_fk'))
     current_id = Column(Integer, ForeignKey(Part.id, name='user_part_progress_current_id_fk'))
+    visited = Column(MutableDict.as_mutable(JSONUnicodeText))
 
     user = relationship('User')
     part = relationship('Part', foreign_keys=[part_id])

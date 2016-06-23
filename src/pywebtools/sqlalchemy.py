@@ -14,11 +14,15 @@ in the main package.
 
 .. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
-from sqlalchemy import text
+import json
+
+from sqlalchemy import (text, UnicodeText)
 from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.mutable import Mutable
 from sqlalchemy.orm import (scoped_session, sessionmaker)
+from sqlalchemy.types import TypeDecorator
 from zope.sqlalchemy import ZopeTransactionExtension
 
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
@@ -64,3 +68,80 @@ def check_database_version(db_version):
                 raise DBUpgradeException(result[0], db_version)
     except OperationalError:
         raise DBUpgradeException('No version-information found', db_version)
+
+
+class JSONUnicodeText(TypeDecorator):
+    """The class:`~pywebtools.sqlalchemy.JSONUnicodeText` is an extension to the
+    :class:`~sqlalchemy.UnicodeText` column type that does automatic conversion
+    from the JSON string representation stored in the DB to a dict/list representation
+    for use in python.
+    """
+
+    impl = UnicodeText
+
+    def process_bind_param(self, value, dialect):
+        """Convert the dict/list to JSON for storing.
+        """
+        if value is not None:
+            value = json.dumps(value)
+        return value
+
+    def process_result_value(self, value, dialect):
+        """Convert the JSON to dict/list for use.
+        """
+        if value is not None:
+            value = json.loads(value)
+        return value
+
+
+class MutableDict(Mutable, dict):
+    """The :class:`~pywebtools.sqlalchemy.MutableDict` is a ``dict`` extension for use
+    with the :class:`~pywebtools.sqlalchemy.JSONUnicodeText` column. It monitors any
+    change to its values and marks the column as dirty, if a change has occurred.
+
+    It is smart about its internal structure and will convert any nested ``dict`` into
+    :class:`~pywebtools.sqlalchemy.MutableDict` as well, to ensure that all changes
+    are tracked.
+    """
+
+    def __init__(self, *args, **kwargs):
+        """Initialise the :class:`~pywebtools.sqlalchemy.MutableDict` and convert any nested
+        ``dict`` to :class:`~pywebtools.sqlalchemy.MutableDict`.
+
+        :params __notify: Optional :class:`~pywebtools.sqlalchemy.MutableDict` to notify
+                          on changes. Needed for nested :class:`~pywebtools.sqlalchemy.MutableDict`.
+        :type __notify: :class:`~pywebtools.sqlalchemy.MutableDict`
+        """
+        if '__notify' in kwargs:
+            self.__notify = kwargs['__notify']
+            del kwargs['__notify']
+        else:
+            self.__notify = self
+        dict.__init__(self, *args, **kwargs)
+        for k, v in self.items():
+            if isinstance(v, dict):
+                dict.__setitem__(self, k, MutableDict(v, __notify=self))
+
+    @classmethod
+    def coerce(cls, key, value):
+        """Automatically coerce any ``dict`` to a :class:`~pywebtools.sqlalchemy.MutableDict`. Used
+        by SQLAlchemy.
+        """
+        if not isinstance(value, MutableDict):
+            if isinstance(value, dict):
+                return MutableDict(value)
+            return Mutable.coerce(key, value)
+        else:
+            return value
+
+    def __setitem__(self, key, value):
+        """Set an key's value and mark as dirty.
+        """
+        dict.__setitem__(self, key, value)
+        self.__notify.changed()
+
+    def __delitem__(self, key):
+        """Delete a key and mark as dirty.
+        """
+        dict.__delitem__(self, key)
+        self.__notify.changed()

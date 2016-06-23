@@ -17,6 +17,7 @@ DEV
 - *NEW*: Compatible with both Python 2.7 and Python 3.5
 - *NEW*: Re-worked the registration and forgotten password to use random tokens
 - *NEW*: Support for quizzes
+- *NEW*: Support for capturing time spent on pages
 - *UPDATE*: Use Kajiki as the rendering engine (#49)
 - *UPDATE*: Improve caching of permission lookups (#49)
 - *UPDATE*: The :asset: directive now automatically searches in all parent parts

@@ -90,36 +90,46 @@
         'csrf_token': '${request.session.get_csrf_token()}'
     });
     
-    function load_page(url) {
+    $(window).activityTimer();
+    function log_duration() {
+        var base_url = '${request.route_url('part.progress.update', pid='PID')}';
+        var part_url = window.location.href;
+        var url = base_url.replace('PID', part_url.substring(part_url.lastIndexOf('/') + 1));
+        $.sendBeacon(url, {duration: $(window).activityTimer('duration')});
+    }
+    $(window).on('unload', log_duration);
+    
+    function load_page(url, nohistory) {
+        log_duration();
         $.ajax(url).then(function(data) {
-            $('#textbook').replaceWith($(data).find('#textbook'));
+            data = $(data);
+            $('#textbook').replaceWith(data.find('#textbook'));
             resize_page();
             $('.fixed-pagination').fixedPagination();
             $('.part-pagination').partPagination({scrolling: $('#textbook')});
             $('#textbook .post-link').postLink();
             $('#textbook').foundation();
-            $('.part-pagination form').on('submit', function(ev) {
-                ev.preventDefault();
-                load_page($(this).attr('action'));
-                
-            });
-            $('.part-pagination a').on('click', function(ev) {
-                ev.preventDefault();
-                load_page($(this).attr('href'));
-            });
             MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+            $(window).activityTimer('reset');
+            if(!nohistory) {
+                history.pushState(null, data.filter('title').text(), url);
+                document.title = data.filter('title').text();
+            }
         }, function() {
             window.location.href = url;
         });
     }
-    $('.part-pagination form').on('submit', function(ev) {
+    $('#page').on('submit', '#textbook .part-pagination form', function(ev) {
         ev.preventDefault();
         load_page($(this).attr('action'));
         
     });
-    $('.part-pagination a').on('click', function(ev) {
+    $('#page').on('click', '#textbook .part-pagination a', function(ev) {
         ev.preventDefault();
         load_page($(this).attr('href'));
+    });
+    $(window).on('popstate', function() {
+        load_page(document.location.href, true);
     });
     </script>
   </py:block>

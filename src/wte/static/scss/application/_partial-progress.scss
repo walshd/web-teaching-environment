@@ -1,0 +1,15 @@
+.partial-progress {
+    @include progress-container;
+        
+    .progress-meter {
+        @include progress-meter;
+        float: left;
+            
+        &.complete {
+            background: #3adb76;
+        }
+        &.partial {
+            background: #ffae00;
+        }
+    }
+}
