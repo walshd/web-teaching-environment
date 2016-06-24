@@ -11,12 +11,16 @@ Utility functions for use with the Pyramid framework.
   :class:`~pyramid.request.Request`.
 * :func:`~pywebtools.pyramid.util.get_config_setting` provides easy access
   to configuration settings set in the [app:main] section of the INI file.
+* :func:`~pywebtools.pyramid.util.require_method` is a decorator to enforce
+  HTTP methods.
 * :class:`~pywebtools.pyramid.util.MenuBuilder` is a helper class to generate
   the menu structure used with :func:`~pywebtools.kajiki.menubar`.
 
 .. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
+from decorator import decorator
 from pyramid.request import Request
+from pyramid.httpexceptions import HTTPMethodNotAllowed
 
 
 def request_from_args(*args):
@@ -31,6 +35,25 @@ def request_from_args(*args):
         if isinstance(arg, Request):
             return arg
     raise Exception('No request found')
+
+
+def require_method(methods):
+    """Checks that the current request method is in the list of ``methods``
+    that are allowed for the given request.
+
+    :param methods: The list of valid request methods
+    :type methods: `list` of `unicode`
+    """
+    if not isinstance(methods, list):
+        methods = [methods]
+
+    def wrapper(f, *args, **kwargs):
+        request = request_from_args(*args)
+        if request.method in methods:
+            return f(*args, **kwargs)
+        else:
+            raise HTTPMethodNotAllowed()
+    return decorator(wrapper)
 
 
 def convert_type(value, target_type, default=None):

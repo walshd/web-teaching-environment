@@ -20,10 +20,11 @@ import transaction
 from datetime import datetime, timedelta
 from decorator import decorator
 from formencode import Invalid, validators, All
-from pyramid.httpexceptions import HTTPSeeOther, HTTPOk
+from pyramid.httpexceptions import HTTPSeeOther, HTTPOk, HTTPUnauthorized, HTTPNotFound
 from sqlalchemy import and_
 
-from pywebtools.formencode import (CSRFSchema, State, UniqueEmailValidator, EmailDomainValidator, PasswordValidator)
+from pywebtools.formencode import (CSRFSchema, State, UniqueEmailValidator, EmailDomainValidator,
+                                   PasswordValidator)
 from pywebtools.pyramid.util import request_from_args, get_config_setting
 from pywebtools.pyramid.auth.models import User, TimeToken
 from pywebtools.sqlalchemy import DBSession
@@ -60,6 +61,59 @@ def current_user():
             request.current_user = User()
             request.current_user.logged_in = False
         return f(*args, **kwargs)
+    return decorator(wrapper)
+
+
+def require_permission(permission=None, class_=None, request_key=None, action=None):
+    """Checks whether the current user has the given permission. Supports two modes:
+
+    If you provide the ``permission`` parameter and it will use
+    :func:`~pywebtools.pyramid.auth.models.User.has_permission` to check whether the
+    current user has the given permission. If not, it raises
+    :class:`~pyramid.httpexceptions.HTTPUnauthorised`.
+
+    Alternatively if you provide ``class_``, ``request_key``, and ``action`` parameters
+    it will run a SQLAlchemy query for the ``class_``, filtering
+    ``class_.id == request.matchdict[request_key]``. If that returns a result, then it
+    will use the ``class_``\ 's ``allow`` to check whether the current user is allowed
+    to perform the given ``action``. If not  it raises
+    :class:`~pyramid.httpexceptions.HTTPUnauthorised`. If no result is returned then it
+    will raise :class:`~pyramid.httpexceptions.HTTPNotFound`.
+
+    :param permission: The permission to check the user for
+    :type permission: ``str``
+    :param class_: The SQLAlchemy ORM class to use for finding the instance that matches
+                   the ``request_key`` value
+    :type class_: ``class``
+    :param request_key: The key to use for getting a unique identifier from the
+                        ``request.matchdict`` to use in finding an instance of ``class_``
+    :type request_key: ``str``
+    :param action: The action to check for with the instance of ``class_``
+    :type action: ``str``
+    :return: The decorated function's return value
+    """
+    def wrapper(f, *args, **kwargs):
+        request = request_from_args(*args)
+        if request.current_user is not None:
+            if permission is not None:
+                if request.current_user.has_permission(permission):
+                    return f(*args, **kwargs)
+                else:
+                    raise HTTPUnauthorized()
+            elif object is not None and request_key is not None and action is not None:
+                dbsession = DBSession()
+                instance = dbsession.query(class_).filter(class_.id == request.matchdict[request_key]).first()
+                if instance is not None:
+                    if instance.allow(action, request.current_user):
+                        return f(*args, **kwargs)
+                    else:
+                        raise HTTPUnauthorized()
+                else:
+                    raise HTTPNotFound()
+            else:
+                return f(*args, **kwargs)
+        else:
+            raise HTTPUnauthorized()
     return decorator(wrapper)
 
 
