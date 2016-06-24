@@ -52,6 +52,8 @@ source-code by an empty line.
   source-code block. Replace the ``XXX`` with the actual file-name to show
 * ``:linenos: X`` - Displays line-numbers. Replace the ``X`` with the
   number you want to start enumerating at
+* ``:no-select:`` - To make it very difficult for the learner to select the
+  sourcecode and copy it (it is not impossible, but very difficult)
 
 The following example shows the same HTML being highlighted, but with the
 inclusion of a filename ("index.html") and with line numbers starting at

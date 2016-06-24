@@ -132,8 +132,8 @@ class Pygments(Directive):
     optional_arguments = 1
     final_argument_whitespace = True
     option_spec = {'filename': directives.unchanged,
-                   'startinline': flag_bool_option,
-                   'linenos': int}
+                   'linenos': int,
+                   'no-select': flag_bool_option}
     has_content = True
 
     def run(self):
@@ -148,7 +148,10 @@ class Pygments(Directive):
                                   linenos='inline' if 'linenos' in self.options else False,
                                   linenostart=self.options['linenos'] if 'linenos' in self.options else 1)
         parsed = highlight('\n'.join(self.content), lexer, formatter)
-        source = HtmlElementBlock('', html_attributes={'class': 'source panel %s' % lexer.name})
+        css_classes = ['source', 'panel', lexer.name]
+        if 'no-select' in self.options and self.options['no-select']:
+            css_classes.append('no-select')
+        source = HtmlElementBlock('', html_attributes={'class': ' '.join(css_classes)})
         if self.lineno:
             source.line = self.lineno
         title = HtmlElementBlock('',
