@@ -133,13 +133,19 @@ class User(Base):
                  otherwise
         :rtype: `bool`
         """
-        if self.id == user.id:
-            return True
-        elif action == 'view':
+        if action == 'view':
+            if self.id == user.id:
+                return True
             return True  # TODO: Add support for showing / hiding profile
         elif action == 'edit':
+            if self.id == user.id:
+                return True
             return user.has_permission('admin.users.edit')
+        elif action == 'edit-permissions':
+            return user.has_permission('admin.users.permissions')
         elif action == 'delete':
+            if self.id == user.id:
+                return True
             return user.has_permission('admin.users.delete')
         return False
 
