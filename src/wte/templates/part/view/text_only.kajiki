@@ -34,6 +34,7 @@
       'check_url': '${request.route_url('quiz.check_answers', pid=part.id)}',
       'csrf_token': '${request.session.get_csrf_token()}'
   });
+  $('.show-hide-block').showHideBlock();
   $(window).activityTimer();
   $(window).on('unload', function() {
       $.sendBeacon('${request.route_url('part.progress.update', pid=part.id)}', {duration: $(window).activityTimer('duration')});

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="../../../../static/css/application.min.css"/>
+    <link rel="stylesheet" href="../../../_static/default.css"/>
+    <link rel="stylesheet" href="../../../_static/override.css"/>
+    <link rel="stylesheet" href="../../../_static/pygments.css"/>
+    <title>Allowing the User to Show and Hide Content</title>
+  </head>
+  <body class="help">
+    <nav>
+      <ul class="breadcrumbs">
+        <li><a href="../../../index.html">Home</a></li>
+        
+          <li><a href="../../index.html">User Documentation</a></li>
+        
+          <li><a href="../index.html">Creating Teaching Materials</a></li>
+        
+          <li><a href="index.html">Editor</a></li>
+        
+        <li>Allowing the User to Show and Hide Content</li>
+      </ul>
+      <div class="row">
+        <div class="column small-12">
+          <div class="section" id="allowing-the-user-to-show-and-hide-content">
+<h1>Allowing the User to Show and Hide Content<a class="headerlink" href="#allowing-the-user-to-show-and-hide-content" title="Permalink to this headline">¶</a></h1>
+<p>The WTE allows you to mark blocks of content as &#8220;optional&#8221; in that they can be shown
+and hidden by the user. To create such an optional block, start it with <code class="docutils literal"><span class="pre">..</span> <span class="pre">show-hide::</span></code>
+and then add whatever content you wish to add.</p>
+<div class="highlight-rest"><div class="highlight"><pre><span></span><span class="p">..</span> <span class="ow">show-hide</span><span class="p">::</span>
+
+  This paragraph is initially visible, but can be hidden by the user.
+</pre></div>
+</div>
+<p>By default blocks are initially visible, but can be hidden. If you want the block to
+initially be hidden, add the <code class="docutils literal"><span class="pre">:initial:</span> <span class="pre">hidden</span></code> option:</p>
+<div class="highlight-rest"><div class="highlight"><pre><span></span><span class="p">..</span> <span class="ow">show-hide</span><span class="p">::</span>
+  <span class="nc">:initial:</span> <span class="nf">hidden</span>
+
+  This paragraph is initially hidden, but can be shown by the user.
+</pre></div>
+</div>
+<p>You can also add an arbitrary title to the block using the <code class="docutils literal"><span class="pre">:title:</span></code> option:</p>
+<div class="highlight-rest"><div class="highlight"><pre><span></span><span class="p">..</span> <span class="ow">show-hide</span><span class="p">::</span>
+  <span class="nc">:initial:</span> <span class="nf">hidden</span>
+  <span class="nc">:title:</span> <span class="nf">Click on the plus icon to show the answer</span>
+
+  The answer to the question was 42.
+</pre></div>
+</div>
+<p>The title will always be visible, so you can use it to let the user know that they there
+is content to be shown or for anything else you wish to let the user know.</p>
+<p>You can put any other content in a <code class="docutils literal"><span class="pre">show-hide</span></code> block. The next example has a nested
+<code class="docutils literal"><span class="pre">sourcecode</span></code> block:</p>
+<div class="highlight-rest"><div class="highlight"><pre><span></span><span class="p">..</span> <span class="ow">show-hide</span><span class="p">::</span>
+  <span class="nc">:initial:</span> <span class="nf">hidden</span>
+  <span class="nc">:title:</span> <span class="nf">Your code should now look like this:</span>
+
+<span class="p">  ..</span> <span class="ow">sourcecode</span><span class="p">::</span> <span class="k">HTML</span>
+
+    <span class="p">&lt;</span><span class="nt">html</span><span class="p">&gt;</span>
+      <span class="p">&lt;</span><span class="nt">head</span><span class="p">&gt;</span>
+      <span class="p">&lt;/</span><span class="nt">head</span><span class="p">&gt;</span>
+      <span class="p">&lt;</span><span class="nt">body</span><span class="p">&gt;</span>
+      <span class="p">&lt;/</span><span class="nt">body</span><span class="p">&gt;</span>
+    <span class="p">&lt;/</span><span class="nt">html</span><span class="p">&gt;</span>
+</pre></div>
+</div>
+</div>
+
+        </div>
+      </div>
+      <ul class="pagination text-center" role="navigation" aria-label="Pagination">
+        
+          <li class="pagination-previous"><a href="quiz.html">In-Tutorial Quizes</a></li>
+        
+        
+          <li class="pagination-next"><a href="../status.html">Changing the Status</a></li>
+        
+      </ul>
+    </nav>
+  </body>
+</html>

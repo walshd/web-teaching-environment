@@ -25,3 +25,4 @@ You can find more detail here:
    crossref
    video
    quiz
+   show-hide

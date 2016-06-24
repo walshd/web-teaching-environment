@@ -234,6 +234,8 @@
             $('#textbook').html(data.content + '<div style="margin-bottom: ' + height + 'px">&nbsp;</div>');
             scroll_viewer_to_selection()
             MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+            $('#textbook .show-hide-block').showHideBlock();
+            $('#textbook .quiz').quiz({});
         });
     }
     render_page();

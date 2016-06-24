@@ -30,6 +30,7 @@ def init(settings):
     directives.register_directive('youtube', YouTube)
     directives.register_directive('quiz', Quiz)
     directives.register_directive('quiz-question', QuizQuestion)
+    directives.register_directive('show-hide', ShowHideBlock)
     roles.register_local_role('asset', asset_ref_role)
     roles.register_local_role('crossref', crossref_role)
     roles.register_local_role('style', inline_css_role)
@@ -346,6 +347,8 @@ class Quiz(Directive):
         quiz = HtmlElementBlock('', html_element='form', html_attributes={'class': 'quiz',
                                                                           'action': '',
                                                                           'data-quiz-id': self.arguments[0]})
+        if self.lineno:
+            quiz.line = self.lineno
         if 'title' in self.options:
             heading = HtmlElementBlock('',
                                        nodes.paragraph(self.options['title'], self.options['title']),
@@ -398,6 +401,8 @@ class QuizQuestion(Directive):
                                                      'data-answers': json.dumps([a.replace('[x]', '').strip()
                                                                                  for a in self.content
                                                                                  if '[x]' in a])})
+        if self.lineno:
+            question.line = self.lineno
         if 'question' in self.options:
             heading = HtmlElementBlock('',
                                        nodes.paragraph(self.options['question'], self.options['question']),
@@ -417,3 +422,52 @@ class QuizQuestion(Directive):
             answer.append(nodes.inline(answer_source, answer_source))
             question.append(answer)
         return [question]
+
+
+class ShowHideBlock(Directive):
+    """The :class:`~wte.text_formatter.docutils_ext` generates a block with arbitrary content
+    that the user can show and hide. Two optional parameters are available. ``initial`` can either
+    be set to "hidden" or "visible" (the default) to set the initial visiblity of the block.
+    ``title`` can be used to add a title to the block.
+    """
+
+    required_arguments = 0
+    optional_arguments = 1
+    final_argument_whitespace = True
+    option_spec = {'initial': directives.unchanged,
+                   'title': directives.unchanged}
+    has_content = True
+
+    def run(self):
+        node = nodes.Element()
+        node.document = self.state.document
+        self.state.nested_parse(self.content, self.content_offset, node)
+        block = HtmlElementBlock('',
+                                 html_attributes={'class': 'show-hide-block',
+                                                  'data-show-hide-initial': 'hidden' if 'initial' in self.options and
+                                                  self.options['initial'] == 'hidden' else 'visible'})
+        if self.lineno:
+            block.line = self.lineno
+        controls = HtmlElementBlock('', html_element='ul', html_attributes={'class': 'controls menu align-right'})
+        if 'title' in self.options and self.options['title']:
+            controls.append(HtmlElementBlock('',
+                                             nodes.Text(self.options['title'], self.options['title']),
+                                             html_element='li',
+                                             html_attributes={'class': 'menu-text float-left'}))
+        controls.append(HtmlElementBlock('',
+                                         nodes.raw('',
+                                                   '<a href="#" title="Hide this block"><span class="fi-minus">' +
+                                                   '<span class="show-for-sr">Hide</span></span></a>',
+                                                   format='html'),
+                                         html_element='li',
+                                         html_attributes={'class': 'hide-block hidden'}))
+        controls.append(HtmlElementBlock('',
+                                         nodes.raw('',
+                                                   '<a href="#" title="Show this block"><span class="fi-plus">' +
+                                                   '<span class="show-for-sr">Show</span></span></a>',
+                                                   format='html'),
+                                         html_element='li',
+                                         html_attributes={'class': 'show-block hidden'}))
+        block.append(controls)
+        block.extend(node)
+        return [block]
