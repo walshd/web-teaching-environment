@@ -21,14 +21,14 @@
           </py:else>
         </select>
       </py:case>
-      <py:else>
-        <py:if test="defined('values') and field_name in values">
-          <input type="${field_type}" name="${field_name}" value="${values[field_name]}" py:attrs="kwargs['extra_attrs'] if 'extra_attrs' in kwargs else None"/>
-        </py:if><py:else>
-          <input type="${field_type}" name="${field_name}" value="${kwargs['value'] if 'value' in kwargs else ''}" py:attrs="kwargs['extra_attrs'] if 'extra_attrs' in kwargs else None"/>
-        </py:else>
-      </py:else>
     </py:switch>
+    <py:if test="field_type not in ['checkbox', 'textarea', 'select']">
+      <py:if test="defined('values') and field_name in values">
+        <input type="${field_type}" name="${field_name}" value="${values[field_name]}" py:attrs="kwargs['extra_attrs'] if 'extra_attrs' in kwargs else None"/>
+      </py:if><py:else>
+        <input type="${field_type}" name="${field_name}" value="${kwargs['value'] if 'value' in kwargs else ''}" py:attrs="kwargs['extra_attrs'] if 'extra_attrs' in kwargs else None"/>
+      </py:else>
+    </py:if>
   </py:def>
   
   <!-- Generate a form field with wrapping label and error display -->
