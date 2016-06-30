@@ -180,7 +180,7 @@ def list_parts(request):
     dbsession = DBSession()
     if 'user_id' in request.params:
         user = dbsession.query(User).filter(User.id == request.params['user_id']).first()
-        if user and user.allow('view', request.current_user):
+        if user and (user.id == request.current_user.id or user.has_permission('admin.users.view')):
             if user.id == request.current_user.id:
                 title = 'My Modules'
                 missing = 'You have not registered for any modules.'
