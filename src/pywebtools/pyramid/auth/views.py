@@ -19,14 +19,15 @@ import transaction
 
 from datetime import datetime, timedelta
 from decorator import decorator
-from formencode import Invalid, validators, All
+from formencode import Invalid, validators, All, ForEach
 from pyramid.httpexceptions import HTTPSeeOther, HTTPOk, HTTPUnauthorized, HTTPNotFound
-from sqlalchemy import and_
+from sqlalchemy import and_, or_
 
 from pywebtools.formencode import (CSRFSchema, State, UniqueEmailValidator, EmailDomainValidator,
                                    PasswordValidator)
-from pywebtools.pyramid.util import request_from_args, get_config_setting
-from pywebtools.pyramid.auth.models import User, TimeToken
+from pywebtools.pyramid.util import request_from_args, get_config_setting, paginate
+from pywebtools.pyramid.auth.decorators import current_user, require_logged_in
+from pywebtools.pyramid.auth.models import User, TimeToken, Permission, PermissionGroup
 from pywebtools.sqlalchemy import DBSession
 
 # Post-action redirects
@@ -37,84 +38,6 @@ active_callbacks = {}
 
 # Pattern used for identifying replacable keyword arguments {argument-name}
 KWARG_PATTERN = re.compile('\{([^}]*)\}')
-
-
-def current_user():
-    """Inserts the currently logged in :class:`~pywebtools.pyramid.auth.models.User` into the
-    `request` parameter under the attribute ``current_user``. If there is no
-    logged in user, then an anonymous :class:`~pywebtools.pyramid.auth.models.User` is created.
-
-    Used in view functions.
-    """
-    def wrapper(f, *args, **kwargs):
-        request = request_from_args(*args)
-        if 'uid' in request.session:
-            dbsession = DBSession()
-            user = dbsession.query(User).filter(User.id == request.session['uid']).first()
-            if user:
-                user.logged_in = True
-                request.current_user = user
-            else:
-                request.current_user = User()
-                request.current_user.logged_in = False
-        else:
-            request.current_user = User()
-            request.current_user.logged_in = False
-        return f(*args, **kwargs)
-    return decorator(wrapper)
-
-
-def require_permission(permission=None, class_=None, request_key=None, action=None):
-    """Checks whether the current user has the given permission. Supports two modes:
-
-    If you provide the ``permission`` parameter and it will use
-    :func:`~pywebtools.pyramid.auth.models.User.has_permission` to check whether the
-    current user has the given permission. If not, it raises
-    :class:`~pyramid.httpexceptions.HTTPUnauthorised`.
-
-    Alternatively if you provide ``class_``, ``request_key``, and ``action`` parameters
-    it will run a SQLAlchemy query for the ``class_``, filtering
-    ``class_.id == request.matchdict[request_key]``. If that returns a result, then it
-    will use the ``class_``\ 's ``allow`` to check whether the current user is allowed
-    to perform the given ``action``. If not  it raises
-    :class:`~pyramid.httpexceptions.HTTPUnauthorised`. If no result is returned then it
-    will raise :class:`~pyramid.httpexceptions.HTTPNotFound`.
-
-    :param permission: The permission to check the user for
-    :type permission: ``str``
-    :param class_: The SQLAlchemy ORM class to use for finding the instance that matches
-                   the ``request_key`` value
-    :type class_: ``class``
-    :param request_key: The key to use for getting a unique identifier from the
-                        ``request.matchdict`` to use in finding an instance of ``class_``
-    :type request_key: ``str``
-    :param action: The action to check for with the instance of ``class_``
-    :type action: ``str``
-    :return: The decorated function's return value
-    """
-    def wrapper(f, *args, **kwargs):
-        request = request_from_args(*args)
-        if request.current_user is not None:
-            if permission is not None:
-                if request.current_user.has_permission(permission):
-                    return f(*args, **kwargs)
-                else:
-                    raise HTTPUnauthorized()
-            elif object is not None and request_key is not None and action is not None:
-                dbsession = DBSession()
-                instance = dbsession.query(class_).filter(class_.id == request.matchdict[request_key]).first()
-                if instance is not None:
-                    if instance.allow(action, request.current_user):
-                        return f(*args, **kwargs)
-                    else:
-                        raise HTTPUnauthorized()
-                else:
-                    raise HTTPNotFound()
-            else:
-                return f(*args, **kwargs)
-        else:
-            raise HTTPUnauthorized()
-    return decorator(wrapper)
 
 
 def replace_kwargs(value, kwargs):
@@ -145,6 +68,20 @@ def replace_kwargs(value, kwargs):
                 value = value.replace(kwarg.group(0), '')
             kwarg = re.match(KWARG_PATTERN, value)
         return value
+
+
+def create_user_crumbs(request, crumbs):
+    """Creates the base-list of breadcrumbs, depending on the current
+    users authorisation level.
+    """
+    if request.current_user.has_permission('admin.users.view'):
+        crumbs.insert(0, {'title': 'Users',
+                          'url': request.route_url('users')})
+    if request.current_user.has_permission('admin'):
+        crumbs.insert(0, {'title': 'Administration',
+                          'url': request.route_url('admin')})
+    crumbs[-1]['current'] = True
+    return crumbs
 
 
 def redirect(request, redirect_id, **kwargs):
@@ -506,3 +443,292 @@ def reset_password(request):
                            {'title': 'Reset Password',
                             'url': request.route_url('user.reset_password',
                                                      token=request.matchdict['token']), 'current': True}]}
+
+
+
+
+@current_user()
+def users(request):
+    """Handles the ``/users`` URL, displaying all users if the current
+    :class:`~pywebtools.pyramid.auth.models.User` has the "admin.users.view"
+    :class:`~pywebtools.pyramid.auth.models.Permission`.
+    """
+    if request.current_user.has_permission('admin.users.view'):
+        dbsession = DBSession()
+        users = dbsession.query(User)
+        query_params = []
+        if 'q' in request.params and request.params['q']:
+            users = users.filter(or_(User.display_name.contains(request.params['q']),
+                                     User.email.contains(request.params['q'])))
+            query_params.append(('q', request.params['q']))
+        if 'status' in request.params and request.params['status']:
+            query_params.append(('status', request.params['status']))
+            if request.params['status'] == 'confirmed':
+                users = users.filter(User.status == 'active')
+            else:
+                users = users.filter(User.status != 'active')
+        start = 0
+        if 'start' in request.params:
+            try:
+                start = int(request.params['start'])
+            except ValueError:
+                pass
+        users = users.order_by(User.display_name)
+        users = users.offset(start).limit(30)
+        pages = paginate(request, users, start, 30, query_params=query_params)
+        return {'users': users,
+                'pages': pages,
+                'crumbs': create_user_crumbs(request, [])}
+    else:
+        unauthorised_redirect(request)
+
+
+class ActionSchema(CSRFSchema):
+    """The :class:`~wte.views.user.ActionSchema` handles the validation of
+    user action requests.
+    """
+    action = All(validators.UnicodeString(not_empty=True),
+                 validators.OneOf(['validate', 'password', 'delete']))
+    """The action to apply"""
+    confirm = validators.StringBool(if_empty=False, if_missing=False)
+    """Whether the user has confirmed the action"""
+    user_id = ForEach(validators.Int(), if_missing=None)
+    """User ids to apply the action to"""
+    q = validators.UnicodeString(if_empty=None, if_missing=None)
+    """Optional query parameter for the redirect"""
+    status = validators.UnicodeString(if_empty=None, if_missing=None)
+    """Optional status parameter for the redirect"""
+    start = validators.UnicodeString(if_empty=None, if_missing=None)
+    """Optional start parameter for the redirect"""
+
+
+@current_user()
+def action(request):
+    """Handles the ``/users/action`` URL, applying the given action to the
+    list of selected users. Requires that the current
+    :class:`~wte.models.User` has the "admin.users.view"
+    :class:`~wte.models.Permission`.
+    """
+    if request.current_user.has_permission('admin.users.view'):
+        dbsession = DBSession()
+        try:
+            query_params = []
+            for param in ['q', 'status', 'start']:
+                if param in request.params and request.params[param]:
+                    query_params.append((param, request.params[param]))
+            params = ActionSchema().to_python(request.params,
+                                              State(request=request))
+            if params['action'] != 'delete' or params['confirm']:
+                with transaction.manager:
+                    for user in dbsession.query(User).filter(User.id.in_(params['user_id'])):
+                        if params['action'] == 'validate':
+                            if user.status == 'unconfirmed' and user.allow('edit', request.current_user):
+                                user.status = 'active'
+                        elif params['action'] == 'delete':
+                            if user.allow('delete', request.current_user):
+                                dbsession.delete(user)
+                        elif params['action'] == 'password':
+                            if user.status == 'active' and user.allow('edit', request.current_user):
+                                token = TimeToken(user.id,
+                                                  'reset_password',
+                                                  datetime.now() + timedelta(seconds=1200))
+                                dbsession.add(token)
+                                dbsession.flush()
+                                password_reset(request, user, token)
+                raise HTTPSeeOther(request.route_url('users', _query=query_params))
+            else:
+                return {'params': params,
+                        'users': dbsession.query(User).filter(User.id.in_(params['user_id'])),
+                        'query_params': query_params,
+                        'crumbs': create_user_crumbs(request, [{'title': 'Confirm',
+                                                                'url': request.current_route_url()}])}
+        except Invalid as e:
+            print(e)
+            request.session.flash('Please select the action you wish to apply and the users to apply it to',
+                                  queue='error')
+            raise HTTPSeeOther(request.route_url('users', _query=query_params))
+    else:
+        unauthorised_redirect(request)
+
+
+@current_user()
+@require_logged_in()
+def view(request):
+    """Handles the "/users/{uid}" URL, showing the user's profile.
+    """
+    dbsession = DBSession()
+    user = dbsession.query(User).filter(User.id == request.matchdict['uid']).first()
+    if user:
+        if user.allow('view', request.current_user):
+            return {'user': user,
+                    'crumbs': create_user_crumbs(request, [{'title': user.display_name,
+                                                            'url': request.route_url('user.view', uid=user.id)}]),
+                    'help': ['user', 'user', 'profile.html']}
+        else:
+            unauthorised_redirect(request)
+    else:
+        raise HTTPNotFound()
+
+
+class EditSchema(CSRFSchema):
+    """The class:`~wte.views.user.EditSchema` handles the validation of
+    changes to the :class:`~wte.models.User`.
+    """
+    email = All(UniqueEmailValidator(),
+                EmailDomainValidator(),
+                validators.Email(not_empty=True))
+    """Updated e-mail address"""
+    name = validators.UnicodeString(not_empty=True)
+    """Updated name"""
+    password = validators.UnicodeString()
+    """Updated password"""
+
+
+@current_user()
+@require_logged_in()
+def edit(request):
+    """Handles the "/users/{uid}/edit" URL, providing the form and backend
+    functionality to update the user's profile.
+    """
+    dbsession = DBSession()
+    user = dbsession.query(User).filter(User.id == request.matchdict['uid']).first()
+    if user:
+        if user.allow('edit', request.current_user):
+            crumbs = create_user_crumbs(request, [{'title': user.display_name,
+                                                   'url': request.route_url('user.view', uid=user.id)},
+                                                  {'title': 'Edit',
+                                                   'url': request.route_url('user.edit', uid=user.id)}])
+            if request.method == 'POST':
+                try:
+                    params = EditSchema().to_python(request.params,
+                                                    State(dbsession=dbsession,
+                                                          userid=user.id,
+                                                          email_domains=get_config_setting(request,
+                                                                                           key='registration.domains',
+                                                                                           target_type='list',
+                                                                                           default=None),
+                                                          user_class=User,
+                                                          request=request))
+                    with transaction.manager:
+                        dbsession.add(user)
+                        user.email = params['email']
+                        user.display_name = params['name']
+                        if params['password']:
+                            user.new_password(params['password'])
+                    raise HTTPSeeOther(request.route_url('user.view', uid=request.matchdict['uid']))
+                except Invalid as e:
+                    return {'e': e.error_dict,
+                            'values': request.params,
+                            'user': user,
+                            'crumbs': crumbs,
+                            'help': ['user', 'user', 'profile.html']}
+            return {'user': user,
+                    'crumbs': crumbs,
+                    'help': ['user', 'user', 'profile.html']}
+        else:
+            unauthorised_redirect(request)
+    else:
+        raise HTTPNotFound()
+
+
+@current_user()
+@require_logged_in()
+def permissions(request):
+    """Handles the "/users/{uid}/permissions" URL, providing the form and
+    backend functionality for setting the :class:`~wte.models.Permission` and
+    :class:`~wte.models.PermissionGroup` that the :class:`~wte.models.User`
+    belongs to.
+    """
+    if request.current_user.has_permission('admin.users.permissions'):
+        dbsession = DBSession()
+        user = dbsession.query(User).filter(User.id == request.matchdict['uid']).first()
+        if user:
+            permission_groups = dbsession.query(PermissionGroup).order_by(PermissionGroup.title)
+            permissions = dbsession.query(Permission).order_by(Permission.title)
+            if request.method == 'POST':
+                try:
+                    CSRFSchema(allow_extra_fields=True).to_python(request.params, State(request=request))
+                    with transaction.manager:
+                        dbsession.add(user)
+                        ids = request.params.getall('permission_group')
+                        if ids:
+                            user.permission_groups = dbsession.query(PermissionGroup).\
+                                filter(PermissionGroup.id.in_(ids)).all()
+                        else:
+                            user.permission_groups = []
+                        ids = request.params.getall('permission')
+                        if ids:
+                            user.permissions = dbsession.query(Permission).filter(Permission.id.in_(ids)).all()
+                        else:
+                            user.permissions = []
+                    dbsession.add(user)
+                    dbsession.add(request.current_user)
+                    if request.current_user.has_permission('admin.users.view'):
+                        raise HTTPSeeOther(request.route_url('users'))
+                    else:
+                        raise HTTPSeeOther(request.route_url('users.view', uid=user.id))
+                except Invalid as e:
+                    print(e)
+                    return {'errors': e.error_dict,
+                            'user': user,
+                            'permission_groups': permission_groups,
+                            'permissions': permissions,
+                            'crumbs': create_user_crumbs(request, [{'title': user.display_name,
+                                                                    'url': request.route_url('user.view',
+                                                                                             uid=user.id)},
+                                                                   {'title': 'Permissions',
+                                                                    'url': request.route_url('user.permissions',
+                                                                                             uid=user.id)}])}
+            return {'user': user,
+                    'permission_groups': permission_groups,
+                    'permissions': permissions,
+                    'crumbs': create_user_crumbs(request, [{'title': user.display_name,
+                                                            'url': request.route_url('user.view',
+                                                                                     uid=user.id)},
+                                                           {'title': 'Permissions',
+                                                            'url': request.route_url('user.permissions',
+                                                                                     uid=user.id)}])}
+        else:
+            raise HTTPNotFound()
+    else:
+        unauthorised_redirect(request)
+
+
+@current_user()
+@require_logged_in()
+def delete(request):
+    """Handles the "/users/{uid}/delete" URL, providing the form and backend
+    functionality for deleting a :class:`~wte.models.User`. Also deletes all
+    the data that is linked to that :class:`~wte.models.User`.
+    """
+    dbsession = DBSession()
+    user = dbsession.query(User).filter(User.id == request.matchdict['uid']).first()
+    if user:
+        if user.allow('delete', request.current_user):
+            if request.method == 'POST':
+                try:
+                    CSRFSchema().to_python(request.params, State(request=request))
+                    with transaction.manager:
+                        dbsession.delete(user)
+                    request.session.flash('The account has been deleted', queue='info')
+                    if request.current_user.has_permission('admin.users.view'):
+                        raise HTTPSeeOther(request.route_url('users'))
+                    else:
+                        raise HTTPSeeOther(request.route_url('root'))
+                except Invalid as e:
+                    return {'errors': e.error_dict,
+                            'user': user,
+                            'crumbs': create_user_crumbs(request,
+                                                         [{'title': user.display_name,
+                                                           'url': request.route_url('user.view', uid=user.id)},
+                                                          {'title': 'Delete',
+                                                           'url': request.route_url('user.delete', uid=user.id)}])}
+            return {'user': user,
+                    'crumbs': create_user_crumbs(request, [{'title': user.display_name,
+                                                            'url': request.route_url('user.view', uid=user.id)},
+                                                           {'title': 'Delete',
+                                                            'url': request.route_url('user.delete', uid=user.id)}])}
+        else:
+            unauthorised_redirect(request)
+    else:
+        raise HTTPNotFound()

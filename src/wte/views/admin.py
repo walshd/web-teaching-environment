@@ -15,13 +15,12 @@ import transaction
 
 from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.view import view_config
+from pywebtools.pyramid.auth.decorators import unauthorised_redirect, require_logged_in
 from pywebtools.pyramid.auth.views import current_user
 from pywebtools.sqlalchemy import DBSession
 
-from wte.decorators import (require_logged_in)
 from wte.models import (Part)
 from wte.text_formatter import compile_rst
-from wte.util import unauthorised_redirect
 
 
 def init(config):

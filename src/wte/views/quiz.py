@@ -18,12 +18,13 @@ import transaction
 from formencode import validators, Invalid, ForEach
 from pyramid.view import view_config
 from pywebtools.formencode import CSRFSchema, State
+from pywebtools.pyramid.auth.decorators import require_logged_in
 from pywebtools.pyramid.auth.views import current_user
+from pywebtools.pyramid.decorators import require_method
 from pywebtools.sqlalchemy import DBSession
 from sqlalchemy import and_
 from xml.etree import ElementTree
 
-from wte.decorators import (require_logged_in, require_method)
 from wte.models import Quiz, QuizAnswer, Part
 
 

@@ -24,17 +24,18 @@ from pyramid.response import Response
 from pyramid.renderers import render_to_response
 from pyramid.view import view_config
 from pywebtools.formencode import State, CSRFSchema
+from pywebtools.pyramid.auth.decorators import unauthorised_redirect, require_logged_in
 from pywebtools.pyramid.auth.views import current_user
+from pywebtools.pyramid.decorators import require_method
 from pywebtools.sqlalchemy import DBSession
 from pkg_resources import resource_string
 from sqlalchemy import and_
 from zipfile import ZipFile, ZIP_DEFLATED, ZIP_STORED, BadZipfile
 
-from wte.decorators import (require_logged_in, require_method)
 from wte.models import (Part, UserPartRole, Asset, UserPartProgress, User,
                         Quiz, QuizAnswer)
 from wte.text_formatter import compile_rst
-from wte.util import (unauthorised_redirect, ordered_counted_set)
+from wte.util import (ordered_counted_set)
 from wte.views.quiz import extract_quizzes
 
 BytesIO = nimport('io:BytesIO')

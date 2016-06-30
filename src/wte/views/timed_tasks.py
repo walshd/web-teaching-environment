@@ -18,12 +18,11 @@ from datetime import datetime
 from pyramid.httpexceptions import (HTTPSeeOther, HTTPNotFound)
 from pyramid.view import view_config
 from pywebtools.formencode import (State, CSRFSchema, DateValidator, TimeValidator, DynamicSchema)
+from pywebtools.pyramid.auth.decorators import unauthorised_redirect, require_logged_in
 from pywebtools.pyramid.auth.views import current_user
 from pywebtools.sqlalchemy import DBSession
 
-from wte.decorators import (require_logged_in)
 from wte.models import (Part, TimedTask)
-from wte.util import (unauthorised_redirect)
 from wte.views.part import create_part_crumbs
 
 

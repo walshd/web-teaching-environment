@@ -18,6 +18,8 @@ Utility functions for use with the Pyramid framework.
 
 .. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
+import math
+
 from decorator import decorator
 from pyramid.request import Request
 from pyramid.httpexceptions import HTTPMethodNotAllowed
@@ -85,7 +87,7 @@ def convert_type(value, target_type, default=None):
         else:
             return False
     elif target_type == 'list':
-        return [v.strip() for line in value.split('\n') for v in line.split(',')]
+        return [v.strip() for line in value.split('\n') for v in line.split(',') if v.strip()]
     if value:
         return value
     else:
@@ -193,3 +195,48 @@ class MenuBuilder(object):
             self._groups.append(self._group)
             self._group = None
         return self._groups
+
+
+def paginate(request, query, start, rows, query_params=None):
+    """Generates the list of pages for a query.
+
+    :param request: The request used to generate URLs
+    :type request: :class:`~pyramid.request.Request`
+    :param query: The SQLAlchemy query to generate the pagination for
+    :type query: :class:`~sqlalchemy.orm.query.Query`
+    :param start: The current starting index
+    :type start: :py:func:`int`
+    :param rows: The number of rows per page
+    :type rows: :py:func:`int`
+    :param query_params: An optional list of query parameters to include in all
+                         URLs that are generated
+    :type query_params: :py:func:`list` of :py:func:`tuple`
+    :return: The :py:func:`list` of pages to use with the "navigation.pagination"
+             helper
+    :rtype: :py:func:`list`
+    """
+    if query_params is None:
+        query_params = []
+    else:
+        query_params = [param for param in query_params if param[0] != 'start']
+    count = query.count()
+    pages = []
+    if start > 0:
+        pages.append({'type': 'prev',
+                      'url': request.route_url('users', _query=query_params + [('start', max(start - rows, 0))])})
+    else:
+        pages.append({'type': 'prev'})
+    for idx in range(0, int(math.ceil(count / float(rows)))):
+        if idx == (start / 30):
+            pages.append({'type': 'current',
+                          'label': str(idx + 1)})
+        else:
+            pages.append({'type': 'item',
+                          'label': str(idx + 1),
+                          'url': request.route_url('users', _query=query_params + [('start', idx * rows)])})
+    if start + rows < count:
+        pages.append({'type': 'next',
+                      'url': request.route_url('users', _query=query_params + [('start', max(start + rows, count))])})
+    else:
+        pages.append({'type': 'next'})
+    return pages

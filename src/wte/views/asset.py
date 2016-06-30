@@ -17,6 +17,7 @@ import transaction
 
 from mimetypes import guess_type
 from pyramid.httpexceptions import (HTTPSeeOther, HTTPNotFound, HTTPNotModified)
+from pywebtools.pyramid.auth.decorators import unauthorised_redirect, require_logged_in
 from pywebtools.pyramid.auth.views import current_user
 from pyramid.response import Response
 from pyramid.view import view_config
@@ -24,10 +25,8 @@ from pywebtools.formencode import State, CSRFSchema
 from pywebtools.sqlalchemy import DBSession
 from sqlalchemy import and_
 
-from wte.decorators import (require_logged_in)
 from wte.models import (Part, Asset)
 from wte.views.part import (create_part_crumbs, get_user_part_progress)
-from wte.util import (unauthorised_redirect)
 
 
 def init(config):

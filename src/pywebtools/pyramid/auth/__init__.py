@@ -21,7 +21,13 @@ active_urls = {'user.login': '/users/login',
                'user.register': '/users/register',
                'user.confirm': '/users/confirm/{token}',
                'user.forgotten_password': '/users/forgotten-password',
-               'user.reset_password': '/users/reset-password/{token}'}
+               'user.reset_password': '/users/reset-password/{token}',
+               'users': '/users',
+               'users.action': '/users/action',
+               'user.view': '/users/{uid}',
+               'user.edit': '/users/{uid}/edit',
+               'user.permissions': '/users/{uid}/permissions',
+               'user.delete': '/users/{uid}/delete'}
 
 
 def init(config, renderers=None, urls=None, redirects=None, callbacks=None):
@@ -68,6 +74,6 @@ def init(config, renderers=None, urls=None, redirects=None, callbacks=None):
     for key, value in active_urls.items():
         config.add_route(key, value)
         if key in renderers:
-            config.add_view('pywebtools.pyramid.auth.views.%s' % (key[key.rfind('.') + 1:]),
+            config.add_view('pywebtools.pyramid.auth.views.%s' % (key.split('.')[-1]),
                             route_name=key,
                             renderer=renderers[key])

@@ -20,38 +20,6 @@ from pyramid.httpexceptions import HTTPSeeOther
 from pywebtools.pyramid.util import get_config_setting
 
 
-def unauthorised_redirect(request, redirect_to=None, message=None):
-    """Provides standardised handling of "unauthorised" redirection. Depending
-    on whether the user is currently logged in, it will set the appropriate
-    error message into the session flash and redirect to the appropriate page.
-    If the user is logged in, it will redirect to the root page or to the
-    ``redirect_to`` URL if specified. If the user is not logged in, it will
-    always redirect to the login page.
-
-    :param request: The pyramid request
-    :param redirect_to: The URL to redirect to, if the user is currently
-                        logged in.
-    :type redirect_to: `unicode`
-    :param message: The message to show to the user
-    :type message: ``unicode``
-    """
-    if request.current_user.logged_in:
-        if message:
-            request.session.flash(message, queue='auth')
-        else:
-            request.session.flash('You are not authorised to access this area.', queue='auth')
-        if redirect_to:
-            raise HTTPSeeOther(redirect_to)
-        else:
-            raise HTTPSeeOther(request.route_url('root'))
-    else:
-        if message:
-            request.session.flash(message, queue='auth')
-        else:
-            request.session.flash('Please log in to access this area.', queue='auth')
-        raise HTTPSeeOther(request.route_url('user.login', _query={'return_to': request.current_route_url()}))
-
-
 def send_email(request, recipient, sender, subject, text):  # pragma: no cover
     """Sends an e-mail based on the settings in the configuration file. If
     the configuration does not have e-mail settings or if there is an
@@ -115,51 +83,6 @@ def timing_tween_factory(handler, registry):
                 logger.info('%s - %.4f seconds' % (request.path, (end - start)))
         return response
     return timing_tween
-
-
-def paginate(request, query, start, rows, query_params=None):
-    """Generates the list of pages for a query.
-
-    :param request: The request used to generate URLs
-    :type request: :class:`~pyramid.request.Request`
-    :param query: The SQLAlchemy query to generate the pagination for
-    :type query: :class:`~sqlalchemy.orm.query.Query`
-    :param start: The current starting index
-    :type start: :py:func:`int`
-    :param rows: The number of rows per page
-    :type rows: :py:func:`int`
-    :param query_params: An optional list of query parameters to include in all
-                         URLs that are generated
-    :type query_params: :py:func:`list` of :py:func:`tuple`
-    :return: The :py:func:`list` of pages to use with the "navigation.pagination"
-             helper
-    :rtype: :py:func:`list`
-    """
-    if query_params is None:
-        query_params = []
-    else:
-        query_params = [param for param in query_params if param[0] != 'start']
-    count = query.count()
-    pages = []
-    if start > 0:
-        pages.append({'type': 'prev',
-                      'url': request.route_url('users', _query=query_params + [('start', max(start - rows, 0))])})
-    else:
-        pages.append({'type': 'prev'})
-    for idx in range(0, int(math.ceil(count / float(rows)))):
-        if idx == (start / 30):
-            pages.append({'type': 'current',
-                          'label': str(idx + 1)})
-        else:
-            pages.append({'type': 'item',
-                          'label': str(idx + 1),
-                          'url': request.route_url('users', _query=query_params + [('start', idx * rows)])})
-    if start + rows < count:
-        pages.append({'type': 'next',
-                      'url': request.route_url('users', _query=query_params + [('start', max(start + rows, count))])})
-    else:
-        pages.append({'type': 'next'})
-    return pages
 
 
 def ordered_counted_set(items):
