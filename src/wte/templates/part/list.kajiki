@@ -37,6 +37,17 @@
         </h2>
         <div py:if="part.compiled_content" class="rest">${literal(part.summary)}</div>
       </li>
+      <li py:if="len([p for p in parts if p.allow('view', request.current_user)]) == 0">
+        <py:if test="'user_id' in request.params">
+          <py:if test="str(request.current_user.id) == request.params['user_id']">
+            You are currently not taking any modules. You can check <a href="${request.route_url('part.list')}">what modules are available</a>.
+          </py:if><py:else>
+            This user is not taking any modules.
+          </py:else>
+        </py:if><py:else>
+          There are currently no modules available.
+        </py:else>
+      </li>
     </ul>
   </py:block>
 </py:extends>
