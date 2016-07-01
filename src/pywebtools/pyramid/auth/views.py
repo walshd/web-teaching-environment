@@ -25,7 +25,7 @@ from sqlalchemy import and_, or_
 from pywebtools.formencode import (CSRFSchema, State, UniqueEmailValidator, EmailDomainValidator,
                                    PasswordValidator)
 from pywebtools.pyramid.util import get_config_setting, paginate
-from pywebtools.pyramid.auth.decorators import current_user, require_logged_in, unauthorised_redirect
+from pywebtools.pyramid.auth.decorators import current_user, require_permission, unauthorised_redirect
 from pywebtools.pyramid.auth.models import User, TimeToken, Permission, PermissionGroup
 from pywebtools.sqlalchemy import DBSession
 
@@ -447,39 +447,37 @@ def reset_password(request):
 
 
 @current_user()
+@require_permission(permission='admin.users.view')
 def users(request):
     """Handles the ``/users`` URL, displaying all users if the current
     :class:`~pywebtools.pyramid.auth.models.User` has the "admin.users.view"
     :class:`~pywebtools.pyramid.auth.models.Permission`.
     """
-    if request.current_user.has_permission('admin.users.view'):
-        dbsession = DBSession()
-        users = dbsession.query(User)
-        query_params = []
-        if 'q' in request.params and request.params['q']:
-            users = users.filter(or_(User.display_name.contains(request.params['q']),
-                                     User.email.contains(request.params['q'])))
-            query_params.append(('q', request.params['q']))
-        if 'status' in request.params and request.params['status']:
-            query_params.append(('status', request.params['status']))
-            if request.params['status'] == 'confirmed':
-                users = users.filter(User.status == 'active')
-            else:
-                users = users.filter(User.status != 'active')
-        start = 0
-        if 'start' in request.params:
-            try:
-                start = int(request.params['start'])
-            except ValueError:
-                pass
-        users = users.order_by(User.display_name)
-        users = users.offset(start).limit(30)
-        pages = paginate(request, users, start, 30, query_params=query_params)
-        return {'users': users,
-                'pages': pages,
-                'crumbs': create_user_crumbs(request, [])}
-    else:
-        unauthorised_redirect(request)
+    dbsession = DBSession()
+    users = dbsession.query(User)
+    query_params = []
+    if 'q' in request.params and request.params['q']:
+        users = users.filter(or_(User.display_name.contains(request.params['q']),
+                                 User.email.contains(request.params['q'])))
+        query_params.append(('q', request.params['q']))
+    if 'status' in request.params and request.params['status']:
+        query_params.append(('status', request.params['status']))
+        if request.params['status'] == 'confirmed':
+            users = users.filter(User.status == 'active')
+        else:
+            users = users.filter(User.status != 'active')
+    start = 0
+    if 'start' in request.params:
+        try:
+            start = int(request.params['start'])
+        except ValueError:
+            pass
+    users = users.order_by(User.display_name)
+    users = users.offset(start).limit(30)
+    pages = paginate(request, users, start, 30, query_params=query_params)
+    return {'users': users,
+            'pages': pages,
+            'crumbs': create_user_crumbs(request, [])}
 
 
 class ActionSchema(CSRFSchema):
@@ -502,56 +500,54 @@ class ActionSchema(CSRFSchema):
 
 
 @current_user()
+@require_permission(permission='admin.users.view')
 def action(request):
     """Handles the ``/users/action`` URL, applying the given action to the
     list of selected users. Requires that the current
     :class:`~wte.models.User` has the "admin.users.view"
     :class:`~wte.models.Permission`.
     """
-    if request.current_user.has_permission('admin.users.view'):
-        dbsession = DBSession()
-        try:
-            query_params = []
-            for param in ['q', 'status', 'start']:
-                if param in request.params and request.params[param]:
-                    query_params.append((param, request.params[param]))
-            params = ActionSchema().to_python(request.params,
-                                              State(request=request))
-            if params['action'] != 'delete' or params['confirm']:
-                with transaction.manager:
-                    for user in dbsession.query(User).filter(User.id.in_(params['user_id'])):
-                        if params['action'] == 'validate':
-                            if user.status == 'unconfirmed' and user.allow('edit', request.current_user):
-                                user.status = 'active'
-                        elif params['action'] == 'delete':
-                            if user.allow('delete', request.current_user):
-                                dbsession.delete(user)
-                        elif params['action'] == 'password':
-                            if user.status == 'active' and user.allow('edit', request.current_user):
-                                token = TimeToken(user.id,
-                                                  'reset_password',
-                                                  datetime.now() + timedelta(seconds=1200))
-                                dbsession.add(token)
-                                dbsession.flush()
-                                password_reset(request, user, token)
-                raise HTTPSeeOther(request.route_url('users', _query=query_params))
-            else:
-                return {'params': params,
-                        'users': dbsession.query(User).filter(User.id.in_(params['user_id'])),
-                        'query_params': query_params,
-                        'crumbs': create_user_crumbs(request, [{'title': 'Confirm',
-                                                                'url': request.current_route_url()}])}
-        except Invalid as e:
-            print(e)
-            request.session.flash('Please select the action you wish to apply and the users to apply it to',
-                                  queue='error')
+    dbsession = DBSession()
+    try:
+        query_params = []
+        for param in ['q', 'status', 'start']:
+            if param in request.params and request.params[param]:
+                query_params.append((param, request.params[param]))
+        params = ActionSchema().to_python(request.params,
+                                          State(request=request))
+        if params['action'] != 'delete' or params['confirm']:
+            with transaction.manager:
+                for user in dbsession.query(User).filter(User.id.in_(params['user_id'])):
+                    if params['action'] == 'validate':
+                        if user.status == 'unconfirmed' and user.allow('edit', request.current_user):
+                            user.status = 'active'
+                    elif params['action'] == 'delete':
+                        if user.allow('delete', request.current_user):
+                            dbsession.delete(user)
+                    elif params['action'] == 'password':
+                        if user.status == 'active' and user.allow('edit', request.current_user):
+                            token = TimeToken(user.id,
+                                              'reset_password',
+                                              datetime.now() + timedelta(seconds=1200))
+                            dbsession.add(token)
+                            dbsession.flush()
+                            password_reset(request, user, token)
             raise HTTPSeeOther(request.route_url('users', _query=query_params))
-    else:
-        unauthorised_redirect(request)
+        else:
+            return {'params': params,
+                    'users': dbsession.query(User).filter(User.id.in_(params['user_id'])),
+                    'query_params': query_params,
+                    'crumbs': create_user_crumbs(request, [{'title': 'Confirm',
+                                                            'url': request.current_route_url()}])}
+    except Invalid as e:
+        print(e)
+        request.session.flash('Please select the action you wish to apply and the users to apply it to',
+                              queue='error')
+        raise HTTPSeeOther(request.route_url('users', _query=query_params))
 
 
 @current_user()
-@require_logged_in()
+@require_permission(class_=User, request_key='uid', action='view')
 def view(request):
     """Handles the "/users/{uid}" URL, showing the user's profile.
     """
@@ -584,7 +580,7 @@ class EditSchema(CSRFSchema):
 
 
 @current_user()
-@require_logged_in()
+@require_permission(class_=User, request_key='uid', action='edit')
 def edit(request):
     """Handles the "/users/{uid}/edit" URL, providing the form and backend
     functionality to update the user's profile.
@@ -631,70 +627,67 @@ def edit(request):
 
 
 @current_user()
-@require_logged_in()
+@require_permission(permission='admin.users.permissions')
 def permissions(request):
     """Handles the "/users/{uid}/permissions" URL, providing the form and
     backend functionality for setting the :class:`~wte.models.Permission` and
     :class:`~wte.models.PermissionGroup` that the :class:`~wte.models.User`
     belongs to.
     """
-    if request.current_user.has_permission('admin.users.permissions'):
-        dbsession = DBSession()
-        user = dbsession.query(User).filter(User.id == request.matchdict['uid']).first()
-        if user:
-            permission_groups = dbsession.query(PermissionGroup).order_by(PermissionGroup.title)
-            permissions = dbsession.query(Permission).order_by(Permission.title)
-            if request.method == 'POST':
-                try:
-                    CSRFSchema(allow_extra_fields=True).to_python(request.params, State(request=request))
-                    with transaction.manager:
-                        dbsession.add(user)
-                        ids = request.params.getall('permission_group')
-                        if ids:
-                            user.permission_groups = dbsession.query(PermissionGroup).\
-                                filter(PermissionGroup.id.in_(ids)).all()
-                        else:
-                            user.permission_groups = []
-                        ids = request.params.getall('permission')
-                        if ids:
-                            user.permissions = dbsession.query(Permission).filter(Permission.id.in_(ids)).all()
-                        else:
-                            user.permissions = []
+    dbsession = DBSession()
+    user = dbsession.query(User).filter(User.id == request.matchdict['uid']).first()
+    if user:
+        permission_groups = dbsession.query(PermissionGroup).order_by(PermissionGroup.title)
+        permissions = dbsession.query(Permission).order_by(Permission.title)
+        if request.method == 'POST':
+            try:
+                CSRFSchema(allow_extra_fields=True).to_python(request.params, State(request=request))
+                with transaction.manager:
                     dbsession.add(user)
-                    dbsession.add(request.current_user)
-                    if request.current_user.has_permission('admin.users.view'):
-                        raise HTTPSeeOther(request.route_url('users'))
+                    ids = request.params.getall('permission_group')
+                    if ids:
+                        user.permission_groups = dbsession.query(PermissionGroup).\
+                            filter(PermissionGroup.id.in_(ids)).all()
                     else:
-                        raise HTTPSeeOther(request.route_url('users.view', uid=user.id))
-                except Invalid as e:
-                    print(e)
-                    return {'errors': e.error_dict,
-                            'user': user,
-                            'permission_groups': permission_groups,
-                            'permissions': permissions,
-                            'crumbs': create_user_crumbs(request, [{'title': user.display_name,
-                                                                    'url': request.route_url('user.view',
-                                                                                             uid=user.id)},
-                                                                   {'title': 'Permissions',
-                                                                    'url': request.route_url('user.permissions',
-                                                                                             uid=user.id)}])}
-            return {'user': user,
-                    'permission_groups': permission_groups,
-                    'permissions': permissions,
-                    'crumbs': create_user_crumbs(request, [{'title': user.display_name,
-                                                            'url': request.route_url('user.view',
-                                                                                     uid=user.id)},
-                                                           {'title': 'Permissions',
-                                                            'url': request.route_url('user.permissions',
-                                                                                     uid=user.id)}])}
-        else:
-            raise HTTPNotFound()
+                        user.permission_groups = []
+                    ids = request.params.getall('permission')
+                    if ids:
+                        user.permissions = dbsession.query(Permission).filter(Permission.id.in_(ids)).all()
+                    else:
+                        user.permissions = []
+                dbsession.add(user)
+                dbsession.add(request.current_user)
+                if request.current_user.has_permission('admin.users.view'):
+                    raise HTTPSeeOther(request.route_url('users'))
+                else:
+                    raise HTTPSeeOther(request.route_url('users.view', uid=user.id))
+            except Invalid as e:
+                print(e)
+                return {'errors': e.error_dict,
+                        'user': user,
+                        'permission_groups': permission_groups,
+                        'permissions': permissions,
+                        'crumbs': create_user_crumbs(request, [{'title': user.display_name,
+                                                                'url': request.route_url('user.view',
+                                                                                         uid=user.id)},
+                                                               {'title': 'Permissions',
+                                                                'url': request.route_url('user.permissions',
+                                                                                         uid=user.id)}])}
+        return {'user': user,
+                'permission_groups': permission_groups,
+                'permissions': permissions,
+                'crumbs': create_user_crumbs(request, [{'title': user.display_name,
+                                                        'url': request.route_url('user.view',
+                                                                                 uid=user.id)},
+                                                       {'title': 'Permissions',
+                                                        'url': request.route_url('user.permissions',
+                                                                                 uid=user.id)}])}
     else:
-        unauthorised_redirect(request)
+        raise HTTPNotFound()
 
 
 @current_user()
-@require_logged_in()
+@require_permission(class_=User, request_key='uid', action='delete')
 def delete(request):
     """Handles the "/users/{uid}/delete" URL, providing the form and backend
     functionality for deleting a :class:`~wte.models.User`. Also deletes all

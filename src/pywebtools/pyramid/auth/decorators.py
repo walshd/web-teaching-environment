@@ -110,7 +110,7 @@ def require_permission(permission=None, class_=None, request_key=None, action=No
                 if request.current_user.has_permission(permission):
                     return f(*args, **kwargs)
                 else:
-                    raise HTTPUnauthorized()
+                    unauthorised_redirect(request)
             elif object is not None and request_key is not None and action is not None:
                 dbsession = DBSession()
                 instance = dbsession.query(class_).filter(class_.id == request.matchdict[request_key]).first()
@@ -118,13 +118,13 @@ def require_permission(permission=None, class_=None, request_key=None, action=No
                     if instance.allow(action, request.current_user):
                         return f(*args, **kwargs)
                     else:
-                        raise HTTPUnauthorized()
+                        unauthorised_redirect(request)
                 else:
                     raise HTTPNotFound()
             else:
                 return f(*args, **kwargs)
         else:
-            raise HTTPUnauthorized()
+            unauthorised_redirect(request)
     return decorator(wrapper)
 
 
@@ -138,6 +138,5 @@ def require_logged_in():
         if request.current_user.logged_in:
             return f(*args, **kwargs)
         else:
-            unauthorised_redirect(request,
-                                  message='You must log-in or register to access this area')
+            unauthorised_redirect(request)
     return decorator(wrapper)

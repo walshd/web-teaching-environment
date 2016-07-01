@@ -136,7 +136,7 @@ class User(Base):
         if action == 'view':
             if self.id == user.id:
                 return True
-            return True  # TODO: Add support for showing / hiding profile
+            return user.has_permission('admin.users.view')
         elif action == 'edit':
             if self.id == user.id:
                 return True
