@@ -18,15 +18,14 @@ import re
 import transaction
 
 from datetime import datetime, timedelta
-from decorator import decorator
 from formencode import Invalid, validators, All, ForEach
-from pyramid.httpexceptions import HTTPSeeOther, HTTPOk, HTTPUnauthorized, HTTPNotFound
+from pyramid.httpexceptions import HTTPSeeOther, HTTPOk, HTTPNotFound
 from sqlalchemy import and_, or_
 
 from pywebtools.formencode import (CSRFSchema, State, UniqueEmailValidator, EmailDomainValidator,
                                    PasswordValidator)
-from pywebtools.pyramid.util import request_from_args, get_config_setting, paginate
-from pywebtools.pyramid.auth.decorators import current_user, require_logged_in
+from pywebtools.pyramid.util import get_config_setting, paginate
+from pywebtools.pyramid.auth.decorators import current_user, require_logged_in, unauthorised_redirect
 from pywebtools.pyramid.auth.models import User, TimeToken, Permission, PermissionGroup
 from pywebtools.sqlalchemy import DBSession
 

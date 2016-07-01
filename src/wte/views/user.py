@@ -10,19 +10,7 @@ Routes are defined in :func:`~wte.views.user.init`.
 
 .. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
-import formencode
-import transaction
-
-from datetime import datetime, timedelta
-from pyramid.httpexceptions import (HTTPSeeOther, HTTPNotFound)
-from pyramid.view import view_config
-from pywebtools.formencode import State, CSRFSchema, UniqueEmailValidator, EmailDomainValidator
 from pywebtools.pyramid import auth as pyramid_auth
-from pywebtools.pyramid.auth.decorators import unauthorised_redirect, require_logged_in
-from pywebtools.pyramid.auth.models import (User, Permission, PermissionGroup, TimeToken)
-from pywebtools.pyramid.auth.views import current_user
-from pywebtools.sqlalchemy import DBSession
-from sqlalchemy import or_
 
 from wte.util import (send_email, get_config_setting)
 
@@ -53,7 +41,7 @@ def init(config):
                                  'user.view': 'wte:templates/users/view.kajiki',
                                  'user.edit': 'wte:templates/users/edit.kajiki',
                                  'user.permissions': 'wte:templates/users/permissions.kajiki',
-                                 'user.delete': 'wte:templateS/users/delete.kajiki'},
+                                 'user.delete': 'wte:templates/users/delete.kajiki'},
                       redirects={'_default': 'root',
                                  'user.login': {'route': 'part.list',
                                                 'params': {'_query': {'user_id': '{uid}'}}},

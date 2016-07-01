@@ -11,12 +11,10 @@ functions.
 """
 import asset
 import logging
-import math
 import smtplib
 
 from email.mime.text import MIMEText
 from email.utils import formatdate
-from pyramid.httpexceptions import HTTPSeeOther
 from pywebtools.pyramid.util import get_config_setting
 
 
