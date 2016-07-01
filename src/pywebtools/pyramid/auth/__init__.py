@@ -16,6 +16,9 @@ function.
 """
 from pywebtools.pyramid.auth import views
 
+routes = ['user.login', 'user.logout', 'user.register', 'user.confirm', 'user.forgotten_password',
+          'user.reset_password', 'users', 'users.action', 'user.view', 'user.edit',
+          'user.permissions', 'user.delete']
 active_urls = {'user.login': '/users/login',
                'user.logout': '/users/logout',
                'user.register': '/users/register',
@@ -71,8 +74,9 @@ def init(config, renderers=None, urls=None, redirects=None, callbacks=None):
         views.active_redirects.update(redirects)
     if callbacks:
         views.active_callbacks.update(callbacks)
-    for key, value in active_urls.items():
-        config.add_route(key, value)
+    for key in routes:
+        config.add_route(key, active_urls[key])
+    for key in active_urls.keys():
         if key in renderers:
             config.add_view('pywebtools.pyramid.auth.views.%s' % (key.split('.')[-1]),
                             route_name=key,
