@@ -11,7 +11,7 @@ use with the authentication framework.
 """
 from decorator import decorator
 
-from pyramid.httpexceptions import HTTPUnauthorized, HTTPNotFound, HTTPSeeOther
+from pyramid.httpexceptions import HTTPNotFound, HTTPSeeOther
 
 from pywebtools.pyramid.auth.models import User
 from pywebtools.pyramid.util import request_from_args

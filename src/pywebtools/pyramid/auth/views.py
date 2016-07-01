@@ -447,8 +447,6 @@ def reset_password(request):
                                                      token=request.matchdict['token']), 'current': True}]}
 
 
-
-
 @current_user()
 @require_permission(permission='admin.users.view')
 def users(request):
@@ -534,7 +532,8 @@ def action(request):
                                               datetime.now() + timedelta(seconds=1200))
                             dbsession.add(token)
                             dbsession.flush()
-                            password_reset(request, user, token)
+                            if 'user.password_reset' in active_callbacks:
+                                active_callbacks['user.password_reset'](request, user, token)
             raise HTTPSeeOther(request.route_url('users', _query=query_params))
         else:
             return {'params': params,

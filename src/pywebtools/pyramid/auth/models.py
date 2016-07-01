@@ -43,7 +43,7 @@ def init_auth_permissions(dbsession):
     group.permissions.append(Permission(name='admin.users.permissions', title='Edit user permissions'))
     return group
 
-    
+
 class User(Base):
     """The :class:`~pywebtools.pyramid.auth.models.User` represents a generic user. Which
     functionality they can access is determined purely through the individual
@@ -190,16 +190,17 @@ class User(Base):
                                                _query=[('email', self.email),
                                                        ('csrf_token', request.session.get_csrf_token()),
                                                        ('return_to', request.current_route_url())]),
-                             attrs={'class': 'post-link'})
+                             attrs={'data-post-link': ''})
             else:
                 builder.group('Access', 'fi-key')
                 builder.menu('Validate user',
                              request.route_url('users.action', _query=[('user_id', self.id),
                                                                        ('action', 'validate'),
-                                                                       ('csrf_token', request.session.get_csrf_token())]),
+                                                                       ('csrf_token',
+                                                                        request.session.get_csrf_token())]),
                              icon='fi-check',
                              highlight=True,
-                             attrs={'class': 'post-link'})
+                             attrs={'data-post-link': 'post-link'})
         if self.allow('delete', request.current_user):
             builder.group('Delete', 'fi-trash')
             builder.menu('Delete',
@@ -207,7 +208,8 @@ class User(Base):
                                            uid=self.id,
                                            _query={'csrf_token': request.session.get_csrf_token()}),
                          icon='fi-trash',
-                         attrs={'class': 'alert post-link',
+                         attrs={'data-post-link': '',
+                                'class': 'alert',
                                 'data-wte-confirm': confirm_delete('user', self.display_name, False)})
         return builder.generate()
 
