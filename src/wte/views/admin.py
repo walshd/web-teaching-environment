@@ -84,7 +84,7 @@ def content_regenerate(request):
                 for part in dbsession.query(Part):
                     if part.content:
                         part.compiled_content = compile_rst(part.content, request, part)
-            request.session.flash('All contents have been regenerated.', queue='info')
+            request.session.flash('Regeneration complete', queue='info')
         raise HTTPSeeOther(request.route_url('admin.content'))
     else:
         raise unauthorised_redirect(request)
