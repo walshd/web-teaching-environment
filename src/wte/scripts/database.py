@@ -14,7 +14,7 @@ import transaction
 from alembic import config, command
 from pyramid.paster import (get_appsettings, setup_logging)
 from pywebtools.sqlalchemy import (Base, DBSession)
-from pywebtools.pyramid.auth.models import (User, Permission, PermissionGroup)
+from pywebtools.pyramid.auth.models import (User, Permission, PermissionGroup, init_auth_permissions)
 from sqlalchemy import engine_from_config
 
 from wte.models import DB_VERSION
@@ -56,13 +56,8 @@ def initialise_database(args):
 
         admin_permission = Permission(name='admin', title='Administration Access')
 
-        group = PermissionGroup(title='User Administration')
-        dbsession.add(group)
+        group = init_auth_permissions(dbsession)
         group.permissions.append(admin_permission)
-        group.permissions.append(Permission(name='admin.users.view', title='View all users'))
-        group.permissions.append(Permission(name='admin.users.edit', title='Edit all users'))
-        group.permissions.append(Permission(name='admin.users.delete', title='Delete all users'))
-        group.permissions.append(Permission(name='admin.users.permissions', title='Edit user permissions'))
         admin_user.permission_groups.append(group)
 
         group = PermissionGroup(title='Content Administration')

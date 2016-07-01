@@ -23,6 +23,26 @@ from uuid import uuid4
 from pywebtools.sqlalchemy import Base, DBSession
 
 
+def init_auth_permissions(dbsession):
+    """Creates the "User Administration" :class:`~pywebtools.pyramid.auth.models.PermissionGroup`
+    and the four :class:`~pywebtools.pyramid.auth.models.Permission` "admin.users.view",
+    "admin.users.edit", "admin.users.delete", and "admin.users.permission" needed for the
+    user management views to work.
+
+    :param dbsession: The database session to add the new objects to
+    :type dbsession: :func:`~sqlalchemy.orm.scoped_session`
+    :return: The group with the new permissions
+    :rtype: :class:`~pywebtools.pyramid.auth.models.PermissionGroup`
+    """
+    group = PermissionGroup(title='User Administration')
+    dbsession.add(group)
+    group.permissions.append(Permission(name='admin.users.view', title='View all users'))
+    group.permissions.append(Permission(name='admin.users.edit', title='Edit all users'))
+    group.permissions.append(Permission(name='admin.users.delete', title='Delete all users'))
+    group.permissions.append(Permission(name='admin.users.permissions', title='Edit user permissions'))
+    return group
+
+    
 class User(Base):
     """The :class:`~pywebtools.pyramid.auth.models.User` represents a generic user. Which
     functionality they can access is determined purely through the individual
