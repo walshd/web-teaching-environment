@@ -18,11 +18,10 @@ Utility functions for use with the Pyramid framework.
 
 .. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
+import json
 import math
 
-from decorator import decorator
 from pyramid.request import Request
-from pyramid.httpexceptions import HTTPMethodNotAllowed
 
 
 def request_from_args(*args):
@@ -37,25 +36,6 @@ def request_from_args(*args):
         if isinstance(arg, Request):
             return arg
     raise Exception('No request found')
-
-
-def require_method(methods):
-    """Checks that the current request method is in the list of ``methods``
-    that are allowed for the given request.
-
-    :param methods: The list of valid request methods
-    :type methods: `list` of `unicode`
-    """
-    if not isinstance(methods, list):
-        methods = [methods]
-
-    def wrapper(f, *args, **kwargs):
-        request = request_from_args(*args)
-        if request.method in methods:
-            return f(*args, **kwargs)
-        else:
-            raise HTTPMethodNotAllowed()
-    return decorator(wrapper)
 
 
 def convert_type(value, target_type, default=None):
@@ -240,3 +220,47 @@ def paginate(request, query, start, rows, query_params=None):
     else:
         pages.append({'type': 'next'})
     return pages
+
+
+def confirm_action(title, message, cancel, ok):
+    """Generates a confirmation JSON object for use with the jQuery.postLink() plugin.
+
+    :param title: The title of the confirmation dialog box
+    :type title: ``unicode``
+    :param message: The main message to show
+    :type message: ``unicode``
+    :param cancel: The cancel button's settings
+    :type cancel: ``dict`` or ``unicode``
+    :param ok: The ok button's settings
+    :type ok: ``dict`` or ``unicode``
+    :return: JSON object
+    :rtype: :func:`unicode`
+    """
+    return json.dumps({'title': title,
+                       'msg': message,
+                       'cancel': cancel if isinstance(cancel, dict) else {'label': cancel},
+                       'ok': ok if isinstance(ok, dict) else {'label': ok}})
+
+
+def confirm_delete(obj_type, title, has_parts=False):
+    """Generates the confirmation JSON object for use with the jQuery.postLink() plugin.
+
+    :param obj_type: The type of object that is being deleted
+    :type obj_type: ``unicode``
+    :param title: The title of the object that is being delete
+    :type title: ``unicode``
+    :param has_parts: Whether to add the suffix " and all its parts"
+    :type has_parts: ``bool``
+    :return: JSON object
+    :rtype: :func:`unicode`
+    """
+    msg = 'Please confirm that you wish to delete the %s "%s"' % (obj_type, title)
+    if has_parts:
+        msg = '%s and all its parts.' % (msg)
+    else:
+        msg = '%s.' % (msg)
+    return confirm_action('Delete this %s' % (obj_type),
+                          msg,
+                          "Don't delete",
+                          {'label': 'Delete',
+                           'class_': 'alert'})

@@ -20,6 +20,7 @@ from sqlalchemy import (Table, Column, Index, ForeignKey, Integer, Unicode,
 from sqlalchemy.orm import (relationship, reconstructor, backref)
 from uuid import uuid4
 
+from pywebtools.pyramid.util import MenuBuilder, confirm_delete
 from pywebtools.sqlalchemy import Base, DBSession
 
 
@@ -168,6 +169,48 @@ class User(Base):
                 return True
             return user.has_permission('admin.users.delete')
         return False
+
+    def admin_menu(self, request):
+        """Generates the menu bar for the users administration list."""
+        builder = MenuBuilder()
+        if self.allow('edit', request.current_user):
+            if self.status == 'active':
+                builder.group('Edit', 'fi-pencil')
+                builder.menu('Edit',
+                             request.route_url('user.edit', uid=self.id),
+                             icon='fi-pencil',
+                             highlight=True)
+                builder.group('Access', 'fi-key')
+                builder.menu('Edit Permissions',
+                             request.route_url('user.permissions', uid=self.id),
+                             icon='fi-key',
+                             highlight=True)
+                builder.menu('Reset Password',
+                             request.route_url('user.forgotten_password',
+                                               _query=[('email', self.email),
+                                                       ('csrf_token', request.session.get_csrf_token()),
+                                                       ('return_to', request.current_route_url())]),
+                             attrs={'class': 'post-link'})
+            else:
+                builder.group('Access', 'fi-key')
+                builder.menu('Validate user',
+                             request.route_url('users.action', _query=[('user_id', self.id),
+                                                                       ('action', 'validate'),
+                                                                       ('csrf_token', request.session.get_csrf_token())]),
+                             icon='fi-check',
+                             highlight=True,
+                             attrs={'class': 'post-link'})
+        if self.allow('delete', request.current_user):
+            builder.group('Delete', 'fi-trash')
+            builder.menu('Delete',
+                         request.route_url('user.delete',
+                                           uid=self.id,
+                                           _query={'csrf_token': request.session.get_csrf_token()}),
+                         icon='fi-trash',
+                         attrs={'class': 'alert post-link',
+                                'data-wte-confirm': confirm_delete('user', self.display_name, False)})
+        return builder.generate()
+
 
 Index('users_email_ix', User.email)
 

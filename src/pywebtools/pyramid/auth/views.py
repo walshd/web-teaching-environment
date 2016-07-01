@@ -77,8 +77,11 @@ def create_user_crumbs(request, crumbs):
         crumbs.insert(0, {'title': 'Users',
                           'url': request.route_url('users')})
     if request.current_user.has_permission('admin'):
-        crumbs.insert(0, {'title': 'Administration',
-                          'url': request.route_url('admin')})
+        try:
+            crumbs.insert(0, {'title': 'Administration',
+                              'url': request.route_url('admin')})
+        except:
+            pass
     crumbs[-1]['current'] = True
     return crumbs
 
@@ -573,7 +576,7 @@ class EditSchema(CSRFSchema):
                 EmailDomainValidator(),
                 validators.Email(not_empty=True))
     """Updated e-mail address"""
-    name = validators.UnicodeString(not_empty=True)
+    display_name = validators.UnicodeString(not_empty=True)
     """Updated name"""
     password = validators.UnicodeString()
     """Updated password"""
@@ -607,7 +610,7 @@ def edit(request):
                     with transaction.manager:
                         dbsession.add(user)
                         user.email = params['email']
-                        user.display_name = params['name']
+                        user.display_name = params['display_name']
                         if params['password']:
                             user.new_password(params['password'])
                     raise HTTPSeeOther(request.route_url('user.view', uid=request.matchdict['uid']))
@@ -660,9 +663,8 @@ def permissions(request):
                 if request.current_user.has_permission('admin.users.view'):
                     raise HTTPSeeOther(request.route_url('users'))
                 else:
-                    raise HTTPSeeOther(request.route_url('users.view', uid=user.id))
+                    raise HTTPSeeOther(request.route_url('user.view', uid=user.id))
             except Invalid as e:
-                print(e)
                 return {'errors': e.error_dict,
                         'user': user,
                         'permission_groups': permission_groups,

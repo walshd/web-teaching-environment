@@ -1,0 +1,37 @@
+<div>
+  <!-- Generic pagination function to generate pagination controls -->
+  <py:def function="pagination(pages)">
+    <nav>
+      <ul class="pagination" role="navigation" aria-label="Pagination">
+        <py:for each="page in pages">
+          <py:switch test="page['type']">
+            <py:case value="'prev'">
+              <py:if test="'url' in page">
+                <li class="pagination-previous"><a href="${page['url']}">Previous <span class="show-for-sr">page</span></a></li>
+              </py:if><py:else>
+                <li class="pagination-previous disabled">Previous <span class="show-for-sr">page</span></li>
+              </py:else>
+            </py:case>
+            <py:case value="'next'">
+              <py:if test="'url' in page">
+                <li class="pagination-next"><a href="${page['url']}">Next <span class="show-for-sr">page</span></a></li>
+              </py:if><py:else>
+                <li class="pagination-next disabled">Next <span class="show-for-sr">page</span></li>
+              </py:else>
+            </py:case>
+            <py:case value="'current'">
+              <li class="current">${page['label']}</li>
+            </py:case>
+            <py:case value="'item'">
+              <py:if test="'url' in page">
+                <li><a href="${page['url']}">${page['label']}</a></li>
+              </py:if><py:else>
+                <li>${page['label']}</li>
+              </py:else>
+            </py:case>
+          </py:switch>
+        </py:for>
+      </ul>
+    </nav>
+  </py:def>
+</div>

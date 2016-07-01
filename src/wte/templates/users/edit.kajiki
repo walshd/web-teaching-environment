@@ -12,7 +12,7 @@
       </div>
       <div class="row">
         <div class="column small-12 medium-8 large-6 end">
-          ${form.field('text', 'name', 'Your Name', value=user.display_name)}
+          ${form.field('text', 'display_name', 'Your Name', value=user.display_name)}
         </div>
       </div>
       <div class="row">
