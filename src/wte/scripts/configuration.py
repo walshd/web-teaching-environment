@@ -10,7 +10,6 @@ styles.
 
 .. moduleauthor:: Mark Hall <mark.hall@work.room3b.eu>
 """
-import sass
 import uuid
 
 from kajiki import TextTemplate
@@ -30,9 +29,13 @@ def init(subparsers):
     parser.add_argument('--filename', default='production.ini', help='Configuration file name')
     parser.add_argument('--sqla-connection-string', default=None, help='SQLAlchemy database connection string')
     parser.set_defaults(func=generate_config)
-    parser = subparsers.add_parser('generate-custom-styling', help='Generate custom CSS styling')
-    parser.add_argument('configuration', default='production.ini', help='Configuration file name')
-    parser.set_defaults(func=generate_custom_styling)
+    try:
+        import sass  # flake8: noqa
+        parser = subparsers.add_parser('generate-custom-styling', help='Generate custom CSS styling')
+        parser.add_argument('configuration', default='production.ini', help='Configuration file name')
+        parser.set_defaults(func=generate_custom_styling)
+    except:
+        pass
 
 
 def generate_config(args):
@@ -54,6 +57,7 @@ def generate_custom_styling(args):
     """Generates a custom CSS styling for the WTE application. Allows
     customisation of general settings, Pygments style, and CodeMirror theme.
     """
+    import sass
     settings = get_appsettings(args.configuration)
 
     # Create the settings overide partial

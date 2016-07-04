@@ -22,7 +22,6 @@ requires = [
     'formencode',
     'alembic',
     'inflect',
-    'libsass>0.9,<0.10',
     'asset',
     'nine',
     'pycrypto'
