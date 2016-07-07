@@ -48,14 +48,18 @@ class DBUpgradeException(Exception):
             "and then start the application again."
 
 
-def check_database_version(db_version):
+def check_database_version(db_version, dbsession=None):
     """Checks that the current version of the database matches the version specified
     by ``db_version``. This requires the use of the Alembic database migration library.
 
     :param db_version: The version identifier to check.
     :type db_version: ``str``
+    :param dbsession: The database session to use for database access. If ``None`` will
+                      create a new session.
+    :type dbsession: :func:`~wlalchemy.orm.scoped_session
     """
-    dbsession = DBSession()
+    if not dbsession:
+        dbsession = DBSession()
     try:
         inspector = Inspector.from_engine(dbsession.bind)
         if 'alembic_version' in inspector.get_table_names():
