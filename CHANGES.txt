@@ -1,6 +1,11 @@
 1.3.dev0
 --------
 
+1.2.1
+-----
+
+- *BUGFIX*: Handle student progress where nothing has been visited
+
 1.2.0
 -----
 
