@@ -321,12 +321,13 @@ def view_part(request):
                                              'completed': 0}
                         time_spent = []
                         for progress in progresses:
-                            if len(progress.visited) == len([c for c in part.children if c.status == 'available']):
-                                stats['students']['completed'] = stats['students']['completed'] + 1
-                            elif len(progress.visited) > 0:
-                                stats['students']['inprogress'] = stats['students']['inprogress'] + 1
-                            if len(progress.visited) > 0:
-                                time_spent.append(sum([p['duration'] for p in progress.visited.values()]))
+                            if progress.visited:
+                                if len(progress.visited) == len([c for c in part.children if c.status == 'available']):
+                                    stats['students']['completed'] = stats['students']['completed'] + 1
+                                elif len(progress.visited) > 0:
+                                    stats['students']['inprogress'] = stats['students']['inprogress'] + 1
+                                if len(progress.visited) > 0:
+                                    time_spent.append(sum([p['duration'] for p in progress.visited.values()]))
                         if time_spent:
                             time_spent.sort()
                             first = math.floor(len(time_spent) * 0.25)
