@@ -2,6 +2,7 @@
 -----
 
 - *BUGFIX*: Correctly handle student progress on modules
+- *BUGFIX*: Correctly handle parts with an empty content
 
 1.2.1
 -----

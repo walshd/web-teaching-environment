@@ -11,7 +11,7 @@
     <py:if test="part.has_role('student', request.current_user)">
       <div class="row">
         <div class="column small-12 medium-6">
-          <div class="rest">${literal(part.compiled_content)}</div>
+          <div class="rest">${literal(part.compiled_content if part.compiled_content else '')}</div>
           <py:if test="len([c for c in part.children if c.allow('view', request.current_user)]) != 0">
             <py:if test="progress.current">
               <a href="${request.route_url('part.view', pid=progress.current.id)}" class="button">Continue the ${part.label.title() if part.label else 'Part'} where you left off</a>

@@ -9,7 +9,7 @@
     <?py from wte.helpers.frontend import set_list ?>
     <div class="float-right">${menu.menubar(part.menu(request))}</div>
     <h1>${part.title} <small py:if="part.status != 'available'" class="label">${part.status.title()}</small></h1>
-    <div class="rest">${literal(part.compiled_content)}</div>
+    <div class="rest">${literal(part.compiled_content if part.compiled_content else '')}</div>
     <py:if test="part.register_state(request.current_user) == 'already_registered'">
       <section py:if="part.children">
         <h2>${set_list(labels)}</h2>
