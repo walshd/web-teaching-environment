@@ -304,9 +304,13 @@ def view_part(request):
                 # End Quiz Summary Generation
                 # Stats Generation
                 if part.has_role('student', request.current_user):
-                    stats['visited'] = len(progress.visited)
-                    stats['time'] = sum([page['duration'] for page in progress.visited.values()])\
-                        if stats['visited'] > 0 else 0
+                    if progress:
+                        stats['visited'] = len(progress.visited)
+                        stats['time'] = sum([page['duration'] for page in progress.visited.values()])\
+                            if stats['visited'] > 0 else 0
+                    else:
+                        stats['visited'] = 0
+                        stats['time'] = 0
                 else:
                     progresses = dbsession.query(UserPartProgress).join(UserPartProgress.user, User.roles).\
                         filter(and_(UserPartProgress.part_id == part.id,
