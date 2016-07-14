@@ -14,7 +14,7 @@
         </div>
         <div class="float-right">${menu.menubar(part.menu(request), alignment='right')}</div>
         <h1>${part.title}<small py:if="part.status == 'unavailable'" class="label radius">Unavailable</small></h1>
-        ${literal(part.compiled_content.replace('\n\n', '\n&amp;nbsp;\n'))}
+        ${literal(part.compiled_content.replace('\n\n', '\n&amp;nbsp;\n') if part.compiled_content else '')}
         ${nav.page_pagination(part)}
         <section py:if="part.assets and part.has_role('owner', request.current_user)">
           <h2>Assets</h2>
