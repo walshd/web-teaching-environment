@@ -108,4 +108,10 @@
         border: 1px solid #dfdfdf;
         border-radius: 3px;
     }
+    .line-block {
+        font-size: inherit;
+        line-height: $paragraph-lineheight;
+        margin-bottom: $paragraph-margin-bottom;
+        text-rendering: $paragraph-text-rendering; 
+    }
 }
