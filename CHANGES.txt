@@ -4,6 +4,7 @@
 - *BUGFIX*: Correctly handle student progress on modules
 - *BUGFIX*: Correctly handle parts with an empty content (#67)
 - *BUGFIX*: Allow editing a module that has been archived (#65)
+- *BUGFIX*: Line blocks now have the same styling as a paragraph (#73)
 
 1.2.1
 -----
