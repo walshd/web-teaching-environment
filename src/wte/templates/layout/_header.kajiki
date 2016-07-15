@@ -2,9 +2,13 @@
   <nav class="top-bar">
     <div class="top-bar-title"><a href="${request.route_url('root')}">Web Teaching Environment</a></div>
     <div class="top-bar-left">
-      <ul class="menu">
+      <ul class="menu dropdown" data-dropdown-menu="">
         <li py:if="request.current_user.has_permission('admin')" class="${'active' if request.matched_route and (request.matched_route.name.startswith('admin') or request.matched_route.name.startswith('user')) else ''}"><a href="${request.route_url('admin')}">Administration</a></li>
-        <li class="${'active' if request.matched_route and request.matched_route.name.startswith('part') else ''}"><a href="${request.route_url('part.list')}">Modules</a></li>
+        <li class="${'active' if request.matched_route and request.matched_route.name.startswith('part') and 'user_id' not in request.params else ''}"><a href="${request.route_url('part.list')}">Modules</a>
+          <ul py:if="request.current_user.logged_in" class="menu">
+            <li><a href="${request.route_url('part.list', _query={'user_id': request.current_user.id})}">My Modules</a></li>
+          </ul>
+        </li>
       </ul>
     </div>
     <div class="top-bar-right">
@@ -13,7 +17,7 @@
           <li><a href="${request.route_url('user.view', uid=request.current_user.id)}">${request.current_user.display_name}</a>
             <ul class="menu">
               <li><a href="${request.route_url('user.edit', uid=request.current_user.id)}">Edit your Profile</a></li>
-              <li><a href="${request.route_url('part.list', _query={'user_id': request.current_user.id})}">Modules</a></li>
+              <li><a href="${request.route_url('part.list', _query={'user_id': request.current_user.id})}">My Modules</a></li>
               <li class="divider"></li>
               <li><a href="${request.route_url('user.logout', _query={'csrf_token': request.session.get_csrf_token()})}" class="post-link">Log out</a></li>
             </ul>
