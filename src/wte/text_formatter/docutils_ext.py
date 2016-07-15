@@ -166,7 +166,7 @@ class Pygments(Directive):
 
 
 YOUTUBE_BASE_TEMPLATE = '<iframe width="560" height="315" ' + \
-    'src="%s" allowfullscreen="allowfullscreen"></iframe>'
+    'src="https://www.youtube.com/embed/%s" allowfullscreen="allowfullscreen"></iframe>'
 
 
 class YouTube(Directive):
@@ -176,14 +176,19 @@ class YouTube(Directive):
 
       .. youtube:: https://URL/TO/VIDEO
 
+    The URL must either be the share or embed URLs.
     """
     required_arguments = 1
 
     def run(self):
-        youtube = HtmlElementBlock('', nodes.raw('', YOUTUBE_BASE_TEMPLATE % (self.arguments[0]), format='html'))
-        if self.lineno:
-            youtube.line = self.lineno
-        return [youtube]
+        if self.arguments[0].startswith('https://www.youtube.com/') or self.arguments[0].startswith('https://youtu.be/'):
+            video_id = self.arguments[0][self.arguments[0].rfind('/') + 1:]
+            youtube = HtmlElementBlock('', nodes.raw('', YOUTUBE_BASE_TEMPLATE % video_id, format='html'))
+            if self.lineno:
+                youtube.line = self.lineno
+            return [youtube]
+        else:
+            return [nodes.paragraph(self.arguments[0], 'Invalid YouTube URL')]
 
 
 CROSSREF_PATTERN = re.compile(r'([0-9]+)|(?:(.*)<([0-9]+)>)')
