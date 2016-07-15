@@ -521,7 +521,8 @@ class EditPartSchema(CSRFSchema):
     """The part's title"""
     status = formencode.All(formencode.validators.UnicodeString(if_empty='available', if_missing='available'),
                             formencode.validators.OneOf(['unavailable',
-                                                         'available']))
+                                                         'available',
+                                                         'archived']))  # TODO: Archived should only work for modules
     """The part's status"""
     display_mode = formencode.All(formencode.validators.UnicodeString(if_empty=None, if_missing=None),
                                   formencode.validators.OneOf([None,
