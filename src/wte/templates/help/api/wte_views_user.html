@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <link rel="stylesheet" href="../../static/css/application.min.css"/>
     <link rel="stylesheet" href="../_static/default.css"/>
@@ -22,156 +22,19 @@
 <h1><a class="reference internal" href="#module-wte.views.user" title="wte.views.user"><code class="xref py py-mod docutils literal"><span class="pre">wte.views.user</span></code></a> &#8211; User functionality view handlers<a class="headerlink" href="#wte-views-user-user-functionality-view-handlers" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#module-wte.views.user" title="wte.views.user"><code class="xref py py-mod docutils literal"><span class="pre">user</span></code></a> module handles all user functionality.</p>
 <p>Routes are defined in <a class="reference internal" href="#wte.views.user.init" title="wte.views.user.init"><code class="xref py py-func docutils literal"><span class="pre">init()</span></code></a>.</p>
-<dl class="class">
-<dt id="wte.views.user.ActionSchema">
-<em class="property">class </em><code class="descclassname">wte.views.user.</code><code class="descname">ActionSchema</code><span class="sig-paren">(</span><em>*args</em>, <em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/user.html#ActionSchema"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.user.ActionSchema" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="docutils">
-<dt>The <a class="reference internal" href="#wte.views.user.ActionSchema" title="wte.views.user.ActionSchema"><code class="xref py py-class docutils literal"><span class="pre">ActionSchema</span></code></a> handles the validation of</dt>
-<dd>user action requests.</dd>
-</dl>
-<p><strong>Messages</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal"><span class="pre">badDictType</span></code>:</dt>
-<dd>The input must be dict-like (not a <code class="docutils literal"><span class="pre">%(type)s</span></code>: <code class="docutils literal"><span class="pre">%(value)r</span></code>)</dd>
-<dt><code class="docutils literal"><span class="pre">badType</span></code>:</dt>
-<dd>The input must be a string (not a <code class="docutils literal"><span class="pre">%(type)s</span></code>: <code class="docutils literal"><span class="pre">%(value)r</span></code>)</dd>
-<dt><code class="docutils literal"><span class="pre">empty</span></code>:</dt>
-<dd>Please enter a value</dd>
-<dt><code class="docutils literal"><span class="pre">missingValue</span></code>:</dt>
-<dd>Missing value</dd>
-<dt><code class="docutils literal"><span class="pre">noneType</span></code>:</dt>
-<dd>The input must be a string (not None)</dd>
-<dt><code class="docutils literal"><span class="pre">notExpected</span></code>:</dt>
-<dd>The input field <code class="docutils literal"><span class="pre">%(name)s</span></code> was not expected.</dd>
-<dt><code class="docutils literal"><span class="pre">singleValueExpected</span></code>:</dt>
-<dd>Please provide only one value</dd>
-</dl>
-<dl class="attribute">
-<dt id="wte.views.user.ActionSchema.action">
-<code class="descname">action</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.user.ActionSchema.action" title="Permalink to this definition">¶</a></dt>
-<dd><p>The action to apply</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="wte.views.user.ActionSchema.confirm">
-<code class="descname">confirm</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.user.ActionSchema.confirm" title="Permalink to this definition">¶</a></dt>
-<dd><p>Whether the user has confirmed the action</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="wte.views.user.ActionSchema.q">
-<code class="descname">q</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.user.ActionSchema.q" title="Permalink to this definition">¶</a></dt>
-<dd><p>Optional query parameter for the redirect</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="wte.views.user.ActionSchema.start">
-<code class="descname">start</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.user.ActionSchema.start" title="Permalink to this definition">¶</a></dt>
-<dd><p>Optional start parameter for the redirect</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="wte.views.user.ActionSchema.status">
-<code class="descname">status</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.user.ActionSchema.status" title="Permalink to this definition">¶</a></dt>
-<dd><p>Optional status parameter for the redirect</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="wte.views.user.ActionSchema.user_id">
-<code class="descname">user_id</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.user.ActionSchema.user_id" title="Permalink to this definition">¶</a></dt>
-<dd><p>User ids to apply the action to</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="wte.views.user.EditSchema">
-<em class="property">class </em><code class="descclassname">wte.views.user.</code><code class="descname">EditSchema</code><span class="sig-paren">(</span><em>*args</em>, <em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/user.html#EditSchema"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.user.EditSchema" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="docutils">
-<dt>The class:<cite>~wte.views.user.EditSchema</cite> handles the validation of</dt>
-<dd>changes to the <code class="xref py py-class docutils literal"><span class="pre">User</span></code>.</dd>
-</dl>
-<p><strong>Messages</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal"><span class="pre">badDictType</span></code>:</dt>
-<dd>The input must be dict-like (not a <code class="docutils literal"><span class="pre">%(type)s</span></code>: <code class="docutils literal"><span class="pre">%(value)r</span></code>)</dd>
-<dt><code class="docutils literal"><span class="pre">badType</span></code>:</dt>
-<dd>The input must be a string (not a <code class="docutils literal"><span class="pre">%(type)s</span></code>: <code class="docutils literal"><span class="pre">%(value)r</span></code>)</dd>
-<dt><code class="docutils literal"><span class="pre">empty</span></code>:</dt>
-<dd>Please enter a value</dd>
-<dt><code class="docutils literal"><span class="pre">missingValue</span></code>:</dt>
-<dd>Missing value</dd>
-<dt><code class="docutils literal"><span class="pre">noneType</span></code>:</dt>
-<dd>The input must be a string (not None)</dd>
-<dt><code class="docutils literal"><span class="pre">notExpected</span></code>:</dt>
-<dd>The input field <code class="docutils literal"><span class="pre">%(name)s</span></code> was not expected.</dd>
-<dt><code class="docutils literal"><span class="pre">singleValueExpected</span></code>:</dt>
-<dd>Please provide only one value</dd>
-</dl>
-<dl class="attribute">
-<dt id="wte.views.user.EditSchema.email">
-<code class="descname">email</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.user.EditSchema.email" title="Permalink to this definition">¶</a></dt>
-<dd><p>Updated e-mail address</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="wte.views.user.EditSchema.name">
-<code class="descname">name</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.user.EditSchema.name" title="Permalink to this definition">¶</a></dt>
-<dd><p>Updated name</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="wte.views.user.EditSchema.password">
-<code class="descname">password</code><em class="property"> = None</em><a class="headerlink" href="#wte.views.user.EditSchema.password" title="Permalink to this definition">¶</a></dt>
-<dd><p>Updated password</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="function">
-<dt id="wte.views.user.action">
-<code class="descclassname">wte.views.user.</code><code class="descname">action</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/user.html#action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.user.action" title="Permalink to this definition">¶</a></dt>
-<dd><p>Handles the <code class="docutils literal"><span class="pre">/users/action</span></code> URL, applying the given action to the
-list of selected users. Requires that the current
-<code class="xref py py-class docutils literal"><span class="pre">User</span></code> has the &#8220;admin.users.view&#8221;
-<code class="xref py py-class docutils literal"><span class="pre">Permission</span></code>.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="wte.views.user.create_user_crumbs">
-<code class="descclassname">wte.views.user.</code><code class="descname">create_user_crumbs</code><span class="sig-paren">(</span><em>request</em>, <em>crumbs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/user.html#create_user_crumbs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.user.create_user_crumbs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates the base-list of breadcrumbs, depending on the current
-users authorisation level.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="wte.views.user.delete">
-<code class="descclassname">wte.views.user.</code><code class="descname">delete</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/user.html#delete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.user.delete" title="Permalink to this definition">¶</a></dt>
-<dd><p>Handles the &#8220;/users/{uid}/delete&#8221; URL, providing the form and backend
-functionality for deleting a <code class="xref py py-class docutils literal"><span class="pre">User</span></code>. Also deletes all
-the data that is linked to that <code class="xref py py-class docutils literal"><span class="pre">User</span></code>.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="wte.views.user.edit">
-<code class="descclassname">wte.views.user.</code><code class="descname">edit</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/user.html#edit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.user.edit" title="Permalink to this definition">¶</a></dt>
-<dd><p>Handles the &#8220;/users/{uid}/edit&#8221; URL, providing the form and backend
-functionality to update the user&#8217;s profile.</p>
-</dd></dl>
-
 <dl class="function">
 <dt id="wte.views.user.init">
 <code class="descclassname">wte.views.user.</code><code class="descname">init</code><span class="sig-paren">(</span><em>config</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/user.html#init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.user.init" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds the user-specific routes (route name, URL pattern, handler):</p>
 <ul class="simple">
-<li><code class="docutils literal"><span class="pre">users</span></code> &#8211; <code class="docutils literal"><span class="pre">/users</span></code> &#8211; <a class="reference internal" href="#wte.views.user.users" title="wte.views.user.users"><code class="xref py py-func docutils literal"><span class="pre">users()</span></code></a></li>
-<li><code class="docutils literal"><span class="pre">users.action</span></code> &#8211; <code class="docutils literal"><span class="pre">/users/action</span></code> &#8211; <a class="reference internal" href="#wte.views.user.action" title="wte.views.user.action"><code class="xref py py-func docutils literal"><span class="pre">action()</span></code></a></li>
-<li><code class="docutils literal"><span class="pre">user.view</span></code> &#8211; <code class="docutils literal"><span class="pre">/users/{uid}</span></code> &#8211; <a class="reference internal" href="#wte.views.user.view" title="wte.views.user.view"><code class="xref py py-func docutils literal"><span class="pre">view()</span></code></a></li>
-<li><code class="docutils literal"><span class="pre">user.edit</span></code> &#8211; <code class="docutils literal"><span class="pre">/users/{uid}/edit</span></code> &#8211; <a class="reference internal" href="#wte.views.user.edit" title="wte.views.user.edit"><code class="xref py py-func docutils literal"><span class="pre">edit()</span></code></a></li>
+<li><code class="docutils literal"><span class="pre">users</span></code> &#8211; <code class="docutils literal"><span class="pre">/users</span></code> &#8211; <code class="xref py py-func docutils literal"><span class="pre">users()</span></code></li>
+<li><code class="docutils literal"><span class="pre">users.action</span></code> &#8211; <code class="docutils literal"><span class="pre">/users/action</span></code> &#8211; <code class="xref py py-func docutils literal"><span class="pre">action()</span></code></li>
+<li><code class="docutils literal"><span class="pre">user.view</span></code> &#8211; <code class="docutils literal"><span class="pre">/users/{uid}</span></code> &#8211; <code class="xref py py-func docutils literal"><span class="pre">view()</span></code></li>
+<li><code class="docutils literal"><span class="pre">user.edit</span></code> &#8211; <code class="docutils literal"><span class="pre">/users/{uid}/edit</span></code> &#8211; <code class="xref py py-func docutils literal"><span class="pre">edit()</span></code></li>
 <li><code class="docutils literal"><span class="pre">user.permissions</span></code> &#8211; <code class="docutils literal"><span class="pre">/users/{uid}/permissions</span></code> &#8211;
-<a class="reference internal" href="#wte.views.user.permissions" title="wte.views.user.permissions"><code class="xref py py-func docutils literal"><span class="pre">permissions()</span></code></a></li>
+<code class="xref py py-func docutils literal"><span class="pre">permissions()</span></code></li>
 <li><code class="docutils literal"><span class="pre">user.delete</span></code> &#8211; <code class="docutils literal"><span class="pre">/users/{uid}/delete</span></code> &#8211;
-<a class="reference internal" href="#wte.views.user.delete" title="wte.views.user.delete"><code class="xref py py-func docutils literal"><span class="pre">delete()</span></code></a></li>
+<code class="xref py py-func docutils literal"><span class="pre">delete()</span></code></li>
 </ul>
 <p>Also initialises the <code class="xref py py-mod docutils literal"><span class="pre">pywebtools.pyramid.auth</span></code> authentication system</p>
 </dd></dl>
@@ -258,29 +121,6 @@ know that their password has been reset.</p>
 <dt id="wte.views.user.password_reset_failed">
 <code class="descclassname">wte.views.user.</code><code class="descname">password_reset_failed</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/user.html#password_reset_failed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.user.password_reset_failed" title="Permalink to this definition">¶</a></dt>
 <dd><p>Callback that handles a failed password reset.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="wte.views.user.permissions">
-<code class="descclassname">wte.views.user.</code><code class="descname">permissions</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/user.html#permissions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.user.permissions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Handles the &#8220;/users/{uid}/permissions&#8221; URL, providing the form and
-backend functionality for setting the <code class="xref py py-class docutils literal"><span class="pre">Permission</span></code> and
-<code class="xref py py-class docutils literal"><span class="pre">PermissionGroup</span></code> that the <code class="xref py py-class docutils literal"><span class="pre">User</span></code>
-belongs to.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="wte.views.user.users">
-<code class="descclassname">wte.views.user.</code><code class="descname">users</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/user.html#users"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.user.users" title="Permalink to this definition">¶</a></dt>
-<dd><p>Handles the <code class="docutils literal"><span class="pre">/users</span></code> URL, displaying all users if the current
-<code class="xref py py-class docutils literal"><span class="pre">User</span></code> has the &#8220;admin.users.view&#8221;
-<code class="xref py py-class docutils literal"><span class="pre">Permission</span></code>.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="wte.views.user.view">
-<code class="descclassname">wte.views.user.</code><code class="descname">view</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/views/user.html#view"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.views.user.view" title="Permalink to this definition">¶</a></dt>
-<dd><p>Handles the &#8220;/users/{uid}&#8221; URL, showing the user&#8217;s profile.</p>
 </dd></dl>
 
 </div>

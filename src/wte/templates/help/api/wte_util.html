@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <link rel="stylesheet" href="../../static/css/application.min.css"/>
     <link rel="stylesheet" href="../_static/default.css"/>
@@ -44,35 +44,6 @@ they appear in the <code class="docutils literal"><span class="pre">items</span>
 </dd></dl>
 
 <dl class="function">
-<dt id="wte.util.paginate">
-<code class="descclassname">wte.util.</code><code class="descname">paginate</code><span class="sig-paren">(</span><em>request</em>, <em>query</em>, <em>start</em>, <em>rows</em>, <em>query_params=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/util.html#paginate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.util.paginate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generates the list of pages for a query.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>request</strong> (<a class="reference external" href="http://docs.pylonsproject.org/projects/pyramid/en/latest/api/request.html#pyramid.request.Request" title="(in The Pyramid Web Framework v1.7)"><code class="xref py py-class docutils literal"><span class="pre">Request</span></code></a>) &#8211; The request used to generate URLs</li>
-<li><strong>query</strong> (<code class="xref py py-class docutils literal"><span class="pre">Query</span></code>) &#8211; The SQLAlchemy query to generate the pagination for</li>
-<li><strong>start</strong> (<code class="xref py py-func docutils literal"><span class="pre">int()</span></code>) &#8211; The current starting index</li>
-<li><strong>rows</strong> (<code class="xref py py-func docutils literal"><span class="pre">int()</span></code>) &#8211; The number of rows per page</li>
-<li><strong>query_params</strong> (<code class="xref py py-func docutils literal"><span class="pre">list()</span></code> of <a class="reference external" href="http://docs.python.org/library/functions.html#tuple" title="(in Python v2.7)"><code class="xref py py-func docutils literal"><span class="pre">tuple()</span></code></a>) &#8211; An optional list of query parameters to include in all
-URLs that are generated</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The <code class="xref py py-func docutils literal"><span class="pre">list()</span></code> of pages to use with the &#8220;navigation.pagination&#8221;
-helper</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><code class="xref py py-func docutils literal"><span class="pre">list()</span></code></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
 <dt id="wte.util.send_email">
 <code class="descclassname">wte.util.</code><code class="descname">send_email</code><span class="sig-paren">(</span><em>request</em>, <em>recipient</em>, <em>sender</em>, <em>subject</em>, <em>text</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/util.html#send_email"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.util.send_email" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sends an e-mail based on the settings in the configuration file. If
@@ -100,31 +71,6 @@ exception sending the e-mail, then it will log an error.</p>
 <code class="descclassname">wte.util.</code><code class="descname">timing_tween_factory</code><span class="sig-paren">(</span><em>handler</em>, <em>registry</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/util.html#timing_tween_factory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.util.timing_tween_factory" title="Permalink to this definition">¶</a></dt>
 <dd><p>Pyramid tween factory that logs the time taken for a request.
 Will not time static requests.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="wte.util.unauthorised_redirect">
-<code class="descclassname">wte.util.</code><code class="descname">unauthorised_redirect</code><span class="sig-paren">(</span><em>request</em>, <em>redirect_to=None</em>, <em>message=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/util.html#unauthorised_redirect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.util.unauthorised_redirect" title="Permalink to this definition">¶</a></dt>
-<dd><p>Provides standardised handling of &#8220;unauthorised&#8221; redirection. Depending
-on whether the user is currently logged in, it will set the appropriate
-error message into the session flash and redirect to the appropriate page.
-If the user is logged in, it will redirect to the root page or to the
-<code class="docutils literal"><span class="pre">redirect_to</span></code> URL if specified. If the user is not logged in, it will
-always redirect to the login page.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>request</strong> &#8211; The pyramid request</li>
-<li><strong>redirect_to</strong> (<cite>unicode</cite>) &#8211; The URL to redirect to, if the user is currently
-logged in.</li>
-<li><strong>message</strong> (<code class="docutils literal"><span class="pre">unicode</span></code>) &#8211; The message to show to the user</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
 </dd></dl>
 
 <dl class="function">

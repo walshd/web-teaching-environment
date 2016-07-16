@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <link rel="stylesheet" href="../../../static/css/application.min.css"/>
     <link rel="stylesheet" href="../../_static/default.css"/>
@@ -34,45 +34,11 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">asset</span>
 <span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">smtplib</span>
 
 <span class="kn">from</span> <span class="nn">email.mime.text</span> <span class="kn">import</span> <span class="n">MIMEText</span>
 <span class="kn">from</span> <span class="nn">email.utils</span> <span class="kn">import</span> <span class="n">formatdate</span>
-<span class="kn">from</span> <span class="nn">pyramid.httpexceptions</span> <span class="kn">import</span> <span class="n">HTTPSeeOther</span>
 <span class="kn">from</span> <span class="nn">pywebtools.pyramid.util</span> <span class="kn">import</span> <span class="n">get_config_setting</span>
-
-
-<div class="viewcode-block" id="unauthorised_redirect"><a class="viewcode-back" href="../../api/wte_util.html#wte.util.unauthorised_redirect">[docs]</a><span class="k">def</span> <span class="nf">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">redirect_to</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Provides standardised handling of &quot;unauthorised&quot; redirection. Depending</span>
-<span class="sd">    on whether the user is currently logged in, it will set the appropriate</span>
-<span class="sd">    error message into the session flash and redirect to the appropriate page.</span>
-<span class="sd">    If the user is logged in, it will redirect to the root page or to the</span>
-<span class="sd">    ``redirect_to`` URL if specified. If the user is not logged in, it will</span>
-<span class="sd">    always redirect to the login page.</span>
-
-<span class="sd">    :param request: The pyramid request</span>
-<span class="sd">    :param redirect_to: The URL to redirect to, if the user is currently</span>
-<span class="sd">                        logged in.</span>
-<span class="sd">    :type redirect_to: `unicode`</span>
-<span class="sd">    :param message: The message to show to the user</span>
-<span class="sd">    :type message: ``unicode``</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="o">.</span><span class="n">logged_in</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">message</span><span class="p">:</span>
-            <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">flash</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">queue</span><span class="o">=</span><span class="s1">&#39;auth&#39;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">flash</span><span class="p">(</span><span class="s1">&#39;You are not authorised to access this area.&#39;</span><span class="p">,</span> <span class="n">queue</span><span class="o">=</span><span class="s1">&#39;auth&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">redirect_to</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">HTTPSeeOther</span><span class="p">(</span><span class="n">redirect_to</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">HTTPSeeOther</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">))</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">message</span><span class="p">:</span>
-            <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">flash</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">queue</span><span class="o">=</span><span class="s1">&#39;auth&#39;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">flash</span><span class="p">(</span><span class="s1">&#39;Please log in to access this area.&#39;</span><span class="p">,</span> <span class="n">queue</span><span class="o">=</span><span class="s1">&#39;auth&#39;</span><span class="p">)</span>
-        <span class="k">raise</span> <span class="n">HTTPSeeOther</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;user.login&#39;</span><span class="p">,</span> <span class="n">_query</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;return_to&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">current_route_url</span><span class="p">()}))</span></div>
 
 
 <div class="viewcode-block" id="send_email"><a class="viewcode-back" href="../../api/wte_util.html#wte.util.send_email">[docs]</a><span class="k">def</span> <span class="nf">send_email</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">recipient</span><span class="p">,</span> <span class="n">sender</span><span class="p">,</span> <span class="n">subject</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
@@ -138,51 +104,6 @@
                 <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> - </span><span class="si">%.4f</span><span class="s1"> seconds&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="p">(</span><span class="n">end</span> <span class="o">-</span> <span class="n">start</span><span class="p">)))</span>
         <span class="k">return</span> <span class="n">response</span>
     <span class="k">return</span> <span class="n">timing_tween</span></div>
-
-
-<div class="viewcode-block" id="paginate"><a class="viewcode-back" href="../../api/wte_util.html#wte.util.paginate">[docs]</a><span class="k">def</span> <span class="nf">paginate</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">query_params</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Generates the list of pages for a query.</span>
-
-<span class="sd">    :param request: The request used to generate URLs</span>
-<span class="sd">    :type request: :class:`~pyramid.request.Request`</span>
-<span class="sd">    :param query: The SQLAlchemy query to generate the pagination for</span>
-<span class="sd">    :type query: :class:`~sqlalchemy.orm.query.Query`</span>
-<span class="sd">    :param start: The current starting index</span>
-<span class="sd">    :type start: :py:func:`int`</span>
-<span class="sd">    :param rows: The number of rows per page</span>
-<span class="sd">    :type rows: :py:func:`int`</span>
-<span class="sd">    :param query_params: An optional list of query parameters to include in all</span>
-<span class="sd">                         URLs that are generated</span>
-<span class="sd">    :type query_params: :py:func:`list` of :py:func:`tuple`</span>
-<span class="sd">    :return: The :py:func:`list` of pages to use with the &quot;navigation.pagination&quot;</span>
-<span class="sd">             helper</span>
-<span class="sd">    :rtype: :py:func:`list`</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">query_params</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">query_params</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">query_params</span> <span class="o">=</span> <span class="p">[</span><span class="n">param</span> <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">query_params</span> <span class="k">if</span> <span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;start&#39;</span><span class="p">]</span>
-    <span class="n">count</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
-    <span class="n">pages</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">if</span> <span class="n">start</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">pages</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;prev&#39;</span><span class="p">,</span>
-                      <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">,</span> <span class="n">_query</span><span class="o">=</span><span class="n">query_params</span> <span class="o">+</span> <span class="p">[(</span><span class="s1">&#39;start&#39;</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">start</span> <span class="o">-</span> <span class="n">rows</span><span class="p">,</span> <span class="mi">0</span><span class="p">))])})</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">pages</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;prev&#39;</span><span class="p">})</span>
-    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">count</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">rows</span><span class="p">)))):</span>
-        <span class="k">if</span> <span class="n">idx</span> <span class="o">==</span> <span class="p">(</span><span class="n">start</span> <span class="o">/</span> <span class="mi">30</span><span class="p">):</span>
-            <span class="n">pages</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;current&#39;</span><span class="p">,</span>
-                          <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)})</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">pages</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;item&#39;</span><span class="p">,</span>
-                          <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>
-                          <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">,</span> <span class="n">_query</span><span class="o">=</span><span class="n">query_params</span> <span class="o">+</span> <span class="p">[(</span><span class="s1">&#39;start&#39;</span><span class="p">,</span> <span class="n">idx</span> <span class="o">*</span> <span class="n">rows</span><span class="p">)])})</span>
-    <span class="k">if</span> <span class="n">start</span> <span class="o">+</span> <span class="n">rows</span> <span class="o">&lt;</span> <span class="n">count</span><span class="p">:</span>
-        <span class="n">pages</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;next&#39;</span><span class="p">,</span>
-                      <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">,</span> <span class="n">_query</span><span class="o">=</span><span class="n">query_params</span> <span class="o">+</span> <span class="p">[(</span><span class="s1">&#39;start&#39;</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">start</span> <span class="o">+</span> <span class="n">rows</span><span class="p">,</span> <span class="n">count</span><span class="p">))])})</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">pages</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;next&#39;</span><span class="p">})</span>
-    <span class="k">return</span> <span class="n">pages</span></div>
 
 
 <div class="viewcode-block" id="ordered_counted_set"><a class="viewcode-back" href="../../api/wte_util.html#wte.util.ordered_counted_set">[docs]</a><span class="k">def</span> <span class="nf">ordered_counted_set</span><span class="p">(</span><span class="n">items</span><span class="p">):</span>

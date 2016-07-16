@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <link rel="stylesheet" href="../../../../static/css/application.min.css"/>
     <link rel="stylesheet" href="../../../_static/default.css"/>
@@ -40,13 +40,12 @@
 
 <span class="kn">from</span> <span class="nn">pyramid.httpexceptions</span> <span class="kn">import</span> <span class="n">HTTPSeeOther</span>
 <span class="kn">from</span> <span class="nn">pyramid.view</span> <span class="kn">import</span> <span class="n">view_config</span>
+<span class="kn">from</span> <span class="nn">pywebtools.pyramid.auth.decorators</span> <span class="kn">import</span> <span class="n">unauthorised_redirect</span><span class="p">,</span> <span class="n">require_logged_in</span>
 <span class="kn">from</span> <span class="nn">pywebtools.pyramid.auth.views</span> <span class="kn">import</span> <span class="n">current_user</span>
 <span class="kn">from</span> <span class="nn">pywebtools.sqlalchemy</span> <span class="kn">import</span> <span class="n">DBSession</span>
 
-<span class="kn">from</span> <span class="nn">wte.decorators</span> <span class="kn">import</span> <span class="p">(</span><span class="n">require_logged_in</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">wte.models</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Part</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">wte.text_formatter</span> <span class="kn">import</span> <span class="n">compile_rst</span>
-<span class="kn">from</span> <span class="nn">wte.util</span> <span class="kn">import</span> <span class="n">unauthorised_redirect</span>
 
 
 <div class="viewcode-block" id="init"><a class="viewcode-back" href="../../../api/wte_views_admin.html#wte.views.admin.init">[docs]</a><span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
@@ -110,7 +109,7 @@
                 <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Part</span><span class="p">):</span>
                     <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">content</span><span class="p">:</span>
                         <span class="n">part</span><span class="o">.</span><span class="n">compiled_content</span> <span class="o">=</span> <span class="n">compile_rst</span><span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">content</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">part</span><span class="p">)</span>
-            <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">flash</span><span class="p">(</span><span class="s1">&#39;All contents have been regenerated.&#39;</span><span class="p">,</span> <span class="n">queue</span><span class="o">=</span><span class="s1">&#39;info&#39;</span><span class="p">)</span>
+            <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">flash</span><span class="p">(</span><span class="s1">&#39;Regeneration complete&#39;</span><span class="p">,</span> <span class="n">queue</span><span class="o">=</span><span class="s1">&#39;info&#39;</span><span class="p">)</span>
         <span class="k">raise</span> <span class="n">HTTPSeeOther</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;admin.content&#39;</span><span class="p">))</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">)</span></div>

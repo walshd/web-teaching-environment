@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <link rel="stylesheet" href="../../../../static/css/application.min.css"/>
     <link rel="stylesheet" href="../../../_static/default.css"/>
@@ -191,7 +191,7 @@
 
 
 <span class="n">YOUTUBE_BASE_TEMPLATE</span> <span class="o">=</span> <span class="s1">&#39;&lt;iframe width=&quot;560&quot; height=&quot;315&quot; &#39;</span> <span class="o">+</span> \
-    <span class="s1">&#39;src=&quot;</span><span class="si">%s</span><span class="s1">&quot; allowfullscreen=&quot;allowfullscreen&quot;&gt;&lt;/iframe&gt;&#39;</span>
+    <span class="s1">&#39;src=&quot;https://www.youtube.com/embed/</span><span class="si">%s</span><span class="s1">&quot; allowfullscreen=&quot;allowfullscreen&quot;&gt;&lt;/iframe&gt;&#39;</span>
 
 
 <div class="viewcode-block" id="YouTube"><a class="viewcode-back" href="../../../api/wte_text_formatter_docutils_ext.html#wte.text_formatter.docutils_ext.YouTube">[docs]</a><span class="k">class</span> <span class="nc">YouTube</span><span class="p">(</span><span class="n">Directive</span><span class="p">):</span>
@@ -201,14 +201,19 @@
 
 <span class="sd">      .. youtube:: https://URL/TO/VIDEO</span>
 
+<span class="sd">    The URL must either be the share or embed URLs.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">required_arguments</span> <span class="o">=</span> <span class="mi">1</span>
 
     <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">youtube</span> <span class="o">=</span> <span class="n">HtmlElementBlock</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">nodes</span><span class="o">.</span><span class="n">raw</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">YOUTUBE_BASE_TEMPLATE</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">format</span><span class="o">=</span><span class="s1">&#39;html&#39;</span><span class="p">))</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lineno</span><span class="p">:</span>
-            <span class="n">youtube</span><span class="o">.</span><span class="n">line</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lineno</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">youtube</span><span class="p">]</span></div>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;https://www.youtube.com/&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;https://youtu.be/&#39;</span><span class="p">):</span>
+            <span class="n">video_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span>
+            <span class="n">youtube</span> <span class="o">=</span> <span class="n">HtmlElementBlock</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">nodes</span><span class="o">.</span><span class="n">raw</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">YOUTUBE_BASE_TEMPLATE</span> <span class="o">%</span> <span class="n">video_id</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s1">&#39;html&#39;</span><span class="p">))</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lineno</span><span class="p">:</span>
+                <span class="n">youtube</span><span class="o">.</span><span class="n">line</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lineno</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">youtube</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">nodes</span><span class="o">.</span><span class="n">paragraph</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;Invalid YouTube URL&#39;</span><span class="p">)]</span></div>
 
 
 <span class="n">CROSSREF_PATTERN</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">r&#39;([0-9]+)|(?:(.*)&lt;([0-9]+)&gt;)&#39;</span><span class="p">)</span>
@@ -449,7 +454,12 @@
         <span class="k">return</span> <span class="p">[</span><span class="n">question</span><span class="p">]</span></div>
 
 
-<span class="k">class</span> <span class="nc">ShowHideBlock</span><span class="p">(</span><span class="n">Directive</span><span class="p">):</span>
+<div class="viewcode-block" id="ShowHideBlock"><a class="viewcode-back" href="../../../api/wte_text_formatter_docutils_ext.html#wte.text_formatter.docutils_ext.ShowHideBlock">[docs]</a><span class="k">class</span> <span class="nc">ShowHideBlock</span><span class="p">(</span><span class="n">Directive</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The :class:`~wte.text_formatter.docutils_ext` generates a block with arbitrary content</span>
+<span class="sd">    that the user can show and hide. Two optional parameters are available. ``initial`` can either</span>
+<span class="sd">    be set to &quot;hidden&quot; or &quot;visible&quot; (the default) to set the initial visiblity of the block.</span>
+<span class="sd">    ``title`` can be used to add a title to the block.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">required_arguments</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">optional_arguments</span> <span class="o">=</span> <span class="mi">1</span>
@@ -490,7 +500,7 @@
                                          <span class="n">html_attributes</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;show-block hidden&#39;</span><span class="p">}))</span>
         <span class="n">block</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">controls</span><span class="p">)</span>
         <span class="n">block</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">block</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">block</span><span class="p">]</span></div>
 </pre></div>
         </div>
       </div>

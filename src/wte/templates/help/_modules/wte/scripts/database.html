@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <link rel="stylesheet" href="../../../../static/css/application.min.css"/>
     <link rel="stylesheet" href="../../../_static/default.css"/>
@@ -37,7 +37,7 @@
 <span class="kn">from</span> <span class="nn">alembic</span> <span class="kn">import</span> <span class="n">config</span><span class="p">,</span> <span class="n">command</span>
 <span class="kn">from</span> <span class="nn">pyramid.paster</span> <span class="kn">import</span> <span class="p">(</span><span class="n">get_appsettings</span><span class="p">,</span> <span class="n">setup_logging</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">pywebtools.sqlalchemy</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">DBSession</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">pywebtools.pyramid.auth.models</span> <span class="kn">import</span> <span class="p">(</span><span class="n">User</span><span class="p">,</span> <span class="n">Permission</span><span class="p">,</span> <span class="n">PermissionGroup</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">pywebtools.pyramid.auth.models</span> <span class="kn">import</span> <span class="p">(</span><span class="n">User</span><span class="p">,</span> <span class="n">Permission</span><span class="p">,</span> <span class="n">PermissionGroup</span><span class="p">,</span> <span class="n">init_auth_permissions</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="n">engine_from_config</span>
 
 <span class="kn">from</span> <span class="nn">wte.models</span> <span class="kn">import</span> <span class="n">DB_VERSION</span>
@@ -79,13 +79,8 @@
 
         <span class="n">admin_permission</span> <span class="o">=</span> <span class="n">Permission</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;admin&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Administration Access&#39;</span><span class="p">)</span>
 
-        <span class="n">group</span> <span class="o">=</span> <span class="n">PermissionGroup</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s1">&#39;User Administration&#39;</span><span class="p">)</span>
-        <span class="n">dbsession</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+        <span class="n">group</span> <span class="o">=</span> <span class="n">init_auth_permissions</span><span class="p">(</span><span class="n">dbsession</span><span class="p">)</span>
         <span class="n">group</span><span class="o">.</span><span class="n">permissions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">admin_permission</span><span class="p">)</span>
-        <span class="n">group</span><span class="o">.</span><span class="n">permissions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Permission</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;admin.users.view&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;View all users&#39;</span><span class="p">))</span>
-        <span class="n">group</span><span class="o">.</span><span class="n">permissions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Permission</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;admin.users.edit&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Edit all users&#39;</span><span class="p">))</span>
-        <span class="n">group</span><span class="o">.</span><span class="n">permissions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Permission</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;admin.users.delete&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Delete all users&#39;</span><span class="p">))</span>
-        <span class="n">group</span><span class="o">.</span><span class="n">permissions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Permission</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;admin.users.permissions&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Edit user permissions&#39;</span><span class="p">))</span>
         <span class="n">admin_user</span><span class="o">.</span><span class="n">permission_groups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
 
         <span class="n">group</span> <span class="o">=</span> <span class="n">PermissionGroup</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s1">&#39;Content Administration&#39;</span><span class="p">)</span>
