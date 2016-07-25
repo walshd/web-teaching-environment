@@ -28,7 +28,7 @@ requires = [
     ]
 
 setup(name='WebTeachingEnvironment',
-      version='1.2.2',
+      version='1.2.3',
       description='The Web Teaching Environment',
       long_description=README + '\n\n' + CHANGES,
       classifiers=[
