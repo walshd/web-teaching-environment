@@ -1,3 +1,8 @@
+1.2.3
+-----
+
+- *BUGFIX*: Remove extra &nbsp; in code blocks
+
 1.2.2
 -----
 
