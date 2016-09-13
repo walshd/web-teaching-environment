@@ -1,6 +1,7 @@
 1.2.5
 
 - *BUGFIX*: Fixed another bug with downloading/exporting parts where the name contains /
+- *BUGFIX*: Fixed a bug with the encoding of static data in downloads
 
 1.2.4
 -----

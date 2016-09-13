@@ -1328,7 +1328,7 @@ def download(request):
                                    ('%s/_static/icons/foundation-icons.woff', 'static/css/icons/foundation-icons.woff'),
                                    ('%s/_static/jquery.min.js', 'static/js/jquery.min.js')]:
                 body_zip.writestr(target % part.title.replace('/', '_'),
-                                  native_str(resource_string('wte', source)))
+                                  resource_string('wte', source))
             index_html = '''<!DOCTYPE html>
 <html>
   <head>
