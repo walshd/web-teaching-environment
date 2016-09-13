@@ -1,3 +1,7 @@
+1.2.5
+
+- *BUGFIX*: Fixed another bug with downloading/exporting parts where the name contains /
+
 1.2.4
 -----
 
