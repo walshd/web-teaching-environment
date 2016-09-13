@@ -1327,7 +1327,7 @@ def download(request):
                                    ('%s/_static/icons/foundation-icons.ttf', 'static/css/icons/foundation-icons.ttf'),
                                    ('%s/_static/icons/foundation-icons.woff', 'static/css/icons/foundation-icons.woff'),
                                    ('%s/_static/jquery.min.js', 'static/js/jquery.min.js')]:
-                body_zip.writestr(target % part.title,
+                body_zip.writestr(target % part.title.replace('/', '_'),
                                   native_str(resource_string('wte', source)))
             index_html = '''<!DOCTYPE html>
 <html>
@@ -1344,8 +1344,8 @@ def download(request):
 </html>''' % {'title': part.title, 'url': '%s.html' % part.id}
             if IS_PYTHON2:
                 index_html = index_html.encode('utf-8')
-            body_zip.writestr('%s/index.html' % (part.title), index_html)
-            download_part(part.title, part, body_zip)
+            body_zip.writestr('%s/index.html' % (part.title.replace('/', '_')), index_html)
+            download_part(part.title.replace('/', '_'), part, body_zip)
             body_zip.close()
             return Response(body=body.getvalue(),
                             headers=[('Content-Type', 'application/zip'),
