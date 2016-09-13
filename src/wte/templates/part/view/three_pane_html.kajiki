@@ -51,7 +51,7 @@
           </div>
         </div>
         <div id="viewer">
-           <iframe src="${request.route_url('file.view', pid=part.id, filename=[f.filename for f in progress.files if f.mimetype == 'text/html'][0] if [f.filename for f in progress.files if f.mimetype == 'text/html'] else '')}"> </iframe>
+           <iframe src="${request.route_url('file.view', pid=part.id, filename=[f.filename for f in progress.files if f.mimetype == 'text/html'][0] if [f.filename for f in progress.files if f.mimetype == 'text/html'] else '')}" title="HTML Viewer"> </iframe>
         </div>
       </section>
     </div>

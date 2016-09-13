@@ -10,7 +10,7 @@
     <py:block name="title_link"></py:block>
     <py:block name="title_script"></py:block>
   </head>
-  <body>
+  <body class="${'high-contrast' if request.current_user and request.current_user.option('high-contrast') == 'true' else ''}">
     <py:include href="wte:templates/layout/_header.kajiki"/>
     <py:include href="wte:templates/layout/_breadcrumbs.kajiki"/>
     <py:include href="wte:templates/layout/_flash.kajiki"/>

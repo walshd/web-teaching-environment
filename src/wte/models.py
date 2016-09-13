@@ -21,7 +21,7 @@ from sqlalchemy.orm import (relationship, backref)
 
 from wte.helpers.frontend import confirm_delete, MenuBuilder, confirm_action
 
-DB_VERSION = '3ff51ab70eba'
+DB_VERSION = 'c9a72e7ff141'
 """The currently required database version."""
 
 

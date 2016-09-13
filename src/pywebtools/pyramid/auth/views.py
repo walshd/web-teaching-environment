@@ -19,11 +19,12 @@ import transaction
 
 from datetime import datetime, timedelta
 from formencode import Invalid, validators, All, ForEach
+from formencode.variabledecode import NestedVariables
 from pyramid.httpexceptions import HTTPSeeOther, HTTPOk, HTTPNotFound
 from sqlalchemy import and_, or_
 
 from pywebtools.formencode import (CSRFSchema, State, UniqueEmailValidator, EmailDomainValidator,
-                                   PasswordValidator)
+                                   PasswordValidator, DictValidator)
 from pywebtools.pyramid.util import get_config_setting, paginate
 from pywebtools.pyramid.auth.decorators import current_user, require_permission, unauthorised_redirect
 from pywebtools.pyramid.auth.models import User, TimeToken, Permission, PermissionGroup
@@ -579,6 +580,9 @@ class EditSchema(CSRFSchema):
     """Updated name"""
     password = validators.UnicodeString()
     """Updated password"""
+    option = DictValidator(if_missing=None, accept_iterator=True)
+
+    pre_validators = [NestedVariables()]
 
 
 @current_user()
@@ -612,8 +616,17 @@ def edit(request):
                         user.display_name = params['display_name']
                         if params['password']:
                             user.new_password(params['password'])
+                        options = {}
+                        if params['option']:
+                            for key, value in params['option'].items():
+                                if isinstance(value, list):
+                                    options[key] = value[-1]
+                                else:
+                                    options[key] = value
+                        user.options = options
                     raise HTTPSeeOther(request.route_url('user.view', uid=request.matchdict['uid']))
                 except Invalid as e:
+                    print(e)
                     return {'e': e.error_dict,
                             'values': request.params,
                             'user': user,

@@ -190,3 +190,17 @@ class TimeValidator(FancyValidator):
             return datetime.strptime(value, '%H:%M').time()
         except Exception:
             raise Invalid(self.message('invalid_format', state), value, state)
+
+
+class DictValidator(FancyValidator):
+    """The :class:`~pywebtools.formencode.DictValidator` validates that the value
+    is a ``dict``.
+    """
+
+    messages = {'not_dict': 'The value is not a dict'}
+
+    def _convert_to_python(self, value, state):
+        if isinstance(value, dict):
+            return value
+        else:
+            raise Invalid(self.message('not_dict', state), value, state)

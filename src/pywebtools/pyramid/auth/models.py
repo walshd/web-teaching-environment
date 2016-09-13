@@ -21,7 +21,7 @@ from sqlalchemy.orm import (relationship, reconstructor, backref)
 from uuid import uuid4
 
 from pywebtools.pyramid.util import MenuBuilder, confirm_delete
-from pywebtools.sqlalchemy import Base, DBSession
+from pywebtools.sqlalchemy import Base, DBSession, JSONUnicodeText, MutableDict
 
 
 def init_auth_permissions(dbsession):
@@ -75,6 +75,7 @@ class User(Base):
     display_name = Column(Unicode(64))
     login_limit = Column(Integer)
     status = Column(Unicode(255))
+    options = Column(MutableDict.as_mutable(JSONUnicodeText))
 
     permissions = relationship('Permission', backref='users', secondary='users_permissions')
     permission_groups = relationship('PermissionGroup', backref='users', secondary='users_permission_groups')
@@ -212,6 +213,28 @@ class User(Base):
                                 'class': 'alert',
                                 'data-wte-confirm': confirm_delete('user', self.display_name, False)})
         return builder.generate()
+
+    def has_option(self, key):
+        """Check if the :class:`~pywebtools.pyramid.auth.models.User` has the given option.
+
+        :param key: Option key to check.
+        :type key: ``unicode``
+        :return: Whether the option exists or not
+        :rtype: ``boolean``
+        """
+        return self.options and key in self.options
+
+    def option(self, key):
+        """Get the :class:`~pywebtools.pyramid.auth.models.User` options with the ``key``.
+
+        :param key: Option key to fetch.
+        :type key: ``unicode``
+        :return: Returns the option value or ``None``
+        """
+        if self.has_option(key):
+            return self.options[key]
+        else:
+            return None
 
 
 Index('users_email_ix', User.email)

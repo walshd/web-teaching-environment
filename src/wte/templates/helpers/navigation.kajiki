@@ -52,7 +52,8 @@ maximum = min(100, 100 * progress / len(part.parent.available_children))
           </py:else>
         </div>
         <div class="column small-8 medium-8">
-          <select><option py:for="page in part.parent.available_children" value="${page.id}" py:attrs="{'selected': 'selected' if page.id == part.id else None}">${page.title}</option></select>
+          <select name="page" title="Select the page to jump to"><option py:for="page in part.parent.available_children" value="${page.id}" py:attrs="{'selected': 'selected' if page.id == part.id else None}">${page.title}</option></select>
+          <input type="submit" value="Go to page" class="show-for-sr"/>
           <div class="progress" role="progressbar" tabindex="0" aria-valuenow="${minimum}" aria-valuemin="0" aria-valuemax="100">
             <div class="progress-meter" style="width: ${minimum}%"> </div>
           </div>

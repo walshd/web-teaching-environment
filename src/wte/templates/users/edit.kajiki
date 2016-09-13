@@ -21,6 +21,17 @@
         </div>
       </div>
       <div class="row">
+        <div class="column small-12 medium-8 large-6 end">
+          <h2>Options</h2>
+        </div>
+      </div>
+      <div class="row">
+        <div class="column small-12 medium-8 large-6 end">
+          <input type="hidden" name="option.high-contrast" value="false"/>
+          ${form.field('checkbox', 'option.high-contrast', 'Use the high-contrast interface', value='true', checked=user.has_option('high-contrast') == 'true')}
+        </div>
+      </div>
+      <div class="row">
         <div class="column small-12 medium-8 large-6 end text-right">
           <a href="${request.route_url('user.view', uid=user.id)}" class="button secondary">Don't Update</a>
           <input type="submit" value="Update" class="button"/>
