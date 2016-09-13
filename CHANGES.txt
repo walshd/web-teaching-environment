@@ -1,5 +1,9 @@
 1.3.dev0
 --------
+1.2.4
+-----
+
+- *BUGFIX*: Fixed a bug with downloading/exporting parts where the name contains /
 
 1.2.3
 -----

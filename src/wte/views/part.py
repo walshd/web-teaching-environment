@@ -1051,7 +1051,7 @@ def export(request):
                 return Response(body=body.getvalue(),
                                 headers=[('Content-Type', 'application/zip'),
                                          ('Content-Disposition',
-                                          native_str('attachment; filename="%s.zip"' % (part.title)))])
+                                          native_str('attachment; filename="%s.zip"' % (part.title.replace('/', '_'))))])
 
             return render_to_response('wte:templates/part/export.kajiki',
                                       {'part': part,
@@ -1350,7 +1350,7 @@ def download(request):
             return Response(body=body.getvalue(),
                             headers=[('Content-Type', 'application/zip'),
                                      ('Content-Disposition',
-                                      native_str('attachment; filename="%s.zip"' % (part.title)))])
+                                      native_str('attachment; filename="%s.zip"' % (part.title.replace('/', '_'))))])
         else:
             unauthorised_redirect(request)
     else:
@@ -1441,7 +1441,7 @@ def download_part_progress(request):
             zipfile.close()
             return Response(body=body.getvalue(),
                             headerlist=[('Content-Type', 'application/zip'),
-                                        ('Content-Disposition', 'attachment; filename="%s"' % (filename))])
+                                        ('Content-Disposition', 'attachment; filename="%s"' % (filename.replace('/', '_')))])
         else:
             unauthorised_redirect(request)
     else:
