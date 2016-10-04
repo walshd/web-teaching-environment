@@ -24,7 +24,8 @@ requires = [
     'inflect',
     'asset',
     'nine',
-    'pycrypto'
+    'pycrypto',
+    'PyWebTools>=1.0.1'
     ]
 
 setup(name='WebTeachingEnvironment',
