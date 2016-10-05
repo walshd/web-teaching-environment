@@ -8,6 +8,9 @@
         background: scale-color(map-get($foundation-palette, warning), $lightness: 85%);
         transition: background 0.4s;
     }
+    &.focusable {
+        cursor: crosshair;
+    }
 }
 
 .textbook {

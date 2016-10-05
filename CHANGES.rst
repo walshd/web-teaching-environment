@@ -1,6 +1,7 @@
 1.3.dev0
 --------
 
+- *UPDATE*: Use the crosshair cursor in the editor preview to indicate focusability (#69)
 - *UPDATE*: Add tooltips to the editor menu icons (#70)
 - *UPDATE*: Highlight Parts with upcoming Timed Actions (#80)
 - *UPDATE*: Make PyWebTools an external dependency

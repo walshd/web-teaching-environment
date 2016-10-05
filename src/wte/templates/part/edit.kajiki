@@ -108,7 +108,7 @@
           </div>
         </div>
       </form>
-      <div id="textbook" class="column small-12 medium-5 large-5 rest textbook">
+      <div id="textbook" class="column small-12 medium-5 large-5 rest textbook focusable">
       Loading content...
       </div>
     </div>
