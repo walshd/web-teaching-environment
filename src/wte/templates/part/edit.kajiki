@@ -72,14 +72,14 @@
           <div class="column small-12 codemirror-border">
             <nav class="menubar float-right">
               <ul class="menu">
-                <li><a href="#" id="bold-button"><span class="fi-bold"> </span><span class="show-for-sr">Bold</span></a></li>
-                <li><a href="#" id="italic-button"><span class="fi-italic"> </span><span class="show-for-sr">Italic</span></a></li>
+                <li><a href="#" id="bold-button" title="Bold Font"><span class="fi-bold"> </span><span class="show-for-sr">Bold</span></a></li>
+                <li><a href="#" id="italic-button" title="Italic Font"><span class="fi-italic"> </span><span class="show-for-sr">Italic</span></a></li>
                 <li class="separator"> </li>
-                <li><a href="#" id="linewrap-button"><span class="fi-no-icon">&#x2936;</span><span class="show-for-sr">Automatic line-wrap</span></a></li>
+                <li><a href="#" id="linewrap-button" title="Automatically wrap lines"><span class="fi-no-icon">&#x2936;</span><span class="show-for-sr">Automatic line-wrap</span></a></li>
                 <li class="separator"> </li>
-                <li><a href="#" id="save-button"><span class="fi-save"> </span><span class="show-for-sr">Save</span></a></li>
+                <li><a href="#" id="save-button" title="Save Changes"><span class="fi-save"> </span><span class="show-for-sr">Save</span></a></li>
                 <li class="separator"> </li>
-                <li><a href="#" id="help-button"><span>?</span><span class="show-for-sr">Save</span></a></li>
+                <li><a href="#" id="help-button" title="Show Help"><span>?</span><span class="show-for-sr">Save</span></a></li>
               </ul>
             </nav>
             ${form.field('textarea', 'content', 'Content', value=part.content, extra_attrs={'data-cm-mimetype': 'text/x-rst'})}
