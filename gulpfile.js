@@ -20,7 +20,8 @@ gulp.task('default', function() {
               'node_modules/jquery-ui/ui/widgets/selectable.js',
               'node_modules/jquery-ui/ui/widgets/sortable.js',
               'node_modules/jquery-ui/ui/effect.js',
-              'node_modules/jquery-ui/ui/effects/*.js']).
+              'node_modules/jquery-ui/ui/effects/*.js',
+              'src/js/*.js']).
         pipe(concat('libraries.js')).
         pipe(minify({
             ext: {

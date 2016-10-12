@@ -21,7 +21,7 @@
     </article>
     <py:include href="wte:templates/layout/_footer.kajiki"/>
     <py:include href="wte:templates/layout/_help.kajiki"/>
-    <py:include href="wte:templates/layout/_scripts.kajiki"/>
+    <script src="${request.static_url('wte:static/js/libraries.min.js')}"></script>
     <py:block name="body_preinit_script"></py:block>
     <py:include href="wte:templates/layout/_init.kajiki"/>
     <py:block name="body_script"></py:block>

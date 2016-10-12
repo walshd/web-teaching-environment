@@ -1,4 +1,0 @@
-<div py:strip="">
-  <script src="${request.static_url('wte:static/js/libraries.min.js')}"></script>
-  <script src="${request.static_url('wte:static/js/jquery-ui.ext.js')}"></script>
-</div>
