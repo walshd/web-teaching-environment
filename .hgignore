@@ -16,3 +16,8 @@ syntax: regexp
 ^.tox$
 syntax: regexp
 ^.coverage$
+
+syntax: regexp
+^node_modules$
+syntax: glob
+.cache

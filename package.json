@@ -1,0 +1,27 @@
+{
+  "name": "web-teaching-environment",
+  "version": "1.3.0-alpha.0",
+  "description": "Web Teaching Environment",
+  "author": "Mark <Mark.Hall@work.room3b.eu>",
+  "contributors": [
+    {
+      "name": "Mark",
+      "email": "mark.hall@work.room3b.eu"
+    },
+    {
+      "name": "Mark",
+      "email": "mark.hall@edgehill.ac.uk"
+    }
+  ],
+  "license": "GPLv3",
+  "private": true,
+  "dependencies": {
+    "foundation-datepicker": "^1.5.5",
+    "foundation-sites": "^6.2.3",
+    "gulp": "^3.9.1",
+    "gulp-concat": "^2.6.0",
+    "gulp-minify": "0.0.14",
+    "jquery-ui": "^1.12.1",
+    "mathjax": "^2.7.0-beta.0"
+  }
+}
