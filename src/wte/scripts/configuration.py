@@ -13,10 +13,7 @@ styles.
 import uuid
 
 from kajiki import TextTemplate
-from os import path
 from pkg_resources import resource_filename, resource_exists, resource_string
-from pygments import formatters, styles
-from pyramid.paster import get_appsettings
 
 from wte.scripts.main import get_user_parameter
 
@@ -29,13 +26,6 @@ def init(subparsers):
     parser.add_argument('--filename', default='production.ini', help='Configuration file name')
     parser.add_argument('--sqla-connection-string', default=None, help='SQLAlchemy database connection string')
     parser.set_defaults(func=generate_config)
-    try:
-        import sass  # flake8: noqa
-        parser = subparsers.add_parser('generate-custom-styling', help='Generate custom CSS styling')
-        parser.add_argument('configuration', default='production.ini', help='Configuration file name')
-        parser.set_defaults(func=generate_custom_styling)
-    except:
-        pass
 
 
 def generate_config(args):
@@ -51,53 +41,3 @@ def generate_config(args):
 
     with open(args.filename, 'w') as out_f:
         out_f.write(tmpl(params).render())
-
-
-def generate_custom_styling(args):
-    """Generates a custom CSS styling for the WTE application. Allows
-    customisation of general settings, Pygments style, and CodeMirror theme.
-    """
-    import sass
-    settings = get_appsettings(args.configuration)
-
-    # Create the settings overide partial
-    with open(resource_filename('wte', 'static/scss/_settings.scss'), 'w') as out_f:
-        out_f.write('/* Any changes made here will be automatically overwritten */\n')
-        if 'style.settings' in settings and path.exists(settings['style.settings']):
-            with open(settings['style.settings']) as in_f:
-                out_f.write(in_f.read())
-
-    # Create the Pygments partial
-    pygments_style = 'default'
-    if 'pygments.theme' in settings and settings['pygments.theme'] in list(styles.get_all_styles()):
-        pygments_style = settings['pygments.theme']
-    with open(resource_filename('wte', 'static/scss/application/_pygments.scss'), 'w') as out_f:
-        out_f.write('/* Any changes made here will be automatically overwritten */\n')
-        out_f.write(formatters.HtmlFormatter(style=pygments_style).get_style_defs())
-        out_f.write('\n.lineno {color: $dark-gray; margin-right: 1rem; border-right: 1px solid $medium-gray; ' +
-                    'line-height: 1.3rem; display: inline-block;}\n')
-
-    # Create the CodeMirror theme partial
-    codemirror_theme = None
-    if 'codemirror.theme' in settings:
-        if resource_exists('wte', 'static/scss/codemirror/theme/%s.css' % (settings['codemirror.theme'])):
-            codemirror_theme = settings['codemirror.theme']
-    with open(resource_filename('wte', 'static/scss/codemirror/_theme.scss'), 'w') as out_f:
-        out_f.write('/* Any changes made here will be automatically overwritten */\n')
-        if codemirror_theme:
-            with open(resource_filename('wte', 'static/scss/codemirror/theme/%s.css' % (codemirror_theme))) as in_f:
-                out_f.write(in_f.read())
-
-    # Create the final overide partial
-    with open(resource_filename('wte', 'static/scss/_overrides.scss'), 'w') as out_f:
-        out_f.write('/* Any changes made here will be automatically overwritten */\n')
-        if 'style.settings' in settings and path.exists(settings['style.overrides']):
-            with open(settings['style.overrides']) as in_f:
-                out_f.write(in_f.read())
-
-    # Generate application.min.css
-    css = sass.compile(filename=resource_filename('wte', 'static/scss/wte.scss'),
-                       output_style='compressed',
-                       custom_functions={'file-exists': lambda fn: False})
-    with open(resource_filename('wte', 'static/css/application.min.css'), 'w') as out_f:
-        out_f.write(css)

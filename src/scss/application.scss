@@ -1,0 +1,28 @@
+/* Load foundation extensions */
+@import 'foundation-icons.scss';
+@import 'foundation-datepicker';
+@import 'application/foundation-overrides';
+
+/* Load codemirror */
+@import 'codemirror';
+@import 'application/codemirror-overrides.scss';
+
+/* Load the actual SCSS files */
+@import 'application/generic.scss';
+@import 'application/jquery-ui.scss';
+@import 'application/images.scss';
+@import 'application/menubar.scss';
+@import 'application/busy.scss';
+@import 'application/textbook.scss';
+@import 'application/pagination.scss';
+@import 'application/editor.scss';
+@import 'application/html-viewer.scss';
+@import 'application/footer.scss';
+@import 'application/docutils.scss';
+@import 'application/dragndrop.scss';
+@import 'application/help.scss';
+@import 'application/quiz.scss';
+@import 'application/partial-progress.scss';
+@import 'application/show-hide.scss';
+@import 'application/accessibility.scss';
+

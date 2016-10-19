@@ -1,0 +1,60 @@
+/**
+ * Textbook styles
+ */
+#textbook {
+    padding-right: $global-padding;
+    
+    .focus-highlight {
+        background: scale-color(map-get($foundation-palette, warning), $lightness: 85%);
+        transition: background 0.4s;
+    }
+    &.focusable {
+        cursor: crosshair;
+    }
+}
+
+.textbook {
+    position: relative;
+    overflow: auto;
+    box-sizing: border-box;
+    
+    iframe {
+        border-width: 0;
+    }
+    
+    ol.upperalpha {
+        list-style-type: upper-alpha;
+    }
+    
+    ol.loweralpha {
+        list-style-type: lower-alpha;
+    }
+    
+    ol.arabic {
+        list-style-type: numeric;
+    }
+    
+    ol.lowerroman {
+        list-style-type: lower-roman;
+    }
+    
+    ol.upperroman {
+        list-style-type: upper-roman;
+    }
+    
+    ol.outline {
+        counter-reset: section;
+        list-style-type: none;
+        margin-left: 0.3rem;
+        
+        ol {
+            counter-reset: section;
+            list-style-type: none;
+        }
+        
+        li:before {
+            counter-increment: section;
+            content: counters(section, ".") ". ";
+        }
+    }
+}

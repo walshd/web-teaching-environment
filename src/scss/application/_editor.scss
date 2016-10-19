@@ -1,0 +1,65 @@
+/**
+ * Editor styles
+ */
+
+#editor {
+    overflow: hidden;
+}
+#files {
+    overflow: hidden;
+    position: relative;
+    
+    .tabs {
+        border-top: 0;
+        border-left: 0;
+        border-right: 0;
+        margin-left: 1rem;
+        
+        a {
+            transition: color 0.1s, background 0.1s;
+            
+            &.modified {
+                color: $white;
+                background: #ff8888;
+            }
+            &.saving, &.saved {
+                color: $white;
+                background: #88cc88;
+            }
+        }
+        
+        li.is-active {
+            a {
+                border: 1px solid $medium-gray;
+                border-bottom-color: $light-gray;
+                position: relative;
+                top: 2px;
+            }
+        }
+    }
+    
+    .tabs-panel {
+        padding: 0;
+        
+        .editor-wrapper {
+            overflow: hidden;
+        }
+
+        .textarea, .CodeMirror {
+            height: 100%;
+        }
+        .menubar {
+            background: $light-gray;
+            padding-left: 0.5rem;
+            border-top: 1px solid $medium-gray;
+    
+            & > .menu > li > a {
+                font-size: 1.3rem;
+                margin-right: 0.3rem;
+            }
+        }
+    }
+    .menu {
+        z-index: 100;
+    }
+}

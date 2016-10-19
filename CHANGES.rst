@@ -6,6 +6,7 @@
 - *UPDATE*: Add tooltips to the editor menu icons (#70)
 - *UPDATE*: Highlight Parts with upcoming Timed Actions (#80)
 - *UPDATE*: Make PyWebTools an external dependency
+- *UPDATE*: CSS/JS build are now performed using Gulp (#77)
 
 1.2.5
 -----
