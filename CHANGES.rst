@@ -7,6 +7,7 @@
 - *UPDATE*: Highlight Parts with upcoming Timed Actions (#80)
 - *UPDATE*: Make PyWebTools an external dependency
 - *UPDATE*: CSS/JS build are now performed using Gulp (#77)
+- *BUGFIX*: Fixed a HTML Entity issue on the Part editor
 
 1.2.5
 -----

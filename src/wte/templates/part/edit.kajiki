@@ -63,7 +63,7 @@
         <py:if test="part.type == 'part'">
           <div class="row">
             <div class="column small-12">
-              ${form.field('select', 'display_mode', 'Page Display Mode', values=[('text_only', 'Text Only'), ('three_pane_html', 'Text, Editor &amp; HTML Viewer')], value=part.display_mode)}
+              ${form.field('select', 'display_mode', 'Page Display Mode', values=[('text_only', 'Text Only'), ('three_pane_html', 'Text, Editor, and HTML Viewer')], value=part.display_mode)}
             </div>
           </div>
         </py:if>
