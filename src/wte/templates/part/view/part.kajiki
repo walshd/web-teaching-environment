@@ -131,11 +131,11 @@
                 </tr>
                 <tr>
                   <th>Median</th>
-                  <td>${time_string(*split_seconds(stats['time'][25]))}</td>
+                  <td>${time_string(*split_seconds(stats['time'][50]))}</td>
                 </tr>
                 <tr>
                   <th>3rd Quartile</th>
-                  <td>${time_string(*split_seconds(stats['time'][25]))}</td>
+                  <td>${time_string(*split_seconds(stats['time'][75]))}</td>
                 </tr>
               </tbody>
             </table>

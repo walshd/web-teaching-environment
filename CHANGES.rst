@@ -8,6 +8,7 @@
 - *UPDATE*: Make PyWebTools an external dependency
 - *UPDATE*: CSS/JS build are now performed using Gulp (#77)
 - *BUGFIX*: Fixed a HTML Entity issue on the Part editor
+- *BUGFIX*: Fixed a bug with the display of time-in-part statistics (#81)
 
 1.2.5
 -----
