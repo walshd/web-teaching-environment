@@ -211,7 +211,7 @@ class Part(Base):
         return False
 
     def register_state(self, user):
-        if self.has_role(['student', 'owner'], user):
+        if self.has_role(['student', 'tutor', 'owner'], user):
             return 'already_registered'
         if self.access_rights:
             rights = json.loads(self.access_rights)
