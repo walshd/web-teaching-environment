@@ -2,6 +2,7 @@
 --------
 
 - *NEW*: Prevent leaving the Part editor if changes have been made (#72)
+- *NEW*: Send an optional e-mail to all users of a module when a change is made (#54)
 - *UPDATE*: Use the crosshair cursor in the editor preview to indicate focusability (#69)
 - *UPDATE*: Add tooltips to the editor menu icons (#70)
 - *UPDATE*: Highlight Parts with upcoming Timed Actions (#80)

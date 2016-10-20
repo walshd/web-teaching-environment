@@ -35,7 +35,7 @@ from zipfile import ZipFile, ZIP_DEFLATED, ZIP_STORED, BadZipfile
 from wte.models import (Part, UserPartRole, Asset, UserPartProgress, User,
                         Quiz, QuizAnswer)
 from wte.text_formatter import compile_rst
-from wte.util import (ordered_counted_set)
+from wte.util import (ordered_counted_set, send_email, get_config_setting)
 from wte.views.quiz import extract_quizzes
 
 BytesIO = nimport('io:BytesIO')
@@ -537,6 +537,10 @@ class EditPartSchema(CSRFSchema):
     """The child :class:`~wte.models.Part` ids for re-ordering"""
     template_id = formencode.ForEach(formencode.validators.Int, if_missing=None)
     """The :class:`~wte.models.Template` ids for re-ordering"""
+    email_notify = formencode.validators.StringBool(if_missing=False)
+    """Whether to send out an automatic change notification e-mail"""
+    email_notify_text = formencode.validators.UnicodeString(if_empty='', if_missing='')
+    """The text of the automatic change notification e-mail"""
 
 
 @view_config(route_name='part.edit', renderer='wte:templates/part/edit.kajiki')
@@ -592,6 +596,23 @@ def edit(request):
                                 if template:
                                     template.order = idx
                     dbsession.add(part)
+                    # Send a change-notification e-mail
+                    if params['email_notify'] and params['email_notify_text'].strip():
+                        if part.type == 'module':
+                            users = part.users
+                        elif part.type == 'part':
+                            users = part.parent.users
+                        elif part.type == 'page':
+                            users = part.parent.parent.users
+                        for user_role in users:
+                            if user_role.user.id != request.current_user.id:
+                                send_email(request,
+                                           user_role.user.email,
+                                           get_config_setting(request, 'email.sender',
+                                                              default='no-reply@example.com'),
+                                           'Update to %s' % part.title,
+                                           params['email_notify_text'])
+                                print(user_role.user.email)
                     raise HTTPSeeOther(request.route_url('part.view', pid=request.matchdict['pid']))
                 except formencode.Invalid as e:
                     dbsession.add(part)

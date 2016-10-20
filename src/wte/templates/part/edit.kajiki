@@ -3,6 +3,7 @@
   <py:block name="content">
     <py:import href="pywebtools:kajiki/menu.kajiki" alias="menu"/>
     <py:import href="pywebtools:kajiki/form.kajiki" alias="form"/>
+    <?py from wte.helpers.frontend import part_change_notification_text ?>
     <h1>${part.title} - Edit</h1>
     <div class="row expanded">
       <div class="column small-12 medium-3 large-2">
@@ -99,6 +100,16 @@
             <ol id="templates">
               <li py:for="template in part.templates" class="panel"><input type="hidden" name="template_id" value="${template.id}"/>${template.filename} (${template.mimetype})</li>
             </ol>
+          </div>
+        </div>
+        <div class="row">
+          <div class="column small-12">
+            ${form.field('checkbox', 'email_notify', value='true', field_label='Notify users of this change by e-mail')}
+          </div>
+        </div>
+        <div id="email_notify_text" class="row hidden">
+          <div class="column small-12">
+            ${form.field('textarea', 'email_notify_text', 'Notification Message', value=part_change_notification_text(request, part))}
           </div>
         </div>
         <div class="row">
@@ -338,6 +349,13 @@
         if(editor_dirty) {
             ev.returnValue = 'Changes detected';
             return ev;
+        }
+    });
+    $('input[name=email_notify]').on('change', function(ev) {
+        if($(this).is(':checked')) {
+            $('#email_notify_text').show();
+        } else {
+            $('#email_notify_text').hide();
         }
     });
     ]]>
