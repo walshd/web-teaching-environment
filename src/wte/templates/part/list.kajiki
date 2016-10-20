@@ -16,7 +16,7 @@
                                       'title': 'Import a previously exported module'}}]},
                 ])}</div>
     <h1>${title}</h1>
-    <nav py:if="has_archived">
+    <nav py:if="has_archived" class="margin-bottom">
       <ul class="menu align-right">
         <li py:attrs="{'class': 'active' if 'status' in request.params and request.params['status'] == 'all' else None}"><a href="${request.route_url('part.list', _query=[('user_id', request.params['user_id']), ('status', 'all')])}">All</a></li>
         <li py:attrs="{'class': 'active' if 'status' in request.params and request.params['status'] == 'archived' else None}"><a href="${request.route_url('part.list', _query=[('user_id', request.params['user_id']), ('status', 'archived')])}">Archived</a></li>
