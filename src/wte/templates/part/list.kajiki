@@ -3,6 +3,7 @@
   <py:block name="content">
     <py:import href="pywebtools:kajiki/menu.kajiki" alias="menu"/>
     <py:import href="pywebtools:kajiki/form.kajiki" alias="form"/>
+    <?py from wte.helpers.frontend import natural_list ?>
     <div py:if="request.current_user.has_permission('modules.create')" class="float-right">${menu.menubar([
                 {'items': [{'visible': True,
                             'icon': 'fi-plus',
@@ -16,13 +17,31 @@
                                       'title': 'Import a previously exported module'}}]},
                 ])}</div>
     <h1>${title}</h1>
-    <nav py:if="has_archived" class="margin-bottom">
-      <ul class="menu align-right">
-        <li py:attrs="{'class': 'active' if 'status' in request.params and request.params['status'] == 'all' else None}"><a href="${request.route_url('part.list', _query=[('user_id', request.params['user_id']), ('status', 'all')])}">All</a></li>
-        <li py:attrs="{'class': 'active' if 'status' in request.params and request.params['status'] == 'archived' else None}"><a href="${request.route_url('part.list', _query=[('user_id', request.params['user_id']), ('status', 'archived')])}">Archived</a></li>
-        <li py:attrs="{'class': 'active' if 'status' not in request.params else None}"><a href="${request.route_url('part.list', _query=[('user_id', request.params['user_id'])])}">Current</a></li>
-        <li class="menu-text">Show:</li>
-      </ul>
+    <nav py:if="available_status" class="margin-bottom clearfix">
+      <button class="float-right button small dropdown" data-toggle="status-filter-dropdown">Showing <py:if test="len(selected_status) == len(available_status)">all</py:if><py:else>${natural_list(selected_status)}</py:else> modules</button>
+      <div id="status-filter-dropdown" class="dropdown-pane bottom" data-dropdown="" data-hover="true" data-hover-pane="true">
+        <form action="${request.route_url('part.list')}">
+          <input type="hidden" name="user_id" value="${request.params['user_id']}"/>
+          <div py:if="'available' in available_status" class="row">
+            <div class="column small-12">
+              ${form.field('checkbox', 'status', value='available', field_label='Available Modules' if 'unavailable' in available_status else 'Current Modules', checked='available' in selected_status)}
+            </div>
+          </div>
+          <div py:if="'unavailable' in available_status" class="row">
+            <div class="column small-12">
+              ${form.field('checkbox', 'status', value='unavailable', field_label='Unavailable Modules', checked='unavailable' in selected_status)}
+            </div>
+          </div>
+          <div py:if="'archived' in available_status" class="row">
+            <div class="column small-12">
+              ${form.field('checkbox', 'status', value='archived', field_label='Archived Modules', checked='archived' in selected_status)}
+            </div>
+          </div>
+          <div class="text-right">
+            <input type="submit" class="button small" value="Update Filters"/>
+          </div>
+        </form>
+      </div>
     </nav>
     <ul class="no-symbol">
       <li py:for="part in parts">

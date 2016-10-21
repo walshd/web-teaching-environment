@@ -8,6 +8,7 @@
 - *UPDATE*: Highlight Parts with upcoming Timed Actions (#80)
 - *UPDATE*: Make PyWebTools an external dependency
 - *UPDATE*: CSS/JS build are now performed using Gulp (#77)
+- *UPDATE*: Improve the usability of the module status filter on the my modules page
 - *BUGFIX*: Fixed a HTML Entity issue on the Part editor
 - *BUGFIX*: Fixed a bug with the display of time-in-part statistics (#81)
 - *BUGFIX*: Fixed a bug where tutors were never marked as registered to a module

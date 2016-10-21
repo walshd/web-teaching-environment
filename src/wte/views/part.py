@@ -29,7 +29,7 @@ from pywebtools.pyramid.auth.views import current_user
 from pywebtools.pyramid.decorators import require_method
 from pywebtools.sqlalchemy import DBSession
 from pkg_resources import resource_string
-from sqlalchemy import and_
+from sqlalchemy import and_, distinct
 from zipfile import ZipFile, ZIP_DEFLATED, ZIP_STORED, BadZipfile
 
 from wte.models import (Part, UserPartRole, Asset, UserPartProgress, User,
@@ -188,16 +188,20 @@ def list_parts(request):
                 title = '%s\'s Modules' % user.display_name
                 missing = '%s has not registered for any modules.' % user.display_name
             parts = dbsession.query(Part).join(UserPartRole)
-            status = ['available', 'unavailable']
-            has_archived = dbsession.query(Part).\
-                join(UserPartRole).filter(and_(Part.type == 'module',
-                                               Part.status == 'archived',
-                                               UserPartRole.user_id == request.params['user_id'])).count() > 0
-            if has_archived and 'status' in request.params:
-                if request.params['status'] == 'all':
-                    status.append('archived')
-                elif request.params['status'] == 'archived':
-                    status = ['archived']
+            # Status filter
+            available_status = [s[0] for s in dbsession.query(distinct(Part.status)).join(UserPartRole).
+                                filter(UserPartRole.user_id == request.params['user_id']).all()]
+            if 'status' in request.params:
+                status = request.params.getall('status')
+            else:
+                if dbsession.query(Part).\
+                        join(UserPartRole).filter(and_(Part.type == 'module',
+                                                       Part.status == 'archived',
+                                                       UserPartRole.user_id == request.params['user_id'])).\
+                                                       count() <= 10:
+                    status = available_status
+                else:
+                    status = ['available', 'unavailable']
             parts = parts.filter(and_(Part.type == 'module',
                                       Part.status.in_(status),
                                       UserPartRole.user_id == request.params['user_id'])).order_by(Part.title)
@@ -214,13 +218,15 @@ def list_parts(request):
                                                   Part.status == 'available')).order_by(Part.title).all()
         missing = 'There are currently no modules available.'
         crumbs = [{'title': 'Modules', 'url': request.route_url('part.list'), 'current': True}]
-        has_archived = False
+        status = []
+        available_status = []
         help_path = ['user', 'learner', 'modules.html']
     return {'parts': parts,
             'title': title,
             'missing': missing,
             'crumbs': crumbs,
-            'has_archived': has_archived,
+            'available_status': available_status,
+            'selected_status': status,
             'help': help_path}
 
 
