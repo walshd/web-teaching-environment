@@ -4,9 +4,10 @@
     <div class="top-bar-left">
       <ul class="menu dropdown" data-dropdown-menu="">
         <li py:if="request.current_user.has_permission('admin')" class="${'active' if request.matched_route and (request.matched_route.name.startswith('admin') or request.matched_route.name.startswith('user')) else ''}"><a href="${request.route_url('admin')}">Administration</a></li>
-        <li class="${'active' if request.matched_route and request.matched_route.name.startswith('part') and 'user_id' not in request.params else ''}"><a href="${request.route_url('part.list')}">Modules</a>
+        <li><a href="${request.route_url('part.list')}">Modules</a>
           <ul py:if="request.current_user.logged_in" class="menu">
-            <li><a href="${request.route_url('part.list', _query={'user_id': request.current_user.id})}">My Modules</a></li>
+            <li class="${'active' if request.matched_route and request.matched_route.name.startswith('part') and 'user_id' not in request.params else ''}"><a href="${request.route_url('part.list')}">All Modules</a></li>
+            <li class="${'active' if request.matched_route and request.matched_route.name.startswith('part') and 'user_id' in request.params else ''}"><a href="${request.route_url('part.list', _query={'user_id': request.current_user.id})}">My Modules</a></li>
           </ul>
         </li>
       </ul>
