@@ -1332,7 +1332,6 @@ def download(request):
                                       {'part': part,
                                        'parents': parents},
                                       request=request)
-        print(response.body)
         body_zip.writestr('%s/%s.html' % (base_path, part.id), response.body)
         for child in part.children:
             if child.allow('view', request.current_user):
