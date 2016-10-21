@@ -18,7 +18,7 @@
                 ])}</div>
     <h1>${title}</h1>
     <nav py:if="available_status" class="margin-bottom clearfix">
-      <button class="float-right button small dropdown" data-toggle="status-filter-dropdown">Showing <py:if test="len(selected_status) == len(available_status)">all</py:if><py:else>${natural_list(selected_status)}</py:else> modules</button>
+      <button class="float-right button small dropdown" data-toggle="status-filter-dropdown">Showing <py:if test="len(selected_status) == len(available_status)">all</py:if><py:else>${natural_list([s if 'unavailable' in available_status else s.replace('available', 'current') for s in selected_status])}</py:else> modules</button>
       <div id="status-filter-dropdown" class="dropdown-pane bottom" data-dropdown="" data-hover="true" data-hover-pane="true">
         <form action="${request.route_url('part.list')}">
           <input type="hidden" name="user_id" value="${request.params['user_id']}"/>
