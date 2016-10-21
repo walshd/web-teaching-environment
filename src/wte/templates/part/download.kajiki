@@ -3,6 +3,7 @@
   <head>
     <title>${part.title}</title>
     <link rel="stylesheet" href="_static/application.min.css"/>
+    <meta charset="utf-8"/>
   </head>
   <body>
     <nav class="top-bar">
@@ -87,7 +88,7 @@
         </nav>
       </div>
     </article>
-    <script src="_static/jquery.min.js"></script>
+    <script src="_static/libraries.min.js"></script>
     <script>
       $('.part-pagination form select').on('change', function() {
           var select = $(this);

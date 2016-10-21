@@ -1332,6 +1332,7 @@ def download(request):
                                       {'part': part,
                                        'parents': parents},
                                       request=request)
+        print(response.body)
         body_zip.writestr('%s/%s.html' % (base_path, part.id), response.body)
         for child in part.children:
             if child.allow('view', request.current_user):
@@ -1349,11 +1350,11 @@ def download(request):
             body = BytesIO()
             body_zip = ZipFile(body, 'w')
             for target, source in [('%s/_static/application.min.css', 'static/css/application.min.css'),
-                                   ('%s/_static/icons/foundation-icons.eot', 'static/css/icons/foundation-icons.eot'),
-                                   ('%s/_static/icons/foundation-icons.svg', 'static/css/icons/foundation-icons.svg'),
-                                   ('%s/_static/icons/foundation-icons.ttf', 'static/css/icons/foundation-icons.ttf'),
-                                   ('%s/_static/icons/foundation-icons.woff', 'static/css/icons/foundation-icons.woff'),
-                                   ('%s/_static/jquery.min.js', 'static/js/jquery.min.js')]:
+                                   ('%s/_static/foundation-icons.eot', 'static/css/foundation-icons.eot'),
+                                   ('%s/_static/foundation-icons.svg', 'static/css/foundation-icons.svg'),
+                                   ('%s/_static/foundation-icons.ttf', 'static/css/foundation-icons.ttf'),
+                                   ('%s/_static/foundation-icons.woff', 'static/css/foundation-icons.woff'),
+                                   ('%s/_static/libraries.min.js', 'static/js/libraries.min.js')]:
                 body_zip.writestr(target % part.title.replace('/', '_'),
                                   resource_string('wte', source))
             index_html = '''<!DOCTYPE html>
