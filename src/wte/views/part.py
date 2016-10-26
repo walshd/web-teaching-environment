@@ -198,7 +198,7 @@ def list_parts(request):
                         join(UserPartRole).filter(and_(Part.type == 'module',
                                                        Part.status == 'archived',
                                                        UserPartRole.user_id == request.params['user_id'])).\
-                                                       count() <= 10:
+                        count() <= 10:
                     status = available_status
                 else:
                     status = ['available', 'unavailable']
@@ -1078,7 +1078,8 @@ def export(request):
                 return Response(body=body.getvalue(),
                                 headers=[('Content-Type', 'application/zip'),
                                          ('Content-Disposition',
-                                          native_str('attachment; filename="%s.zip"' % (part.title.replace('/', '_'))))])
+                                          native_str('attachment; filename="%s.zip"' %
+                                                     (part.title.replace('/', '_'))))])
 
             return render_to_response('wte:templates/part/export.kajiki',
                                       {'part': part,
@@ -1468,7 +1469,8 @@ def download_part_progress(request):
             zipfile.close()
             return Response(body=body.getvalue(),
                             headerlist=[('Content-Type', 'application/zip'),
-                                        ('Content-Disposition', 'attachment; filename="%s"' % (filename.replace('/', '_')))])
+                                        ('Content-Disposition', 'attachment; filename="%s"' %
+                                         (filename.replace('/', '_')))])
         else:
             unauthorised_redirect(request)
     else:

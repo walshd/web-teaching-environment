@@ -13,7 +13,7 @@ styles.
 import uuid
 
 from kajiki import TextTemplate
-from pkg_resources import resource_filename, resource_exists, resource_string
+from pkg_resources import resource_string
 
 from wte.scripts.main import get_user_parameter
 

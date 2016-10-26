@@ -181,7 +181,8 @@ class YouTube(Directive):
     required_arguments = 1
 
     def run(self):
-        if self.arguments[0].startswith('https://www.youtube.com/') or self.arguments[0].startswith('https://youtu.be/'):
+        if self.arguments[0].startswith('https://www.youtube.com/') or\
+                self.arguments[0].startswith('https://youtu.be/'):
             video_id = self.arguments[0][self.arguments[0].rfind('/') + 1:]
             youtube = HtmlElementBlock('', nodes.raw('', YOUTUBE_BASE_TEMPLATE % video_id, format='html'))
             if self.lineno:

@@ -394,6 +394,7 @@ def user_admin_menubar(request, user):
                             'data-wte-confirm': confirm_delete('user', user.display_name, False)})
     return builder.generate()
 
+
 def part_change_notification_text(request, part):
     """Generates a default notification text to be emailed when changes
     are made to a part.
@@ -413,7 +414,7 @@ This is to let you know that changes have been made to the %s module.
 Please reload the module to see the changes.
 
 %s''' % (part.title,
-         request.current_user.display_name) 
+         request.current_user.display_name)
     elif part.type == 'part':
         return '''Hello,
 
@@ -425,7 +426,7 @@ Please reload the %s to see the changes.
          part.label if part.label else 'part',
          part.parent.title,
          part.label if part.label else 'part',
-         request.current_user.display_name) 
+         request.current_user.display_name)
     elif part.type == 'page':
         return '''Hello,
 
@@ -437,4 +438,4 @@ Please reload that page to see the changes.
          part.parent.title,
          part.parent.label if part.parent.label else 'part',
          part.parent.parent.title,
-         request.current_user.display_name) 
+         request.current_user.display_name)
