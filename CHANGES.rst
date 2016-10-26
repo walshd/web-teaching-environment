@@ -15,6 +15,7 @@
 - *BUGFIX*: Fixed a bug with the display of time-in-part statistics (#81)
 - *BUGFIX*: Fixed a bug where tutors were never marked as registered to a module
 - *BUGFIX*: Fixed the UTF-8 encoding issues with downloaded parts (#79)
+- *BUGFIX*: Allow administrator access to module's users
 
 1.2.5
 -----

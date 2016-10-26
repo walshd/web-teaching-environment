@@ -178,6 +178,8 @@ class Part(Base):
                 return self.parent.allow(action, user)
         elif action == 'users':
             if self.type == 'module':
+                if user.has_permission('admin.modules.edit'):
+                    return True
                 if self.has_role('owner', user):
                     return True
                 else:
