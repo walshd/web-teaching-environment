@@ -4,7 +4,11 @@
     <h1>Content Administration</h1>
     <p>The following administrative functions are available:</p>
     <ul class="no-symbol row">
-      <li class="column small-12 medium-6 end">
+      <li py:if="request.current_user.has_permission('admin.modules.view')" class="column small-12 medium-6 end">
+        <h2><a href="${request.route_url('admin.content.list')}">View all Modules</a></h2>
+        <p>View all modules, including unavailable and archived modules.</p>
+      </li>
+      <li py:if="request.current_user.has_permission('admin.modules.edit')" class="column small-12 medium-6 end">
         <h2>Rebuild content</h2>
         <p>Regenerate the content for all modules, tutorials, exercises, and pages.
           This can be necessary when importing old data or after upgrading the WTE

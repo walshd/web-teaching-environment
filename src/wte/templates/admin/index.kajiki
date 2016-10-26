@@ -8,7 +8,7 @@
         <h2><a href="${request.route_url('users')}">User Administration</a></h2>
         <p>Administer the registered users, register new users, delete users.</p>
       </li>
-      <li py:if="request.current_user.has_permission('admin')" class="column small-12 medium-6">
+      <li py:if="request.current_user.has_permission('admin.modules.view')" class="column small-12 medium-6">
         <h2><a href="${request.route_url('admin.content')}">Content Administration</a></h2>
         <p>Administer the site's content.</p>
       </li>

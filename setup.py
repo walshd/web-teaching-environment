@@ -25,7 +25,7 @@ requires = [
     'asset',
     'nine',
     'pycrypto',
-    'PyWebTools>=1.0.1'
+    'PyWebTools>=1.0.5'
     ]
 
 setup(name='WebTeachingEnvironment',
