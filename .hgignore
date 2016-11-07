@@ -21,3 +21,6 @@ syntax: regexp
 ^node_modules$
 syntax: glob
 .cache
+
+syntax: regexp
+^src/scss/application/_pygments_style\.scss$

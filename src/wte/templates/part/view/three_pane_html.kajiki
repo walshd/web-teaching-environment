@@ -45,7 +45,7 @@
             <div py:for="idx, file in enumerate(progress.files)" py:if="file.mimetype.startswith('text/')" id="${html_id(file.filename)}" class="tabs-panel ${'is-active' if idx == 0 else ''}">
               ${menu.menubar(file.menu(request, part))}
               <div class="editor-wrapper">
-                <textarea data-cm-mimetype="${file.mimetype}" data-tab-fileid="${file.id}" data-cm-options="${codemirror_options(request, file.mimetype)}">${file.data.decode('utf-8') if file.data else ' '}</textarea>
+                <textarea aria-label="Editor for ${file.filename}" data-cm-mimetype="${file.mimetype}" data-tab-fileid="${file.id}" data-cm-options="${codemirror_options(request, file.mimetype)}">${file.data.decode('utf-8') if file.data else ' '}</textarea>
               </div>
             </div>
           </div>

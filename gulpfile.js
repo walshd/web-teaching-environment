@@ -5,6 +5,7 @@ var sass = require('gulp-sass');
 var clean_css = require('gulp-clean-css');
 var rename = require('gulp-rename');
 var argv = require('yargs').argv;
+var execSync = require('child_process').execSync;
 
 gulp.task('default', function() {
     // Build JS files
@@ -51,6 +52,11 @@ gulp.task('default', function() {
               'node_modules/mathjax/MathJax.js'], {base: 'node_modules/mathjax'}).
         pipe(gulp.dest('src/wte/static/js/mathjax'));
     // Build CSS files (inserting the optional user-provided settings and overrides SCSS files)
+    if(argv.pygments) {
+        execSync('pygmentize -f html -S ' + argv.pygments + ' >src/scss/application/_pygments_style.scss');
+    } else {
+        execSync('pygmentize -f html -S borland >src/scss/application/_pygments_style.scss');
+    }
     var css_sources = ['src/scss/base-settings.scss'];
     if(argv.settings) {
         css_sources.push(argv.settings);

@@ -13,5 +13,12 @@ $source-bash-session-title-color: #fff;
 $source-bash-session-title-background-color: #222;
 
 /* Foundation settings */
+$foundation-palette: (
+  primary: #006bb1,
+  secondary: #767676,
+  success: #3adb76,
+  warning: #ffae00,
+  alert: #d54129,
+) !default;
 $topbar-padding: 0 0.5rem;
-$topbar-background: lighten($black, 20%);
+$topbar-background: lighten(#000, 20%);
