@@ -1,5 +1,5 @@
-1.3.dev0
---------
+1.3.0
+-----
 
 - *NEW*: Prevent leaving the Part editor if changes have been made (#72)
 - *NEW*: Send an optional e-mail to all users of a module when a change is made (#54)
