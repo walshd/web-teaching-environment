@@ -30,12 +30,12 @@
 
 <span class="sd">.. moduleauthor:: Mark Hall &lt;mark.hall@work.room3b.eu&gt;</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">pyramid.config</span> <span class="kn">import</span> <span class="n">Configurator</span>
-<span class="kn">from</span> <span class="nn">pywebtools.sqlalchemy</span> <span class="kn">import</span> <span class="n">Base</span><span class="p">,</span> <span class="n">DBSession</span><span class="p">,</span> <span class="n">check_database_version</span>
-<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="n">engine_from_config</span>
+<span class="kn">from</span> <span class="nn">pyramid.config</span> <span class="k">import</span> <span class="n">Configurator</span>
+<span class="kn">from</span> <span class="nn">pywebtools.sqlalchemy</span> <span class="k">import</span> <span class="n">Base</span><span class="p">,</span> <span class="n">DBSession</span><span class="p">,</span> <span class="n">check_database_version</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="k">import</span> <span class="n">engine_from_config</span>
 
-<span class="kn">from</span> <span class="nn">wte</span> <span class="kn">import</span> <span class="n">views</span><span class="p">,</span> <span class="n">text_formatter</span>
-<span class="kn">from</span> <span class="nn">wte.models</span> <span class="kn">import</span> <span class="p">(</span><span class="n">DB_VERSION</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">wte</span> <span class="k">import</span> <span class="n">views</span><span class="p">,</span> <span class="n">text_formatter</span>
+<span class="kn">from</span> <span class="nn">wte.models</span> <span class="k">import</span> <span class="p">(</span><span class="n">DB_VERSION</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="main"><a class="viewcode-back" href="../api/wte.html#wte.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">global_config</span><span class="p">,</span> <span class="o">**</span><span class="n">settings</span><span class="p">):</span>

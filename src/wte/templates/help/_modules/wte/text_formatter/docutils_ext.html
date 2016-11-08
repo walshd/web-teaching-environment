@@ -36,16 +36,16 @@
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">re</span>
 
-<span class="kn">from</span> <span class="nn">docutils</span> <span class="kn">import</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">utils</span>
-<span class="kn">from</span> <span class="nn">docutils.parsers.rst</span> <span class="kn">import</span> <span class="n">directives</span><span class="p">,</span> <span class="n">roles</span><span class="p">,</span> <span class="n">Directive</span>
-<span class="kn">from</span> <span class="nn">docutils.writers.html4css1</span> <span class="kn">import</span> <span class="n">HTMLTranslator</span>
-<span class="kn">from</span> <span class="nn">pygments</span> <span class="kn">import</span> <span class="n">highlight</span>
-<span class="kn">from</span> <span class="nn">pygments.formatters</span> <span class="kn">import</span> <span class="n">HtmlFormatter</span>
-<span class="kn">from</span> <span class="nn">pygments.lexers</span> <span class="kn">import</span> <span class="n">get_lexer_by_name</span><span class="p">,</span> <span class="n">TextLexer</span><span class="p">,</span> <span class="n">get_all_lexers</span>
-<span class="kn">from</span> <span class="nn">pywebtools.sqlalchemy</span> <span class="kn">import</span> <span class="n">DBSession</span>
-<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="n">and_</span>
+<span class="kn">from</span> <span class="nn">docutils</span> <span class="k">import</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">utils</span>
+<span class="kn">from</span> <span class="nn">docutils.parsers.rst</span> <span class="k">import</span> <span class="n">directives</span><span class="p">,</span> <span class="n">roles</span><span class="p">,</span> <span class="n">Directive</span>
+<span class="kn">from</span> <span class="nn">docutils.writers.html4css1</span> <span class="k">import</span> <span class="n">HTMLTranslator</span>
+<span class="kn">from</span> <span class="nn">pygments</span> <span class="k">import</span> <span class="n">highlight</span>
+<span class="kn">from</span> <span class="nn">pygments.formatters</span> <span class="k">import</span> <span class="n">HtmlFormatter</span>
+<span class="kn">from</span> <span class="nn">pygments.lexers</span> <span class="k">import</span> <span class="n">get_lexer_by_name</span><span class="p">,</span> <span class="n">TextLexer</span><span class="p">,</span> <span class="n">get_all_lexers</span>
+<span class="kn">from</span> <span class="nn">pywebtools.sqlalchemy</span> <span class="k">import</span> <span class="n">DBSession</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="k">import</span> <span class="n">and_</span>
 
-<span class="kn">from</span> <span class="nn">wte.models</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Asset</span><span class="p">,</span> <span class="n">Part</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">wte.models</span> <span class="k">import</span> <span class="p">(</span><span class="n">Asset</span><span class="p">,</span> <span class="n">Part</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="init"><a class="viewcode-back" href="../../../api/wte_text_formatter_docutils_ext.html#wte.text_formatter.docutils_ext.init">[docs]</a><span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="n">settings</span><span class="p">):</span>
@@ -73,9 +73,9 @@
 <span class="sd">    value is set and has any value except &quot;false&quot;.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s1">&#39;false&#39;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">return</span> <span class="kc">True</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">False</span></div>
+        <span class="k">return</span> <span class="kc">False</span></div>
 
 
 <div class="viewcode-block" id="HtmlElementBlock"><a class="viewcode-back" href="../../../api/wte_text_formatter_docutils_ext.html#wte.text_formatter.docutils_ext.HtmlElementBlock">[docs]</a><span class="k">class</span> <span class="nc">HtmlElementBlock</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">General</span><span class="p">,</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Element</span><span class="p">):</span>
@@ -87,7 +87,7 @@
 <span class="sd">    which must be set to a ``dict``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rawsource</span><span class="p">,</span> <span class="o">*</span><span class="n">children</span><span class="p">,</span> <span class="n">html_element</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">html_attributes</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rawsource</span><span class="p">,</span> <span class="o">*</span><span class="n">children</span><span class="p">,</span> <span class="n">html_element</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">html_attributes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">nodes</span><span class="o">.</span><span class="n">Element</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rawsource</span><span class="p">,</span> <span class="o">*</span><span class="n">children</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">html_element</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">html_element</span> <span class="o">=</span> <span class="n">html_element</span>
@@ -156,11 +156,11 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">required_arguments</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">optional_arguments</span> <span class="o">=</span> <span class="mi">1</span>
-    <span class="n">final_argument_whitespace</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">final_argument_whitespace</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">option_spec</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;filename&#39;</span><span class="p">:</span> <span class="n">directives</span><span class="o">.</span><span class="n">unchanged</span><span class="p">,</span>
                    <span class="s1">&#39;linenos&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
                    <span class="s1">&#39;no-select&#39;</span><span class="p">:</span> <span class="n">flag_bool_option</span><span class="p">}</span>
-    <span class="n">has_content</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">has_content</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_has_content</span><span class="p">()</span>
@@ -169,9 +169,9 @@
         <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
             <span class="c1"># no lexer found - use the text one instead of an exception</span>
             <span class="n">lexer</span> <span class="o">=</span> <span class="n">TextLexer</span><span class="p">()</span>
-        <span class="n">formatter</span> <span class="o">=</span> <span class="n">HtmlFormatter</span><span class="p">(</span><span class="n">noclasses</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+        <span class="n">formatter</span> <span class="o">=</span> <span class="n">HtmlFormatter</span><span class="p">(</span><span class="n">noclasses</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                                   <span class="n">style</span><span class="o">=</span><span class="s1">&#39;native&#39;</span><span class="p">,</span>
-                                  <span class="n">linenos</span><span class="o">=</span><span class="s1">&#39;inline&#39;</span> <span class="k">if</span> <span class="s1">&#39;linenos&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="k">else</span> <span class="bp">False</span><span class="p">,</span>
+                                  <span class="n">linenos</span><span class="o">=</span><span class="s1">&#39;inline&#39;</span> <span class="k">if</span> <span class="s1">&#39;linenos&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="k">else</span> <span class="kc">False</span><span class="p">,</span>
                                   <span class="n">linenostart</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;linenos&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="s1">&#39;linenos&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="k">else</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">parsed</span> <span class="o">=</span> <span class="n">highlight</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">content</span><span class="p">),</span> <span class="n">lexer</span><span class="p">,</span> <span class="n">formatter</span><span class="p">)</span>
         <span class="n">css_classes</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;source&#39;</span><span class="p">,</span> <span class="s1">&#39;panel&#39;</span><span class="p">,</span> <span class="n">lexer</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
@@ -186,7 +186,7 @@
         <span class="k">if</span> <span class="s1">&#39;filename&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">:</span>
             <span class="n">title</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">inline</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">],</span> <span class="n">classes</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">]))</span>
         <span class="n">source</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
-        <span class="n">source</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">raw</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">content</span><span class="p">),</span> <span class="n">parsed</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s1">&#39;html&#39;</span><span class="p">))</span>
+        <span class="n">source</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">raw</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">content</span><span class="p">),</span> <span class="n">parsed</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;html&#39;</span><span class="p">))</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">source</span><span class="p">]</span></div>
 
 
@@ -206,9 +206,10 @@
     <span class="n">required_arguments</span> <span class="o">=</span> <span class="mi">1</span>
 
     <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;https://www.youtube.com/&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;https://youtu.be/&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;https://www.youtube.com/&#39;</span><span class="p">)</span> <span class="ow">or</span>\
+                <span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;https://youtu.be/&#39;</span><span class="p">):</span>
             <span class="n">video_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span>
-            <span class="n">youtube</span> <span class="o">=</span> <span class="n">HtmlElementBlock</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">nodes</span><span class="o">.</span><span class="n">raw</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">YOUTUBE_BASE_TEMPLATE</span> <span class="o">%</span> <span class="n">video_id</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s1">&#39;html&#39;</span><span class="p">))</span>
+            <span class="n">youtube</span> <span class="o">=</span> <span class="n">HtmlElementBlock</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">nodes</span><span class="o">.</span><span class="n">raw</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">YOUTUBE_BASE_TEMPLATE</span> <span class="o">%</span> <span class="n">video_id</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;html&#39;</span><span class="p">))</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lineno</span><span class="p">:</span>
                 <span class="n">youtube</span><span class="o">.</span><span class="n">line</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lineno</span>
             <span class="k">return</span> <span class="p">[</span><span class="n">youtube</span><span class="p">]</span>
@@ -239,7 +240,7 @@
         <span class="n">part</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Part</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">Part</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">target_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">part</span><span class="p">:</span>
             <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">reference</span><span class="p">(</span><span class="n">rawtext</span><span class="p">,</span> <span class="n">groups</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">groups</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">else</span> <span class="n">part</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
-                                          <span class="n">internal</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                                          <span class="n">internal</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                                           <span class="n">refuri</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;part.view&#39;</span><span class="p">,</span>
                                                                    <span class="n">pid</span><span class="o">=</span><span class="n">target_id</span><span class="p">)))</span>
         <span class="k">else</span><span class="p">:</span>
@@ -262,10 +263,10 @@
         <span class="n">lexer</span> <span class="o">=</span> <span class="n">get_lexer_by_name</span><span class="p">(</span><span class="n">name</span><span class="p">[</span><span class="mi">5</span><span class="p">:])</span>
     <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
         <span class="n">lexer</span> <span class="o">=</span> <span class="n">TextLexer</span><span class="p">()</span>
-    <span class="n">formatter</span> <span class="o">=</span> <span class="n">HtmlFormatter</span><span class="p">(</span><span class="n">nowrap</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">formatter</span> <span class="o">=</span> <span class="n">HtmlFormatter</span><span class="p">(</span><span class="n">nowrap</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
     <span class="n">parsed</span> <span class="o">=</span> <span class="n">highlight</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">lexer</span><span class="p">,</span> <span class="n">formatter</span><span class="p">)</span>
-    <span class="k">return</span> <span class="p">[</span><span class="n">nodes</span><span class="o">.</span><span class="n">raw</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;span class=&quot;source&quot;&gt;</span><span class="si">%s</span><span class="s1">&lt;/span&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">parsed</span><span class="p">),</span> <span class="n">format</span><span class="o">=</span><span class="s1">&#39;html&#39;</span><span class="p">)],</span> <span class="p">[]</span></div>
+    <span class="k">return</span> <span class="p">[</span><span class="n">nodes</span><span class="o">.</span><span class="n">raw</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;span class=&quot;source&quot;&gt;</span><span class="si">%s</span><span class="s1">&lt;/span&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">parsed</span><span class="p">),</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;html&#39;</span><span class="p">)],</span> <span class="p">[]</span></div>
 
 
 <span class="n">ASSET_PATTERN</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">r&#39;((?:(parent):)?([a-zA-Z0-9_\-.]+)$)|((.+)(?:&lt;(?:(parent):)?([a-zA-Z0-9_\-.]+)&gt;)$)&#39;</span><span class="p">)</span>
@@ -288,14 +289,14 @@
         <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
             <span class="n">groups</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">groups</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">groups</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-                <span class="n">title</span> <span class="o">=</span> <span class="bp">None</span>
+                <span class="n">title</span> <span class="o">=</span> <span class="kc">None</span>
                 <span class="n">filename</span> <span class="o">=</span> <span class="n">groups</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">title</span> <span class="o">=</span> <span class="n">groups</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
                 <span class="n">filename</span> <span class="o">=</span> <span class="n">groups</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span>
             <span class="n">part_ids</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="n">part</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">wte_part</span>
-            <span class="k">while</span> <span class="n">part</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">while</span> <span class="n">part</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">part_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
                 <span class="n">part</span> <span class="o">=</span> <span class="n">part</span><span class="o">.</span><span class="n">parent</span>
             <span class="n">data</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Asset</span><span class="p">,</span> <span class="n">Part</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">Asset</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">and_</span><span class="p">(</span><span class="n">Part</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">part_ids</span><span class="p">),</span>
@@ -311,7 +312,7 @@
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">reference</span><span class="p">(</span><span class="n">rawtext</span><span class="p">,</span>
                                                   <span class="n">title</span> <span class="k">if</span> <span class="n">title</span> <span class="k">else</span> <span class="n">asset</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span>
-                                                  <span class="n">internal</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                                                  <span class="n">internal</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                                                   <span class="n">refuri</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;asset.view&#39;</span><span class="p">,</span>
                                                                            <span class="n">pid</span><span class="o">=</span><span class="n">part</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
                                                                            <span class="n">filename</span><span class="o">=</span><span class="n">asset</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span>
@@ -341,7 +342,7 @@
     <span class="n">messages</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">CSS_PATTERN</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
-        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">raw</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;span style=&quot;</span><span class="si">%s</span><span class="s1">&quot;&gt;</span><span class="si">%s</span><span class="s1">&lt;/span&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)),</span> <span class="n">format</span><span class="o">=</span><span class="s1">&#39;html&#39;</span><span class="p">))</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">raw</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;span style=&quot;</span><span class="si">%s</span><span class="s1">&quot;&gt;</span><span class="si">%s</span><span class="s1">&lt;/span&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)),</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;html&#39;</span><span class="p">))</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inliner</span><span class="o">.</span><span class="n">reporter</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;No CSS definition found in &quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">text</span><span class="p">)))</span>
     <span class="k">return</span> <span class="n">result</span><span class="p">,</span> <span class="n">messages</span></div>
@@ -366,9 +367,9 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">required_arguments</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">optional_arguments</span> <span class="o">=</span> <span class="mi">1</span>
-    <span class="n">final_argument_whitespace</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">final_argument_whitespace</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">option_spec</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="n">directives</span><span class="o">.</span><span class="n">unchanged</span><span class="p">}</span>
-    <span class="n">has_content</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">has_content</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">node</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Element</span><span class="p">()</span>
@@ -418,10 +419,10 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">required_arguments</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">optional_arguments</span> <span class="o">=</span> <span class="mi">1</span>
-    <span class="n">final_argument_whitespace</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">final_argument_whitespace</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">option_spec</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;question&#39;</span><span class="p">:</span> <span class="n">directives</span><span class="o">.</span><span class="n">unchanged</span><span class="p">,</span>
                    <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="n">directives</span><span class="o">.</span><span class="n">unchanged</span><span class="p">}</span>
-    <span class="n">has_content</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">has_content</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">question</span> <span class="o">=</span> <span class="n">HtmlElementBlock</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
@@ -463,10 +464,10 @@
 
     <span class="n">required_arguments</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">optional_arguments</span> <span class="o">=</span> <span class="mi">1</span>
-    <span class="n">final_argument_whitespace</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">final_argument_whitespace</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">option_spec</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;initial&#39;</span><span class="p">:</span> <span class="n">directives</span><span class="o">.</span><span class="n">unchanged</span><span class="p">,</span>
                    <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="n">directives</span><span class="o">.</span><span class="n">unchanged</span><span class="p">}</span>
-    <span class="n">has_content</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">has_content</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">node</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Element</span><span class="p">()</span>
@@ -488,14 +489,14 @@
                                          <span class="n">nodes</span><span class="o">.</span><span class="n">raw</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
                                                    <span class="s1">&#39;&lt;a href=&quot;#&quot; title=&quot;Hide this block&quot;&gt;&lt;span class=&quot;fi-minus&quot;&gt;&#39;</span> <span class="o">+</span>
                                                    <span class="s1">&#39;&lt;span class=&quot;show-for-sr&quot;&gt;Hide&lt;/span&gt;&lt;/span&gt;&lt;/a&gt;&#39;</span><span class="p">,</span>
-                                                   <span class="n">format</span><span class="o">=</span><span class="s1">&#39;html&#39;</span><span class="p">),</span>
+                                                   <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;html&#39;</span><span class="p">),</span>
                                          <span class="n">html_element</span><span class="o">=</span><span class="s1">&#39;li&#39;</span><span class="p">,</span>
                                          <span class="n">html_attributes</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;hide-block hidden&#39;</span><span class="p">}))</span>
         <span class="n">controls</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">HtmlElementBlock</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
                                          <span class="n">nodes</span><span class="o">.</span><span class="n">raw</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
                                                    <span class="s1">&#39;&lt;a href=&quot;#&quot; title=&quot;Show this block&quot;&gt;&lt;span class=&quot;fi-plus&quot;&gt;&#39;</span> <span class="o">+</span>
                                                    <span class="s1">&#39;&lt;span class=&quot;show-for-sr&quot;&gt;Show&lt;/span&gt;&lt;/span&gt;&lt;/a&gt;&#39;</span><span class="p">,</span>
-                                                   <span class="n">format</span><span class="o">=</span><span class="s1">&#39;html&#39;</span><span class="p">),</span>
+                                                   <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;html&#39;</span><span class="p">),</span>
                                          <span class="n">html_element</span><span class="o">=</span><span class="s1">&#39;li&#39;</span><span class="p">,</span>
                                          <span class="n">html_attributes</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;show-block hidden&#39;</span><span class="p">}))</span>
         <span class="n">block</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">controls</span><span class="p">)</span>

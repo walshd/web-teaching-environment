@@ -51,16 +51,6 @@ section of the configuration file.</p>
 <div class="section" id="application-settings">
 <h3><a class="toc-backref" href="#id2">Application settings</a><a class="headerlink" href="#application-settings" title="Permalink to this headline">¶</a></h3>
 <dl class="docutils">
-<dt><strong>pygments.theme</strong> <em>(optional)</em></dt>
-<dd><p class="first">The pygments style to use for source-code highlighting. You can find the
-full list of available Pygments styles here: <a class="reference external" href="http://pygments.org/demo/">http://pygments.org/demo/</a></p>
-<p>After changing the style you must run the following command to update the
-styles:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">WTE</span> <span class="n">generate</span><span class="o">-</span><span class="n">custom</span><span class="o">-</span><span class="n">styling</span> <span class="o">&lt;</span><span class="n">configuration</span><span class="o">.</span><span class="n">ini</span><span class="o">&gt;</span>
-</pre></div>
-</div>
-<p class="last">Default: default</p>
-</dd>
 <dt><strong>codemirror.theme</strong> <em>(optional)</em></dt>
 <dd><p class="first">The CodeMirror theme to use for styling the code editors. You can find the
 full list of available Pygments themes here:
@@ -71,28 +61,6 @@ styles:</p>
 </pre></div>
 </div>
 <p class="last">Default: default</p>
-</dd>
-<dt><strong>style.settings</strong> <em>(optional)</em></dt>
-<dd><p class="first">Here you can specify a settings SCSS file that can be used to change the
-default settings used to generate the WTE styling. The WTE uses Foundation 5
-and you can find a full list of available settings here:
-<a class="reference external" href="http://foundation.zurb.com/docs/">http://foundation.zurb.com/docs/</a></p>
-<p>After changing the settings you must run the following command to update the
-styles:</p>
-<div class="last highlight-default"><div class="highlight"><pre><span></span><span class="n">WTE</span> <span class="n">generate</span><span class="o">-</span><span class="n">custom</span><span class="o">-</span><span class="n">styling</span> <span class="o">&lt;</span><span class="n">configuration</span><span class="o">.</span><span class="n">ini</span><span class="o">&gt;</span>
-</pre></div>
-</div>
-</dd>
-<dt><strong>style.overrides</strong> <em>(optional)</em></dt>
-<dd><p class="first">Using the overrides setting you can specify an SCSS file that will be
-included as the last SCSS file when generating the WTE styling. This allows
-you to override any of the default styles if they cannot be configured via
-<strong>style.settings</strong>.</p>
-<p>After changing the overrides you must run the following command to update the
-styles:</p>
-<div class="last highlight-default"><div class="highlight"><pre><span></span><span class="n">WTE</span> <span class="n">generate</span><span class="o">-</span><span class="n">custom</span><span class="o">-</span><span class="n">styling</span> <span class="o">&lt;</span><span class="n">configuration</span><span class="o">.</span><span class="n">ini</span><span class="o">&gt;</span>
-</pre></div>
-</div>
 </dd>
 <dt><strong>registration.domains</strong> <em>(optional)</em></dt>
 <dd>Here you can specify an optional comma-separated list of domains that are used

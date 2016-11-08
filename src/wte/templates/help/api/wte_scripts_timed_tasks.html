@@ -26,7 +26,7 @@ ever be run as otherwise it is possible that tasks are run multiple times.</p>
 <dl class="function">
 <dt id="wte.scripts.timed_tasks.init">
 <code class="descclassname">wte.scripts.timed_tasks.</code><code class="descname">init</code><span class="sig-paren">(</span><em>subparsers</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wte/scripts/timed_tasks.html#init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wte.scripts.timed_tasks.init" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialises the <a class="reference external" href="http://docs.python.org/library/argparse.html#argparse.ArgumentParser" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">ArgumentParser</span></code></a>, adding the
+<dd><p>Initialises the <a class="reference external" href="https://docs.python.org/2/library/argparse.html#argparse.ArgumentParser" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">ArgumentParser</span></code></a>, adding the
 &#8220;run-timed-tasks&#8221; command that runs <a class="reference internal" href="#wte.scripts.timed_tasks.run_timed_tasks" title="wte.scripts.timed_tasks.run_timed_tasks"><code class="xref py py-func docutils literal"><span class="pre">run_timed_tasks()</span></code></a>.</p>
 </dd></dl>
 
@@ -46,8 +46,8 @@ value of the &#8220;target_status&#8221; key in the <a class="reference internal
 <code class="docutils literal"><span class="pre">status</span></code> to uniquely identify them for this run. Individual task runners are then
 responsible for setting that status to &#8220;completed&#8221; after the task completes successfully
 or to &#8220;failed&#8221; if it failed.</p>
-<p>All task runners are run in independent <a class="reference external" href="http://docs.python.org/library/threading.html#threading.Thread" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">threading.Thread</span></code></a>s. After all
-<a class="reference external" href="http://docs.python.org/library/threading.html#threading.Thread" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">Thread</span></code></a> complete, any <a class="reference internal" href="wte_models.html#wte.models.TimedTask" title="wte.models.TimedTask"><code class="xref py py-class docutils literal"><span class="pre">TimedTask</span></code></a> that still have
+<p>All task runners are run in independent <a class="reference external" href="https://docs.python.org/2/library/threading.html#threading.Thread" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">threading.Thread</span></code></a>s. After all
+<a class="reference external" href="https://docs.python.org/2/library/threading.html#threading.Thread" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">Thread</span></code></a> complete, any <a class="reference internal" href="wte_models.html#wte.models.TimedTask" title="wte.models.TimedTask"><code class="xref py py-class docutils literal"><span class="pre">TimedTask</span></code></a> that still have
 the unique &#8220;run-{random-number}&#8221; status are automatically set to the &#8220;failed&#8221; status.</p>
 </dd></dl>
 

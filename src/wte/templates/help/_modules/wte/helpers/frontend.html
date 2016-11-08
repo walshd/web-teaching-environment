@@ -38,7 +38,7 @@
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">math</span>
 
-<span class="kn">from</span> <span class="nn">pywebtools.pyramid.util</span> <span class="kn">import</span> <span class="p">(</span><span class="n">get_config_setting</span><span class="p">,</span> <span class="n">MenuBuilder</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">pywebtools.pyramid.util</span> <span class="k">import</span> <span class="p">(</span><span class="n">get_config_setting</span><span class="p">,</span> <span class="n">MenuBuilder</span><span class="p">)</span>
 
 <span class="n">inflector</span> <span class="o">=</span> <span class="n">inflect</span><span class="o">.</span><span class="n">engine</span><span class="p">()</span>
 
@@ -114,19 +114,19 @@
     <span class="k">return</span> <span class="n">scripts</span></div>
 
 
-<span class="n">CODEMIRROR_OPTIONS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;text/html&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;matchTags&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">},</span>
+<span class="n">CODEMIRROR_OPTIONS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;text/html&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;matchTags&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
                       <span class="s1">&#39;text/css&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;gutters&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;CodeMirror-lint-markers&#39;</span><span class="p">],</span>
-                                   <span class="s1">&#39;matchBrackets&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
-                                   <span class="s1">&#39;lint&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">},</span>
-                      <span class="s1">&#39;text/javascript&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;lint&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+                                   <span class="s1">&#39;matchBrackets&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                                   <span class="s1">&#39;lint&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+                      <span class="s1">&#39;text/javascript&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;lint&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
                                           <span class="s1">&#39;gutters&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;CodeMirror-lint-markers&#39;</span><span class="p">],</span>
-                                          <span class="s1">&#39;matchBrackets&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">},</span>
+                                          <span class="s1">&#39;matchBrackets&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
                       <span class="s1">&#39;application/javascript&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;gutters&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;CodeMirror-lint-markers&#39;</span><span class="p">],</span>
-                                                 <span class="s1">&#39;matchBrackets&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
-                                                 <span class="s1">&#39;lint&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">}}</span>
+                                                 <span class="s1">&#39;matchBrackets&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                                                 <span class="s1">&#39;lint&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}}</span>
 
 
-<div class="viewcode-block" id="codemirror_options"><a class="viewcode-back" href="../../../api/wte_helpers_frontend.html#wte.helpers.frontend.codemirror_options">[docs]</a><span class="k">def</span> <span class="nf">codemirror_options</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">mimetype</span><span class="p">,</span> <span class="n">include_mode</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+<div class="viewcode-block" id="codemirror_options"><a class="viewcode-back" href="../../../api/wte_helpers_frontend.html#wte.helpers.frontend.codemirror_options">[docs]</a><span class="k">def</span> <span class="nf">codemirror_options</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">mimetype</span><span class="p">,</span> <span class="n">include_mode</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Generates a JSON representation of CodeMirror options that are valid</span>
 <span class="sd">    for the given ``mimetype``.</span>
 
@@ -166,7 +166,7 @@
                        <span class="s1">&#39;ok&#39;</span><span class="p">:</span> <span class="n">ok</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ok</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="p">{</span><span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="n">ok</span><span class="p">}})</span></div>
 
 
-<div class="viewcode-block" id="confirm_delete"><a class="viewcode-back" href="../../../api/wte_helpers_frontend.html#wte.helpers.frontend.confirm_delete">[docs]</a><span class="k">def</span> <span class="nf">confirm_delete</span><span class="p">(</span><span class="n">obj_type</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">has_parts</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+<div class="viewcode-block" id="confirm_delete"><a class="viewcode-back" href="../../../api/wte_helpers_frontend.html#wte.helpers.frontend.confirm_delete">[docs]</a><span class="k">def</span> <span class="nf">confirm_delete</span><span class="p">(</span><span class="n">obj_type</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">has_parts</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Generates the confirmation JSON object for use with the jQuery.postLink() plugin.</span>
 
 <span class="sd">    :param obj_type: The type of object that is being deleted</span>
@@ -205,7 +205,7 @@
 <span class="sd">    :return: The human-readable representation</span>
 <span class="sd">    :rtype: :func:`unicode`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">number_unit</span><span class="p">(</span><span class="n">number</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">fraction</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">number_unit</span><span class="p">(</span><span class="n">number</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">fraction</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Formats a string &quot;number unit&quot;, where the unit is appropriately</span>
 <span class="sd">        pluralised. Optionally the parameter ``fraction`` can be inserted</span>
 <span class="sd">        between the two.</span>
@@ -219,7 +219,7 @@
 <span class="sd">        :return: The string &quot;number unit&quot; or &quot;number fraction unit&quot;</span>
 <span class="sd">        :rtype: :func:`unicode`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">fraction</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">fraction</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="s1">&#39;</span><span class="si">%i</span><span class="s1"> </span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">number</span><span class="p">,</span> <span class="n">fraction</span><span class="p">,</span> <span class="n">inflector</span><span class="o">.</span><span class="n">plural</span><span class="p">(</span><span class="n">unit</span><span class="p">,</span> <span class="n">number</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="s1">&#39;</span><span class="si">%i</span><span class="s1"> </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">number</span><span class="p">,</span> <span class="n">inflector</span><span class="o">.</span><span class="n">plural</span><span class="p">(</span><span class="n">unit</span><span class="p">,</span> <span class="n">number</span><span class="p">))</span>
@@ -334,7 +334,7 @@
         <span class="k">return</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">display_mode</span><span class="p">,</span> <span class="n">DISPLAY_MODES</span><span class="p">[</span><span class="n">display_mode</span><span class="p">][</span><span class="n">part_type</span><span class="p">])</span>
     <span class="k">elif</span> <span class="n">part_type</span> <span class="ow">in</span> <span class="n">DISPLAY_MODES</span><span class="p">[</span><span class="s1">&#39;default&#39;</span><span class="p">]:</span>
         <span class="k">return</span> <span class="s1">&#39;default/</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">DISPLAY_MODES</span><span class="p">[</span><span class="s1">&#39;default&#39;</span><span class="p">][</span><span class="n">part_type</span><span class="p">])</span>
-    <span class="k">return</span> <span class="bp">None</span></div>
+    <span class="k">return</span> <span class="kc">None</span></div>
 
 
 <div class="viewcode-block" id="natural_list"><a class="viewcode-back" href="../../../api/wte_helpers_frontend.html#wte.helpers.frontend.natural_list">[docs]</a><span class="k">def</span> <span class="nf">natural_list</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">separator</span><span class="o">=</span><span class="s1">&#39;, &#39;</span><span class="p">,</span> <span class="n">final_separator</span><span class="o">=</span><span class="s1">&#39; &amp; &#39;</span><span class="p">):</span>
@@ -387,12 +387,12 @@
             <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Edit&#39;</span><span class="p">,</span>
                          <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;user.edit&#39;</span><span class="p">,</span> <span class="n">uid</span><span class="o">=</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
                          <span class="n">icon</span><span class="o">=</span><span class="s1">&#39;fi-pencil&#39;</span><span class="p">,</span>
-                         <span class="n">highlight</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+                         <span class="n">highlight</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="n">builder</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;Access&#39;</span><span class="p">,</span> <span class="s1">&#39;fi-key&#39;</span><span class="p">)</span>
             <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Edit Permissions&#39;</span><span class="p">,</span>
                          <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;user.permissions&#39;</span><span class="p">,</span> <span class="n">uid</span><span class="o">=</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
                          <span class="n">icon</span><span class="o">=</span><span class="s1">&#39;fi-key&#39;</span><span class="p">,</span>
-                         <span class="n">highlight</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+                         <span class="n">highlight</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="n">builder</span><span class="o">.</span><span class="n">menu</span><span class="p">(</span><span class="s1">&#39;Reset Password&#39;</span><span class="p">,</span>
                          <span class="n">request</span><span class="o">.</span><span class="n">route_url</span><span class="p">(</span><span class="s1">&#39;user.forgotten_password&#39;</span><span class="p">,</span>
                                            <span class="n">_query</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;email&#39;</span><span class="p">,</span> <span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="p">),</span>
@@ -406,7 +406,7 @@
                                                                    <span class="p">(</span><span class="s1">&#39;action&#39;</span><span class="p">,</span> <span class="s1">&#39;validate&#39;</span><span class="p">),</span>
                                                                    <span class="p">(</span><span class="s1">&#39;csrf_token&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get_csrf_token</span><span class="p">())]),</span>
                          <span class="n">icon</span><span class="o">=</span><span class="s1">&#39;fi-check&#39;</span><span class="p">,</span>
-                         <span class="n">highlight</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                         <span class="n">highlight</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                          <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;post-link&#39;</span><span class="p">})</span>
     <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">allow</span><span class="p">(</span><span class="s1">&#39;delete&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="p">):</span>
         <span class="n">builder</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;Delete&#39;</span><span class="p">,</span> <span class="s1">&#39;fi-trash&#39;</span><span class="p">)</span>
@@ -416,8 +416,54 @@
                                        <span class="n">_query</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;csrf_token&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get_csrf_token</span><span class="p">()}),</span>
                      <span class="n">icon</span><span class="o">=</span><span class="s1">&#39;fi-trash&#39;</span><span class="p">,</span>
                      <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;alert post-link&#39;</span><span class="p">,</span>
-                            <span class="s1">&#39;data-wte-confirm&#39;</span><span class="p">:</span> <span class="n">confirm_delete</span><span class="p">(</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="n">user</span><span class="o">.</span><span class="n">display_name</span><span class="p">,</span> <span class="bp">False</span><span class="p">)})</span>
+                            <span class="s1">&#39;data-wte-confirm&#39;</span><span class="p">:</span> <span class="n">confirm_delete</span><span class="p">(</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="n">user</span><span class="o">.</span><span class="n">display_name</span><span class="p">,</span> <span class="kc">False</span><span class="p">)})</span>
     <span class="k">return</span> <span class="n">builder</span><span class="o">.</span><span class="n">generate</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="part_change_notification_text"><a class="viewcode-back" href="../../../api/wte_helpers_frontend.html#wte.helpers.frontend.part_change_notification_text">[docs]</a><span class="k">def</span> <span class="nf">part_change_notification_text</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">part</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generates a default notification text to be emailed when changes</span>
+<span class="sd">    are made to a part.</span>
+
+<span class="sd">    :param request: The current request to get the current user from</span>
+<span class="sd">    :type request: :class:`~pyramid.request.Request`</span>
+<span class="sd">    :param part: The part that is being changed</span>
+<span class="sd">    :type part: :class:`~wte.models.Part`</span>
+<span class="sd">    :return: The default notification text</span>
+<span class="sd">    :rtype: ``str``</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;module&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;&#39;&#39;Hello,</span>
+
+<span class="s1">This is to let you know that changes have been made to the </span><span class="si">%s</span><span class="s1"> module.</span>
+
+<span class="s1">Please reload the module to see the changes.</span>
+
+<span class="si">%s</span><span class="s1">&#39;&#39;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+         <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="o">.</span><span class="n">display_name</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">part</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;part&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;&#39;&#39;Hello,</span>
+
+<span class="s1">This is to let you know that changes have been made to the </span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1"> of the </span><span class="si">%s</span><span class="s1"> module.</span>
+
+<span class="s1">Please reload the </span><span class="si">%s</span><span class="s1"> to see the changes.</span>
+
+<span class="si">%s</span><span class="s1">&#39;&#39;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+         <span class="n">part</span><span class="o">.</span><span class="n">label</span> <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">label</span> <span class="k">else</span> <span class="s1">&#39;part&#39;</span><span class="p">,</span>
+         <span class="n">part</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+         <span class="n">part</span><span class="o">.</span><span class="n">label</span> <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">label</span> <span class="k">else</span> <span class="s1">&#39;part&#39;</span><span class="p">,</span>
+         <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="o">.</span><span class="n">display_name</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">part</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;page&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;&#39;&#39;Hello,</span>
+
+<span class="s1">This is to let you know that changes have been made to the page &quot;</span><span class="si">%s</span><span class="s1">&quot; in the </span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1"> of the </span><span class="si">%s</span><span class="s1"> module.</span>
+
+<span class="s1">Please reload that page to see the changes.</span>
+
+<span class="si">%s</span><span class="s1">&#39;&#39;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+         <span class="n">part</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+         <span class="n">part</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">label</span> <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">label</span> <span class="k">else</span> <span class="s1">&#39;part&#39;</span><span class="p">,</span>
+         <span class="n">part</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+         <span class="n">request</span><span class="o">.</span><span class="n">current_user</span><span class="o">.</span><span class="n">display_name</span><span class="p">)</span></div>
 </pre></div>
         </div>
       </div>

@@ -36,13 +36,13 @@
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">transaction</span>
 
-<span class="kn">from</span> <span class="nn">pyramid.paster</span> <span class="kn">import</span> <span class="p">(</span><span class="n">get_appsettings</span><span class="p">,</span> <span class="n">setup_logging</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="n">randint</span>
-<span class="kn">from</span> <span class="nn">pywebtools.sqlalchemy</span> <span class="kn">import</span> <span class="n">DBSession</span>
-<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="p">(</span><span class="n">engine_from_config</span><span class="p">,</span> <span class="n">and_</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">threading</span> <span class="kn">import</span> <span class="n">Thread</span>
+<span class="kn">from</span> <span class="nn">pyramid.paster</span> <span class="k">import</span> <span class="p">(</span><span class="n">get_appsettings</span><span class="p">,</span> <span class="n">setup_logging</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">random</span> <span class="k">import</span> <span class="n">randint</span>
+<span class="kn">from</span> <span class="nn">pywebtools.sqlalchemy</span> <span class="k">import</span> <span class="n">DBSession</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="k">import</span> <span class="p">(</span><span class="n">engine_from_config</span><span class="p">,</span> <span class="n">and_</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">threading</span> <span class="k">import</span> <span class="n">Thread</span>
 
-<span class="kn">from</span> <span class="nn">wte.models</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">TimedTask</span><span class="p">,</span> <span class="n">Part</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">wte.models</span> <span class="k">import</span> <span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">TimedTask</span><span class="p">,</span> <span class="n">Part</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="init"><a class="viewcode-back" href="../../../api/wte_scripts_timed_tasks.html#wte.scripts.timed_tasks.init">[docs]</a><span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="n">subparsers</span><span class="p">):</span>
@@ -76,7 +76,7 @@
                                                    <span class="n">TimedTask</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;ready&#39;</span><span class="p">))</span>
     <span class="n">rnd</span> <span class="o">=</span> <span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000000</span><span class="p">)</span>
     <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">manager</span><span class="p">:</span>
-        <span class="n">tasks</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">TimedTask</span><span class="o">.</span><span class="n">status</span><span class="p">:</span> <span class="s1">&#39;running-</span><span class="si">%i</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">rnd</span><span class="p">)},</span> <span class="n">synchronize_session</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="n">tasks</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">TimedTask</span><span class="o">.</span><span class="n">status</span><span class="p">:</span> <span class="s1">&#39;running-</span><span class="si">%i</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">rnd</span><span class="p">)},</span> <span class="n">synchronize_session</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">tasks</span> <span class="o">=</span> <span class="n">dbsession</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">TimedTask</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">TimedTask</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;running-</span><span class="si">%i</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">rnd</span><span class="p">))</span>
     <span class="n">task_count</span> <span class="o">=</span> <span class="n">tasks</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">task_count</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -84,7 +84,7 @@
         <span class="n">threads</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">task</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;change_status&#39;</span><span class="p">:</span>
-                <span class="n">threads</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">run_change_status</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">id</span><span class="p">,)))</span>
+                <span class="n">threads</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">run_change_status</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">id</span><span class="p">,)))</span>
         <span class="k">for</span> <span class="n">thread</span> <span class="ow">in</span> <span class="n">threads</span><span class="p">:</span>
             <span class="n">thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">thread</span> <span class="ow">in</span> <span class="n">threads</span><span class="p">:</span>

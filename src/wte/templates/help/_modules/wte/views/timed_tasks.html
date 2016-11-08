@@ -39,16 +39,16 @@
 <span class="kn">import</span> <span class="nn">formencode</span>
 <span class="kn">import</span> <span class="nn">transaction</span>
 
-<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
-<span class="kn">from</span> <span class="nn">pyramid.httpexceptions</span> <span class="kn">import</span> <span class="p">(</span><span class="n">HTTPSeeOther</span><span class="p">,</span> <span class="n">HTTPNotFound</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">pyramid.view</span> <span class="kn">import</span> <span class="n">view_config</span>
-<span class="kn">from</span> <span class="nn">pywebtools.formencode</span> <span class="kn">import</span> <span class="p">(</span><span class="n">State</span><span class="p">,</span> <span class="n">CSRFSchema</span><span class="p">,</span> <span class="n">DateValidator</span><span class="p">,</span> <span class="n">TimeValidator</span><span class="p">,</span> <span class="n">DynamicSchema</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">pywebtools.pyramid.auth.decorators</span> <span class="kn">import</span> <span class="n">unauthorised_redirect</span><span class="p">,</span> <span class="n">require_logged_in</span>
-<span class="kn">from</span> <span class="nn">pywebtools.pyramid.auth.views</span> <span class="kn">import</span> <span class="n">current_user</span>
-<span class="kn">from</span> <span class="nn">pywebtools.sqlalchemy</span> <span class="kn">import</span> <span class="n">DBSession</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">pyramid.httpexceptions</span> <span class="k">import</span> <span class="p">(</span><span class="n">HTTPSeeOther</span><span class="p">,</span> <span class="n">HTTPNotFound</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">pyramid.view</span> <span class="k">import</span> <span class="n">view_config</span>
+<span class="kn">from</span> <span class="nn">pywebtools.formencode</span> <span class="k">import</span> <span class="p">(</span><span class="n">State</span><span class="p">,</span> <span class="n">CSRFSchema</span><span class="p">,</span> <span class="n">DateValidator</span><span class="p">,</span> <span class="n">TimeValidator</span><span class="p">,</span> <span class="n">DynamicSchema</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">pywebtools.pyramid.auth.decorators</span> <span class="k">import</span> <span class="n">unauthorised_redirect</span><span class="p">,</span> <span class="n">require_logged_in</span>
+<span class="kn">from</span> <span class="nn">pywebtools.pyramid.auth.views</span> <span class="k">import</span> <span class="n">current_user</span>
+<span class="kn">from</span> <span class="nn">pywebtools.sqlalchemy</span> <span class="k">import</span> <span class="n">DBSession</span>
 
-<span class="kn">from</span> <span class="nn">wte.models</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Part</span><span class="p">,</span> <span class="n">TimedTask</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">wte.views.part</span> <span class="kn">import</span> <span class="n">create_part_crumbs</span>
+<span class="kn">from</span> <span class="nn">wte.models</span> <span class="k">import</span> <span class="p">(</span><span class="n">Part</span><span class="p">,</span> <span class="n">TimedTask</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">wte.views.part</span> <span class="k">import</span> <span class="n">create_part_crumbs</span>
 
 
 <div class="viewcode-block" id="init"><a class="viewcode-back" href="../../../api/wte_views_timed_tasks.html#wte.views.timed_tasks.init">[docs]</a><span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
@@ -64,10 +64,10 @@
 <span class="sd">    * ``parts.timed_tasks.delete`` -- ``/parts/{pid}/timed-tasks/{tid}/delete`` --</span>
 <span class="sd">      :func:`~wte.views.timed_tasks.delete_part_task`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">config</span><span class="o">.</span><span class="n">add_route</span><span class="p">(</span><span class="s1">&#39;part.timed_task&#39;</span><span class="p">,</span> <span class="s1">&#39;/parts/{pid}/timed-tasks&#39;</span><span class="p">)</span>
-    <span class="n">config</span><span class="o">.</span><span class="n">add_route</span><span class="p">(</span><span class="s1">&#39;part.timed_task.new&#39;</span><span class="p">,</span> <span class="s1">&#39;/parts/{pid}/timed-tasks/new&#39;</span><span class="p">)</span>
-    <span class="n">config</span><span class="o">.</span><span class="n">add_route</span><span class="p">(</span><span class="s1">&#39;part.timed_task.edit&#39;</span><span class="p">,</span> <span class="s1">&#39;/parts/{pid}/timed-tasks/{tid}/edit&#39;</span><span class="p">)</span>
-    <span class="n">config</span><span class="o">.</span><span class="n">add_route</span><span class="p">(</span><span class="s1">&#39;part.timed_task.delete&#39;</span><span class="p">,</span> <span class="s1">&#39;/parts/{pid}/timed-tasks/{tid}/delete&#39;</span><span class="p">)</span></div>
+    <span class="n">config</span><span class="o">.</span><span class="n">add_route</span><span class="p">(</span><span class="s1">&#39;part.timed_task&#39;</span><span class="p">,</span> <span class="s1">&#39;/parts/</span><span class="si">{pid}</span><span class="s1">/timed-tasks&#39;</span><span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">add_route</span><span class="p">(</span><span class="s1">&#39;part.timed_task.new&#39;</span><span class="p">,</span> <span class="s1">&#39;/parts/</span><span class="si">{pid}</span><span class="s1">/timed-tasks/new&#39;</span><span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">add_route</span><span class="p">(</span><span class="s1">&#39;part.timed_task.edit&#39;</span><span class="p">,</span> <span class="s1">&#39;/parts/</span><span class="si">{pid}</span><span class="s1">/timed-tasks/</span><span class="si">{tid}</span><span class="s1">/edit&#39;</span><span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">add_route</span><span class="p">(</span><span class="s1">&#39;part.timed_task.delete&#39;</span><span class="p">,</span> <span class="s1">&#39;/parts/</span><span class="si">{pid}</span><span class="s1">/timed-tasks/</span><span class="si">{tid}</span><span class="s1">/delete&#39;</span><span class="p">)</span></div>
 
 
 <span class="nd">@view_config</span><span class="p">(</span><span class="n">route_name</span><span class="o">=</span><span class="s1">&#39;part.timed_task&#39;</span><span class="p">,</span> <span class="n">renderer</span><span class="o">=</span><span class="s1">&#39;wte:templates/timed_task/view.kajiki&#39;</span><span class="p">)</span>
@@ -92,7 +92,7 @@
             <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
                     <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
                     <span class="s1">&#39;available_tasks&#39;</span><span class="p">:</span> <span class="n">available_tasks</span><span class="p">,</span>
-                    <span class="s1">&#39;include_footer&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+                    <span class="s1">&#39;include_footer&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
                     <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;timed_actions.html&#39;</span><span class="p">]}</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
@@ -104,7 +104,7 @@
     <span class="sd">&quot;&quot;&quot;The :class:`~wte.views.timed_tasks.NewTimedTaskSchema` handles the</span>
 <span class="sd">    validation of a new :class:`~wte.models.TimedTask`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">name</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">All</span><span class="p">(</span><span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">UnicodeString</span><span class="p">(</span><span class="n">not_empty</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">formencode</span><span class="o">.</span><span class="n">All</span><span class="p">(</span><span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">UnicodeString</span><span class="p">(</span><span class="n">not_empty</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
                           <span class="n">formencode</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">OneOf</span><span class="p">([</span><span class="s1">&#39;change_status&#39;</span><span class="p">]))</span>
     <span class="sd">&quot;&quot;&quot;The new task&#39;s name&quot;&quot;&quot;</span></div>
 
@@ -150,12 +150,12 @@
                             <span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
                             <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
                             <span class="s1">&#39;available_tasks&#39;</span><span class="p">:</span> <span class="n">available_tasks</span><span class="p">,</span>
-                            <span class="s1">&#39;include_footer&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+                            <span class="s1">&#39;include_footer&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
                             <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;timed_actions.html&#39;</span><span class="p">]}</span>
             <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
                     <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
                     <span class="s1">&#39;available_tasks&#39;</span><span class="p">:</span> <span class="n">available_tasks</span><span class="p">,</span>
-                    <span class="s1">&#39;include_footer&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+                    <span class="s1">&#39;include_footer&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
                     <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;timed_actions.html&#39;</span><span class="p">]}</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
@@ -175,14 +175,14 @@
 <span class="sd">    &quot;options.{field-name}&quot;.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">date</span> <span class="o">=</span> <span class="n">DateValidator</span><span class="p">(</span><span class="n">not_empty</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">date</span> <span class="o">=</span> <span class="n">DateValidator</span><span class="p">(</span><span class="n">not_empty</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="sd">&quot;&quot;&quot;The task&#39;s updated date&quot;&quot;&quot;</span>
-    <span class="n">time</span> <span class="o">=</span> <span class="n">TimeValidator</span><span class="p">(</span><span class="n">not_empty</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">time</span> <span class="o">=</span> <span class="n">TimeValidator</span><span class="p">(</span><span class="n">not_empty</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="sd">&quot;&quot;&quot;The tasks&#39;s updatet time&quot;&quot;&quot;</span>
 
     <span class="n">pre_validators</span> <span class="o">=</span> <span class="p">[</span><span class="n">formencode</span><span class="o">.</span><span class="n">variabledecode</span><span class="o">.</span><span class="n">NestedVariables</span><span class="p">()]</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;:param options: Any additional option validators to apply.</span>
 <span class="sd">        :type options: ``list`` of ``tuple`` (field-name, validator)&quot;&quot;&quot;</span>
         <span class="n">formencode</span><span class="o">.</span><span class="n">Schema</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -236,12 +236,12 @@
                             <span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
                             <span class="s1">&#39;task&#39;</span><span class="p">:</span> <span class="n">task</span><span class="p">,</span>
                             <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
-                            <span class="s1">&#39;include_footer&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+                            <span class="s1">&#39;include_footer&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
                             <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;timed_actions.html&#39;</span><span class="p">]}</span>
             <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
                     <span class="s1">&#39;task&#39;</span><span class="p">:</span> <span class="n">task</span><span class="p">,</span>
                     <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
-                    <span class="s1">&#39;include_footer&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+                    <span class="s1">&#39;include_footer&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
                     <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;timed_actions.html&#39;</span><span class="p">]}</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
@@ -284,12 +284,12 @@
                             <span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
                             <span class="s1">&#39;task&#39;</span><span class="p">:</span> <span class="n">task</span><span class="p">,</span>
                             <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
-                            <span class="s1">&#39;include_footer&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+                            <span class="s1">&#39;include_footer&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
                             <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;timed_actions.html&#39;</span><span class="p">]}</span>
             <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;part&#39;</span><span class="p">:</span> <span class="n">part</span><span class="p">,</span>
                     <span class="s1">&#39;task&#39;</span><span class="p">:</span> <span class="n">task</span><span class="p">,</span>
                     <span class="s1">&#39;crumbs&#39;</span><span class="p">:</span> <span class="n">crumbs</span><span class="p">,</span>
-                    <span class="s1">&#39;include_footer&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+                    <span class="s1">&#39;include_footer&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
                     <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;timed_actions.html&#39;</span><span class="p">]}</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">unauthorised_redirect</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>

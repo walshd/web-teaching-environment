@@ -35,9 +35,9 @@
 
 <span class="sd">.. moduleauthor:: Mark Hall &lt;mark.hall@work.room3b.eu&gt;</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">pywebtools.pyramid</span> <span class="kn">import</span> <span class="n">auth</span> <span class="k">as</span> <span class="n">pyramid_auth</span>
+<span class="kn">from</span> <span class="nn">pywebtools.pyramid</span> <span class="k">import</span> <span class="n">auth</span> <span class="k">as</span> <span class="n">pyramid_auth</span>
 
-<span class="kn">from</span> <span class="nn">wte.util</span> <span class="kn">import</span> <span class="p">(</span><span class="n">send_email</span><span class="p">,</span> <span class="n">get_config_setting</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">wte.util</span> <span class="k">import</span> <span class="p">(</span><span class="n">send_email</span><span class="p">,</span> <span class="n">get_config_setting</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="init"><a class="viewcode-back" href="../../../api/wte_views_user.html#wte.views.user.init">[docs]</a><span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
@@ -69,12 +69,12 @@
                                  <span class="s1">&#39;user.delete&#39;</span><span class="p">:</span> <span class="s1">&#39;wte:templates/users/delete.kajiki&#39;</span><span class="p">},</span>
                       <span class="n">redirects</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;_default&#39;</span><span class="p">:</span> <span class="s1">&#39;root&#39;</span><span class="p">,</span>
                                  <span class="s1">&#39;user.login&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;route&#39;</span><span class="p">:</span> <span class="s1">&#39;part.list&#39;</span><span class="p">,</span>
-                                                <span class="s1">&#39;params&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;_query&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;user_id&#39;</span><span class="p">:</span> <span class="s1">&#39;{uid}&#39;</span><span class="p">}}},</span>
+                                                <span class="s1">&#39;params&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;_query&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;user_id&#39;</span><span class="p">:</span> <span class="s1">&#39;</span><span class="si">{uid}</span><span class="s1">&#39;</span><span class="p">}}},</span>
                                  <span class="s1">&#39;user.logout&#39;</span><span class="p">:</span> <span class="s1">&#39;root&#39;</span><span class="p">,</span>
                                  <span class="s1">&#39;user.register&#39;</span><span class="p">:</span> <span class="s1">&#39;root&#39;</span><span class="p">,</span>
                                  <span class="s1">&#39;user.forgotten_password&#39;</span><span class="p">:</span> <span class="s1">&#39;root&#39;</span><span class="p">,</span>
                                  <span class="s1">&#39;user.reset_password&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;route&#39;</span><span class="p">:</span> <span class="s1">&#39;part.list&#39;</span><span class="p">,</span>
-                                                         <span class="s1">&#39;params&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;_query&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;user_id&#39;</span><span class="p">:</span> <span class="s1">&#39;{uid}&#39;</span><span class="p">}}}},</span>
+                                                         <span class="s1">&#39;params&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;_query&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;user_id&#39;</span><span class="p">:</span> <span class="s1">&#39;</span><span class="si">{uid}</span><span class="s1">&#39;</span><span class="p">}}}},</span>
                       <span class="n">callbacks</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;user.created&#39;</span><span class="p">:</span> <span class="n">new_user_created</span><span class="p">,</span>
                                  <span class="s1">&#39;user.validated&#39;</span><span class="p">:</span> <span class="n">new_user_validated</span><span class="p">,</span>
                                  <span class="s1">&#39;user.password_reset&#39;</span><span class="p">:</span> <span class="n">password_reset</span><span class="p">,</span>

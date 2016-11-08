@@ -25,16 +25,6 @@ section of the configuration file.
 Application settings
 --------------------
 
-**pygments.theme** *(optional)*
-  The pygments style to use for source-code highlighting. You can find the
-  full list of available Pygments styles here: http://pygments.org/demo/
-  
-  After changing the style you must run the following command to update the
-  styles::
-  
-    WTE generate-custom-styling <configuration.ini> 
-  
-  Default: default
 **codemirror.theme** *(optional)*
   The CodeMirror theme to use for styling the code editors. You can find the
   full list of available Pygments themes here:
@@ -46,28 +36,6 @@ Application settings
     WTE generate-custom-styling <configuration.ini> 
   
   Default: default
-**style.settings** *(optional)*
-  Here you can specify a settings SCSS file that can be used to change the
-  default settings used to generate the WTE styling. The WTE uses Foundation 5
-  and you can find a full list of available settings here:
-  http://foundation.zurb.com/docs/
-  
-  After changing the settings you must run the following command to update the
-  styles::
-  
-    WTE generate-custom-styling <configuration.ini> 
-  
-**style.overrides** *(optional)*
-  Using the overrides setting you can specify an SCSS file that will be
-  included as the last SCSS file when generating the WTE styling. This allows
-  you to override any of the default styles if they cannot be configured via
-  **style.settings**.
-  
-  After changing the overrides you must run the following command to update the
-  styles::
-  
-    WTE generate-custom-styling <configuration.ini> 
-
 **registration.domains** *(optional)*
   Here you can specify an optional comma-separated list of domains that are used
   to limit registration. If one or more domain names are specified then only

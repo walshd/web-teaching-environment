@@ -6,7 +6,6 @@ API Documentation
    :maxdepth: 1
 
    wte
-   wte_decorators
    wte_doc
    wte_helpers
    wte_helpers_frontend
