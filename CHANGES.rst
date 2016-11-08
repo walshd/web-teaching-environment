@@ -16,6 +16,7 @@
 - *BUGFIX*: Fixed a bug where tutors were never marked as registered to a module
 - *BUGFIX*: Fixed the UTF-8 encoding issues with downloaded parts (#79)
 - *BUGFIX*: Allow administrator access to module's users
+- *BUGFIX*: Re-added the missing menu for the HTML viewer
 
 1.2.5
 -----
