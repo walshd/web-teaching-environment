@@ -1,3 +1,8 @@
+1.3.1
+-----
+
+- *BUGFIX*: Fixed an issue with dropdown menus hidden by the navigation element
+
 1.3.0
 -----
 
