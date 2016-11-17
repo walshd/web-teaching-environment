@@ -51,7 +51,7 @@
           </div>
         </div>
         <div id="viewer">
-          <div class="float-right">${menu.menubar([{'label': 'View', 'items': [{'visible': True, 'label': 'Open in New Tab', 'attrs': {'href': request.route_url('file.view', pid=part.id, filename=[f.filename for f in progress.files if f.mimetype == 'text/html'][0] if [f.filename for f in progress.files if f.mimetype == 'text/html'] else ''), 'target': '_blank'}}]}])}</div>
+          <div style="position:absolute;top:0;right:1rem;z-index:1;">${menu.menubar([{'label': 'View', 'items': [{'visible': True, 'label': 'Open in New Tab', 'attrs': {'href': request.route_url('file.view', pid=part.id, filename=[f.filename for f in progress.files if f.mimetype == 'text/html'][0] if [f.filename for f in progress.files if f.mimetype == 'text/html'] else ''), 'target': '_blank'}}]}])}</div>
           <iframe src="${request.route_url('file.view', pid=part.id, filename=[f.filename for f in progress.files if f.mimetype == 'text/html'][0] if [f.filename for f in progress.files if f.mimetype == 'text/html'] else '')}" title="HTML Viewer"> </iframe>
         </div>
       </section>

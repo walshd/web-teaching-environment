@@ -1,3 +1,8 @@
+1.3.2
+-----
+
+- *BUGFIX*: Fixed an issue with the html viewer menu positioning
+
 1.3.1
 -----
 
