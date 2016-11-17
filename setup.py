@@ -29,7 +29,7 @@ requires = [
     ]
 
 setup(name='WebTeachingEnvironment',
-      version='1.3.0',
+      version='1.4.0-dev0',
       description='The Web Teaching Environment',
       long_description=README + '\n\n' + CHANGES,
       classifiers=[
