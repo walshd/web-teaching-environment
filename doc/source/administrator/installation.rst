@@ -8,12 +8,11 @@ Python 3.5 (recommended).
 Core System
 ===========
 
-.. comment::
-  To install the Web Teaching Environment, download the latest version from
-  https://bitbucket.org/mhall/web-teaching-environment and install using the
-  following command::
+.. To install the Web Teaching Environment, download the latest version from
+   https://bitbucket.org/mhall/web-teaching-environment and install using the
+   following command::
 
-  pip install WebTeachingEnvironment-x.y.z.tar.gz
+   pip install WebTeachingEnvironment-x.y.z.tar.gz
 
 Due to the move to Github the Web Teaching Environment is currently only
 available as source::
