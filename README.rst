@@ -9,7 +9,7 @@ Getting Started
 ---------------
 
 - Clone the Mercurial repository:
-  ``hg clone https://bitbucket.org/mhall/web-teaching-environment``;
+  ``git clone https://github.com/scmmmh/web-teaching-environment.git``;
 
 - Create a new Python `virtualenv`_. If you have never used Python
   virtualenvironments, then read up on them first. For ease of interaction with
