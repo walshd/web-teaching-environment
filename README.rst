@@ -1,6 +1,8 @@
 Web Teaching Environment README
 ===============================
 
+**Unmaintained** - The Web Teaching Environment is unmaintained.
+
 This README is primarily written for developers wishing to work on the Web
 Teaching Environment. If you just want to use the Web Teaching Environment,
 please consult the documentation at http://web-teaching-environment.readthedocs.org/en/latest/
