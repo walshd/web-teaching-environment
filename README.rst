@@ -58,3 +58,5 @@ To generate the documentation:
 
 .. _`Sphinx`: http://sphinx-doc.org
 .. _`provided online`: http://web-teaching-environment.readthedocs.org/
+
+- Documentation avaliable here: https://github.com/Edge-Hill-University-Web/WTE-Docs
